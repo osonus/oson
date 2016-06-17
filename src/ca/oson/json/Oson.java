@@ -223,7 +223,7 @@ public class Oson {
 	// make sure options have non null values
 	public static class Options {
 		private String simpleDateFormat = "yyyy-MM-dd'T'HH:mm:ss.SS'Z'";
-		public DateFormat dateFormat = new SimpleDateFormat(simpleDateFormat);
+		private DateFormat dateFormat = new SimpleDateFormat(simpleDateFormat);
 		private JSON_PROCESSOR jsonProcessor = JSON_PROCESSOR.OSON;
 		private FIELD_NAMING fieldNaming = FIELD_NAMING.FIELD;
 		private DEFAULT_VALUE defaultValue = DEFAULT_VALUE.NON_NULL;
@@ -241,7 +241,7 @@ public class Oson {
 		
 		
 
-		public Set<Class> getIgnoreClassWithAnnotations() {
+		private Set<Class> getIgnoreClassWithAnnotations() {
 			return ignoreClassWithAnnotations;
 		}
 
@@ -264,7 +264,7 @@ public class Oson {
 		}
 		
 		
-		public Set<Class> getIgnoreFieldsWithAnnotations() {
+		private Set<Class> getIgnoreFieldsWithAnnotations() {
 			return ignoreFieldsWithAnnotations;
 		}
 
@@ -287,7 +287,7 @@ public class Oson {
 		}
 		
 		
-		public Set<MODIFIER> getIncludeFieldsWithModifiers() {
+		private Set<MODIFIER> getIncludeFieldsWithModifiers() {
 			return includeFieldsWithModifiers;
 		}
 
@@ -311,7 +311,7 @@ public class Oson {
 		}
 		
 		
-		public Set<FieldStrategy> getFieldStrategies() {
+		private Set<FieldStrategy> getFieldStrategies() {
 			return fieldStrategies;
 		}
 
@@ -592,7 +592,7 @@ public class Oson {
 		}
 
 
-		public int getIndentation() {
+		protected int getIndentation() {
 			return indentation;
 		}
 
@@ -602,7 +602,7 @@ public class Oson {
 			}
 		}
 
-		public String getSimpleDateFormat() {
+		protected String getSimpleDateFormat() {
 			return simpleDateFormat;
 		}
 
@@ -614,7 +614,7 @@ public class Oson {
 			}
 		}
 
-		public DateFormat getDateFormat() {
+		protected DateFormat getDateFormat() {
 			return dateFormat;
 		}
 
@@ -630,7 +630,7 @@ public class Oson {
 			}
 		}
 
-		public DEFAULT_VALUE getDefaultValue() {
+		protected DEFAULT_VALUE getDefaultValue() {
 			return defaultValue;
 		}
 
@@ -640,7 +640,7 @@ public class Oson {
 			}
 		}
 
-		public Boolean getPrettyPrinting() {
+		protected Boolean getPrettyPrinting() {
 			return prettyPrinting;
 		}
 
@@ -650,7 +650,7 @@ public class Oson {
 			}
 		}
 
-		public JSON_PROCESSOR getJsonProcessor() {
+		protected JSON_PROCESSOR getJsonProcessor() {
 			return jsonProcessor;
 		}
 
@@ -660,7 +660,7 @@ public class Oson {
 			}
 		}
 
-		public ANNOTATION_SUPPORT getAnnotationSupport() {
+		private ANNOTATION_SUPPORT getAnnotationSupport() {
 			return annotationSupport;
 		}
 
@@ -668,7 +668,7 @@ public class Oson {
 			this.annotationSupport = annotationSupport;
 		}
 
-		public Boolean getOrderByKeys() {
+		private Boolean getOrderByKeys() {
 			return orderByKeys;
 		}
 
@@ -676,7 +676,7 @@ public class Oson {
 			this.orderByKeys = orderByKeys;
 		}
 
-		public Boolean getIncludeClassTypeInJson() {
+		private Boolean getIncludeClassTypeInJson() {
 			return includeClassTypeInJson;
 		}
 
@@ -684,7 +684,7 @@ public class Oson {
 			this.includeClassTypeInJson = includeClassTypeInJson;
 		}
 
-		public Boolean getPrintErrorUseOsonInFailure() {
+		private Boolean getPrintErrorUseOsonInFailure() {
 			return printErrorUseOsonInFailure;
 		}
 
@@ -693,7 +693,7 @@ public class Oson {
 			this.printErrorUseOsonInFailure = printErrorUseOsonInFailure;
 		}
 
-		public String getJsonClassType() {
+		private String getJsonClassType() {
 			return jsonClassType;
 		}
 
@@ -701,7 +701,7 @@ public class Oson {
 			this.jsonClassType = jsonClassType;
 		}
 
-		public FIELD_NAMING getFieldNaming() {
+		private FIELD_NAMING getFieldNaming() {
 			return fieldNaming;
 		}
 
@@ -838,12 +838,12 @@ public class Oson {
 		public Integer max = null; // default (int) 2147483647;
 		public Object defaultValue = null; // default ""
 
-		public FieldData(T object, Field field, String defaultName, Object value,
+		public FieldData(T enclosingObj, Field field, String defaultName, Object valueToProcess,
 				Class<E> returnType, EnumType enumType, Boolean notNull,
 				Integer length, Integer scale, Integer min,
 				Integer max, Object defaultValue, boolean json2Java) {
-			this(value, returnType, enumType);
-			this.enclosingObj = object; // enclosing object
+			this(valueToProcess, returnType, enumType);
+			this.enclosingObj = enclosingObj; // enclosing object
 			this.field = field;
 			this.defaultName = defaultName;
 			this.notNull = notNull;
@@ -855,46 +855,50 @@ public class Oson {
 			this.json2Java = json2Java;
 		}
 
-		public FieldData(Object value, Class<E> returnType, EnumType enumType) {
-			this(value, returnType);
+		public FieldData(Object valueToProcess, Class<E> returnType, EnumType enumType) {
+			this(valueToProcess, returnType);
 			this.enumType = enumType;
 		}
 
-		public FieldData(Object value, Class<E> returnType) {
-			this.valueToProcess = value;
+		public FieldData(Object valueToProcess, Class<E> returnType) {
+			this.valueToProcess = valueToProcess;
 			this.returnType = returnType;
 		}
 
-		public FieldData(Object value, Class<E> returnType, Boolean notNull) {
-			this(value, returnType);
+		public FieldData(Object valueToProcess, Class<E> returnType, Boolean notNull) {
+			this(valueToProcess, returnType);
 			this.notNull = notNull;
 		}
 
-		public FieldData(T object, Object value, Class<E> returnType) {
-			this(value, returnType);
-			this.enclosingObj = object;
+		public FieldData(T enclosingObj, Object valueToProcess, Class<E> returnType) {
+			this(valueToProcess, returnType);
+			this.enclosingObj = enclosingObj;
 		}
 
-		public FieldData(T object, Object value, Class<E> returnType, E obj, boolean json2Java) {
-			this(object, value, returnType);
-			this.returnObj = obj;
+		public FieldData(T enclosingObj, Object valueToProcess, Class<E> returnType, E returnObj, boolean json2Java) {
+			this(enclosingObj, valueToProcess, returnType);
+			this.returnObj = returnObj;
 			this.json2Java = json2Java;
 		}
 
-		public FieldData(T object, Object value, Type type, boolean json2Java) {
-			this.valueToProcess = value; // value to interpret
-			this.enclosingObj = object; // enclosing object
+		public FieldData(T enclosingObj, Object valueToProcess, Type type, boolean json2Java) {
+			this.valueToProcess = valueToProcess; // value to interpret
+			this.enclosingObj = enclosingObj; // enclosing object
 			this.erasedType = type; // generic type information
 			this.json2Java = json2Java;
 		}
 
-		public FieldData(T object, Object value, E obj) {
-			this.valueToProcess = value; // value to interpret
-			this.enclosingObj = object; // enclosing object
-			this.returnObj = obj; // object to return
+		public FieldData(T enclosingObj, Object valueToProcess, E returnObj) {
+			this.valueToProcess = valueToProcess; // value to interpret
+			this.enclosingObj = enclosingObj; // enclosing object
+			this.returnObj = returnObj; // object to return
 		}
 
-
+		public FieldData(Object valueToProcess, Class<E> returnType, boolean json2Java) {
+			this(valueToProcess, returnType);
+			this.json2Java = json2Java;
+		}
+		
 		public String getDefaultName() {
 			if (defaultName == null) {
 				if (field != null) {
@@ -1036,7 +1040,17 @@ public class Oson {
 		
 		return this;
 	}
+	
+	public Oson asGson() {
+		return setJsonProcessor(JSON_PROCESSOR.GSON);
+	}
 
+	public Oson asJackson() {
+		return setJsonProcessor(JSON_PROCESSOR.JACKSON);
+	}
+	
+	
+	
 	private FIELD_NAMING getFieldNaming() {
 		return options.getFieldNaming();
 	}
@@ -3483,10 +3497,8 @@ public class Oson {
 			Class componentType = CollectionArrayTypeGuesser
 					.guessElementType(collection, (Class<Collection<E>>) returnType, getJsonClassType());
 
-			level++;
 			String repeated = getPrettyIndentationln(level);
-			String repeatedItem = getPrettyIndentationln(level+1);
-
+			String repeatedItem = getPrettyIndentationln(++level);
 			StringBuilder sbuilder = new StringBuilder();
 			for (Object s : collection) {
 				FieldData newFieldData = new FieldData(s, componentType);
@@ -3526,9 +3538,9 @@ public class Oson {
 
 			int size = Array.getLength(value);
 
-			level++;
+			
 			String repeated = getPrettyIndentationln(level);
-			String repeatedItem = getPrettyIndentationln(level+1);
+			String repeatedItem = getPrettyIndentationln(++level);
 			StringBuilder sbuilder = new StringBuilder();
 			for (int i = 0; i < size; i++) {
 				FieldData newFieldData = new FieldData(Array.get(value, i), componentType);
@@ -3568,11 +3580,8 @@ public class Oson {
 
 			StringBuilder sbuilder = new StringBuilder();
 
-			level++;
 			String repeated = getPrettyIndentationln(level), pretty = getPrettySpace();
-
-			level++;
-			String repeatedItem = getPrettyIndentationln(level);
+			String repeatedItem = getPrettyIndentationln(++level);
 
 			//for (Map.Entry<Object, ?> entry : map.entrySet()) {
 			Set<String> names = map.keySet();
@@ -3617,7 +3626,7 @@ public class Oson {
 				returnType = valueType;
 			}
 
-			return toJson((E) value, returnType, level + 1, set); //level + 1
+			return toJson((E) value, returnType, level, set);
 		}
 	}
 	
@@ -3802,7 +3811,7 @@ public class Oson {
 		FIELD_NAMING format = getFieldNaming();
 
 		String repeated = getPrettyIndentationln(level), pretty = getPrettySpace();
-		String repeatedItem = getPrettyIndentationln(level+1);
+		String repeatedItem = getPrettyIndentationln(++level);
 
 		ANNOTATION_SUPPORT annotationSupport = getAnnotationSupport();
 		Annotation[] annotations = null;
@@ -5360,12 +5369,12 @@ public class Oson {
 			valueType = (Class<T>) source.getClass();
 		}
 
-		if (Iterable.class.isAssignableFrom(valueType) || Map.class.isAssignableFrom(valueType)) {
+		//if (Iterable.class.isAssignableFrom(valueType) || Map.class.isAssignableFrom(valueType)) {
 			return object2String(new FieldData(source, valueType, type, false), level, set);
 
-		} else {
-			return toJson(source, valueType, level, set);
-		}
+		//} else {
+		//	return toJson(source, valueType, level, set);
+		//}
 	}
 	public <T> String toJson(T source) {
 		if (source == null) {
@@ -5400,8 +5409,12 @@ public class Oson {
 		int level = 0;
 		Set set = new HashSet();
 		Class<T> valueType = (Class<T>) source.getClass();
-
-		return toJson(source, valueType, level, set);
+		
+		//if (Iterable.class.isAssignableFrom(valueType) || valueType.isArray() || Map.class.isAssignableFrom(valueType)) {
+			return object2String(new FieldData(source, valueType, false), level, set);
+		//} else {
+		//	return toJson(source, valueType, level, set);
+		//}
 	}
 
 	
