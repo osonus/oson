@@ -963,8 +963,8 @@ public class Oson {
 	private Gson gson = null;
 
 	private static Map<Class, Field[]> cachedFields = new ConcurrentHashMap<>();
-	private static Map<Class, Method[]> cachedSetters = new ConcurrentHashMap<>();
-	private static Map<Class, Method[]> cachedGetters = new ConcurrentHashMap<>();
+	private static Map<String, Method[]> cachedSetters = new ConcurrentHashMap<>();
+	private static Map<String, Method[]> cachedGetters = new ConcurrentHashMap<>();
 
 	////////////////////////////////////////////////////////////////////////////////
 	// END OF variables and class definition
@@ -1011,7 +1011,7 @@ public class Oson {
 	}
 
 	public Oson configure(Map<String, Object> map) {
-		Options options = this.fromMap(map, Options.class);
+		Options options = this.deserialize(map, Options.class);
 
 		return configure(options);
 	}
@@ -1040,16 +1040,18 @@ public class Oson {
 		
 		return this;
 	}
-	
-	public Oson asGson() {
-		return setJsonProcessor(JSON_PROCESSOR.GSON);
-	}
 
 	public Oson asJackson() {
 		return setJsonProcessor(JSON_PROCESSOR.JACKSON);
 	}
 	
+	public Oson asGson() {
+		return setJsonProcessor(JSON_PROCESSOR.GSON);
+	}
 	
+	public Oson asOson() {
+		return setJsonProcessor(JSON_PROCESSOR.OSON);
+	}
 	
 	private FIELD_NAMING getFieldNaming() {
 		return options.getFieldNaming();
@@ -3279,9 +3281,9 @@ public class Oson {
 			}
 			
 			if (obj == null) {
-				return (E) fromMap(mvalue, returnType);
+				return (E) deserialize(mvalue, returnType);
 			} else {
-				return (E) fromMap(mvalue, returnType, obj);
+				return (E) deserialize(mvalue, returnType, obj);
 			}
 		}
 	}
@@ -3556,7 +3558,9 @@ public class Oson {
 			String repeatedItem = getPrettyIndentationln(++level);
 			StringBuilder sbuilder = new StringBuilder();
 			for (int i = 0; i < size; i++) {
-				FieldData newFieldData = new FieldData(Array.get(value, i), componentType);
+				Object componentValue = Array.get(value, i);
+				
+				FieldData newFieldData = new FieldData(componentValue, componentType);
 				newFieldData.json2Java = objectDTO.json2Java;
 				String str = object2String(newFieldData, level, set);
 				if (str != null && str.length() > 0) {
@@ -3586,6 +3590,11 @@ public class Oson {
 
 		} else if (Map.class.isAssignableFrom(returnType)) {
 			if (value == null) {
+				return null;
+			}
+			
+			Class valueType = value.getClass();
+			if (!Map.class.isAssignableFrom(valueType)) {
 				return null;
 			}
 
@@ -3633,13 +3642,13 @@ public class Oson {
 			// return "\"" + escapeDoublequote(value.toString()) +
 			// "\"";//toJson(value); // null; //
 			Class valueType = value.getClass();
-			if (returnType == null) {
+			//if (returnType == null) {
 				returnType = valueType;
-			} else if (valueType != null && returnType.isAssignableFrom(valueType)) {
-				returnType = valueType;
-			}
+			//} else if (valueType != null && returnType.isAssignableFrom(valueType)) {
+			//	returnType = valueType;
+			//}
 
-			return toJson((E) value, returnType, level, set);
+			return serialize((E) value, returnType, level, set);
 		}
 	}
 	
@@ -3701,23 +3710,24 @@ public class Oson {
 		return getMethods(valueType, true);
 	}
 	private static <T> Method[] getMethods(Class<T> valueType, boolean isGetter) {
+		String fullName = valueType.getName();
 		
 		if (isGetter) {
-			if (cachedGetters.containsKey(valueType)) {
-				return cachedGetters.get(valueType);
+			if (cachedGetters.containsKey(fullName)) {
+				return cachedGetters.get(fullName);
 			}
 		} else {
-			if (cachedSetters.containsKey(valueType)) {
-				return cachedSetters.get(valueType);
+			if (cachedSetters.containsKey(fullName)) {
+				return cachedSetters.get(fullName);
 			}
 		}
 
 		Stream<Method> stream = Arrays.stream(valueType.getDeclaredMethods());
-		while (valueType != null && valueType != Object.class) {
-			stream = Stream.concat(stream, Arrays.stream(valueType
-					.getSuperclass().getDeclaredMethods()));
-			valueType = (Class<T>) valueType.getSuperclass();
-		}
+//		while (valueType != null && valueType != Object.class) {
+//			stream = Stream.concat(stream, Arrays.stream(valueType
+//					.getSuperclass().getDeclaredMethods()));
+//			valueType = (Class<T>) valueType.getSuperclass();
+//		}
 
 		List<Method> uniqueSetters = new ArrayList<>();
 		List<Method> uniqueGetters = new ArrayList<>();
@@ -3745,14 +3755,13 @@ public class Oson {
 			}
 		}
 
-		cachedSetters.put(valueType, uniqueSetters.toArray(new Method[uniqueSetters.size()]));
-		cachedSetters.put(valueType, uniqueGetters.toArray(new Method[uniqueGetters.size()]));
-		
+		cachedSetters.put(fullName, uniqueSetters.toArray(new Method[uniqueSetters.size()]));
+		cachedGetters.put(fullName, uniqueGetters.toArray(new Method[uniqueGetters.size()]));
 		
 		if (isGetter) {
-			return cachedGetters.get(valueType);
+			return cachedGetters.get(fullName);
 		} else {
-			return cachedSetters.get(valueType);
+			return cachedSetters.get(fullName);
 		}
 	}
 	
@@ -3773,11 +3782,12 @@ public class Oson {
 			return cachedFields.get(valueType);
 		}
 
-		Stream<Field> stream = Arrays.stream(valueType.getDeclaredFields());
-		while (valueType != null && valueType != Object.class) {
-			stream = Stream.concat(stream, Arrays.stream(valueType
+		Class<T> valueTypeAll = valueType;
+		Stream<Field> stream = Arrays.stream(valueTypeAll.getDeclaredFields());
+		while (valueTypeAll != null && valueTypeAll != Object.class) {
+			stream = Stream.concat(stream, Arrays.stream(valueTypeAll
 					.getSuperclass().getDeclaredFields()));
-			valueType = (Class<T>) valueType.getSuperclass();
+			valueTypeAll = (Class<T>) valueTypeAll.getSuperclass();
 		}
 
 		//(Field[]) stream.distinct().toArray(size -> new Field[size])
@@ -3802,10 +3812,11 @@ public class Oson {
 	 */
 	// private <T> String toJson(T source, Class<T> valueType, int level, Set
 	// set) {
-	private <T> String toJson(Object obj, Class<T> valueType, int level, Set set) {
+	private <T> String serialize(Object obj, Class<T> valueType, int level, Set set) {
 		if (obj == null) {
 			return "";
 		}
+		
 		StringBuffer sb = new StringBuffer();
 
 		int hash = ObjectUtil.hashCode(obj);
@@ -3887,7 +3898,7 @@ public class Oson {
 				String defaultValue = null;
 				boolean json2Java = false;
 				
-				Method getterMethod = gettersByNames.remove(name);
+				Method getterMethod = gettersByNames.remove(name.toLowerCase());
 
 				// in case the value is returned from the getter method only
 				if (getterMethod != null) {
@@ -3949,6 +3960,13 @@ public class Oson {
 						} else if (annotation instanceof org.codehaus.jackson.annotate.JsonIgnore) {
 							ignored = true;
 							break;
+							
+						} else if (annotation instanceof JsonIgnoreProperties) {
+							JsonIgnoreProperties jsonIgnoreProperties = (JsonIgnoreProperties) annotation;
+							if (!jsonIgnoreProperties.allowGetters()) {
+								ignored = true;
+								break;
+							}
 
 						} else if (ignoreField(annotation)) {
 							ignored = true;
@@ -4152,6 +4170,13 @@ public class Oson {
 						ignored = true;
 						break;
 
+					} else if (annotation instanceof JsonIgnoreProperties) {
+						JsonIgnoreProperties jsonIgnoreProperties = (JsonIgnoreProperties) annotation;
+						if (!jsonIgnoreProperties.allowGetters()) {
+							ignored = true;
+							break;
+						}
+						
 					} else if (ignoreField(annotation)) {
 						ignored = true;
 						break;
@@ -4455,7 +4480,7 @@ public class Oson {
 
 					return string2Object(fieldData);
 				} else {
-					return (T) fromMap(map, valueType);
+					return (T) deserialize(map, valueType);
 				}
 
 			} else {
@@ -4499,9 +4524,9 @@ public class Oson {
 
 				} else {
 					if (object == null) {
-						return fromMap(map, valueType);
+						return deserialize(map, valueType);
 					} else {
-						return fromMap(map, valueType, object);
+						return deserialize(map, valueType, object);
 					}
 				}
 
@@ -4544,14 +4569,14 @@ public class Oson {
     	return null;
     }
 
-	<T> T fromMap(Map<String, Object> map, Class<T> valueType) {
+	<T> T deserialize(Map<String, Object> map, Class<T> valueType) {
 		if (map == null) {
 			return null;
 		}
 
 		T obj = newInstance(map, valueType);
 
-		return fromMap(map, valueType, obj);
+		return deserialize(map, valueType, obj);
 	}
 
 	/*
@@ -4874,7 +4899,7 @@ public class Oson {
 	/*
 	 * string to object, deserialize, set method should be used
 	 */
-	<T> T fromMap(Map<String, Object> map, Class<T> valueType, T obj) {
+	<T> T deserialize(Map<String, Object> map, Class<T> valueType, T obj) {
 
 		Set<String> nameKeys = new HashSet(map.keySet());
 
@@ -4999,6 +5024,13 @@ public class Oson {
 						} else if (annotation instanceof org.codehaus.jackson.annotate.JsonIgnore) {
 							ignored = true;
 							break;
+							
+						} else if (annotation instanceof JsonIgnoreProperties) {
+							JsonIgnoreProperties jsonIgnoreProperties = (JsonIgnoreProperties) annotation;
+							if (!jsonIgnoreProperties.allowSetters()) {
+								ignored = true;
+								break;
+							}
 							
 						} else if (ignoreField(annotation)) {
 							ignored = true;
@@ -5247,7 +5279,7 @@ public class Oson {
 	/*
 	 * string to object, deserialize, set method should be used
 	 */
-	public <T> T fromJson(String source, T obj) {
+	public <T> T deserialize(String source, T obj) {
 		if (source == null || source.length() < 2 || obj == null) {
 			return null;
 		}
@@ -5278,7 +5310,7 @@ public class Oson {
 
 	}
 
-	public <T> T fromJson(String source, Class<T> valueType) {
+	public <T> T deserialize(String source, Class<T> valueType) {
 		JSON_PROCESSOR processor = getJsonProcessor();
 
 		if (processor == JSON_PROCESSOR.JACKSON) {
@@ -5307,7 +5339,7 @@ public class Oson {
 		return fromJsonMap(source, valueType);
 	}
 	
-	public <T> T fromJson(String source, Type type) {
+	public <T> T deserialize(String source, Type type) {
 		JSON_PROCESSOR processor = getJsonProcessor();
 
 		if (processor == JSON_PROCESSOR.JACKSON) {
@@ -5341,7 +5373,7 @@ public class Oson {
 		return fromJsonMap(source, type);
 	}
 
-	public <T> String toJson(T source, Type type) {
+	public <T> String serialize(T source, Type type) {
 		if (source == null) {
 			return "";
 		}
@@ -5389,7 +5421,7 @@ public class Oson {
 		//	return toJson(source, valueType, level, set);
 		//}
 	}
-	public <T> String toJson(T source) {
+	public <T> String serialize(T source) {
 		if (source == null) {
 			return "";
 		}
@@ -5431,35 +5463,35 @@ public class Oson {
 	}
 
 	
-	public <T> T deserialize(String source, T obj) {
-		return fromJson(source, obj);
+	public <T> T fromJson(String source, T obj) {
+		return deserialize(source, obj);
 	}
-	public <T> T deserialize(String source, Class<T> valueType) {
-		return fromJson(source, valueType);
+	public <T> T fromJson(String source, Class<T> valueType) {
+		return deserialize(source, valueType);
 	}
-	public <T> T deserialize(String source, Type type) {
-		return fromJson(source, type);
+	public <T> T fromJson(String source, Type type) {
+		return deserialize(source, type);
 	}
-	public <T> String serialize(T source, Type type) {
-		return toJson(source, type);
+	public <T> String toJson(T source, Type type) {
+		return serialize(source, type);
 	}
-	public <T> String serialize(T source) {
-		return toJson(source);
+	public <T> String toJson(T source) {
+		return serialize(source);
 	}
 	public <T> T readValue(String source, T obj) {
-		return fromJson(source, obj);
+		return deserialize(source, obj);
 	}
 	public <T> T readValue(String source, Class<T> valueType) {
-		return fromJson(source, valueType);
+		return deserialize(source, valueType);
 	}
 	public <T> T readValue(String source, Type type) {
-		return fromJson(source, type);
+		return deserialize(source, type);
 	}
 	public <T> String writeValueAsString(T source, Type type) {
-		return toJson(source, type);
+		return serialize(source, type);
 	}
 	public <T> String writeValueAsString(T source) {
-		return toJson(source);
+		return serialize(source);
 	}
 
 	/*
