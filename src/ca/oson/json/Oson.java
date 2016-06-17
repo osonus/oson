@@ -1318,6 +1318,12 @@ public class Oson {
 	private boolean ignoreModifiers(int modifiers) {
 		Set<MODIFIER> includeFieldsWithModifiers = getIncludeFieldsWithModifiers();
 		if (includeFieldsWithModifiers == null || includeFieldsWithModifiers.size() == 0) {
+			// by default, transient is ignored
+			// unless you specify otherwise, by using MODIFIER.Transient enum
+			if (Modifier.isTransient(modifiers)) {
+				return true;
+			}
+			
 			return false;
 		}
 		
