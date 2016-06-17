@@ -168,13 +168,14 @@ public class Oson {
 	}
 	
 	public static enum MODIFIER {
+		Public,
+		Protected,
+		Package, // Package Private, no modifier
+		Private,
 		Abstract,
 		Final,
 		Interface,
 		Native,
-		Private,
-		Protected,
-		Public,
 		Static,
 		Strict,
 		Synchronized,
@@ -827,6 +828,7 @@ public class Oson {
 		public E returnObj = null;
 		public Type erasedType = null;
 		public boolean json2Java = true;
+		public Method getter;
 
 		public EnumType enumType = null;
 		public boolean notNull = false;// not nullable
@@ -922,23 +924,25 @@ public class Oson {
 			}
 
 			if (enclosingObj != null) {
-				if (field != null) {
-					String name = field.getName();
+				if (getter == null) {
+					if (field != null) {
+						String name = field.getName();
 
-					String getterName = "get" + StringUtil.capitalize(name);
+						String getterName = "get" + StringUtil.capitalize(name);
+						try {
+							getter = enclosingObj.getClass().getMethod(getterName, null);
 
-					Method getterMethod = null;
-					try {
-						getterMethod = enclosingObj.getClass().getMethod(getterName,
-								null);
-
-						// in case the value is returned from the getter method only
-						if (getterMethod != null) {
-							getterMethod.setAccessible(true);
-							defaultValue = getterMethod.invoke(enclosingObj, null);
+						} catch (NoSuchMethodException | IllegalArgumentException e) {
+							// e.printStackTrace();
 						}
-
-					} catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException | IllegalArgumentException e) {
+					}
+				}
+				
+				if (getter != null) {
+					getter.setAccessible(true);
+					try {
+						defaultValue = getter.invoke(enclosingObj, null);
+					} catch (InvocationTargetException | IllegalAccessException | IllegalArgumentException e) {
 						// e.printStackTrace();
 					}
 				}
@@ -955,6 +959,8 @@ public class Oson {
 	private Gson gson = null;
 
 	private static Map<Class, Field[]> cachedFields = new ConcurrentHashMap<>();
+	private static Map<Class, Method[]> cachedSetters = new ConcurrentHashMap<>();
+	private static Map<Class, Method[]> cachedGetters = new ConcurrentHashMap<>();
 
 	////////////////////////////////////////////////////////////////////////////////
 	// END OF variables and class definition
@@ -1335,6 +1341,11 @@ public class Oson {
 				break;
 			case Public:
 				if (Modifier.isPublic(modifiers)) {
+					return false;
+				}
+				break;
+			case Package:
+				if (ObjectUtil.isPackage(modifiers)) {
 					return false;
 				}
 				break;
@@ -2997,7 +3008,6 @@ public class Oson {
 			returnObj.put(entry.getKey(), string2Object(newFieldData));
 		}
 		
-		
 		return returnObj;
 	}
 
@@ -3010,42 +3020,6 @@ public class Oson {
 		Collection<E> defaultValue = (Collection<E>)objectDTO.defaultValue;
 		Type erasedType = objectDTO.erasedType;
 
-		if (value == null || value.toString().length() == 0) {
-			if (notNull) {
-				if (returnObj != null) {
-					return returnObj;
-				}
-
-				if (defaultValue != null) {
-					return defaultValue;
-				}
-
-				if (returnType == null) {
-					if (erasedType != null) {
-						returnType = ObjectUtil.getTypeClass(erasedType);
-					}
-
-					if (returnType == null && returnObj != null) {
-						returnType = (Class<Collection<E>>) returnObj.getClass();
-					}
-
-					if (returnType == null) {
-						returnType = (Class<Collection<E>>) DefaultValue.collection.getClass();
-					}
-				}
-
-				returnObj = newInstance(new HashMap(), returnType);
-
-				if (returnObj != null) {
-					return returnObj;
-				}
-
-				return DefaultValue.collection;
-			}
-
-			return null;
-		}
-
 		if (returnType == null) {
 			if (erasedType != null) {
 				returnType = ObjectUtil.getTypeClass(erasedType);
@@ -3054,96 +3028,86 @@ public class Oson {
 			if (returnType == null && returnObj != null) {
 				returnType = (Class<Collection<E>>) returnObj.getClass();
 			}
-		}
 
-		if (returnObj == null) {
+			if (returnType == null) {
+				returnType = (Class<Collection<E>>) DefaultValue.collection.getClass();
+			}
+		}
+		
+		if (value != null && value.toString().length() > 0) {	
+			Collection<E> values = (Collection<E>) value;
+	
+			if (values.size() > 0) {
+				if (returnObj == null) {
+					if (defaultValue != null) {
+						returnObj = defaultValue;
+					}
+		
+					if (returnObj == null) {
+						returnObj = newInstance(new HashMap(), returnType);
+					}
+		
+					if (returnObj == null) {
+						returnObj = DefaultValue.collection;
+					}
+				}
+				
+				Class<E> componentType = null;
+				if (objectDTO.erasedType != null) {
+					componentType = ObjectUtil.getTypeComponentClass(objectDTO.erasedType);
+				}
+		
+				if (componentType == null) {
+					if (returnType == null && returnObj != null) {
+						returnType = (Class<Collection<E>>) returnObj.getClass();
+					}
+		
+					componentType = CollectionArrayTypeGuesser.guessElementType(values, returnType,  getJsonClassType());
+				}
+		
+				for (E val : values) {
+					FieldData newFieldData = new FieldData(val, componentType);
+					newFieldData.json2Java = objectDTO.json2Java;
+					returnObj.add(string2Object(newFieldData));
+				}
+				
+				return returnObj;
+			}
+		}
+		
+		
+		if (notNull) {
+			if (returnObj != null) {
+				return returnObj;
+			}
+
 			if (defaultValue != null) {
-				returnObj = defaultValue;
+				return defaultValue;
 			}
 
-			if (returnObj == null) {
-				returnObj = newInstance(new HashMap(), returnType);
+			returnObj = newInstance(new HashMap(), returnType);
+
+			if (returnObj != null) {
+				return returnObj;
 			}
 
-			if (returnObj == null) {
-				returnObj = DefaultValue.collection;
-			}
-		}
-
-		Collection<E> values = (Collection<E>) value;
-
-		if (values.size() == 0) {
-			return returnObj;
-		}
-
-		Class<E> componentType = null;
-		if (objectDTO.erasedType != null) {
-			componentType = ObjectUtil.getTypeComponentClass(objectDTO.erasedType);
-		}
-
-		if (componentType == null) {
-			if (returnType == null && returnObj != null) {
-				returnType = (Class<Collection<E>>) returnObj.getClass();
-			}
-
-			componentType = CollectionArrayTypeGuesser.guessElementType(values, returnType,  getJsonClassType());
-		}
-
-		for (E val : values) {
-			FieldData newFieldData = new FieldData(val, componentType);
-			newFieldData.json2Java = objectDTO.json2Java;
-			returnObj.add(string2Object(newFieldData));
+			return DefaultValue.collection;
 		}
 
 		return returnObj;
 	}
 
 
+	/*
+	 * deserialize only
+	 */
 	private <E> E[] getArray(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		E[] returnObj = (E[])objectDTO.returnObj;
 		Class<E[]> returnType = objectDTO.returnType;
 		boolean notNull = objectDTO.notNull;
-		E[] defaultValue = (E[])objectDTO.defaultValue;
+		
 		Type erasedType = objectDTO.erasedType;
-		
-		
-		if (value == null || value.toString().length() == 0) {
-			if (notNull) {
-				if (returnObj != null) {
-					return returnObj;
-				}
-
-				if (defaultValue != null) {
-					return defaultValue;
-				}
-
-				if (returnType == null) {
-					if (erasedType != null) {
-						returnType = ObjectUtil.getTypeClass(erasedType);
-					}
-
-					if (returnType == null && returnObj != null) {
-						returnType = (Class<E[]>) returnObj.getClass();
-					}
-
-					if (returnType == null) {
-						returnType = (Class<E[]>) DefaultValue.array.getClass();
-					}
-				}
-
-				returnObj = (E[]) newInstance(new HashMap(), returnType);
-
-				if (returnObj != null) {
-					return returnObj;
-				}
-
-				return (E[]) DefaultValue.array;
-			}
-
-			return null;
-		}
-		
 		
 		if (returnType == null) {
 			if (erasedType != null) {
@@ -3158,77 +3122,66 @@ public class Oson {
 				returnType = (Class<E[]>) DefaultValue.array.getClass();
 			}
 		}
-
-
 		
-		E[] arr = null;
-		if (Collection.class.isAssignableFrom(returnType)) {
-			Collection<E> values = (Collection<E>) value;
-
-			int size = values.size();
-
-			if (size == 0) {
-				return (E[]) new Object[0];
-			}
-
-			Class<E> componentType = null;
-			if (objectDTO.erasedType != null) {
-				componentType = ObjectUtil.getTypeComponentClass(objectDTO.erasedType);
-			}
-
-			if (componentType == null) {
-				if (returnType == null && returnObj != null) {
-					returnType = (Class<E[]>) returnObj.getClass();
-				}
-
-				componentType = CollectionArrayTypeGuesser.guessElementType(values, (Class<Collection<E>>) values.getClass(),  getJsonClassType());
-			}
-
-			arr = (E[]) Array.newInstance(componentType, size);
-			int i = 0;
-			for (Object val: values) {
-				FieldData newFieldData = new FieldData(val, componentType);
-				newFieldData.json2Java = objectDTO.json2Java;
-				arr[i++] = string2Object(newFieldData);
-			}
-
-
-		} else if (returnType.isArray()) {
-
-			E[] values = (E[]) value;
-
-			int size = values.length;
-
-			if (size == 0) {
-				return values;
-			}
-
-			Class<E> componentType = null;
-			if (objectDTO.erasedType != null) {
-				componentType = ObjectUtil.getTypeComponentClass(objectDTO.erasedType);
-			}
-
-			if (componentType == null) {
-				if (returnType == null && returnObj != null) {
-					returnType = (Class<E[]>) returnObj.getClass();
-				}
-
-				componentType = CollectionArrayTypeGuesser.guessElementType(values, returnType);
+		
+		if (value != null && value.toString().length() > 0) {
+			Collection<E> values = null;
+			Class<?> valueType = value.getClass();
+			if (Collection.class.isAssignableFrom(valueType)) {
+				values = (Collection<E>) value;
+			} else if (valueType.isArray()) {
+				values = Arrays.asList((E[]) value);
 			}
 			
-			// Class<?> componentType = returnType.getComponentType();
-
-			arr = (E[]) Array.newInstance(componentType, size);
-
-			for (int i = 0; i < size; i++) {
-				FieldData newFieldData = new FieldData(values[i], componentType);
-				newFieldData.json2Java = objectDTO.json2Java;
-				arr[i] = string2Object(newFieldData);
+			Class<E> componentType = (Class<E>) returnType.getComponentType();
+			
+			if (objectDTO.erasedType != null) {
+				componentType = ObjectUtil.getTypeComponentClass(objectDTO.erasedType);
+			}
+			
+			if (values != null) {
+				if (componentType == null) {
+					componentType = CollectionArrayTypeGuesser.guessElementType(values, (Class<Collection<E>>)values.getClass(),  getJsonClassType());
+				}
+				
+				if (componentType == null) componentType = (Class<E>) Object.class;
+				
+				if (values.size() > 0) {
+					E[] arr = (E[]) Array.newInstance(componentType, values.size());
+	
+					int i = 0;
+					for (Object val: values) {
+						FieldData newFieldData = new FieldData(val, componentType);
+						newFieldData.json2Java = objectDTO.json2Java;
+						arr[i++] = string2Object(newFieldData);
+					}
+					
+					return arr;
+				}
 			}
 		}
 
 
-		return arr;
+		if (notNull) {
+			if (returnObj != null) {
+				return returnObj;
+			}
+
+			E[] defaultValue = (E[])objectDTO.defaultValue;
+			if (defaultValue != null) {
+				return defaultValue;
+			}
+
+			returnObj = (E[]) newInstance(new HashMap(), returnType);
+
+			if (returnObj != null) {
+				return returnObj;
+			}
+
+			return (E[]) DefaultValue.array;
+		}
+
+		return returnObj;
 	}
 
 	/*
@@ -3293,10 +3246,15 @@ public class Oson {
 
 		} else {
 			E obj = (E)objectDTO.returnObj;
+			Map<String, Object> mvalue = null;
+			if (value != null && Map.class.isAssignableFrom(value.getClass())) {
+				mvalue = (Map<String, Object>)value;
+			}
+			
 			if (obj == null) {
-				return (E) fromMap((Map<String, Object>)value, returnType);
+				return (E) fromMap(mvalue, returnType);
 			} else {
-				return (E) fromMap((Map<String, Object>)value, returnType, obj);
+				return (E) fromMap(mvalue, returnType, obj);
 			}
 		}
 	}
@@ -3662,9 +3620,121 @@ public class Oson {
 			return toJson((E) value, returnType, level + 1, set); //level + 1
 		}
 	}
+	
+	
+	private static <T> Method getSetterByName(String name, T obj) {
+		Class<T> valueType = (Class<T>) obj.getClass();
 
+		return getSetterByName(name, valueType);
+	}
 
+	private static <T> Method getSetterByName(String name, Class<T> valueType) {
+		Method[] sets = getSetters(valueType);
 
+		name = "set" + name.toLowerCase();
+		
+		for (Method method: sets) {
+			if (name.equals(method.getName().toLowerCase())) {
+				return method;
+			}
+		}
+
+		return null;
+	}
+	
+	private static <T> Method getGetterByName(String name, T obj) {
+		Class<T> valueType = (Class<T>) obj.getClass();
+
+		return getGetterByName(name, valueType);
+	}
+
+	private static <T> Method getGetterByName(String name, Class<T> valueType) {
+		Method[] gets = getGetters(valueType);
+
+		name = "get" + name.toLowerCase();
+		
+		for (Method method: gets) {
+			if (name.equals(method.getName().toLowerCase())) {
+				return method;
+			}
+		}
+
+		return null;
+	}
+	
+	private static <T> Method[] getSetters(T obj) {
+		Class<T> valueType = (Class<T>) obj.getClass();
+
+		return getSetters(valueType);
+	}
+	private static <T> Method[] getSetters(Class<T> valueType) {
+		return getMethods(valueType, false);
+	}
+	private static <T> Method[] getGetters(T obj) {
+		Class<T> valueType = (Class<T>) obj.getClass();
+
+		return getGetters(valueType);
+	}
+	private static <T> Method[] getGetters(Class<T> valueType) {
+		return getMethods(valueType, true);
+	}
+	private static <T> Method[] getMethods(Class<T> valueType, boolean isGetter) {
+		
+		if (isGetter) {
+			if (cachedGetters.containsKey(valueType)) {
+				return cachedGetters.get(valueType);
+			}
+		} else {
+			if (cachedSetters.containsKey(valueType)) {
+				return cachedSetters.get(valueType);
+			}
+		}
+
+		Stream<Method> stream = Arrays.stream(valueType.getDeclaredMethods());
+		while (valueType != null && valueType != Object.class) {
+			stream = Stream.concat(stream, Arrays.stream(valueType
+					.getSuperclass().getDeclaredMethods()));
+			valueType = (Class<T>) valueType.getSuperclass();
+		}
+
+		List<Method> uniqueSetters = new ArrayList<>();
+		List<Method> uniqueGetters = new ArrayList<>();
+		Set<String> sets = new HashSet<>();
+		Set<String> gets = new HashSet<>();
+		
+		String name;
+		for (Method method: stream.collect(Collectors.toList())) {
+			name = method.getName();
+			
+			if (name.startsWith("set")) {
+				if (name.length() > 3) {
+					if (method.getParameterCount() == 1 && !sets.contains(name)) {
+						sets.add(name);
+						uniqueSetters.add(method);
+					}
+				}
+			} else if (name.startsWith("get")) {
+				if (name.length() > 3) {
+					if (method.getParameterCount() == 0 && !gets.contains(name)) {
+						gets.add(name);
+						uniqueGetters.add(method);
+					}
+				}
+			}
+		}
+
+		cachedSetters.put(valueType, uniqueSetters.toArray(new Method[uniqueSetters.size()]));
+		cachedSetters.put(valueType, uniqueGetters.toArray(new Method[uniqueGetters.size()]));
+		
+		
+		if (isGetter) {
+			return cachedGetters.get(valueType);
+		} else {
+			return cachedSetters.get(valueType);
+		}
+	}
+	
+	
 	private static <T> Field[] getFields(T obj) {
 		Class<T> valueType = (Class<T>) obj.getClass();
 		// try {
@@ -3711,6 +3781,9 @@ public class Oson {
 	// private <T> String toJson(T source, Class<T> valueType, int level, Set
 	// set) {
 	private <T> String toJson(Object obj, Class<T> valueType, int level, Set set) {
+		if (obj == null) {
+			return "";
+		}
 		StringBuffer sb = new StringBuffer();
 
 		int hash = ObjectUtil.hashCode(obj);
@@ -3749,11 +3822,22 @@ public class Oson {
 				}
 			}
 		}
+		
+		Set<String> processedNameSet = new HashSet<>();
 
 		try {
 			DEFAULT_VALUE defaultVal = getDefaultValue();
 			//boolean nonNUll = (defaultVal == DEFAULT_VALUE.NON_NULL);
 			//boolean nonNUllEmpty = (defaultVal == DEFAULT_VALUE.NON_NULL_EMPTY);
+			
+			// get all getters, keep by field names
+			Map<String, Method> gettersByNames = new HashMap<>();
+			Method[] methods = getGetters(obj);
+			if (methods != null) {
+				for (Method getter: methods) {
+					gettersByNames.put(getter.getName().substring(3).toLowerCase(), getter);
+				}
+			}
 
 
 			Field[] fields = getFields(obj);
@@ -3762,6 +3846,7 @@ public class Oson {
 				f.setAccessible(true);
 
 				String name = f.getName();
+				String fieldName = name;
 
 				// in the ignored list
 				if (ObjectUtil.inArray(name, names)) {
@@ -3779,29 +3864,26 @@ public class Oson {
 				Integer max = null;
 				String defaultValue = null;
 				boolean json2Java = false;
+				
+				Method getterMethod = gettersByNames.remove(name);
 
-				String getterName = "get" + StringUtil.capitalize(name);
-
-				Method getterMethod = null;
-				try {
-					getterMethod = obj.getClass().getMethod(getterName,
-							null);
-
-					// in case the value is returned from the getter method only
-					if (getterMethod != null) {
-						getterMethod.setAccessible(true);
+				// in case the value is returned from the getter method only
+				if (getterMethod != null) {
+					getterMethod.setAccessible(true);
+					try {
 						Object mvalue = getterMethod.invoke(obj, null);
-
+	
 						if (mvalue != null) {
 							if (value == null || value.toString().length() == 0) {
 								value = mvalue;
 							}
 						}
+						
+					} catch (InvocationTargetException e) {
+						// e.printStackTrace();
 					}
-
-				} catch (NoSuchMethodException | InvocationTargetException e) {
-					// e.printStackTrace();
 				}
+
 
 				if (ignoreModifiers(f.getModifiers())) {
 					if (getterMethod != null) {
@@ -3834,7 +3916,11 @@ public class Oson {
 
 
 					for (Annotation annotation : annotations) {
-						if (annotation instanceof JsonIgnore || ObjectUtil.isinstanceof(annotation, JsonIgnore.class)) {
+						if (annotation instanceof JsonAnyGetter) {
+							ignored = true;
+							break; // handle in next section, in case there are multiple @JsonAnyGetter methods
+							
+						} else if (annotation instanceof JsonIgnore || ObjectUtil.isinstanceof(annotation, JsonIgnore.class)) {
 							ignored = true;
 							break;
 
@@ -3930,15 +4016,29 @@ public class Oson {
 				}
 
 				// might be renamed by strategy
+				// here naming strategy configuration takes precedence
 				String jname = java2Json(name);
 
 				if (jname == null) {
 					continue;
-				} else {
+				} else if (!jname.equals(name)) {
 					name = jname;
+				} else if (!name.equals(fieldName)) {
+					jname = java2Json(fieldName);
+					
+					if (jname == null) {
+						continue;
+					} else if (!jname.equals(fieldName)) {
+						name = jname;
+					}
 				}
 
-				name = StringUtil.formatName(name, format);
+				// only if the name is still the same as the field name
+				// format it based on the naming settings
+				// otherwise, it is set on purpose
+				if (fieldName.equals(name)) {
+					name = StringUtil.formatName(name, format);
+				}
 
 				String str;
 				//if (value == null && (defaultVal == DEFAULT_VALUE.ALWAYS)) {
@@ -3965,6 +4065,216 @@ public class Oson {
 				//}
 
 				sb.append(repeatedItem);
+				
+				processedNameSet.add(name);
+
+				sb.append("\"" + name + "\":" + pretty);
+				sb.append(str);
+				sb.append(",");
+			}
+			
+
+			// some get methods might not be processed by using field names only
+			for (Entry<String, Method> entry: gettersByNames.entrySet()) {
+				String methodName = entry.getKey();
+				Method method = entry.getValue();
+				
+				if (ignoreModifiers(method.getModifiers())) {
+					continue;
+				}
+				
+				String name = StringUtil.uncapitalize(methodName.substring(3));
+				
+				// in the ignored list
+				if (ObjectUtil.inArray(name, names)) {
+					continue;
+				}
+				
+				if (processedNameSet.contains(name)) {
+					continue;
+				}
+				
+				// just use field name, even it might not be a field
+				String fieldName = name;
+				
+				method.setAccessible(true);
+				
+				Object value = null;
+
+				try {
+					value = method.invoke(obj, null);
+				} catch (InvocationTargetException e) {
+					// e.printStackTrace();
+				}
+				
+				boolean ignored = false;
+				EnumType enumType = null;
+				boolean notNull = false;
+				Integer length = null;
+				Integer scale = null;
+				Integer min = null;
+				Integer max = null;
+				String defaultValue = null;
+				boolean json2Java = false;
+				
+				
+				for (Annotation annotation: method.getDeclaredAnnotations()) {
+					if (annotation instanceof JsonAnyGetter) {
+						ignored = true;
+						break; // handle in next section, in case there are multiple @JsonAnyGetter methods
+					} else if (annotation instanceof JsonIgnore || ObjectUtil.isinstanceof(annotation, JsonIgnore.class)) {
+						ignored = true;
+						break;
+
+					} else if (annotation instanceof org.codehaus.jackson.annotate.JsonIgnore) {
+						ignored = true;
+						break;
+
+					} else if (ignoreField(annotation)) {
+						ignored = true;
+						break;
+						
+					} else if (annotation instanceof Enumerated) {
+						enumType = ((Enumerated) annotation).value();
+
+					} else if (annotation instanceof NotNull) {
+						notNull = true;
+
+					} else if (annotation instanceof JsonProperty) {
+						JsonProperty jsonProperty = (JsonProperty) annotation;
+						switch (annotationSupport) {
+						case FULL:
+
+						case NAME:
+							String dvalue = jsonProperty.value();
+							if (dvalue != null && dvalue.length() > 0) {
+								name = dvalue;
+							}
+
+						case BASIC:
+							Access access = jsonProperty.access();
+							if (access == Access.WRITE_ONLY) {
+								ignored = true;
+								break;
+							}
+
+							boolean required = jsonProperty.required();
+							if (required) {
+								notNull = true;
+							}
+
+							defaultValue = jsonProperty.defaultValue();
+
+						case NONE:
+						}
+
+					} else if (annotation instanceof Size
+							&& annotationSupport == ANNOTATION_SUPPORT.FULL) {
+						Size size = (Size) annotation;
+						min = size.min();
+						max = size.max();
+
+					} else if (annotation instanceof Column) {
+						Column column = (Column) annotation;
+
+						switch (annotationSupport) {
+						case FULL:
+							length = column.length();
+							scale = column.scale();
+
+						case NAME:
+							// String dvalue = column.name(); // may not be
+							// used
+							// if (dvalue != null && dvalue.length() > 0) {
+							// name = dvalue;
+							// }
+
+						case BASIC:
+							boolean nullable = column.nullable();
+							if (!nullable) {
+								notNull = true;
+							}
+
+						case NONE:
+						}
+
+						// String dvalue = ().name();
+
+						// nullable
+
+					} else if (annotationSupport == ANNOTATION_SUPPORT.NAME || annotationSupport == ANNOTATION_SUPPORT.FULL) {
+						String dvalue = ObjectUtil.getName(annotation);
+						if (dvalue != null && dvalue.length() > 0) {
+							name = dvalue;
+						}
+					}
+					
+				}
+				
+				if (ignored) {
+					continue;
+				}
+
+				if (processedNameSet.contains(name)) {
+					continue;
+				}
+				
+				// might be renamed by strategy
+				// here naming strategy configuration takes precedence
+				String jname = java2Json(name);
+
+				if (jname == null) {
+					continue;
+				} else if (!jname.equals(name)) {
+					name = jname;
+				} else if (!name.equals(fieldName)) {
+					jname = java2Json(fieldName);
+					
+					if (jname == null) {
+						continue;
+					} else if (!jname.equals(fieldName)) {
+						name = jname;
+					}
+				}
+				
+				if (processedNameSet.contains(name)) {
+					continue;
+				}
+				
+				
+				// only if the name is still the same as the field name
+				// format it based on the naming settings
+				// otherwise, it is set on purpose
+				if (fieldName.equals(name)) {
+					name = StringUtil.formatName(name, format);
+				}
+
+				String str;
+				//if (value == null && (defaultVal == DEFAULT_VALUE.ALWAYS)) {
+				//	str = "null";
+
+				//} else {
+					Class<?> returnType = method.getReturnType();
+					FieldData objectDTO = new FieldData(obj, null, name, value,
+							returnType, enumType, notNull, length,
+							scale, min, max, defaultValue, json2Java);
+					objectDTO.getter = method;
+					str = object2String(objectDTO, level, set);
+
+					if (str == null) {
+						if (defaultVal == DEFAULT_VALUE.NON_NULL || defaultVal == DEFAULT_VALUE.NON_NULL_EMPTY) {
+							continue;
+						} else {
+							str = "null";
+						}
+
+					} else if (str.length() == 0 || str.equals("\"\"") || str.equals("''") || str.equals("[]") || str.equals("{}")) {
+						if (defaultVal == DEFAULT_VALUE.NON_NULL_EMPTY)
+							continue;
+					}
+				//}
+
+				sb.append(repeatedItem);
 
 				sb.append("\"" + name + "\":" + pretty);
 				sb.append(str);
@@ -3973,52 +4283,54 @@ public class Oson {
 
 
 			// handle @JsonAnyGetter
-			for (Method method: valueType.getMethods()) {
-				for (Annotation annotation: method.getAnnotations()) {
-					if (annotation instanceof JsonAnyGetter) {
-
-						if (ignoreModifiers(method.getModifiers())) {
-							continue;
-						}
-						
-						try {
-							Object allValues = method.invoke(obj, null);
-
-							if (allValues != null && allValues instanceof Map) {
-								Map<String, Object> map = (Map)allValues;
-								String str;
-								for (String name: map.keySet()) {
-									Object value = map.get(name);
-									
-									FieldData newFieldData = new FieldData(value, value.getClass());
-									newFieldData.json2Java = false;
-									str = object2String(newFieldData, level, set);
-
-									if (str == null) {
-										if (defaultVal == DEFAULT_VALUE.NON_NULL || defaultVal == DEFAULT_VALUE.NON_NULL_EMPTY) {
-											continue;
-										} else {
-											str = "null";
-										}
-
-									} else if (defaultVal == DEFAULT_VALUE.NON_NULL_EMPTY && StringUtil.isEmpty(str)) {
-										continue;
-									}
-
-									sb.append(repeatedItem);
-
-									sb.append("\"" + name + "\":" + pretty);
-									sb.append(str);
-									sb.append(",");
-								}
-
+			if (annotationSupport != ANNOTATION_SUPPORT.NONE) {
+				for (Method method: valueType.getMethods()) {
+					for (Annotation annotation: method.getAnnotations()) {
+						if (annotation instanceof JsonAnyGetter) {
+	
+							if (ignoreModifiers(method.getModifiers())) {
+								continue;
 							}
-						} catch (InvocationTargetException e) {
-							// TODO Auto-generated catch block
-							//e.printStackTrace();
+							
+							try {
+								Object allValues = method.invoke(obj, null);
+	
+								if (allValues != null && allValues instanceof Map) {
+									Map<String, Object> map = (Map)allValues;
+									String str;
+									for (String name: map.keySet()) {
+										Object value = map.get(name);
+										
+										FieldData newFieldData = new FieldData(value, value.getClass());
+										newFieldData.json2Java = false;
+										str = object2String(newFieldData, level, set);
+	
+										if (str == null) {
+											if (defaultVal == DEFAULT_VALUE.NON_NULL || defaultVal == DEFAULT_VALUE.NON_NULL_EMPTY) {
+												continue;
+											} else {
+												str = "null";
+											}
+	
+										} else if (defaultVal == DEFAULT_VALUE.NON_NULL_EMPTY && StringUtil.isEmpty(str)) {
+											continue;
+										}
+	
+										sb.append(repeatedItem);
+	
+										sb.append("\"" + name + "\":" + pretty);
+										sb.append(str);
+										sb.append(",");
+									}
+	
+								}
+							} catch (InvocationTargetException e) {
+								// TODO Auto-generated catch block
+								//e.printStackTrace();
+							}
+	
+							break;
 						}
-
-						break;
 					}
 				}
 			}
@@ -4581,6 +4893,7 @@ public class Oson {
 				f.setAccessible(true);
 
 				String name = f.getName();
+				String fieldName = name;
 
 				if (ObjectUtil.inArray(name, names)) {
 					nameKeys.remove(name);
@@ -4682,7 +4995,9 @@ public class Oson {
 
 							case NAME:
 								String dvalue = jsonProperty.value();
-								if (dvalue != null && dvalue.length() > 0) {
+								Object jvalue = getMapValue(map, dvalue, nameKeys);
+								if (jvalue != null) {
+									value = jvalue;
 									name = dvalue;
 								}
 
@@ -4744,8 +5059,11 @@ public class Oson {
 
 							if (!name.equals(dvalue)) {
 								if (value == null) {
-									value = getMapValue(map, dvalue, nameKeys);
-									name = dvalue;
+									Object jvalue = getMapValue(map, dvalue, nameKeys);
+									if (jvalue != null) {
+										value = jvalue;
+										name = dvalue;
+									}
 								}
 							}
 
@@ -4759,14 +5077,34 @@ public class Oson {
 				}
 
 				//if (value == null) {
+				// remapped to other name
 					String jname = json2Java(name);
 					if (jname == null) { // ignored
 						continue;
 					}
-
-					if (!name.equals(jname)) {
-						value = getMapValue(map, jname, nameKeys);
-						name = jname;
+					
+					if (jname.equals(name)) {
+						if (!fieldName.equals(name)) {
+							String jfieldName = json2Java(fieldName);
+							if (jfieldName == null) { // ignored
+								continue;
+								
+							} else if (!fieldName.equals(jfieldName)) {
+								// this is the new name now
+								Object jvalue = getMapValue(map, jfieldName, nameKeys);
+								if (jvalue != null) {
+									value = jvalue;
+									name = jfieldName;
+								}
+							}
+						}
+						
+					} else {
+						Object jvalue = getMapValue(map, jname, nameKeys);
+						if (jvalue != null) {
+							value = jvalue;
+							name = jname;
+						}
 					}
 				//}
 
@@ -4797,7 +5135,7 @@ public class Oson {
 							if (setterMethod != null) {
 								try {
 									setterMethod.invoke(obj, value);
-								} catch (InvocationTargetException e) {
+								} catch (InvocationTargetException | IllegalArgumentException e) {
 									// e.printStackTrace();
 									Object value2 = f.get(obj);
 									if (value2 != null
@@ -4946,7 +5284,7 @@ public class Oson {
 
 		return fromJsonMap(source, valueType);
 	}
-
+	
 	public <T> T fromJson(String source, Type type) {
 		JSON_PROCESSOR processor = getJsonProcessor();
 
@@ -5066,8 +5404,37 @@ public class Oson {
 		return toJson(source, valueType, level, set);
 	}
 
-
-
+	
+	public <T> T deserialize(String source, T obj) {
+		return fromJson(source, obj);
+	}
+	public <T> T deserialize(String source, Class<T> valueType) {
+		return fromJson(source, valueType);
+	}
+	public <T> T deserialize(String source, Type type) {
+		return fromJson(source, type);
+	}
+	public <T> String serialize(T source, Type type) {
+		return toJson(source, type);
+	}
+	public <T> String serialize(T source) {
+		return toJson(source);
+	}
+	public <T> T readValue(String source, T obj) {
+		return fromJson(source, obj);
+	}
+	public <T> T readValue(String source, Class<T> valueType) {
+		return fromJson(source, valueType);
+	}
+	public <T> T readValue(String source, Type type) {
+		return fromJson(source, type);
+	}
+	public <T> String writeValueAsString(T source, Type type) {
+		return toJson(source, type);
+	}
+	public <T> String writeValueAsString(T source) {
+		return toJson(source);
+	}
 
 	/*
 	 * Helper classes
@@ -5397,6 +5764,19 @@ public class Oson {
 	}
 
 	public static class ObjectUtil {
+		public static boolean isPackage(int modifiers) {
+			if (modifiers == 0) {
+				return true;
+			}
+			
+			if (Modifier.isPrivate(modifiers) || Modifier.isProtected(modifiers)
+					|| Modifier.isPublic(modifiers)) {
+				return false;
+			}
+
+			return true;
+		}
+		
 		public static void addAnnotationToMethod(String className,
 				String methodName, String annotationFullName) throws Exception {
 			addAnnotationToMethod(className,
