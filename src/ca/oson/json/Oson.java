@@ -1104,21 +1104,21 @@ public class Oson {
 	}
 
 	private String getPrettySpace() {
-		if (getPrettyPrinting()) {
+		if (getPrettyPrinting() && getIndentation() > 0) {
 			return String.valueOf(SPACE);
 		}
 
 		return "";
 	}
 	private String getPrettyIndentation(int level) {
-		if (options.getPrettyPrinting()) {
+		if (options.getPrettyPrinting() && getIndentation() > 0) {
 			return StringUtil.repeatSpace(level * getIndentation());
 		}
 
 		return "";
 	}
 	private String getPrettyIndentationln(int level) {
-		if (options.getPrettyPrinting()) {
+		if (options.getPrettyPrinting() && getIndentation() > 0) {
 			return "\n" + StringUtil.repeatSpace(level * getIndentation());
 		}
 
@@ -1143,7 +1143,7 @@ public class Oson {
 	}
 
 	public Oson setIndentation(int indentation) {
-		if (indentation != getIndentation() && indentation > 0) {
+		if (indentation != getIndentation() && indentation >= 0) {
 			options.setIndentation(indentation);
 			reset();
 		}
@@ -1481,7 +1481,7 @@ public class Oson {
 				break;
 			}
 
-			if (getPrettyPrinting()) {
+			if (getPrettyPrinting() && getIndentation() > 0) {
 				mapper.enable(SerializationFeature.INDENT_OUTPUT);
 				mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
 			}
@@ -2006,7 +2006,7 @@ public class Oson {
 			}
 
 
-			if (getPrettyPrinting()) {
+			if (getPrettyPrinting() && getIndentation() > 0) {
 				gsonBuilder.setPrettyPrinting();
 			}
 
@@ -2897,11 +2897,18 @@ public class Oson {
 					}
 				}
 				
+				return valueToReturn;
+				
 			} catch (Exception err) {
 				if (function != null && !json2Java) {
 					try {
 						return function.apply(str);
 					} catch (Exception e) {}
+				}
+				if (str.matches("\\d*")) {
+					try {
+						return new Date(Long.parseLong(value.toString()));
+					} catch (NumberFormatException e) {}
 				}
 			}
 		}
