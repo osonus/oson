@@ -74,6 +74,8 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnoreType;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
@@ -96,7 +98,10 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.FieldNamingStrategy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.InstanceCreator;
+import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.google.gson.annotations.Since;
 
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -156,7 +161,7 @@ public class Oson {
 	};
 
 	public static enum DEFAULT_VALUE {
-		ALWAYS, NON_NULL, NON_NULL_EMPTY, DEFAULT
+		ALWAYS, NON_NULL, NON_NULL_EMPTY, NON_DEFAULT, DEFAULT
 	}
 
 	public static enum ANNOTATION_SUPPORT {
@@ -220,7 +225,7 @@ public class Oson {
 		}
 	}
 
-	// make sure options have non null values
+	// make sure options have valid values
 	public static class Options {
 		private String simpleDateFormat = "yyyy-MM-dd'T'HH:mm:ss.SS'Z'";
 		private DateFormat dateFormat = new SimpleDateFormat(simpleDateFormat);
@@ -234,11 +239,12 @@ public class Oson {
 		private Boolean includeClassTypeInJson = false;
 		private Boolean printErrorUseOsonInFailure = true;
 		private String jsonClassType = "@class";
-		private Set<FieldStrategy> fieldStrategies = null;
+		private Double ignoreVersionsAfter;
+		private Set<Mapper> mappers = null;
 		private Set<Class> ignoreFieldsWithAnnotations = null;
 		private Set<Class> ignoreClassWithAnnotations = null;
 		private Set<MODIFIER> includeFieldsWithModifiers = null;
-		
+		private Map<Class, InstanceCreator> typeAdapters = null;
 		
 
 		private Set<Class> getIgnoreClassWithAnnotations() {
@@ -301,7 +307,7 @@ public class Oson {
 			this.includeFieldsWithModifiers = new HashSet<MODIFIER>(Arrays.asList(includeFieldsWithModifiers));
 		}
 		
-		public void includeFieldsWithModifier(
+		public void includeFieldsWithModifiers(
 				MODIFIER includeFieldsWithModifier) {
 			if (this.includeFieldsWithModifiers == null) {
 				this.includeFieldsWithModifiers = new HashSet<MODIFIER>();
@@ -311,32 +317,32 @@ public class Oson {
 		}
 		
 		
-		private Set<FieldStrategy> getFieldStrategies() {
-			return fieldStrategies;
+		private Set<Mapper> getFieldStrategies() {
+			return mappers;
 		}
 
-		public void setFieldStrategies(Set<FieldStrategy> fieldStrategies) {
-			for (FieldStrategy fieldStrategy: fieldStrategies) {
-				addFieldStrategy(fieldStrategy);
+		public void setFieldStrategies(Set<Mapper> mappers) {
+			for (Mapper mapper: mappers) {
+				setFieldStrategies(mapper);
 			}
 		}
 
-		public void setFieldStrategies(FieldStrategy[] fieldStrategies) {
-			for (FieldStrategy fieldStrategy: fieldStrategies) {
-				addFieldStrategy(fieldStrategy);
+		public void setFieldStrategies(Mapper[] mappers) {
+			for (Mapper mapper: mappers) {
+				setFieldStrategies(mapper);
 			}
 		}
 
-		public void addFieldStrategy(FieldStrategy fieldStrategy) {
-			if (!fieldStrategy.isValidFieldStrategy()) {
+		public void setFieldStrategies(Mapper mapper) {
+			if (!mapper.isValidFieldStrategy()) {
 				return;
 			}
 			
-			if (this.fieldStrategies == null) {
-				this.fieldStrategies = new HashSet<FieldStrategy>();
+			if (this.mappers == null) {
+				this.mappers = new HashSet<Mapper>();
 			}
-			if (!this.fieldStrategies.contains(fieldStrategy)) {
-				this.fieldStrategies.add(fieldStrategy);
+			if (!this.mappers.contains(mapper)) {
+				this.mappers.add(mapper);
 			}
 		}
 
@@ -354,16 +360,16 @@ public class Oson {
 				return null;
 			}
 
-			if (fieldStrategies == null) {
+			if (mappers == null) {
 				return name;
 			}
 
-			for (FieldStrategy fieldStrategy: fieldStrategies) {
-				String java = fieldStrategy.java;
+			for (Mapper mapper: mappers) {
+				String java = mapper.java;
 
 				if (java != null && lname.equals(java.toLowerCase())) {
 					// if is null, ignore it
-					return fieldStrategy.json;
+					return mapper.json;
 				}
 			}
 
@@ -385,16 +391,16 @@ public class Oson {
 				return null;
 			}
 
-			if (fieldStrategies == null) {
+			if (mappers == null) {
 				return name;
 			}
 
-			for (FieldStrategy fieldStrategy: fieldStrategies) {
-				String json = fieldStrategy.json;
+			for (Mapper mapper: mappers) {
+				String json = mapper.json;
 
 				if (json != null && lname.equals(json.toLowerCase())) {
 					// if is null, ignore it
-					return fieldStrategy.java;
+					return mapper.java;
 				}
 			}
 
@@ -417,17 +423,17 @@ public class Oson {
 				return null;
 			}
 
-			if (fieldStrategies == null) {
+			if (mappers == null) {
 				return name;
 			}
 
 			List<String> names = new ArrayList<>();
 
-			for (FieldStrategy fieldStrategy: fieldStrategies) {
-				String java = fieldStrategy.java;
+			for (Mapper mapper: mappers) {
+				String java = mapper.java;
 
 				if (java != null && lname.equals(java.toLowerCase())) {
-					Class<?> type = fieldStrategy.type;
+					Class<?> type = mapper.type;
 
 					if (type != null) {
 						Field fld;
@@ -435,7 +441,7 @@ public class Oson {
 							fld = type.getDeclaredField(name);
 
 							if (fld != null && fld.equals(field)) {
-								return fieldStrategy.json;
+								return mapper.json;
 							}
 
 						} catch (NoSuchFieldException | SecurityException e) {
@@ -443,7 +449,7 @@ public class Oson {
 						}
 
 					} else {
-						names.add(fieldStrategy.json);
+						names.add(mapper.json);
 					}
 				}
 			}
@@ -471,17 +477,17 @@ public class Oson {
 				return null;
 			}
 
-			if (fieldStrategies == null) {
+			if (mappers == null) {
 				return name;
 			}
 
 			List<String> names = new ArrayList<>();
 
-			for (FieldStrategy fieldStrategy: fieldStrategies) {
-				String json = fieldStrategy.json;
+			for (Mapper mapper: mappers) {
+				String json = mapper.json;
 
 				if (json != null && lname.equals(json.toLowerCase())) {
-					Class<?> type = fieldStrategy.type;
+					Class<?> type = mapper.type;
 
 					if (type != null) {
 						Field fld;
@@ -489,7 +495,7 @@ public class Oson {
 							fld = type.getDeclaredField(name);
 
 							if (fld != null && fld.equals(field)) {
-								return fieldStrategy.java;
+								return mapper.java;
 							}
 
 						} catch (NoSuchFieldException | SecurityException e) {
@@ -497,7 +503,7 @@ public class Oson {
 						}
 
 					} else {
-						names.add(fieldStrategy.java);
+						names.add(mapper.java);
 					}
 				}
 			}
@@ -510,7 +516,7 @@ public class Oson {
 		}
 
 
-		private Function getJson2JavaFunction(String name, Class enclosingType) {
+		private Function getDeserializer(String name, Class valueType, Class enclosingType) {
 			if (name == null) {
 				return null;
 			}
@@ -520,38 +526,81 @@ public class Oson {
 			}
 			String lname = name.toLowerCase();
 
-			if (fieldStrategies == null) {
+			if (mappers == null) {
 				return null;
 			}
 
 			List<Function> functions = new ArrayList<>();
+			List<Function> function4type = new ArrayList<>();
 
-			for (FieldStrategy fieldStrategy: fieldStrategies) {
-				String java = fieldStrategy.java;
-				String json = fieldStrategy.json;
+			for (Mapper mapper: mappers) {
+				String java = mapper.java;
+				String json = mapper.json;
+				Class<?> type = mapper.getType();
 
 				if ((java != null && lname.equals(java.toLowerCase())) ||
 						(json != null && lname.equals(json.toLowerCase())) ) {
-					Class<?> type = fieldStrategy.type;
 
-					if (fieldStrategy.type == enclosingType) {
-						return fieldStrategy.json2JavaFunction;
+					if (type == enclosingType) {
+						if (mapper.deserializer != null) {
+							return mapper.deserializer;
+						}
 
-					} else if (fieldStrategy.json2JavaFunction != null) {
-						functions.add(fieldStrategy.json2JavaFunction);
+					} else if (mapper.deserializer != null) {
+						functions.add(mapper.deserializer);
 					}
+					
+				} else if (valueType != null && type != null && (valueType == type || type.isAssignableFrom(valueType))
+						&& java == null && json == null && mapper.deserializer != null) {
+					function4type.add(mapper.deserializer);
 				}
 			}
 
 			if (functions.size() > 0) {
 				return functions.get(0);
 			}
+			
+			if (function4type.size() > 0) {
+				return function4type.get(0);
+			}
 
 			return null;
 		}
 
+		
+		private Function getDeserializer(Class valueType) {
+			if (mappers == null || valueType == null) {
+				return null;
+			}
 
-		private Function getJava2JsonFunction(String name, Class enclosingType) {
+			List<Function> function4type = new ArrayList<>();
+
+			for (Mapper mapper: mappers) {
+				if (mapper.java == null && mapper.json == null) {
+					Class<?> type = mapper.getType();
+					
+					if (valueType == type) {
+						if (mapper.deserializer != null) {
+							return mapper.deserializer;
+						}
+						
+					} else if (type.isAssignableFrom(valueType)) {
+						if (mapper.deserializer != null) {
+							function4type.add(mapper.deserializer);
+						}
+					}
+				}
+			}
+
+			if (function4type.size() > 0) {
+				return function4type.get(0);
+			}
+
+			return null;
+		}
+		
+
+		private Function getSerializer(String name, Class valueType, Class enclosingType) {
 			if (name == null) {
 				return null;
 			}
@@ -561,26 +610,33 @@ public class Oson {
 			}
 			String lname = name.toLowerCase();
 
-			if (fieldStrategies == null) {
+			if (mappers == null) {
 				return null;
 			}
 
 			List<Function> functions = new ArrayList<>();
+			List<Function> function4type = new ArrayList<>();
 
-			for (FieldStrategy fieldStrategy: fieldStrategies) {
-				String java = fieldStrategy.java;
-				String json = fieldStrategy.json;
+			for (Mapper mapper: mappers) {
+				String java = mapper.java;
+				String json = mapper.json;
+				Class<?> type = mapper.type;
 
 				if ((java != null && lname.equals(java.toLowerCase())) ||
 						(json != null && lname.equals(json.toLowerCase())) ) {
-					Class<?> type = fieldStrategy.type;
+					
+					if (mapper.type == enclosingType) {
+						if (mapper.deserializer != null) {
+							return mapper.deserializer;
+						}
 
-					if (fieldStrategy.type == enclosingType) {
-						return fieldStrategy.java2JsonFunction;
-
-					} else if (fieldStrategy.java2JsonFunction != null) {
-						functions.add(fieldStrategy.java2JsonFunction);
+					} else if (mapper.serializer != null) {
+						functions.add(mapper.serializer);
 					}
+					
+				} else if (valueType != null && type != null && (valueType == type || type.isAssignableFrom(valueType))
+						&& java == null && json == null && mapper.serializer != null) {
+					function4type.add(mapper.serializer);
 				}
 			}
 
@@ -588,9 +644,45 @@ public class Oson {
 				return functions.get(0);
 			}
 
+			if (function4type.size() > 0) {
+				return function4type.get(0);
+			}
+			
 			return null;
 		}
 
+		
+		private Function getSerializer(Class valueType) {
+			if (mappers == null || valueType == null) {
+				return null;
+			}
+
+			List<Function> function4type = new ArrayList<>();
+
+			for (Mapper mapper: mappers) {
+				if (mapper.java == null && mapper.json == null) {
+					Class<?> type = mapper.getType();
+					
+					if (valueType == type) {
+						if (mapper.serializer != null) {
+							return mapper.serializer;
+						}
+						
+					} else if (type.isAssignableFrom(valueType)) {
+						if (mapper.serializer != null) {
+							function4type.add(mapper.serializer);
+						}
+					}
+				}
+			}
+
+			if (function4type.size() > 0) {
+				return function4type.get(0);
+			}
+
+			return null;
+		}
+		
 
 		protected int getIndentation() {
 			return indentation;
@@ -709,26 +801,49 @@ public class Oson {
 			this.fieldNaming = fieldNaming;
 		}
 
+		private Map<Class, InstanceCreator> getTypeAdapters() {
+			return typeAdapters;
+		}
+
+		public void setTypeAdapters(Map<Class, InstanceCreator> typeAdapters) {
+			this.typeAdapters = typeAdapters;
+		}
+
+		public void setTypeAdapters(Class<?> type, InstanceCreator instance) {
+			if (this.typeAdapters == null) {
+				this.typeAdapters = new HashMap<>();
+			}
+			
+			this.typeAdapters.putIfAbsent(type, instance);
+		}
+
+		private Double getIgnoreVersionsAfter() {
+			return ignoreVersionsAfter;
+		}
+
+		public void ignoreVersionsAfter(Double ignoreVersionsAfter) {
+			this.ignoreVersionsAfter = ignoreVersionsAfter;
+		}
 	}
 
-	public static class FieldStrategy<E, T, R> {
+	public static class Mapper<E, T, R> {
 		/*
 		 * type for the class enclosing the field, should be in full path format
 		 * such as ca.oson.json.Oson
 		 * for modifying class object before loading
 		 */
 		private Class<E> type = null;
-		public String className;
-		
+		private String className;
+
 		/*
 		 * java: java field name. json: json property name
-		 * There are 5 cases for naming:
+		 * There are 6 cases for naming:
 		 * case 1, if java is null, json value is ignored during deserialization;
 		 * 2, if json is null, java field is ignored during serializatio;
 		 * 3. if java and json is the same, no change of naming;
 		 * 4. if different, serialization: map java field to json property;
 		 * 5. deserialization: map json property to java field
-		 *
+		 * 6. if there is a matching type with functions without json and java value, then these function will be used
 		 */
 		public String java;
 		public String json;
@@ -747,23 +862,31 @@ public class Oson {
 		/*
 		 * The java function that transforms the field value to json property value during serialization
 		 */
-		public Function<T, R> java2JsonFunction = null;
+		public Function<T, R> serializer = null;
 
 		/*
 		 * The json function that reverses back the property value to java field value
 		 * during deserialization
 		 */
-		public Function<R, T> json2JavaFunction = null;
+		public Function<R, T> deserializer = null;
 
 		public boolean isValidFieldStrategy() {
-			if (className == null && java == null && json == null) {
-				return false;
+			if (className == null && java == null) {
+				if (json == null) {
+					return false;
+					
+				} else if (serializer == null && deserializer == null) {
+					// should at least have one serializer or deserializer for the type
+					return false;
+				}
+				
 			}
 			
 			return true;
 		}
 		
-		public FieldStrategy (String java, String json) {
+		
+		public Mapper (String java, String json) {
 			if (java != null) {
 				this.java = java.trim();
 				if (this.java.length() == 0) {
@@ -778,29 +901,48 @@ public class Oson {
 			}
 		}
 
-		public FieldStrategy (String java, String json, String className) {
+		public Mapper (String java, String json, String className) {
 			this(java, json);
-			if (className != null) {
-				this.className = className.trim();
-				if (this.className.length() == 0) {
-					this.className = null;
-				}
-			}
+			setClassName(className);
 		}
 
-		public FieldStrategy (String java, String json, String className,
-				Function<T, R> java2JsonFunction, Function<R, T> json2JavaFunction) {
-			this(java, json, className);
-			this.java2JsonFunction = java2JsonFunction;
-			this.json2JavaFunction = json2JavaFunction;
+		public Mapper (String java, String json, Class<E> type) {
+			this(java, json);
+			setType(type);
 		}
 		
-		
-		public FieldStrategy (String java, String json, String className,
-				Function<T, R> java2JsonFunction) {
+		public Mapper (String java, String json, String className,
+				Function<T, R> serializer, Function<R, T> deserializer) {
 			this(java, json, className);
-			this.java2JsonFunction = java2JsonFunction;
+			this.serializer = serializer;
+			this.deserializer = deserializer;
 		}
+		
+		public Mapper (String java, String json, Class<E> type,
+				Function<T, R> serializer, Function<R, T> deserializer) {
+			this(java, json, type);
+			this.serializer = serializer;
+			this.deserializer = deserializer;
+		}
+		
+		public Mapper (String java, String json, String className,
+				Function<T, R> serializer) {
+			this(java, json, className);
+			this.serializer = serializer;
+		}
+		
+		public Mapper (String className, Function<T, R> serializer, Function<R, T> deserializer) {
+			this.serializer = serializer;
+			this.deserializer = deserializer;
+			setClassName(className);
+		}
+		
+		public Mapper (Class<E> type, Function<T, R> serializer, Function<R, T> deserializer) {
+			this.serializer = serializer;
+			this.deserializer = deserializer;
+			setType(type);
+		}
+		
 		
 		public Class<E> getType() {
 			if (type != null) {
@@ -816,6 +958,39 @@ public class Oson {
 			}
 			
 			return type;
+		}
+		
+		public void setType(Class<E> type) {
+			if (type == null) {
+				this.className = null;
+			} else {
+				this.className = type.getName();
+			}
+			this.type = type;
+		}
+		
+		public String getClassName() {
+			if (className == null) {
+				if (type != null) {
+					className = type.getName();
+				}
+			}
+			
+			return className;
+		}
+		
+		public void setClassName(String className) {
+			if (className == null) {
+				type = null;
+			} else {
+				try {
+					type = (Class<E>) Class.forName(className);
+				} catch (ClassNotFoundException e) {
+					// e.printStackTrace();
+				}
+			}
+			
+			this.className = className;
 		}
 	}
 
@@ -837,6 +1012,7 @@ public class Oson {
 		public Integer min = null; // default (int) 0;
 		public Integer max = null; // default (int) 2147483647;
 		public Object defaultValue = null; // default ""
+		public DEFAULT_VALUE defaultVal = null;
 
 		public FieldData(T enclosingObj, Field field, String defaultName, Object valueToProcess,
 				Class<E> returnType, EnumType enumType, Boolean notNull,
@@ -880,12 +1056,22 @@ public class Oson {
 			this.returnObj = returnObj;
 			this.json2Java = json2Java;
 		}
+		
 
-		public FieldData(T enclosingObj, Object valueToProcess, Type type, boolean json2Java) {
+		public FieldData(Object valueToProcess, Class<E> returnType, Type type, boolean json2Java, DEFAULT_VALUE defaultVal) {
+			this.valueToProcess = valueToProcess; // value to interpret
+			this.returnType = returnType;
+			this.erasedType = type; // generic type information
+			this.json2Java = json2Java;
+			this.defaultVal = defaultVal;
+		}
+
+		public FieldData(T enclosingObj, Object valueToProcess, Type type, boolean json2Java, DEFAULT_VALUE defaultVal) {
 			this.valueToProcess = valueToProcess; // value to interpret
 			this.enclosingObj = enclosingObj; // enclosing object
 			this.erasedType = type; // generic type information
 			this.json2Java = json2Java;
+			this.defaultVal = defaultVal;
 		}
 
 		public FieldData(T enclosingObj, Object valueToProcess, E returnObj) {
@@ -894,9 +1080,10 @@ public class Oson {
 			this.returnObj = returnObj; // object to return
 		}
 
-		public FieldData(Object valueToProcess, Class<E> returnType, boolean json2Java) {
+		public FieldData(Object valueToProcess, Class<E> returnType, boolean json2Java, DEFAULT_VALUE defaultVal) {
 			this(valueToProcess, returnType);
 			this.json2Java = json2Java;
+			this.defaultVal = defaultVal;
 		}
 		
 		public String getDefaultName() {
@@ -959,7 +1146,7 @@ public class Oson {
 	//private static Oson converter = null;
 
 	private Options options = new Options();
-	private ObjectMapper mapper = null;
+	private ObjectMapper jackson = null;
 	private Gson gson = null;
 
 	private static Map<Class, Field[]> cachedFields = new ConcurrentHashMap<>();
@@ -1153,18 +1340,18 @@ public class Oson {
 		return this;
 	}
 
-	private Set<FieldStrategy> getFieldStrategies() {
-		return options.fieldStrategies;
+	private Set<Mapper> getFieldStrategies() {
+		return options.mappers;
 	}
 
-	public Oson setFieldStrategies(FieldStrategy[] fieldStrategies) {
-		options.setFieldStrategies(fieldStrategies);
+	public Oson setFieldStrategies(Mapper[] mappers) {
+		options.setFieldStrategies(mappers);
 
 		return this;
 	}
 
-	public Oson addFieldStrategies(FieldStrategy fieldStrategy) {
-		options.addFieldStrategy(fieldStrategy);
+	public Oson setFieldStrategies(Mapper mapper) {
+		options.setFieldStrategies(mapper);
 
 		return this;
 	}
@@ -1239,7 +1426,33 @@ public class Oson {
 	
 	public Oson includeFieldsWithModifier(
 			MODIFIER includeFieldsWithModifier) {
-		options.includeFieldsWithModifier(includeFieldsWithModifier);
+		options.includeFieldsWithModifiers(includeFieldsWithModifier);
+
+		return this;
+	}
+	
+	private Map<Class, InstanceCreator> getTypeAdapters() {
+		return options.getTypeAdapters();
+	}
+	
+	private InstanceCreator getTypeAdapter(Class type) {
+		Map<Class, InstanceCreator> typeAdapters = getTypeAdapters();
+		
+		if (typeAdapters == null) {
+			return null;
+		}
+		
+		return typeAdapters.get(type);
+	}
+
+	public Oson setTypeAdapters(Map<Class, InstanceCreator> typeAdapters) {
+		options.setTypeAdapters(typeAdapters);
+
+		return this;
+	}
+
+	public Oson setTypeAdapters(Class<?> type, InstanceCreator instance) {
+		options.setTypeAdapters(type, instance);
 
 		return this;
 	}
@@ -1260,23 +1473,28 @@ public class Oson {
 		return options.json2Java(field);
 	}
 
-	private Function getJava2JsonFunction(String defaultName, Class enclosingType) {
-		return options.getJava2JsonFunction(defaultName, enclosingType);
+	private Function getSerializer(String defaultName, Class valueType, Class enclosingType) {
+		return options.getSerializer(defaultName, valueType, enclosingType);
 	}
-
-	private Function getJson2JavaFunction(String defaultName, Class enclosingType) {
-		return options.getJson2JavaFunction(defaultName, enclosingType);
+	private Function getSerializer(Class valueType) {
+		return options.getSerializer(valueType);
+	}
+	private Function getDeserializer(String defaultName, Class valueType, Class enclosingType) {
+		return options.getDeserializer(defaultName, valueType, enclosingType);
+	}
+	private Function getDeserializer(Class valueType) {
+		return options.getDeserializer(valueType);
 	}
 	
 	private boolean ignoreClass(Class valueType) {
-		Set<FieldStrategy> fieldStrategies = getFieldStrategies();
-		if (fieldStrategies == null || valueType == null) {
+		Set<Mapper> mappers = getFieldStrategies();
+		if (mappers == null || valueType == null) {
 			return false;
 		}
 		
-		for (FieldStrategy fieldStrategy: fieldStrategies) {
-			if (fieldStrategy.java == null && fieldStrategy.json == null
-					&& valueType == fieldStrategy.getType()) {
+		for (Mapper mapper: mappers) {
+			if (mapper.java == null && mapper.json == null
+					&& valueType == mapper.getType()) {
 				return true;
 			}
 		}
@@ -1286,6 +1504,20 @@ public class Oson {
 	
 	
 	private boolean ignoreClass(Annotation annotation) {
+		if (annotation instanceof JsonIgnoreType) {
+			JsonIgnoreType jsonIgnoreType = (JsonIgnoreType)annotation;
+			if (jsonIgnoreType.value()) {
+				return true;
+			}
+			
+		} else if (annotation instanceof org.codehaus.jackson.annotate.JsonIgnoreType) {
+			org.codehaus.jackson.annotate.JsonIgnoreType jsonIgnoreType = (org.codehaus.jackson.annotate.JsonIgnoreType)annotation;
+			if (jsonIgnoreType.value()) {
+				return true;
+			}
+		}
+
+		
 		Set<Class> annotations = getIgnoreClassWithAnnotations();
 		if (annotations == null || annotation == null) {
 			return false;
@@ -1296,6 +1528,9 @@ public class Oson {
 				return true;
 			}
 		}
+		
+		
+		
 		
 		return false;
 	}
@@ -1456,56 +1691,75 @@ public class Oson {
 		return this;
 	}
 
+	private Double getIgnoreVersionsAfter() {
+		return options.getIgnoreVersionsAfter();
+	}
 
+	public Oson ignoreVersionsAfter(Double ignoreVersionsAfter) {
+		options.ignoreVersionsAfter(ignoreVersionsAfter);
+		reset();
+
+		return this;
+	}
+	
+	private boolean ignoreVersionsAfter(double ignoreVersionsAfter) {
+		Double version = getIgnoreVersionsAfter();
+		if (version == null || ignoreVersionsAfter <= version) {
+			return false;
+		}
+
+		return true;
+	}
+	
 	private void reset() {
-		mapper = null;
+		jackson = null;
 		gson = null;
 	}
 
 	private ObjectMapper getJackson() {
-		if (mapper == null) {
+		if (jackson == null) {
+			jackson = new ObjectMapper();
 			prefixProcessing();
 			
-			mapper = new ObjectMapper();
 			// do not fail for funny reason
-			mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-			mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+			jackson.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+			jackson.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
 
 			switch (getDefaultValue()) {
 			case ALWAYS:
-				mapper.setSerializationInclusion(Include.ALWAYS);
+				jackson.setSerializationInclusion(Include.ALWAYS);
 				break;
 			case NON_NULL:
-				mapper.setSerializationInclusion(Include.NON_NULL);
+				jackson.setSerializationInclusion(Include.NON_NULL);
 				break;
 			case NON_NULL_EMPTY:
-				mapper.setSerializationInclusion(Include.NON_EMPTY);
+				jackson.setSerializationInclusion(Include.NON_EMPTY);
 				break;
 			case DEFAULT:
-				mapper.setSerializationInclusion(Include.USE_DEFAULTS);
+				jackson.setSerializationInclusion(Include.USE_DEFAULTS);
 				break;
 			default:
-				mapper.setSerializationInclusion(Include.NON_NULL);
+				jackson.setSerializationInclusion(Include.NON_NULL);
 				break;
 			}
 
 			if (getPrettyPrinting() && getIndentation() > 0) {
-				mapper.enable(SerializationFeature.INDENT_OUTPUT);
-				mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+				jackson.enable(SerializationFeature.INDENT_OUTPUT);
+				jackson.configure(SerializationFeature.INDENT_OUTPUT, true);
 			}
 
 			if (getOrderByKeys()) {
-				mapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
+				jackson.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
 			}
 
-			Set<FieldStrategy> fieldStrategies = getFieldStrategies();
+			Set<Mapper> mappers = getFieldStrategies();
 
-			if (fieldStrategies != null) {
+			if (mappers != null) {
 				//defines how names of JSON properties ("external names") are derived from names of POJO methods and fields ("internal names"),
 				// in cases where they are not auto-detected and no explicit annotations exist for naming
 				// config - Configuration in used: either SerializationConfig or DeserializationConfig,
 				// depending on whether method is called during serialization or deserialization
-				mapper.setPropertyNamingStrategy(new PropertyNamingStrategy() {
+				jackson.setPropertyNamingStrategy(new PropertyNamingStrategy() {
 					@Override
 					public String nameForField(MapperConfig<?> config, AnnotatedField field, String defaultName) {
 						String name = defaultName;
@@ -1520,11 +1774,11 @@ public class Oson {
 						String lname = name.toLowerCase();
 
 						if (config instanceof SerializationConfig || !(config instanceof DeserializationConfig)) {
-							for (FieldStrategy fieldStrategy: fieldStrategies) {
-								String java = fieldStrategy.java;
+							for (Mapper mapper: mappers) {
+								String java = mapper.java;
 
 								if (java != null && lname.equals(java.toLowerCase())) {
-									Class<?> type = fieldStrategy.getType();
+									Class<?> type = mapper.getType();
 									String fullName = field.getFullName(); // ca.oson.json.Artist#age;
 									int index = fullName.indexOf('#');
 									if (index > -1) {
@@ -1533,9 +1787,9 @@ public class Oson {
 									
 									if (type != null) {
 										try {
-											// fieldStrategy.type.getTypeName() is the same as fieldStrategy.type.getName()
+											// mapper.type.getTypeName() is the same as mapper.type.getName()
 											if (type.getTypeName().equals(fullName)) {
-												return fieldStrategy.json;
+												return mapper.json;
 											}
 
 										} catch (SecurityException e) {
@@ -1543,7 +1797,7 @@ public class Oson {
 										}
 
 									} else { // just by name
-										return fieldStrategy.json;
+										return mapper.json;
 									}
 								}
 							}
@@ -1551,11 +1805,11 @@ public class Oson {
 						}
 
 						if (config instanceof DeserializationConfig || !(config instanceof SerializationConfig)) {
-							for (FieldStrategy fieldStrategy: fieldStrategies) {
-								String json = fieldStrategy.json;
+							for (Mapper mapper: mappers) {
+								String json = mapper.json;
 
 								if (json != null && lname.equals(json.toLowerCase())) {
-									Class<?> type = fieldStrategy.getType();
+									Class<?> type = mapper.getType();
 									String fullName = field.getFullName(); // ca.oson.json.Artist#age;
 									int index = fullName.indexOf('#');
 									if (index > -1) {
@@ -1564,9 +1818,9 @@ public class Oson {
 									
 									if (type != null) {
 										try {
-											// fieldStrategy.type.getTypeName() is the same as fieldStrategy.type.getName()
+											// mapper.type.getTypeName() is the same as mapper.type.getName()
 											if (type.getTypeName().equals(fullName)) {
-												return fieldStrategy.java;
+												return mapper.java;
 											}
 
 										} catch (SecurityException e) {
@@ -1574,7 +1828,7 @@ public class Oson {
 										}
 
 									} else { // just by name
-										return fieldStrategy.java;
+										return mapper.java;
 									}
 								}
 							}
@@ -1598,11 +1852,11 @@ public class Oson {
 						String lname = name.toLowerCase();
 						
 						if (config instanceof SerializationConfig || !(config instanceof DeserializationConfig)) {
-							for (FieldStrategy fieldStrategy: fieldStrategies) {
-								String java = fieldStrategy.java;
+							for (Mapper mapper: mappers) {
+								String java = mapper.java;
 
 								if (java != null && lname.equals(java.toLowerCase())) {
-									Class<?> type = fieldStrategy.getType();
+									Class<?> type = mapper.getType();
 									String fullName = method.getFullName(); // java.util.Date#getTime(0 params)
 									int index = fullName.indexOf('#');
 									if (index > -1) {
@@ -1611,9 +1865,9 @@ public class Oson {
 									
 									if (type != null) {
 										try {
-											// fieldStrategy.type.getTypeName() is the same as fieldStrategy.type.getName()
+											// mapper.type.getTypeName() is the same as mapper.type.getName()
 											if (type.getTypeName().equals(fullName)) {
-												return fieldStrategy.json;
+												return mapper.json;
 											}
 
 										} catch (SecurityException e) {
@@ -1621,7 +1875,7 @@ public class Oson {
 										}
 
 									} else { // just by name
-										return fieldStrategy.json;
+										return mapper.json;
 									}
 								}
 							}
@@ -1630,11 +1884,11 @@ public class Oson {
 
 
 						if (config instanceof DeserializationConfig || !(config instanceof SerializationConfig)) {
-							for (FieldStrategy fieldStrategy: fieldStrategies) {
-								String json = fieldStrategy.json;
+							for (Mapper mapper: mappers) {
+								String json = mapper.json;
 
 								if (json != null && lname.equals(json.toLowerCase())) {
-									Class<?> type = fieldStrategy.getType();
+									Class<?> type = mapper.getType();
 									String fullName = method.getFullName(); // java.util.Date#getTime(0 params)
 									int index = fullName.indexOf('#');
 									if (index > -1) {
@@ -1643,9 +1897,9 @@ public class Oson {
 									
 									if (type != null) {
 										try {
-											// fieldStrategy.type.getTypeName() is the same as fieldStrategy.type.getName()
+											// mapper.type.getTypeName() is the same as mapper.type.getName()
 											if (type.getTypeName().equals(fullName)) {
-												return fieldStrategy.java;
+												return mapper.java;
 											}
 
 										} catch (SecurityException e) {
@@ -1653,7 +1907,7 @@ public class Oson {
 										}
 
 									} else { // just by name
-										return fieldStrategy.java;
+										return mapper.java;
 									}
 								}
 							}
@@ -1686,11 +1940,11 @@ public class Oson {
 						String lname = name.toLowerCase();
 
 						if (config instanceof SerializationConfig || !(config instanceof DeserializationConfig)) {
-							for (FieldStrategy fieldStrategy: fieldStrategies) {
-								String java = fieldStrategy.java;
+							for (Mapper mapper: mappers) {
+								String java = mapper.java;
 
 								if (java != null && lname.equals(java.toLowerCase())) {
-									Class<?> type = fieldStrategy.getType();
+									Class<?> type = mapper.getType();
 									String fullName = method.getFullName(); // java.util.Date#getTime(0 params)
 									int index = fullName.indexOf('#');
 									if (index > -1) {
@@ -1699,9 +1953,9 @@ public class Oson {
 									
 									if (type != null) {
 										try {
-											// fieldStrategy.type.getTypeName() is the same as fieldStrategy.type.getName()
+											// mapper.type.getTypeName() is the same as mapper.type.getName()
 											if (type.getTypeName().equals(fullName)) {
-												return fieldStrategy.json;
+												return mapper.json;
 											}
 
 										} catch (SecurityException e) {
@@ -1709,7 +1963,7 @@ public class Oson {
 										}
 
 									} else { // just by name
-										return fieldStrategy.json;
+										return mapper.json;
 									}
 								}
 							}
@@ -1718,11 +1972,11 @@ public class Oson {
 
 
 						if (config instanceof DeserializationConfig || !(config instanceof SerializationConfig)) {
-							for (FieldStrategy fieldStrategy: fieldStrategies) {
-								String json = fieldStrategy.json;
+							for (Mapper mapper: mappers) {
+								String json = mapper.json;
 
 								if (json != null && lname.equals(json.toLowerCase())) {
-									Class<?> type = fieldStrategy.getType();
+									Class<?> type = mapper.getType();
 									String fullName = method.getFullName(); // java.util.Date#getTime(0 params)
 									int index = fullName.indexOf('#');
 									if (index > -1) {
@@ -1731,9 +1985,9 @@ public class Oson {
 									
 									if (type != null) {
 										try {
-											// fieldStrategy.type.getTypeName() is the same as fieldStrategy.type.getName()
+											// mapper.type.getTypeName() is the same as mapper.type.getName()
 											if (type.getTypeName().equals(fullName)) {
-												return fieldStrategy.java;
+												return mapper.java;
 											}
 
 										} catch (SecurityException e) {
@@ -1741,7 +1995,7 @@ public class Oson {
 										}
 
 									} else { // just by name
-										return fieldStrategy.java;
+										return mapper.java;
 									}
 								}
 							}
@@ -1775,11 +2029,11 @@ public class Oson {
 						String lname = name.toLowerCase();
 
 						if (config instanceof SerializationConfig || !(config instanceof DeserializationConfig)) {
-							for (FieldStrategy fieldStrategy: fieldStrategies) {
-								String java = fieldStrategy.java;
+							for (Mapper mapper: mappers) {
+								String java = mapper.java;
 
 								if (java != null && lname.equals(java.toLowerCase())) {
-									Class<?> type = fieldStrategy.getType();
+									Class<?> type = mapper.getType();
 									String fullName = ctorParam.getName(); // java.util.Date#
 									int index = fullName.indexOf('#');
 									if (index > -1) {
@@ -1788,9 +2042,9 @@ public class Oson {
 									
 									if (type != null) {
 										try {
-											// fieldStrategy.type.getTypeName() is the same as fieldStrategy.type.getName()
+											// mapper.type.getTypeName() is the same as mapper.type.getName()
 											if (type.getTypeName().equals(fullName)) {
-												return fieldStrategy.json;
+												return mapper.json;
 											}
 
 										} catch (SecurityException e) {
@@ -1798,7 +2052,7 @@ public class Oson {
 										}
 
 									} else { // just by name
-										String json = fieldStrategy.json;
+										String json = mapper.json;
 
 										if (json == null) {
 											// do nothing?
@@ -1814,11 +2068,11 @@ public class Oson {
 
 
 						if (config instanceof DeserializationConfig || !(config instanceof SerializationConfig)) {
-							for (FieldStrategy fieldStrategy: fieldStrategies) {
-								String json = fieldStrategy.json;
+							for (Mapper mapper: mappers) {
+								String json = mapper.json;
 
 								if (json != null && lname.equals(json.toLowerCase())) {
-									Class<?> type = fieldStrategy.getType();
+									Class<?> type = mapper.getType();
 									String fullName = ctorParam.getName(); // java.util.Date#
 									int index = fullName.indexOf('#');
 									if (index > -1) {
@@ -1827,9 +2081,9 @@ public class Oson {
 									
 									if (type != null) {
 										try {
-											// fieldStrategy.type.getTypeName() is the same as fieldStrategy.type.getName()
+											// mapper.type.getTypeName() is the same as mapper.type.getName()
 											if (type.getTypeName().equals(fullName)) {
-												return fieldStrategy.java;
+												return mapper.java;
 											}
 
 										} catch (SecurityException e) {
@@ -1837,7 +2091,7 @@ public class Oson {
 										}
 
 									} else { // just by name
-										return fieldStrategy.java;
+										return mapper.java;
 									}
 								}
 							}
@@ -1852,12 +2106,12 @@ public class Oson {
 
 
 
-			mapper.setDateFormat(getDateFormat());
+			jackson.setDateFormat(getDateFormat());
 		}
 
 
 
-		return mapper;
+		return jackson;
 	}
 
 	
@@ -1866,19 +2120,19 @@ public class Oson {
 			return;
 		}
 		
-		Set<FieldStrategy> fieldStrategies = getFieldStrategies();
-		if (fieldStrategies == null) {
+		Set<Mapper> mappers = getFieldStrategies();
+		if (mappers == null) {
 			return;
 		}
 		
-		for (FieldStrategy fieldStrategy: fieldStrategies) {
-			if (fieldStrategy.isProcessed()) {
+		for (Mapper mapper: mappers) {
+			if (mapper.isProcessed()) {
 				continue;
 			}
 			
-			String json = fieldStrategy.json;
-			String java = fieldStrategy.java;
-			String className = fieldStrategy.className;
+			String json = mapper.json;
+			String java = mapper.java;
+			String className = mapper.className;
 			if (json == null || java == null) {
 				continue;
 			}
@@ -1890,18 +2144,18 @@ public class Oson {
 					try {
 						ObjectUtil.addAnnotationToField(className, java,
 						        "com.fasterxml.jackson.annotation.JsonIgnore");
-						fieldStrategy.setProcessed(true);
+						mapper.setProcessed(true);
 					} catch (Exception e) {
 						e.printStackTrace();
-						if (!fieldStrategy.isProcessed()) {
+						if (!mapper.isProcessed()) {
 							// should ignore it, have to use mixin abstract class
 							try {
 								ObjectUtil.addAnnotationToField(className, java,
 								        "com.fasterxml.jackson.annotation.JsonIgnore", mixin);
 
-								mapper.addMixInAnnotations(fieldStrategy.getClass(), Class.forName(className + mixin));
+								jackson.addMixInAnnotations(mapper.getClass(), Class.forName(className + mixin));
 								
-								fieldStrategy.setProcessed(true);
+								mapper.setProcessed(true);
 								
 							} catch (Exception ex) {
 								ex.printStackTrace();
@@ -1916,18 +2170,18 @@ public class Oson {
 					try {
 						ObjectUtil.addAnnotationToField(className, json,
 						        "com.fasterxml.jackson.annotation.JsonIgnore");
-						fieldStrategy.setProcessed(true);
+						mapper.setProcessed(true);
 					} catch (Exception e) {
 						e.printStackTrace();
-						if (!fieldStrategy.isProcessed()) {
+						if (!mapper.isProcessed()) {
 							// should ignore it, have to use mixin abstract class
 							try {
 								ObjectUtil.addAnnotationToField(className, json,
 								        "com.fasterxml.jackson.annotation.JsonIgnore", mixin);
 
-								mapper.addMixInAnnotations(fieldStrategy.getClass(), Class.forName(className + mixin));
+								jackson.addMixInAnnotations(mapper.getClass(), Class.forName(className + mixin));
 								
-								fieldStrategy.setProcessed(true);
+								mapper.setProcessed(true);
 								
 							} catch (Exception ex) {
 								ex.printStackTrace();
@@ -2020,9 +2274,9 @@ public class Oson {
 
 			gsonBuilder.setDateFormat(options.getSimpleDateFormat());
 
-			Set<FieldStrategy> fieldStrategies = getFieldStrategies();
+			Set<Mapper> mappers = getFieldStrategies();
 			
-			if (fieldStrategies != null) {
+			if (mappers != null) {
 				gsonBuilder.setFieldNamingStrategy(new FieldNamingStrategy() {
 					@Override
 					public String translateName(Field f) {
@@ -2037,8 +2291,8 @@ public class Oson {
 				});
 				
 				List<ExclusionStrategy> strategies = new ArrayList<>();
-				for (FieldStrategy fieldStrategy: fieldStrategies) {
-					if (fieldStrategy.java == null || fieldStrategy.json == null) {
+				for (Mapper mapper: mappers) {
+					if (mapper.java == null || mapper.json == null) {
 						strategies.add(new ExclusionStrategy() {
 
 							@Override
@@ -2046,21 +2300,21 @@ public class Oson {
 								String name = f.getName();
 								Class cls = f.getClass();
 								
-								if (fieldStrategy.java == null) {
-									if (fieldStrategy.json == null) {
-										if (cls.equals(fieldStrategy.getType())) {
+								if (mapper.java == null) {
+									if (mapper.json == null) {
+										if (cls.equals(mapper.getType())) {
 											return true;
 										}
 									
-									} else if (fieldStrategy.json.equals(name)) {
-										if (fieldStrategy.getType() == null || cls.equals(fieldStrategy.getType())) {
+									} else if (mapper.json.equals(name)) {
+										if (mapper.getType() == null || cls.equals(mapper.getType())) {
 											return true;
 										}
 									}
 									
-								} else if (fieldStrategy.json == null) {
-									if (fieldStrategy.java.equals(name)) {
-										if (fieldStrategy.getType() == null || cls.equals(fieldStrategy.getType())) {
+								} else if (mapper.json == null) {
+									if (mapper.java.equals(name)) {
+										if (mapper.getType() == null || cls.equals(mapper.getType())) {
 											return true;
 										}
 									}
@@ -2071,7 +2325,7 @@ public class Oson {
 
 							@Override
 							public boolean shouldSkipClass(Class<?> clazz) {
-								if (fieldStrategy.java == null && fieldStrategy.json == null && clazz.equals(fieldStrategy.getType())) {
+								if (mapper.java == null && mapper.json == null && clazz.equals(mapper.getType())) {
 									return true;
 								}
 								return false;
@@ -2082,6 +2336,18 @@ public class Oson {
 				gsonBuilder.setExclusionStrategies(strategies.toArray(new ExclusionStrategy[strategies.size()]));
 			}
 
+			Map<Class, InstanceCreator> typeAdapters = getTypeAdapters();
+			if (typeAdapters != null) {
+				for (Entry<Class, InstanceCreator> entry: typeAdapters.entrySet()) {
+					gsonBuilder.registerTypeAdapter(entry.getKey(), entry.getValue());
+				}
+			}
+			
+			Double ignoreVersionsAfter = getIgnoreVersionsAfter();
+			if (ignoreVersionsAfter != null) {
+				gsonBuilder.setVersion(ignoreVersionsAfter);
+			}
+			
 			
 			gson = gsonBuilder.create();
 		}
@@ -2138,15 +2404,19 @@ public class Oson {
 				}
 
 				if (json2Java) {
-					function = getJson2JavaFunction(objectDTO.getDefaultName(), objectDTO.getEnclosingType());
+					function = getDeserializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
 					if (function != null) {
-						valueToReturn = (Double)function.apply(valueToReturn);
+						try {
+							valueToReturn = (Double)function.apply(valueToReturn);
+						} catch (Exception e) {}
 					}
 					
 				} else {
-					function = getJava2JsonFunction(objectDTO.getDefaultName(), objectDTO.getEnclosingType());
+					function = getSerializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
 					if (function != null) {
-						return function.apply(valueToReturn);
+						try {
+							return function.apply(valueToReturn);
+						} catch (Exception e) {}
 					}
 				}
 	
@@ -2215,15 +2485,19 @@ public class Oson {
 				}
 
 				if (json2Java) {
-					function = getJson2JavaFunction(objectDTO.getDefaultName(), objectDTO.getEnclosingType());
+					function = getDeserializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
 					if (function != null) {
-						valueToReturn = (Float)function.apply(valueToReturn);
+						try {
+							valueToReturn = (Float)function.apply(valueToReturn);
+						} catch (Exception e) {}
 					}
 					
 				} else {
-					function = getJava2JsonFunction(objectDTO.getDefaultName(), objectDTO.getEnclosingType());
+					function = getSerializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
 					if (function != null) {
-						return function.apply(valueToReturn);
+						try {
+							return function.apply(valueToReturn);
+						} catch (Exception e) {}
 					}
 				}
 	
@@ -2292,15 +2566,19 @@ public class Oson {
 				}
 
 				if (json2Java) {
-					function = getJson2JavaFunction(objectDTO.getDefaultName(), objectDTO.getEnclosingType());
+					function = getDeserializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
 					if (function != null) {
-						valueToReturn = (BigDecimal)function.apply(valueToReturn);
+						try {
+							valueToReturn = (BigDecimal)function.apply(valueToReturn);
+						} catch (Exception e) {}
 					}
 					
 				} else {
-					function = getJava2JsonFunction(objectDTO.getDefaultName(), objectDTO.getEnclosingType());
+					function = getSerializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
 					if (function != null) {
-						return function.apply(valueToReturn);
+						try {
+							return function.apply(valueToReturn);
+						} catch (Exception e) {}
 					}
 				}
 				
@@ -2370,15 +2648,19 @@ public class Oson {
 	
 				// processing
 				if (json2Java) {
-					function = getJson2JavaFunction(objectDTO.getDefaultName(), objectDTO.getEnclosingType());
+					function = getDeserializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
 					if (function != null) {
-						valueToReturn = (BigInteger)function.apply(valueToReturn);
+						try {
+							valueToReturn = (BigInteger)function.apply(valueToReturn);
+						} catch (Exception e) {}
 					}
 					
 				} else {
-					function = getJava2JsonFunction(objectDTO.getDefaultName(), objectDTO.getEnclosingType());
+					function = getSerializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
 					if (function != null) {
-						return function.apply(valueToReturn);
+						try {
+							return function.apply(valueToReturn);
+						} catch (Exception e) {}
 					}
 				}
 				
@@ -2445,15 +2727,19 @@ public class Oson {
 	
 				// processing jsonFunction
 				if (json2Java) {
-					function = getJson2JavaFunction(objectDTO.getDefaultName(), objectDTO.getEnclosingType());
+					function = getDeserializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
 					if (function != null) {
-						valueToReturn = (Long)function.apply(valueToReturn);
+						try {
+							valueToReturn = (Long)function.apply(valueToReturn);
+						} catch (Exception e) {}
 					}
 					
 				} else {
-					function = getJava2JsonFunction(objectDTO.getDefaultName(), objectDTO.getEnclosingType());
+					function = getSerializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
 					if (function != null) {
-						return function.apply(valueToReturn);
+						try {
+							return function.apply(valueToReturn);
+						} catch (Exception e) {}
 					}
 				}
 	
@@ -2522,15 +2808,19 @@ public class Oson {
 	
 				// processing jsonFunction
 				if (json2Java) {
-					function = getJson2JavaFunction(objectDTO.getDefaultName(), objectDTO.getEnclosingType());
+					function = getDeserializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
 					if (function != null) {
-						valueToReturn = (Integer)function.apply(valueToReturn);
+						try {
+							valueToReturn = (Integer)function.apply(valueToReturn);
+						} catch (Exception e) {}
 					}
 					
 				} else {
-					function = getJava2JsonFunction(objectDTO.getDefaultName(), objectDTO.getEnclosingType());
+					function = getSerializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
 					if (function != null) {
-						return function.apply(valueToReturn);
+						try {
+							return function.apply(valueToReturn);
+						} catch (Exception e) {}
 					}
 				}
 	
@@ -2598,15 +2888,19 @@ public class Oson {
 				
 				// processing jsonFunction
 				if (json2Java) {
-					function = getJson2JavaFunction(objectDTO.getDefaultName(), objectDTO.getEnclosingType());
+					function = getDeserializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
 					if (function != null) {
-						valueToReturn = (Byte)function.apply(valueToReturn);
+						try {
+							valueToReturn = (Byte)function.apply(valueToReturn);
+						} catch (Exception e) {}
 					}
 					
 				} else {
-					function = getJava2JsonFunction(objectDTO.getDefaultName(), objectDTO.getEnclosingType());
+					function = getSerializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
 					if (function != null) {
-						return function.apply(valueToReturn);
+						try {
+							return function.apply(valueToReturn);
+						} catch (Exception e) {}
 					}
 				}
 				
@@ -2670,15 +2964,19 @@ public class Oson {
 				}
 				
 				if (json2Java) {
-					function = getJson2JavaFunction(objectDTO.getDefaultName(), objectDTO.getEnclosingType());
+					function = getDeserializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
 					if (function != null) {
-						valueToReturn = (Character)function.apply(valueToReturn);
+						try {
+							valueToReturn = (Character)function.apply(valueToReturn);
+						} catch (Exception e) {}
 					}
 					
 				} else {
-					function = getJava2JsonFunction(objectDTO.getDefaultName(), objectDTO.getEnclosingType());
+					function = getSerializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
 					if (function != null) {
-						return function.apply(valueToReturn);
+						try {
+							return function.apply(valueToReturn);
+						} catch (Exception e) {}
 					}
 				}
 
@@ -2728,15 +3026,19 @@ public class Oson {
 				}
 	
 				if (json2Java) {
-					function = getJson2JavaFunction(objectDTO.getDefaultName(), objectDTO.getEnclosingType());
+					function = getDeserializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
 					if (function != null) {
-						valueToReturn = (Short)function.apply(valueToReturn);
+						try {
+							valueToReturn = (Short)function.apply(valueToReturn);
+						} catch (Exception e) {}
 					}
 					
 				} else {
-					function = getJava2JsonFunction(objectDTO.getDefaultName(), objectDTO.getEnclosingType());
+					function = getSerializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
 					if (function != null) {
-						return function.apply(valueToReturn);
+						try {
+							return function.apply(valueToReturn);
+						} catch (Exception e) {}
 					}
 				}
 				
@@ -2781,12 +3083,13 @@ public class Oson {
 		return null;
 	}
 
-	private <E> String getString(FieldData objectDTO) {
+	private <E> Object getString(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
 		boolean notNull = objectDTO.notNull;
 		String defaultValue = (String)objectDTO.getDefaultValue();
 		Integer length = objectDTO.length; // not handled yet, some dummy string might be good for testing?
+		boolean json2Java = objectDTO.json2Java;
 		
 		if (value == null || value.toString().trim().length() == 0 || value.toString().trim().equalsIgnoreCase("null")) {
 			if (getDefaultValue() == DEFAULT_VALUE.DEFAULT || notNull) {
@@ -2801,11 +3104,32 @@ public class Oson {
 			return null;
 		}
 		
+		String valueToReturn = null;
 		if (value instanceof String) {
-			return ((String)value).trim();
+			valueToReturn = ((String)value).trim();
+		} else {
+			valueToReturn = value.toString().trim();
+		}
+		
+		Function function = null;
+		if (json2Java) {
+			function = getDeserializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
+			if (function != null) {
+				try {
+					valueToReturn = (String)function.apply(valueToReturn);
+				} catch (Exception e) {}
+			}
+			
+		} else {
+			function = getSerializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
+			if (function != null) {
+				try {
+					return function.apply(valueToReturn);
+				} catch (Exception e) {}
+			}
 		}
 
-		return value.toString().trim();
+		return valueToReturn;
 	}
 
 	private <E> Object getBoolean(FieldData objectDTO) {
@@ -2827,15 +3151,19 @@ public class Oson {
 				}
 				
 				if (json2Java) {
-					function = getJson2JavaFunction(objectDTO.getDefaultName(), objectDTO.getEnclosingType());
+					function = getDeserializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
 					if (function != null) {
-						valueToReturn = (Boolean)function.apply(valueToReturn);
+						try {
+							valueToReturn = (Boolean)function.apply(valueToReturn);
+						} catch (Exception e) {}
 					}
 					
 				} else {
-					function = getJava2JsonFunction(objectDTO.getDefaultName(), objectDTO.getEnclosingType());
+					function = getSerializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
 					if (function != null) {
-						return function.apply(valueToReturn);
+						try {
+							return function.apply(valueToReturn);
+						} catch (Exception e) {}
 					}
 				}
 				
@@ -2893,15 +3221,19 @@ public class Oson {
 	
 				// processing jsonFunction
 				if (json2Java) {
-					function = getJson2JavaFunction(objectDTO.getDefaultName(), objectDTO.getEnclosingType());
+					function = getDeserializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
 					if (function != null) {
-						valueToReturn = (Date)function.apply(valueToReturn);
+						try {
+							valueToReturn = (Date)function.apply(valueToReturn);
+						} catch (Exception e) {}
 					}
 					
 				} else {
-					function = getJava2JsonFunction(objectDTO.getDefaultName(), objectDTO.getEnclosingType());
+					function = getSerializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
 					if (function != null) {
-						return function.apply(valueToReturn);
+						try {
+							return function.apply(valueToReturn);
+						} catch (Exception e) {}
 					}
 				}
 				
@@ -2987,6 +3319,7 @@ public class Oson {
 		Class<Map> returnType = objectDTO.returnType;
 		boolean notNull = objectDTO.notNull;
 		Map defaultValue = (Map)objectDTO.defaultValue;
+		boolean json2Java = objectDTO.json2Java;
 
 		if (value == null) {
 			if (notNull) {
@@ -3029,6 +3362,24 @@ public class Oson {
 		if (values.size() == 0) {
 			return returnObj;
 		}
+		
+		Function function = null;
+		if (json2Java) {
+			function = getDeserializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
+			if (function != null) {
+				try {
+					return function.apply(values);
+				} catch (Exception e) {}
+			}
+			
+		} else {
+			function = getSerializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
+			if (function != null) {
+				try {
+					return function.apply(values);
+				} catch (Exception e) {}
+			}
+		}
 
 		for (Entry<String, Object> entry: values.entrySet()) {
 			Object obj = entry.getValue();
@@ -3041,13 +3392,14 @@ public class Oson {
 	}
 
 
-	private <E> Collection<E> getCollection(FieldData objectDTO) {
+	private <E> Object getCollection(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Collection<E> returnObj = (Collection<E>)objectDTO.returnObj;
 		Class<Collection<E>> returnType = objectDTO.returnType;
 		boolean notNull = objectDTO.notNull;
 		Collection<E> defaultValue = (Collection<E>)objectDTO.defaultValue;
 		Type erasedType = objectDTO.erasedType;
+		boolean json2Java = objectDTO.json2Java;
 
 		if (returnType == null) {
 			if (erasedType != null) {
@@ -3067,6 +3419,25 @@ public class Oson {
 			Collection<E> values = (Collection<E>) value;
 	
 			if (values.size() > 0) {
+				Function function = null;
+				if (json2Java) {
+					function = getDeserializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
+					if (function != null) {
+						try {
+							return function.apply(values);
+						} catch (Exception e) {}
+					}
+					
+				} else {
+					function = getSerializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
+					if (function != null) {
+						try {
+							return function.apply(values);
+						} catch (Exception e) {}
+					}
+				}
+				
+				
 				if (returnObj == null) {
 					if (defaultValue != null) {
 						returnObj = defaultValue;
@@ -3130,7 +3501,7 @@ public class Oson {
 	/*
 	 * deserialize only
 	 */
-	private <E> E[] getArray(FieldData objectDTO) {
+	private <E> Object getArray(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		E[] returnObj = (E[])objectDTO.returnObj;
 		Class<E[]> returnType = objectDTO.returnType;
@@ -3176,6 +3547,26 @@ public class Oson {
 				if (componentType == null) componentType = (Class<E>) Object.class;
 				
 				if (values.size() > 0) {
+					boolean json2Java = objectDTO.json2Java;
+					Function function = null;
+					if (json2Java) {
+						function = getDeserializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
+						if (function != null) {
+							try {
+								return function.apply(values);
+							} catch (Exception e) {}
+						}
+						
+					} else {
+						function = getSerializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
+						if (function != null) {
+							try {
+								return function.apply(values);
+							} catch (Exception e) {}
+						}
+					}
+					
+					
 					E[] arr = (E[]) Array.newInstance(componentType, values.size());
 	
 					int i = 0;
@@ -3314,6 +3705,9 @@ public class Oson {
 		Object value = objectDTO.valueToProcess;
 		Class<?> returnType = objectDTO.returnType;
 		boolean notNull = objectDTO.notNull;
+		if (objectDTO.defaultVal == null) {
+			objectDTO.defaultVal = getDefaultValue();
+		}
 
 		if (returnType == null) {
 			if (value == null) {
@@ -3324,14 +3718,19 @@ public class Oson {
 			}
 
 		} else if (returnType == String.class) {
-			String string = getString(objectDTO);
+			value = getString(objectDTO);
 
-			if (string == null) {
+			if (value == null) {
 				return null;
-			} else {
-				return "\"" + StringUtil.escapeDoublequote(string)
-						+ "\"";
 			}
+			
+			if (!notNull && (objectDTO.defaultVal == DEFAULT_VALUE.NON_DEFAULT || objectDTO.defaultVal == DEFAULT_VALUE.NON_NULL_EMPTY)) {
+				if (value.equals(DefaultValue.string)) {
+					return null;
+				}
+			}
+			
+			return "\"" + StringUtil.escapeDoublequote(value.toString()) + "\"";
 
 		} else if (returnType == Integer.class || returnType == int.class) {
 			Object valueToReturn = getInteger(objectDTO);
@@ -3342,6 +3741,12 @@ public class Oson {
 			
 			if (valueToReturn instanceof String) {
 				return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+			}
+			
+			if (!notNull && objectDTO.defaultVal == DEFAULT_VALUE.NON_DEFAULT) {
+				if (valueToReturn.equals(DefaultValue.integer)) {
+					return null;
+				}
 			}
 			
 			return String.valueOf(valueToReturn);
@@ -3358,6 +3763,12 @@ public class Oson {
 				return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
 			}
 			
+			if (!notNull && objectDTO.defaultVal == DEFAULT_VALUE.NON_DEFAULT) {
+				if (valueToReturn.equals(DefaultValue.ddouble)) {
+					return null;
+				}
+			}
+			
 			return String.valueOf(valueToReturn);
 
 			
@@ -3372,6 +3783,12 @@ public class Oson {
 				return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
 			}
 			
+			if (!notNull && objectDTO.defaultVal == DEFAULT_VALUE.NON_DEFAULT) {
+				if (valueToReturn.equals(DefaultValue.dshort)) {
+					return null;
+				}
+			}
+			
 			return String.valueOf(valueToReturn);
 
 		} else if (returnType == Float.class || returnType == float.class) {
@@ -3383,6 +3800,12 @@ public class Oson {
 			
 			if (valueToReturn instanceof String) {
 				return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+			}
+			
+			if (!notNull && objectDTO.defaultVal == DEFAULT_VALUE.NON_DEFAULT) {
+				if (valueToReturn.equals(DefaultValue.dfloat)) {
+					return null;
+				}
 			}
 			
 			return String.valueOf(valueToReturn);
@@ -3399,6 +3822,12 @@ public class Oson {
 				return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
 			}
 			
+			if (!notNull && objectDTO.defaultVal == DEFAULT_VALUE.NON_DEFAULT) {
+				if (valueToReturn.equals(DefaultValue.bigDecimal)) {
+					return null;
+				}
+			}
+			
 			return String.valueOf(valueToReturn);
 			
 			
@@ -3411,6 +3840,12 @@ public class Oson {
 			
 			if (valueToReturn instanceof String) {
 				return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+			}
+			
+			if (!notNull && objectDTO.defaultVal == DEFAULT_VALUE.NON_DEFAULT) {
+				if (valueToReturn.equals(DefaultValue.bigInteger)) {
+					return null;
+				}
 			}
 			
 			return String.valueOf(valueToReturn);
@@ -3428,6 +3863,12 @@ public class Oson {
 				return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
 			}
 			
+			if (!notNull && objectDTO.defaultVal == DEFAULT_VALUE.NON_DEFAULT) {
+				if (valueToReturn.equals(DefaultValue.character)) {
+					return null;
+				}
+			}
+			
 			return "\"" + StringUtil.escapeDoublequote(valueToReturn.toString()) + "\"";
 
 		} else if (returnType == Byte.class || returnType == byte.class) {
@@ -3441,6 +3882,12 @@ public class Oson {
 				return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
 			}
 			
+			if (!notNull && objectDTO.defaultVal == DEFAULT_VALUE.NON_DEFAULT) {
+				if (valueToReturn.equals(DefaultValue.dbyte)) {
+					return null;
+				}
+			}
+			
 			return String.valueOf(valueToReturn);
 			
 		} else if (returnType == Long.class || returnType == long.class) {
@@ -3452,6 +3899,12 @@ public class Oson {
 			
 			if (valueToReturn instanceof String) {
 				return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+			}
+			
+			if (!notNull && objectDTO.defaultVal == DEFAULT_VALUE.NON_DEFAULT) {
+				if (valueToReturn.equals(DefaultValue.dlong)) {
+					return null;
+				}
 			}
 			
 			return String.valueOf(valueToReturn);
@@ -3473,7 +3926,7 @@ public class Oson {
 //			} else if (Number.class.isAssignableFrom(returnType) || returnType.isPrimitive()) {
 //				if (value == null) {
 //					if (returnType.isPrimitive()
-//							|| getDefaultValue() == DEFAULT_VALUE.DEFAULT || notNull) {
+//							|| objectDTO.defaultVal == DEFAULT_VALUE.DEFAULT || notNull) {
 //						return "0";
 //					}
 //					return null;
@@ -3528,7 +3981,7 @@ public class Oson {
 			String str = sbuilder.toString();
 			int size = str.length();
 			if (size == 0) {
-				switch (getDefaultValue()) {
+				switch (objectDTO.defaultVal) {
 				case ALWAYS:
 					return "[]";
 				case NON_NULL:
@@ -3571,7 +4024,7 @@ public class Oson {
 			String str = sbuilder.toString();
 			size = str.length();
 			if (size == 0) {
-				switch (getDefaultValue()) {
+				switch (objectDTO.defaultVal) {
 				case ALWAYS:
 					return "[]";
 				case NON_NULL:
@@ -3831,11 +4284,38 @@ public class Oson {
 			return "";
 		}
 		
+		Function function = getDeserializer(valueType);
+		if (function != null) {
+			try {
+				Object returnValue = null;
+				try {
+					returnValue = function.apply(obj);
+				} catch (Exception e) {}
+				
+				if (returnValue == null) {
+					return "";
+				}
+				
+				Class returnType = returnValue.getClass();
+				
+				if (returnType == String.class) {
+					return (String)returnValue;
+					
+				} else if (returnType == valueType || valueType.isAssignableFrom(returnType)) {
+					// just continue to do the serializing
+				} else {
+					return returnValue.toString();
+				}
+			
+			} catch (Exception e) {}
+		}
 		
 		FIELD_NAMING format = getFieldNaming();
 
 		String repeated = getPrettyIndentationln(level), pretty = getPrettySpace();
 		String repeatedItem = getPrettyIndentationln(++level);
+		
+		DEFAULT_VALUE classDefaultVal = getDefaultValue();
 
 		ANNOTATION_SUPPORT annotationSupport = getAnnotationSupport();
 		Annotation[] annotations = null;
@@ -3852,6 +4332,30 @@ public class Oson {
 					JsonIgnoreProperties jsonIgnoreProperties = (JsonIgnoreProperties) annotation;
 					names = jsonIgnoreProperties.value();
 					Arrays.sort(names);
+					
+				} else if (annotation instanceof JsonInclude) {
+					JsonInclude jsonInclude = (JsonInclude) annotation;
+					
+					switch (jsonInclude.content()) {
+					case ALWAYS:
+						classDefaultVal = DEFAULT_VALUE.ALWAYS;
+						break;
+					case NON_NULL:
+						classDefaultVal = DEFAULT_VALUE.NON_NULL;
+						break;
+					case NON_ABSENT:
+						classDefaultVal = DEFAULT_VALUE.NON_NULL;
+						break;
+					case NON_EMPTY:
+						classDefaultVal = DEFAULT_VALUE.NON_NULL_EMPTY;
+						break;
+					case NON_DEFAULT:
+						classDefaultVal = DEFAULT_VALUE.NON_DEFAULT;
+						break;
+					case USE_DEFAULTS:
+						classDefaultVal = DEFAULT_VALUE.DEFAULT;
+						break;
+					}
 				}
 			}
 		}
@@ -3859,7 +4363,7 @@ public class Oson {
 		Set<String> processedNameSet = new HashSet<>();
 
 		try {
-			DEFAULT_VALUE defaultVal = getDefaultValue();
+			
 			//boolean nonNUll = (defaultVal == DEFAULT_VALUE.NON_NULL);
 			//boolean nonNUllEmpty = (defaultVal == DEFAULT_VALUE.NON_NULL_EMPTY);
 			
@@ -3897,6 +4401,7 @@ public class Oson {
 				Integer max = null;
 				String defaultValue = null;
 				boolean json2Java = false;
+				DEFAULT_VALUE defaultVal = classDefaultVal;
 				
 				Method getterMethod = gettersByNames.remove(name.toLowerCase());
 
@@ -3967,10 +4472,48 @@ public class Oson {
 								ignored = true;
 								break;
 							}
-
+							
+						} else if (annotation instanceof Expose) {
+							Expose expose = (Expose) annotation;
+							if (!expose.serialize()) {
+								ignored = true;
+								break;
+							}
+							
+						} else if (annotation instanceof Since) {
+							Since since = (Since) annotation;
+							if (ignoreVersionsAfter(since.value())) {
+								ignored = true;
+								break;
+							}
+							
 						} else if (ignoreField(annotation)) {
 							ignored = true;
 							break;
+							
+						} else if (annotation instanceof JsonInclude) {
+							JsonInclude jsonInclude = (JsonInclude) annotation;
+							
+							switch (jsonInclude.content()) {
+							case ALWAYS:
+								defaultVal = DEFAULT_VALUE.ALWAYS;
+								break;
+							case NON_NULL:
+								defaultVal = DEFAULT_VALUE.NON_NULL;
+								break;
+							case NON_ABSENT:
+								defaultVal = DEFAULT_VALUE.NON_NULL;
+								break;
+							case NON_EMPTY:
+								defaultVal = DEFAULT_VALUE.NON_NULL_EMPTY;
+								break;
+							case NON_DEFAULT:
+								defaultVal = DEFAULT_VALUE.NON_DEFAULT;
+								break;
+							case USE_DEFAULTS:
+								defaultVal = DEFAULT_VALUE.DEFAULT;
+								break;
+							}
 							
 						} else if (annotation instanceof Enumerated) {
 							enumType = ((Enumerated) annotation).value();
@@ -4092,7 +4635,7 @@ public class Oson {
 					str = object2String(objectDTO, level, set);
 
 					if (str == null) {
-						if (defaultVal == DEFAULT_VALUE.NON_NULL || defaultVal == DEFAULT_VALUE.NON_NULL_EMPTY) {
+						if (defaultVal == DEFAULT_VALUE.NON_NULL || defaultVal == DEFAULT_VALUE.NON_NULL_EMPTY || defaultVal == DEFAULT_VALUE.NON_DEFAULT) {
 							continue;
 						} else {
 							str = "null";
@@ -4156,7 +4699,7 @@ public class Oson {
 				Integer max = null;
 				String defaultValue = null;
 				boolean json2Java = false;
-				
+				DEFAULT_VALUE defaultVal = classDefaultVal;
 				
 				for (Annotation annotation: method.getDeclaredAnnotations()) {
 					if (annotation instanceof JsonAnyGetter) {
@@ -4177,9 +4720,40 @@ public class Oson {
 							break;
 						}
 						
+					} else if (annotation instanceof Since) {
+						Since since = (Since) annotation;
+						if (ignoreVersionsAfter(since.value())) {
+							ignored = true;
+							break;
+						}
+						
 					} else if (ignoreField(annotation)) {
 						ignored = true;
 						break;
+						
+					} else if (annotation instanceof JsonInclude) {
+						JsonInclude jsonInclude = (JsonInclude) annotation;
+						
+						switch (jsonInclude.content()) {
+						case ALWAYS:
+							defaultVal = DEFAULT_VALUE.ALWAYS;
+							break;
+						case NON_NULL:
+							defaultVal = DEFAULT_VALUE.NON_NULL;
+							break;
+						case NON_ABSENT:
+							defaultVal = DEFAULT_VALUE.NON_NULL;
+							break;
+						case NON_EMPTY:
+							defaultVal = DEFAULT_VALUE.NON_NULL_EMPTY;
+							break;
+						case NON_DEFAULT:
+							defaultVal = DEFAULT_VALUE.NON_DEFAULT;
+							break;
+						case USE_DEFAULTS:
+							defaultVal = DEFAULT_VALUE.DEFAULT;
+							break;
+						}
 						
 					} else if (annotation instanceof Enumerated) {
 						enumType = ((Enumerated) annotation).value();
@@ -4306,10 +4880,11 @@ public class Oson {
 							returnType, enumType, notNull, length,
 							scale, min, max, defaultValue, json2Java);
 					objectDTO.getter = method;
+					objectDTO.defaultVal = defaultVal;
 					str = object2String(objectDTO, level, set);
 
 					if (str == null) {
-						if (defaultVal == DEFAULT_VALUE.NON_NULL || defaultVal == DEFAULT_VALUE.NON_NULL_EMPTY) {
+						if (defaultVal == DEFAULT_VALUE.NON_NULL || defaultVal == DEFAULT_VALUE.NON_NULL_EMPTY || defaultVal == DEFAULT_VALUE.NON_DEFAULT) {
 							continue;
 						} else {
 							str = "null";
@@ -4350,16 +4925,18 @@ public class Oson {
 										
 										FieldData newFieldData = new FieldData(value, value.getClass());
 										newFieldData.json2Java = false;
+										newFieldData.defaultVal = classDefaultVal;
 										str = object2String(newFieldData, level, set);
 	
 										if (str == null) {
-											if (defaultVal == DEFAULT_VALUE.NON_NULL || defaultVal == DEFAULT_VALUE.NON_NULL_EMPTY) {
+											if (classDefaultVal == DEFAULT_VALUE.NON_NULL || classDefaultVal == DEFAULT_VALUE.NON_NULL_EMPTY
+													 || classDefaultVal == DEFAULT_VALUE.NON_DEFAULT) {
 												continue;
 											} else {
 												str = "null";
 											}
 	
-										} else if (defaultVal == DEFAULT_VALUE.NON_NULL_EMPTY && StringUtil.isEmpty(str)) {
+										} else if (classDefaultVal == DEFAULT_VALUE.NON_NULL_EMPTY && StringUtil.isEmpty(str)) {
 											continue;
 										}
 	
@@ -4464,7 +5041,7 @@ public class Oson {
 
 				List list = (List)fromJsonMap(obj);
 
-				FieldData fieldData = new FieldData(null, list, type, true);
+				FieldData fieldData = new FieldData(null, list, type, true, getDefaultValue());
 				return string2Object(fieldData);
 
 			} else if (source.startsWith("{")) {
@@ -4475,7 +5052,7 @@ public class Oson {
 				Class<T> valueType = ObjectUtil.getTypeClass(type);
 
 				if (Iterable.class.isAssignableFrom(valueType) || Map.class.isAssignableFrom(valueType)) {
-					FieldData fieldData = new FieldData(null, map, type, true);
+					FieldData fieldData = new FieldData(null, map, type, true, getDefaultValue());
 					fieldData.returnType = valueType;
 
 					return string2Object(fieldData);
@@ -4583,9 +5160,17 @@ public class Oson {
 	 * create an initial object of valueType type to copy data into
 	 */
 	<T> T newInstance(Map<String, Object> map, Class<T> valueType) {
+		InstanceCreator creator = getTypeAdapter(valueType);
+		
+		if (creator != null) {
+			return (T) creator.createInstance(valueType);
+		}
+		
+		
 		if (map == null) {
 			return null;
 		}
+
 		// @JsonTypeInfo(use = JsonTypeInfo.Id.MINIMAL_CLASS, include = As.PROPERTY, property = "@class")
 		//@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = As.PROPERTY, property = "@class")
 		String JsonClassType = null;
@@ -4912,6 +5497,16 @@ public class Oson {
 			return null;
 		}
 
+
+		Function function = getDeserializer(valueType);
+		if (function != null) {
+			try {
+				return (T) function.apply(obj);
+			} catch (Exception e) {}
+		}
+		
+		DEFAULT_VALUE classDefaultVal = getDefaultValue();
+		
 		try {
 			ANNOTATION_SUPPORT annotationSupport = getAnnotationSupport();
 			Annotation[] annotations = null;
@@ -4928,7 +5523,32 @@ public class Oson {
 						JsonIgnoreProperties jsonIgnoreProperties = (JsonIgnoreProperties) annotation;
 						names = jsonIgnoreProperties.value();
 						Arrays.sort(names);
+						
+					} else if (annotation instanceof JsonInclude) {
+						JsonInclude jsonInclude = (JsonInclude) annotation;
+						
+						switch (jsonInclude.content()) {
+						case ALWAYS:
+							classDefaultVal = DEFAULT_VALUE.ALWAYS;
+							break;
+						case NON_NULL:
+							classDefaultVal = DEFAULT_VALUE.NON_NULL;
+							break;
+						case NON_ABSENT:
+							classDefaultVal = DEFAULT_VALUE.NON_NULL;
+							break;
+						case NON_EMPTY:
+							classDefaultVal = DEFAULT_VALUE.NON_NULL_EMPTY;
+							break;
+						case NON_DEFAULT:
+							classDefaultVal = DEFAULT_VALUE.NON_DEFAULT;
+							break;
+						case USE_DEFAULTS:
+							classDefaultVal = DEFAULT_VALUE.DEFAULT;
+							break;
+						}
 					}
+					
 				}
 			}
 
@@ -4963,6 +5583,7 @@ public class Oson {
 				Integer max = null;
 				String defaultValue = null;
 				boolean json2Java = true;
+				DEFAULT_VALUE defaultVal = classDefaultVal;
 
 				String setterName = "set" + StringUtil.capitalize(name);
 
@@ -5032,10 +5653,48 @@ public class Oson {
 								break;
 							}
 							
+						} else if (annotation instanceof Expose) {
+							Expose expose = (Expose) annotation;
+							if (!expose.deserialize()) {
+								ignored = true;
+								break;
+							}
+							
+						} else if (annotation instanceof Since) {
+							Since since = (Since) annotation;
+							if (ignoreVersionsAfter(since.value())) {
+								ignored = true;
+								break;
+							}
+							
 						} else if (ignoreField(annotation)) {
 							ignored = true;
 							break;
 
+						} else if (annotation instanceof JsonInclude) {
+							JsonInclude jsonInclude = (JsonInclude) annotation;
+							
+							switch (jsonInclude.content()) {
+							case ALWAYS:
+								defaultVal = DEFAULT_VALUE.ALWAYS;
+								break;
+							case NON_NULL:
+								defaultVal = DEFAULT_VALUE.NON_NULL;
+								break;
+							case NON_ABSENT:
+								defaultVal = DEFAULT_VALUE.NON_NULL;
+								break;
+							case NON_EMPTY:
+								defaultVal = DEFAULT_VALUE.NON_NULL_EMPTY;
+								break;
+							case NON_DEFAULT:
+								defaultVal = DEFAULT_VALUE.NON_DEFAULT;
+								break;
+							case USE_DEFAULTS:
+								defaultVal = DEFAULT_VALUE.DEFAULT;
+								break;
+							}
+							
 						} else if (annotation instanceof Enumerated) {
 							enumType = ((Enumerated) annotation).value();
 
@@ -5167,6 +5826,7 @@ public class Oson {
 					FieldData objectDTO = new FieldData(obj, f, name, value,
 							returnType, enumType, notNull, length,
 							scale, min, max, defaultValue, json2Java);
+					objectDTO.defaultVal = defaultVal;
 					value = string2Object(objectDTO);
 
 					if (value != null) {
@@ -5415,10 +6075,10 @@ public class Oson {
 		}
 
 		//if (Iterable.class.isAssignableFrom(valueType) || Map.class.isAssignableFrom(valueType)) {
-			return object2String(new FieldData(source, valueType, type, false), level, set);
+			return object2String(new FieldData(source, valueType, type, false, getDefaultValue()), level, set);
 
 		//} else {
-		//	return toJson(source, valueType, level, set);
+		//	return serialize(source, valueType, level, set);
 		//}
 	}
 	public <T> String serialize(T source) {
