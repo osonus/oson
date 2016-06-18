@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -76,6 +77,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
@@ -235,7 +237,7 @@ public class Oson {
 		private Boolean prettyPrinting = true;
 		private int indentation = 2;
 		private ANNOTATION_SUPPORT annotationSupport = ANNOTATION_SUPPORT.BASIC;
-		private Boolean orderByKeys = false;
+		private Boolean orderByKeyAndProperties = false;
 		private Boolean includeClassTypeInJson = false;
 		private Boolean printErrorUseOsonInFailure = true;
 		private String jsonClassType = "@class";
@@ -760,12 +762,12 @@ public class Oson {
 			this.annotationSupport = annotationSupport;
 		}
 
-		private Boolean getOrderByKeys() {
-			return orderByKeys;
+		private Boolean getOrderByKeyAndProperties() {
+			return orderByKeyAndProperties;
 		}
 
-		public void setOrderByKeys(Boolean orderByKeys) {
-			this.orderByKeys = orderByKeys;
+		public void setOrderByKeyAndProperties(Boolean orderByKeyAndProperties) {
+			this.orderByKeyAndProperties = orderByKeyAndProperties;
 		}
 
 		private Boolean getIncludeClassTypeInJson() {
@@ -1638,13 +1640,13 @@ public class Oson {
 	}
 	
 
-	private Boolean getOrderByKeys() {
-		return options.getOrderByKeys();
+	private Boolean getOrderByKeyAndProperties() {
+		return options.getOrderByKeyAndProperties();
 	}
 
-	public Oson setOrderByKeys(Boolean orderByKeys) {
-		if (orderByKeys != null) {
-			options.setOrderByKeys(orderByKeys);
+	public Oson setOrderByKeyAndProperties(Boolean orderByKeyAndProperties) {
+		if (orderByKeyAndProperties != null) {
+			options.setOrderByKeyAndProperties(orderByKeyAndProperties);
 			reset();
 		}
 
@@ -1748,7 +1750,7 @@ public class Oson {
 				jackson.configure(SerializationFeature.INDENT_OUTPUT, true);
 			}
 
-			if (getOrderByKeys()) {
+			if (getOrderByKeyAndProperties()) {
 				jackson.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
 			}
 
@@ -4061,7 +4063,7 @@ public class Oson {
 			//for (Map.Entry<Object, ?> entry : map.entrySet()) {
 			Set<String> names = map.keySet();
 			try {
-				if (getOrderByKeys()) {//LinkedHashSet
+				if (getOrderByKeyAndProperties()) {//LinkedHashSet
 					names = new TreeSet(names);
 				}
 
@@ -4269,8 +4271,6 @@ public class Oson {
 		if (obj == null) {
 			return "";
 		}
-		
-		StringBuffer sb = new StringBuffer();
 
 		int hash = ObjectUtil.hashCode(obj);
 		if (set.contains(hash)) {
@@ -4320,6 +4320,11 @@ public class Oson {
 		ANNOTATION_SUPPORT annotationSupport = getAnnotationSupport();
 		Annotation[] annotations = null;
 		String[] names = null;
+		
+		String[] propertyOrders = null;
+		boolean orderByKeyAndProperties = getOrderByKeyAndProperties();
+		Map<String, String> keyJsonStrings = new HashMap<>();
+		Map<String, String> fieldNames = new HashMap<>();
 
 		if (annotationSupport != ANNOTATION_SUPPORT.NONE) {
 			annotations = valueType.getAnnotations();
@@ -4328,14 +4333,31 @@ public class Oson {
 					return "";
 				}
 				
-				if (annotation instanceof JsonIgnoreProperties) {
+				switch (annotation.annotationType().getName()) {
+				case "com.fasterxml.jackson.annotation.JsonIgnoreProperties":
 					JsonIgnoreProperties jsonIgnoreProperties = (JsonIgnoreProperties) annotation;
 					names = jsonIgnoreProperties.value();
 					Arrays.sort(names);
+					break;
 					
-				} else if (annotation instanceof JsonInclude) {
+				case "org.codehaus.jackson.annotate.JsonIgnoreProperties":
+					org.codehaus.jackson.annotate.JsonIgnoreProperties jsonIgnoreProperties2 = (org.codehaus.jackson.annotate.JsonIgnoreProperties) annotation;
+					names = jsonIgnoreProperties2.value();
+					Arrays.sort(names);
+					break;
+					
+				case "com.fasterxml.jackson.annotation.JsonPropertyOrder":
+					JsonPropertyOrder jsonPropertyOrder = (JsonPropertyOrder) annotation;
+					propertyOrders = jsonPropertyOrder.value();
+					break;
+					
+				case "org.codehaus.jackson.annotate.JsonPropertyOrder":
+					org.codehaus.jackson.annotate.JsonPropertyOrder jsonPropertyOrder2 = (org.codehaus.jackson.annotate.JsonPropertyOrder) annotation;
+					propertyOrders = jsonPropertyOrder2.value();
+					break;
+					
+				case "com.fasterxml.jackson.annotation.JsonInclude":
 					JsonInclude jsonInclude = (JsonInclude) annotation;
-					
 					switch (jsonInclude.content()) {
 					case ALWAYS:
 						classDefaultVal = DEFAULT_VALUE.ALWAYS;
@@ -4356,12 +4378,15 @@ public class Oson {
 						classDefaultVal = DEFAULT_VALUE.DEFAULT;
 						break;
 					}
+					break;	
 				}
 			}
 		}
 		
+		
 		Set<String> processedNameSet = new HashSet<>();
-
+		//StringBuffer sb = new StringBuffer();
+		
 		try {
 			
 			//boolean nonNUll = (defaultVal == DEFAULT_VALUE.NON_NULL);
@@ -4454,44 +4479,45 @@ public class Oson {
 
 
 					for (Annotation annotation : annotations) {
-						if (annotation instanceof JsonAnyGetter) {
-							ignored = true;
-							break; // handle in next section, in case there are multiple @JsonAnyGetter methods
-							
-						} else if (annotation instanceof JsonIgnore || ObjectUtil.isinstanceof(annotation, JsonIgnore.class)) {
+						if (ignoreField(annotation)) {
 							ignored = true;
 							break;
-
-						} else if (annotation instanceof org.codehaus.jackson.annotate.JsonIgnore) {
+						}
+						
+						// to improve performance, using swith on string
+						switch (annotation.annotationType().getName()) {
+						case "com.fasterxml.jackson.annotation.JsonAnyGetter":
+						case "org.codehaus.jackson.annotate.JsonAnyGetter":
 							ignored = true;
 							break;
 							
-						} else if (annotation instanceof JsonIgnoreProperties) {
+						case "com.fasterxml.jackson.annotation.JsonIgnore":
+						case "org.codehaus.jackson.annotate.JsonIgnore":
+							ignored = true;
+							break;
+							
+						case "com.fasterxml.jackson.annotation.JsonIgnoreProperties":
 							JsonIgnoreProperties jsonIgnoreProperties = (JsonIgnoreProperties) annotation;
 							if (!jsonIgnoreProperties.allowGetters()) {
 								ignored = true;
-								break;
 							}
+							break;
 							
-						} else if (annotation instanceof Expose) {
+						case "com.google.gson.annotations.Expose":
 							Expose expose = (Expose) annotation;
 							if (!expose.serialize()) {
 								ignored = true;
-								break;
 							}
+							break;
 							
-						} else if (annotation instanceof Since) {
+						case "com.google.gson.annotations.Since":
 							Since since = (Since) annotation;
 							if (ignoreVersionsAfter(since.value())) {
 								ignored = true;
-								break;
 							}
-							
-						} else if (ignoreField(annotation)) {
-							ignored = true;
 							break;
 							
-						} else if (annotation instanceof JsonInclude) {
+						case "com.fasterxml.jackson.annotation.JsonInclude":
 							JsonInclude jsonInclude = (JsonInclude) annotation;
 							
 							switch (jsonInclude.content()) {
@@ -4514,23 +4540,26 @@ public class Oson {
 								defaultVal = DEFAULT_VALUE.DEFAULT;
 								break;
 							}
+							break;
 							
-						} else if (annotation instanceof Enumerated) {
+						case "javax.persistence.Enumerated":
 							enumType = ((Enumerated) annotation).value();
-
-						} else if (annotation instanceof NotNull) {
+							break;
+							
+						case "javax.validation.constraints.NotNull":
 							notNull = true;
-
-						} else if (annotation instanceof JsonProperty) {
+							break;
+							
+						case "com.fasterxml.jackson.annotation.JsonProperty":
 							JsonProperty jsonProperty = (JsonProperty) annotation;
 							switch (annotationSupport) {
 							case FULL:
 
 							case NAME:
-								String dvalue = jsonProperty.value();
-								if (dvalue != null && dvalue.length() > 0) {
-									name = dvalue;
-								}
+//								String dvalue = jsonProperty.value();
+//								if (dvalue != null && dvalue.length() > 0) {
+//									name = dvalue;
+//								}
 
 							case BASIC:
 								Access access = jsonProperty.access();
@@ -4548,16 +4577,19 @@ public class Oson {
 
 							case NONE:
 							}
-
-						} else if (annotation instanceof Size
-								&& annotationSupport == ANNOTATION_SUPPORT.FULL) {
-							Size size = (Size) annotation;
-							min = size.min();
-							max = size.max();
-
-						} else if (annotation instanceof Column) {
+							break;
+							
+						case "javax.validation.constraints.Size":
+							 if (annotationSupport == ANNOTATION_SUPPORT.FULL) {
+									Size size = (Size) annotation;
+									min = size.min();
+									max = size.max();
+							 }
+							break;
+							
+						case "javax.persistence.Column":
 							Column column = (Column) annotation;
-
+							
 							switch (annotationSupport) {
 							case FULL:
 								length = column.length();
@@ -4578,20 +4610,16 @@ public class Oson {
 
 							case NONE:
 							}
+							break;
+						}
 
-							// String dvalue = ().name();
-
-							// nullable
-
-						} else if (annotationSupport == ANNOTATION_SUPPORT.NAME || annotationSupport == ANNOTATION_SUPPORT.FULL) {
+						if (annotationSupport == ANNOTATION_SUPPORT.NAME || annotationSupport == ANNOTATION_SUPPORT.FULL) {
 							String dvalue = ObjectUtil.getName(annotation);
 							if (dvalue != null && dvalue.length() > 0) {
 								name = dvalue;
 							}
 						}
-
 					}
-
 				}
 
 				if (ignored) {
@@ -4647,13 +4675,15 @@ public class Oson {
 					}
 				//}
 
+				StringBuffer sb = new StringBuffer();
 				sb.append(repeatedItem);
-				
 				processedNameSet.add(name);
-
 				sb.append("\"" + name + "\":" + pretty);
 				sb.append(str);
 				sb.append(",");
+				
+				keyJsonStrings.put(fieldName, sb.toString());
+				fieldNames.put(fieldName, name);
 			}
 			
 
@@ -4702,36 +4732,44 @@ public class Oson {
 				DEFAULT_VALUE defaultVal = classDefaultVal;
 				
 				for (Annotation annotation: method.getDeclaredAnnotations()) {
-					if (annotation instanceof JsonAnyGetter) {
-						ignored = true;
-						break; // handle in next section, in case there are multiple @JsonAnyGetter methods
-					} else if (annotation instanceof JsonIgnore || ObjectUtil.isinstanceof(annotation, JsonIgnore.class)) {
+					if (ignoreField(annotation)) {
 						ignored = true;
 						break;
+					}
 
-					} else if (annotation instanceof org.codehaus.jackson.annotate.JsonIgnore) {
+					switch (annotation.annotationType().getName()) {
+					case "com.fasterxml.jackson.annotation.JsonAnyGetter":
+					case "org.codehaus.jackson.annotate.JsonAnyGetter":
 						ignored = true;
 						break;
-
-					} else if (annotation instanceof JsonIgnoreProperties) {
+						
+					case "com.fasterxml.jackson.annotation.JsonIgnore":
+					case "org.codehaus.jackson.annotate.JsonIgnore":
+						ignored = true;
+						break;
+						
+					case "com.fasterxml.jackson.annotation.JsonIgnoreProperties":
 						JsonIgnoreProperties jsonIgnoreProperties = (JsonIgnoreProperties) annotation;
 						if (!jsonIgnoreProperties.allowGetters()) {
 							ignored = true;
-							break;
 						}
+						break;
 						
-					} else if (annotation instanceof Since) {
+					case "com.google.gson.annotations.Expose":
+						Expose expose = (Expose) annotation;
+						if (!expose.serialize()) {
+							ignored = true;
+						}
+						break;
+						
+					case "com.google.gson.annotations.Since":
 						Since since = (Since) annotation;
 						if (ignoreVersionsAfter(since.value())) {
 							ignored = true;
-							break;
 						}
-						
-					} else if (ignoreField(annotation)) {
-						ignored = true;
 						break;
 						
-					} else if (annotation instanceof JsonInclude) {
+					case "com.fasterxml.jackson.annotation.JsonInclude":
 						JsonInclude jsonInclude = (JsonInclude) annotation;
 						
 						switch (jsonInclude.content()) {
@@ -4754,23 +4792,26 @@ public class Oson {
 							defaultVal = DEFAULT_VALUE.DEFAULT;
 							break;
 						}
+						break;
 						
-					} else if (annotation instanceof Enumerated) {
+					case "javax.persistence.Enumerated":
 						enumType = ((Enumerated) annotation).value();
-
-					} else if (annotation instanceof NotNull) {
+						break;
+						
+					case "javax.validation.constraints.NotNull":
 						notNull = true;
-
-					} else if (annotation instanceof JsonProperty) {
+						break;
+						
+					case "com.fasterxml.jackson.annotation.JsonProperty":
 						JsonProperty jsonProperty = (JsonProperty) annotation;
 						switch (annotationSupport) {
 						case FULL:
 
 						case NAME:
-							String dvalue = jsonProperty.value();
-							if (dvalue != null && dvalue.length() > 0) {
-								name = dvalue;
-							}
+//							String dvalue = jsonProperty.value();
+//							if (dvalue != null && dvalue.length() > 0) {
+//								name = dvalue;
+//							}
 
 						case BASIC:
 							Access access = jsonProperty.access();
@@ -4788,16 +4829,19 @@ public class Oson {
 
 						case NONE:
 						}
-
-					} else if (annotation instanceof Size
-							&& annotationSupport == ANNOTATION_SUPPORT.FULL) {
-						Size size = (Size) annotation;
-						min = size.min();
-						max = size.max();
-
-					} else if (annotation instanceof Column) {
+						break;
+						
+					case "javax.validation.constraints.Size":
+						 if (annotationSupport == ANNOTATION_SUPPORT.FULL) {
+								Size size = (Size) annotation;
+								min = size.min();
+								max = size.max();
+						 }
+						break;
+						
+					case "javax.persistence.Column":
 						Column column = (Column) annotation;
-
+						
 						switch (annotationSupport) {
 						case FULL:
 							length = column.length();
@@ -4818,19 +4862,17 @@ public class Oson {
 
 						case NONE:
 						}
+						break;
+					}
 
-						// String dvalue = ().name();
-
-						// nullable
-
-					} else if (annotationSupport == ANNOTATION_SUPPORT.NAME || annotationSupport == ANNOTATION_SUPPORT.FULL) {
+					if (annotationSupport == ANNOTATION_SUPPORT.NAME || annotationSupport == ANNOTATION_SUPPORT.FULL) {
 						String dvalue = ObjectUtil.getName(annotation);
 						if (dvalue != null && dvalue.length() > 0) {
 							name = dvalue;
 						}
 					}
-					
 				}
+
 				
 				if (ignored) {
 					continue;
@@ -4896,11 +4938,13 @@ public class Oson {
 					}
 				//}
 
+				StringBuffer sb = new StringBuffer();
 				sb.append(repeatedItem);
-
 				sb.append("\"" + name + "\":" + pretty);
 				sb.append(str);
 				sb.append(",");
+				keyJsonStrings.put(fieldName, sb.toString());
+				fieldNames.put(fieldName, name);
 			}
 
 
@@ -4908,8 +4952,7 @@ public class Oson {
 			if (annotationSupport != ANNOTATION_SUPPORT.NONE) {
 				for (Method method: valueType.getMethods()) {
 					for (Annotation annotation: method.getAnnotations()) {
-						if (annotation instanceof JsonAnyGetter) {
-	
+						if (annotation instanceof JsonAnyGetter || annotation instanceof org.codehaus.jackson.annotate.JsonAnyGetter) {
 							if (ignoreModifiers(method.getModifiers())) {
 								continue;
 							}
@@ -4940,11 +4983,12 @@ public class Oson {
 											continue;
 										}
 	
+										StringBuffer sb = new StringBuffer();
 										sb.append(repeatedItem);
-	
 										sb.append("\"" + name + "\":" + pretty);
 										sb.append(str);
 										sb.append(",");
+										keyJsonStrings.put(name, sb.toString());
 									}
 	
 								}
@@ -4959,8 +5003,7 @@ public class Oson {
 				}
 			}
 
-			String text = sb.toString();
-			int size = text.length();
+			int size = keyJsonStrings.size();
 			if (size == 0) {
 				return "{}"; // ""
 
@@ -4970,7 +5013,40 @@ public class Oson {
 					includeClassType = repeatedItem + "\"@class\":" + pretty + "\"" + valueType.getName() + "\",";
 				}
 
-				return "{" + includeClassType + text.substring(0, size - 1) + repeated + "}";
+				// based on sorting requirements
+				StringBuffer sb = new StringBuffer();
+				if (propertyOrders != null) {
+					for (String property: propertyOrders) {
+						String jsonText = keyJsonStrings.get(property);
+						if (jsonText != null) {
+							sb.append(jsonText);
+							keyJsonStrings.remove(property);
+						} else {
+							property = fieldNames.get(property);
+							if (property != null && keyJsonStrings.containsKey(property)) {
+								sb.append(keyJsonStrings.get(property));
+								keyJsonStrings.remove(property);
+							}
+						}
+					}
+				}
+				
+				List<String> properties = new ArrayList(keyJsonStrings.keySet());
+				if (orderByKeyAndProperties) {
+					Collections.sort(properties);
+				}
+				
+				for (String property: properties) {
+					sb.append(keyJsonStrings.get(property));
+				}
+				
+				String text = sb.toString();
+				size = text.length();
+				if (size == 0) {
+					return "{}";
+				} else {
+					return "{" + includeClassType + text.substring(0, size - 1) + repeated + "}";
+				}
 			}
 
 		} catch (IllegalAccessException | IllegalArgumentException
@@ -5519,14 +5595,21 @@ public class Oson {
 						return null;
 					}
 					
-					if (annotation instanceof JsonIgnoreProperties) {
+					switch (annotation.annotationType().getName()) {
+					case "com.fasterxml.jackson.annotation.JsonIgnoreProperties":
 						JsonIgnoreProperties jsonIgnoreProperties = (JsonIgnoreProperties) annotation;
 						names = jsonIgnoreProperties.value();
 						Arrays.sort(names);
+						break;
 						
-					} else if (annotation instanceof JsonInclude) {
+					case "org.codehaus.jackson.annotate.JsonIgnoreProperties":
+						org.codehaus.jackson.annotate.JsonIgnoreProperties jsonIgnoreProperties2 = (org.codehaus.jackson.annotate.JsonIgnoreProperties) annotation;
+						names = jsonIgnoreProperties2.value();
+						Arrays.sort(names);
+						break;
+
+					case "com.fasterxml.jackson.annotation.JsonInclude":
 						JsonInclude jsonInclude = (JsonInclude) annotation;
-						
 						switch (jsonInclude.content()) {
 						case ALWAYS:
 							classDefaultVal = DEFAULT_VALUE.ALWAYS;
@@ -5547,10 +5630,11 @@ public class Oson {
 							classDefaultVal = DEFAULT_VALUE.DEFAULT;
 							break;
 						}
+						break;	
 					}
-					
 				}
 			}
+
 
 			Field[] fields = getFields(obj);
 
@@ -5637,41 +5721,47 @@ public class Oson {
 
 					}
 
+					
 					for (Annotation annotation : annotations) {
-						if (annotation instanceof JsonIgnore) {
+						if (ignoreField(annotation)) {
+							ignored = true;
+							break;
+						}
+						
+						// to improve performance, using swith on string
+						switch (annotation.annotationType().getName()) {
+						case "com.fasterxml.jackson.annotation.JsonAnySetter":
+						case "org.codehaus.jackson.annotate.JsonAnySetter":
 							ignored = true;
 							break;
 							
-						} else if (annotation instanceof org.codehaus.jackson.annotate.JsonIgnore) {
+						case "com.fasterxml.jackson.annotation.JsonIgnore":
+						case "org.codehaus.jackson.annotate.JsonIgnore":
 							ignored = true;
 							break;
 							
-						} else if (annotation instanceof JsonIgnoreProperties) {
+						case "com.fasterxml.jackson.annotation.JsonIgnoreProperties":
 							JsonIgnoreProperties jsonIgnoreProperties = (JsonIgnoreProperties) annotation;
 							if (!jsonIgnoreProperties.allowSetters()) {
 								ignored = true;
-								break;
 							}
+							break;
 							
-						} else if (annotation instanceof Expose) {
+						case "com.google.gson.annotations.Expose":
 							Expose expose = (Expose) annotation;
 							if (!expose.deserialize()) {
 								ignored = true;
-								break;
 							}
+							break;
 							
-						} else if (annotation instanceof Since) {
+						case "com.google.gson.annotations.Since":
 							Since since = (Since) annotation;
 							if (ignoreVersionsAfter(since.value())) {
 								ignored = true;
-								break;
 							}
-							
-						} else if (ignoreField(annotation)) {
-							ignored = true;
 							break;
-
-						} else if (annotation instanceof JsonInclude) {
+							
+						case "com.fasterxml.jackson.annotation.JsonInclude":
 							JsonInclude jsonInclude = (JsonInclude) annotation;
 							
 							switch (jsonInclude.content()) {
@@ -5694,29 +5784,30 @@ public class Oson {
 								defaultVal = DEFAULT_VALUE.DEFAULT;
 								break;
 							}
+							break;
 							
-						} else if (annotation instanceof Enumerated) {
+						case "javax.persistence.Enumerated":
 							enumType = ((Enumerated) annotation).value();
-
-						} else if (annotation instanceof NotNull) {
+							break;
+							
+						case "javax.validation.constraints.NotNull":
 							notNull = true;
-
-						} else if (annotation instanceof JsonProperty) {
+							break;
+							
+						case "com.fasterxml.jackson.annotation.JsonProperty":
 							JsonProperty jsonProperty = (JsonProperty) annotation;
 							switch (annotationSupport) {
 							case FULL:
 
 							case NAME:
-								String dvalue = jsonProperty.value();
-								Object jvalue = getMapValue(map, dvalue, nameKeys);
-								if (jvalue != null) {
-									value = jvalue;
-									name = dvalue;
-								}
+//								String dvalue = jsonProperty.value();
+//								if (dvalue != null && dvalue.length() > 0) {
+//									name = dvalue;
+//								}
 
 							case BASIC:
 								Access access = jsonProperty.access();
-								if (access == Access.READ_ONLY) {
+								if (access == Access.WRITE_ONLY) {
 									ignored = true;
 									break;
 								}
@@ -5730,16 +5821,19 @@ public class Oson {
 
 							case NONE:
 							}
-
-						} else if (annotation instanceof Size
-								&& annotationSupport == ANNOTATION_SUPPORT.FULL) {
-							Size size = (Size) annotation;
-							min = size.min();
-							max = size.max();
-
-						} else if (annotation instanceof Column) {
+							break;
+							
+						case "javax.validation.constraints.Size":
+							 if (annotationSupport == ANNOTATION_SUPPORT.FULL) {
+									Size size = (Size) annotation;
+									min = size.min();
+									max = size.max();
+							 }
+							break;
+							
+						case "javax.persistence.Column":
 							Column column = (Column) annotation;
-
+							
 							switch (annotationSupport) {
 							case FULL:
 								length = column.length();
@@ -5760,30 +5854,19 @@ public class Oson {
 
 							case NONE:
 							}
+							break;
+						}
 
-							// String dvalue = ().name();
-
-							// nullable
-
-							
-						} else if (annotationSupport == ANNOTATION_SUPPORT.NAME ||
-								annotationSupport == ANNOTATION_SUPPORT.FULL) {
+						if (annotationSupport == ANNOTATION_SUPPORT.NAME || annotationSupport == ANNOTATION_SUPPORT.FULL) {
 							String dvalue = ObjectUtil.getName(annotation);
-
-							if (!name.equals(dvalue)) {
-								if (value == null) {
-									Object jvalue = getMapValue(map, dvalue, nameKeys);
-									if (jvalue != null) {
-										value = jvalue;
-										name = dvalue;
-									}
-								}
+							if (dvalue != null && dvalue.length() > 0) {
+								name = dvalue;
 							}
-
 						}
 					}
+				
 				}
-
+				
 				if (ignored) {
 					nameKeys.remove(name);
 					continue;
@@ -5891,7 +5974,7 @@ public class Oson {
 			if (nameKeys.size() > 0) {
 				for (Method method: valueType.getMethods()) {
 					for (Annotation annotation: method.getAnnotations()) {
-						if (annotation instanceof JsonAnySetter) {
+						if (annotation instanceof JsonAnySetter || annotation instanceof org.codehaus.jackson.annotate.JsonAnySetter) {
 
 							if (ignoreModifiers(method.getModifiers())) {
 								continue;
@@ -6892,50 +6975,48 @@ public class Oson {
 		}
 
 		public static String getName(Annotation annotation) {
-			String name = null;
-
-			Object a;
-			if (isinstanceof(annotation, JsonProperty.class)) {
+			switch(annotation.annotationType().getName()) {
+			case "com.fasterxml.jackson.annotation.JsonProperty":
 				JsonProperty jsonProperty = (JsonProperty)annotation;
-				name = jsonProperty.value();
+				return jsonProperty.value();
+				
+			case "com.fasterxml.jackson.annotation.JsonSetter":
+				return ((JsonSetter) annotation).value();
 
-			} else if (annotation instanceof JsonSetter) {
-				JsonSetter jsonSetter = (JsonSetter) annotation;
-				name = jsonSetter.value();
-
-			} else if (annotation instanceof SerializedName) {
-				name = ((SerializedName) annotation).value();
-
-
-			} else if (annotation instanceof RequestParam) {
+			case "org.codehaus.jackson.annotate.JsonSetter":
+				return ((org.codehaus.jackson.annotate.JsonSetter) annotation).value();
+				
+			case "com.google.gson.annotations.SerializedName":
+				return ((SerializedName) annotation).value();
+				
+			case "org.springframework.web.bind.annotation.RequestParam":
 				RequestParam requestParam = (RequestParam) annotation;
-
-				name = requestParam.value();
+				String name = requestParam.value();
 				if (name == null) {
 					name = requestParam.name();
 				}
-
-			} else if (annotation instanceof Column) {
-				name = ((Column) annotation).name();
-
-			} else if (annotation instanceof com.fasterxml.jackson.databind.util.Named) {
-				com.fasterxml.jackson.databind.util.Named named = (com.fasterxml.jackson.databind.util.Named)annotation;
-				name = named.getName();
-
-			} else if (annotation instanceof com.google.inject.name.Named) {
-				com.google.inject.name.Named named = (com.google.inject.name.Named)annotation;
-				name = named.value();
-
-			} else if (annotation instanceof javax.inject.Named) {
-				javax.inject.Named named = (javax.inject.Named)annotation;
-				name = named.value();
-
-			} else if (annotation instanceof org.codehaus.jackson.map.util.Named) {
-				org.codehaus.jackson.map.util.Named named = (org.codehaus.jackson.map.util.Named)annotation;
-				name = named.getName();
+				return name;
+				
+			case "javax.persistence.Column":
+				return ((Column) annotation).name();
+				
+			case "com.fasterxml.jackson.databind.util.Named":
+				return ((com.fasterxml.jackson.databind.util.Named)annotation).getName();
+				
+			case "com.google.inject.name.Named":
+				return ((com.google.inject.name.Named) annotation).value();
+				
+			case "javax.inject.Named":
+				return ((javax.inject.Named)annotation).value();
+				
+			case "org.codehaus.jackson.map.util.Named":
+				return ((org.codehaus.jackson.map.util.Named)annotation).getName();
+				
+			case "org.codehaus.jackson.annotate.JsonProperty":
+				return ((org.codehaus.jackson.annotate.JsonProperty) annotation).value();
 			}
 
-			return name;
+			return null;
 		}
 
 		/**
