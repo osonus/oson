@@ -78,6 +78,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonRawValue;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
@@ -1015,6 +1016,7 @@ public class Oson {
 		public Integer max = null; // default (int) 2147483647;
 		public Object defaultValue = null; // default ""
 		public DEFAULT_VALUE defaultVal = null;
+		public boolean jsonRawValue = false;
 
 		public FieldData(T enclosingObj, Field field, String defaultName, Object valueToProcess,
 				Class<E> returnType, EnumType enumType, Boolean notNull,
@@ -3707,6 +3709,7 @@ public class Oson {
 		Object value = objectDTO.valueToProcess;
 		Class<?> returnType = objectDTO.returnType;
 		boolean notNull = objectDTO.notNull;
+		boolean jsonRawValue = objectDTO.jsonRawValue;
 		if (objectDTO.defaultVal == null) {
 			objectDTO.defaultVal = getDefaultValue();
 		}
@@ -3714,6 +3717,8 @@ public class Oson {
 		if (returnType == null) {
 			if (value == null) {
 				return null;
+			} else if (jsonRawValue) {
+				return value.toString();
 			} else {
 				return "\"" + StringUtil.escapeDoublequote(value.toString())
 						+ "\"";
@@ -3732,7 +3737,11 @@ public class Oson {
 				}
 			}
 			
-			return "\"" + StringUtil.escapeDoublequote(value.toString()) + "\"";
+			if (jsonRawValue) {
+				return value.toString();
+			} else {
+				return "\"" + StringUtil.escapeDoublequote(value.toString()) + "\"";
+			}
 
 		} else if (returnType == Integer.class || returnType == int.class) {
 			Object valueToReturn = getInteger(objectDTO);
@@ -3742,7 +3751,11 @@ public class Oson {
 			}
 			
 			if (valueToReturn instanceof String) {
-				return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+				if (jsonRawValue) {
+					return (String) valueToReturn;
+				} else {
+					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+				}
 			}
 			
 			if (!notNull && objectDTO.defaultVal == DEFAULT_VALUE.NON_DEFAULT) {
@@ -3762,7 +3775,11 @@ public class Oson {
 			}
 			
 			if (valueToReturn instanceof String) {
-				return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+				if (jsonRawValue) {
+					return (String) valueToReturn;
+				} else {
+					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+				}
 			}
 			
 			if (!notNull && objectDTO.defaultVal == DEFAULT_VALUE.NON_DEFAULT) {
@@ -3782,7 +3799,11 @@ public class Oson {
 			}
 			
 			if (valueToReturn instanceof String) {
-				return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+				if (jsonRawValue) {
+					return (String) valueToReturn;
+				} else {
+					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+				}
 			}
 			
 			if (!notNull && objectDTO.defaultVal == DEFAULT_VALUE.NON_DEFAULT) {
@@ -3801,7 +3822,11 @@ public class Oson {
 			}
 			
 			if (valueToReturn instanceof String) {
-				return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+				if (jsonRawValue) {
+					return (String) valueToReturn;
+				} else {
+					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+				}
 			}
 			
 			if (!notNull && objectDTO.defaultVal == DEFAULT_VALUE.NON_DEFAULT) {
@@ -3821,7 +3846,11 @@ public class Oson {
 			}
 			
 			if (valueToReturn instanceof String) {
-				return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+				if (jsonRawValue) {
+					return (String) valueToReturn;
+				} else {
+					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+				}
 			}
 			
 			if (!notNull && objectDTO.defaultVal == DEFAULT_VALUE.NON_DEFAULT) {
@@ -3841,7 +3870,11 @@ public class Oson {
 			}
 			
 			if (valueToReturn instanceof String) {
-				return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+				if (jsonRawValue) {
+					return (String) valueToReturn;
+				} else {
+					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+				}
 			}
 			
 			if (!notNull && objectDTO.defaultVal == DEFAULT_VALUE.NON_DEFAULT) {
@@ -3862,7 +3895,11 @@ public class Oson {
 			}
 
 			if (valueToReturn instanceof String) {
-				return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+				if (jsonRawValue) {
+					return (String) valueToReturn;
+				} else {
+					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+				}
 			}
 			
 			if (!notNull && objectDTO.defaultVal == DEFAULT_VALUE.NON_DEFAULT) {
@@ -3881,7 +3918,11 @@ public class Oson {
 			}
 			
 			if (valueToReturn instanceof String) {
-				return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+				if (jsonRawValue) {
+					return (String) valueToReturn;
+				} else {
+					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+				}
 			}
 			
 			if (!notNull && objectDTO.defaultVal == DEFAULT_VALUE.NON_DEFAULT) {
@@ -3900,7 +3941,11 @@ public class Oson {
 			}
 			
 			if (valueToReturn instanceof String) {
-				return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+				if (jsonRawValue) {
+					return (String) valueToReturn;
+				} else {
+					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+				}
 			}
 			
 			if (!notNull && objectDTO.defaultVal == DEFAULT_VALUE.NON_DEFAULT) {
@@ -3919,7 +3964,11 @@ public class Oson {
 			}
 			
 			if (valueToReturn instanceof String) {
-				return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+				if (jsonRawValue) {
+					return (String) valueToReturn;
+				} else {
+					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+				}
 			}
 			
 			return String.valueOf(valueToReturn);
@@ -3943,13 +3992,22 @@ public class Oson {
 			}
 			
 			if (valueToReturn instanceof String) {
-				return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+				if (jsonRawValue) {
+					return (String) valueToReturn;
+				} else {
+					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+				}
 			}
 
 			try {
 				DateFormat format = getDateFormat();
 
-				return "\"" + format.format((Date)valueToReturn) + "\"";
+				if (jsonRawValue) {
+					return format.format((Date)valueToReturn);
+				} else {
+					return "\"" + format.format((Date)valueToReturn) + "\"";
+				}
+				
 			} catch (Exception err) {
 				return null;
 			}
@@ -4428,6 +4486,8 @@ public class Oson {
 				boolean json2Java = false;
 				DEFAULT_VALUE defaultVal = classDefaultVal;
 				
+				boolean jsonRawValue = false;
+				
 				Method getterMethod = gettersByNames.remove(name.toLowerCase());
 
 				// in case the value is returned from the getter method only
@@ -4539,6 +4599,18 @@ public class Oson {
 							case USE_DEFAULTS:
 								defaultVal = DEFAULT_VALUE.DEFAULT;
 								break;
+							}
+							break;
+							
+						case "com.fasterxml.jackson.annotation.JsonRawValue":
+							if (((JsonRawValue) annotation).value()) {
+								jsonRawValue = true;
+							}
+							break;
+							
+						case "org.codehaus.jackson.annotate.JsonRawValue":
+							if (((org.codehaus.jackson.annotate.JsonRawValue) annotation).value()) {
+								jsonRawValue = true;
 							}
 							break;
 							
@@ -4660,6 +4732,7 @@ public class Oson {
 					FieldData objectDTO = new FieldData(obj, f, name, value,
 							returnType, enumType, notNull, length,
 							scale, min, max, defaultValue, json2Java);
+					objectDTO.jsonRawValue = jsonRawValue;
 					str = object2String(objectDTO, level, set);
 
 					if (str == null) {
@@ -4731,6 +4804,8 @@ public class Oson {
 				boolean json2Java = false;
 				DEFAULT_VALUE defaultVal = classDefaultVal;
 				
+				boolean jsonRawValue = false;
+				
 				for (Annotation annotation: method.getDeclaredAnnotations()) {
 					if (ignoreField(annotation)) {
 						ignored = true;
@@ -4791,6 +4866,18 @@ public class Oson {
 						case USE_DEFAULTS:
 							defaultVal = DEFAULT_VALUE.DEFAULT;
 							break;
+						}
+						break;
+						
+					case "com.fasterxml.jackson.annotation.JsonRawValue":
+						if (((JsonRawValue) annotation).value()) {
+							jsonRawValue = true;
+						}
+						break;
+						
+					case "org.codehaus.jackson.annotate.JsonRawValue":
+						if (((org.codehaus.jackson.annotate.JsonRawValue) annotation).value()) {
+							jsonRawValue = true;
 						}
 						break;
 						
@@ -6506,7 +6593,7 @@ public class Oson {
 		}
 
 		public static String escapeDoublequote(String str) {
-			return str.replaceAll("\"", "\\\"");
+			return str.replaceAll("\"", "\\\\\"");
 		}
 		public static String escapeDoublequote(Object obj) {
 			return escapeDoublequote(obj.toString());
