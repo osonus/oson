@@ -84,6 +84,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationConfig;
@@ -5037,9 +5038,36 @@ public class Oson {
 
 			// handle @JsonAnyGetter
 			if (annotationSupport != ANNOTATION_SUPPORT.NONE) {
-				for (Method method: valueType.getMethods()) {
+				for (Method method: valueType.getDeclaredMethods()) { // .getMethods()
 					for (Annotation annotation: method.getAnnotations()) {
-						if (annotation instanceof JsonAnyGetter || annotation instanceof org.codehaus.jackson.annotate.JsonAnyGetter) {
+						
+						if (annotation instanceof JsonValue) {
+							try {
+								method.setAccessible(true);
+								Object mvalue = method.invoke(obj, null);
+			
+								if (mvalue != null) {
+									return "\"" + StringUtil.escapeDoublequote(mvalue) + "\"";
+								}
+								
+							} catch (InvocationTargetException e) {
+								// e.printStackTrace();
+							}
+							
+						} else if (annotation instanceof org.codehaus.jackson.annotate.JsonValue) {
+							try {
+								method.setAccessible(true);
+								Object mvalue = method.invoke(obj, null);
+			
+								if (mvalue != null) {
+									return "\"" + StringUtil.escapeDoublequote(mvalue) + "\"";
+								}
+								
+							} catch (InvocationTargetException e) {
+								// e.printStackTrace();
+							}
+							
+						} else if (annotation instanceof JsonAnyGetter || annotation instanceof org.codehaus.jackson.annotate.JsonAnyGetter) {
 							if (ignoreModifiers(method.getModifiers())) {
 								continue;
 							}
