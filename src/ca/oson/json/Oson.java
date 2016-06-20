@@ -142,7 +142,7 @@ import javassist.bytecode.annotation.StringMemberValue;
 public class Oson {
 	private static final char SPACE = ' ';
 	private static final String mixin = "MixIn";
-	private static final int MAX_LEVEL = 10;
+	private static final int MAX_LEVEL = 15;
 	public static enum JSON_PROCESSOR {
 		JACKSON, // use Jacksopn's implementation
 		GSON, // use google's gson implementation
@@ -4714,7 +4714,9 @@ public class Oson {
 						sbuilder.append(",");
 					}
 				}
-			} catch (ClassCastException e) {}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 
 			String str = sbuilder.toString();
 			int size = str.length();
@@ -4740,7 +4742,7 @@ public class Oson {
 
 			return serialize((E) value, returnType, level, set);
 		} else {
-			return " ... ";
+			return "{}";
 		}
 	}
 	
