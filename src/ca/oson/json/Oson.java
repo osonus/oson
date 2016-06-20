@@ -1524,7 +1524,9 @@ public class Oson {
 	private boolean getPrettyPrinting() {
 		return options.getPrettyPrinting();
 	}
-
+	public Oson pretty(Boolean prettyPrinting) {
+		return prettyPrinting(prettyPrinting);
+	}
 	public Oson prettyPrinting(Boolean prettyPrinting) {
 		if (prettyPrinting != null) {
 			options.prettyPrinting(prettyPrinting);
@@ -5182,52 +5184,22 @@ public class Oson {
 					continue;
 				}
 
-				Object value = f.get(obj);
-
 				boolean ignored = false;
 
-				Method getterMethod = gettersByNames.remove(name.toLowerCase());
-				
 				Set<String> names = new HashSet<>();
-
-				// in case the value is returned from the getter method only
-				if (getterMethod != null && (value == null || value.toString().length() == 0)) {
-					getterMethod.setAccessible(true);
-					try {
-						Object mvalue = getterMethod.invoke(obj, null);
-	
-						if (mvalue != null) {
-							value = mvalue;
-						}
-						
-					} catch (InvocationTargetException e) {
-						// e.printStackTrace();
-					}
-				}
-
-				if (ignoreModifiers(f.getModifiers(), classMapper.includeFieldsWithModifiers)) {
-					if (getterMethod != null) {
-						if (ignoreModifiers(getterMethod.getModifiers(), classMapper.includeFieldsWithModifiers)) {
-							continue;
-						}
-						
-					} else {
-						continue;
-					}
-				}
-
+				
 				if (annotationSupport != ANNOTATION_SUPPORT.NO) {
 					annotations = f.getDeclaredAnnotations();//.getAnnotations();
 					// check get method
 					// if it exists, combine both into 1 array
-					if (getterMethod != null && ((mapper.useAttribute == null && DefaultValue.useAttribute) || mapper.useAttribute)) {
-						annotations = getterMethod.getDeclaredAnnotations();//.getAnnotations();
-						annotations = Stream
-								.concat(Arrays.stream(annotations),
-										Arrays.stream(getterMethod
-												.getAnnotations()))
-								.toArray(Annotation[]::new);
-					}
+//					if (getterMethod != null && ((mapper.useAttribute == null && DefaultValue.useAttribute) || mapper.useAttribute)) {
+//						annotations = getterMethod.getDeclaredAnnotations();//.getAnnotations();
+//						annotations = Stream
+//								.concat(Arrays.stream(annotations),
+//										Arrays.stream(getterMethod
+//												.getAnnotations()))
+//								.toArray(Annotation[]::new);
+//					}
 
 
 					for (Annotation annotation : annotations) {
@@ -5279,10 +5251,10 @@ public class Oson {
 								
 								if (!fieldMapperAnnotation.useField()) {
 									mapper.useField = false;
-									if (getterMethod != null && (mapper.useAttribute == null || mapper.useAttribute)) {
-										gettersByNames.put(fieldName.toLowerCase(), getterMethod);
-									}
-									ignored = true;
+//									if (getterMethod != null && (mapper.useAttribute == null || mapper.useAttribute)) {
+//										gettersByNames.put(fieldName.toLowerCase(), getterMethod);
+//									}
+//									ignored = true;
 									break;
 								}
 								
@@ -5470,14 +5442,59 @@ public class Oson {
 					continue;
 				}
 
+				
+				
 				if (mapper.useField != null && !mapper.useField) {
-					if (getterMethod != null && (mapper.useAttribute == null || mapper.useAttribute)) {
-						gettersByNames.put(fieldName.toLowerCase(), getterMethod);
-					}
+//					if (getterMethod != null && (mapper.useAttribute == null || mapper.useAttribute)) {
+//						gettersByNames.put(fieldName.toLowerCase(), getterMethod);
+//					}
 					
 					continue;
 				}
 				
+
+//				Method getterMethod = gettersByNames.remove(name.toLowerCase());
+//				// in case the value is returned from the getter method only
+//				if (getterMethod != null && (value == null || value.toString().length() == 0)) {
+//					getterMethod.setAccessible(true);
+//					try {
+//						Object mvalue = getterMethod.invoke(obj, null);
+//	
+//						if (mvalue != null) {
+//							value = mvalue;
+//						}
+//						
+//					} catch (InvocationTargetException e) {
+//						// e.printStackTrace();
+//					}
+//				}
+//
+//				if (ignoreModifiers(f.getModifiers(), classMapper.includeFieldsWithModifiers)) {
+//					if (getterMethod != null) {
+//						if (ignoreModifiers(getterMethod.getModifiers(), classMapper.includeFieldsWithModifiers)) {
+//							continue;
+//						}
+//						
+//					} else {
+//						continue;
+//					}
+//				}
+
+
+				Object value = f.get(obj);
+				
+				if (mapper.useAttribute == null || mapper.useAttribute) {
+					if (value == null) {
+						continue;
+					}
+					
+				} else if (value != null) {
+					// just do not use getter method
+					
+				}
+				
+				
+
 				// might be renamed by strategy
 				// here naming strategy configuration takes precedence
 				
@@ -6859,8 +6876,13 @@ public class Oson {
 					continue;
 				}
 				
+				// options take precedence
+//				if (mapper.useField != null && !mapper.useField) {
+//					continue;
+//				}
+				
 				// get value for name in map
-				Object value = getMapValue(map, name, nameKeys);
+				//Object value = getMapValue(map, name, nameKeys);
 
 				Class<?> returnType = f.getType(); // value.getClass();
 
@@ -7162,6 +7184,13 @@ public class Oson {
 					continue;
 				}
 
+				if (mapper.useField != null && !mapper.useField) {
+					continue;
+				}
+				
+				// get value for name in map
+				Object value = getMapValue(map, name, nameKeys);
+				
 				boolean jnameFixed = false;
 				String jname = json2Java(name);
 
