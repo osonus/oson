@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 
 import javax.persistence.EnumType;
 
-import ca.oson.json.Oson.DEFAULT_TYPE;
+import ca.oson.json.Oson.JSON_INCLUDE;
 
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
 @Retention(RUNTIME)
@@ -74,7 +74,7 @@ public @interface FieldMapper {
 	 * Specify the default value handling principal, such as to allow null value 
 	 * or not in its output
 	 */
-	DEFAULT_TYPE defaultType() default DEFAULT_TYPE.NON_NULL;
+	JSON_INCLUDE defaultType() default JSON_INCLUDE.NONE;
 
 	/*
 	 * Specify this field should not use double quotes in serialization, if true
@@ -91,4 +91,9 @@ public @interface FieldMapper {
 	 */
 	boolean ignore() default false;
 	
+	
+	/*
+	 * This is the version to ignore
+	 */
+	double ignoreVersionsAfter() default 0;
 }

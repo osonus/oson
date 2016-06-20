@@ -19,6 +19,11 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import ca.oson.json.Oson.JSON_INCLUDE;
+import ca.oson.json.Oson.MODIFIER;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+
 @Target({ ElementType.TYPE})
 @Retention(RUNTIME)
 public @interface ClassMapper {
@@ -27,6 +32,11 @@ public @interface ClassMapper {
 	 * Defautl value for a certain type, for now only String is allowed
 	 */
 	String defaultValue() default "";
+	
+	/*
+	 * NULL means it has no value here
+	 */
+	JSON_INCLUDE defaultType() default JSON_INCLUDE.NONE;
 	
 	/*
 	 * Use field first to get/set a field value
@@ -49,6 +59,11 @@ public @interface ClassMapper {
 	 */
 	boolean orderByKeyAndProperties() default false;
 	
+    /**
+     * Specific ordered list of properties.
+     */
+    public String[] propertyOrders() default { };
+	
 	/*
 	 * During serialization, include class name in the Json output if true
 	 * default to @class attribute
@@ -67,6 +82,12 @@ public @interface ClassMapper {
      * @ClassMapper(ignoreFieldsWithAnnotations = { "ca.oson.json.Oson" })
      */
     public String[] ignoreFieldsWithAnnotations() default { };
+    
+    /*
+     * Specify a set of MODIFIER for a class to include properties
+     */
+    public MODIFIER[] includeFieldsWithModifiers() default { };
+
     
     /*
      * Ignore the list of attribute names directly
