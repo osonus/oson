@@ -142,6 +142,7 @@ import javassist.bytecode.annotation.StringMemberValue;
 public class Oson {
 	private static final char SPACE = ' ';
 	private static final String mixin = "MixIn";
+	private static final int MAX_LEVEL = 10;
 	public static enum JSON_PROCESSOR {
 		JACKSON, // use Jacksopn's implementation
 		GSON, // use google's gson implementation
@@ -361,7 +362,7 @@ public class Oson {
 		public Set<Class> ignoreFieldsWithAnnotations = null;
 		public Set<String> jsonIgnoreProperties;
 		
-		public JSON_INCLUDE defaultType = JSON_INCLUDE.NON_NULL;
+		public JSON_INCLUDE defaultType = null; // JSON_INCLUDE.NONE;
 	}
 	
 	/*
@@ -543,7 +544,7 @@ public class Oson {
 		private JSON_PROCESSOR jsonProcessor = JSON_PROCESSOR.OSON;
 		private FIELD_NAMING fieldNaming = FIELD_NAMING.FIELD;
 		private JSON_INCLUDE defaultType = JSON_INCLUDE.NONE;
-		private Boolean prettyPrinting = true;
+		private Boolean prettyPrinting = false;
 		private int indentation = 2;
 		private ANNOTATION_SUPPORT annotationSupport = ANNOTATION_SUPPORT.BASIC;
 		private Boolean orderByKeyAndProperties = false;
@@ -1016,7 +1017,7 @@ public class Oson {
 			return prettyPrinting;
 		}
 
-		public void setPrettyPrinting(Boolean prettyPrinting) {
+		public void prettyPrinting(Boolean prettyPrinting) {
 			if (prettyPrinting != null) {
 				this.prettyPrinting = prettyPrinting;
 			}
@@ -1524,9 +1525,9 @@ public class Oson {
 		return options.getPrettyPrinting();
 	}
 
-	public Oson setPrettyPrinting(Boolean prettyPrinting) {
+	public Oson prettyPrinting(Boolean prettyPrinting) {
 		if (prettyPrinting != null) {
-			options.setPrettyPrinting(prettyPrinting);
+			options.prettyPrinting(prettyPrinting);
 			reset();
 		}
 
@@ -1868,7 +1869,7 @@ public class Oson {
 		return options.getIncludeClassTypeInJson();
 	}
 
-	public Oson setIncludeClassTypeInJson(Boolean includeClassTypeInJson) {
+	public Oson includeClassTypeInJson(Boolean includeClassTypeInJson) {
 		if (includeClassTypeInJson != null) {
 			options.setIncludeClassTypeInJson(includeClassTypeInJson);
 			reset();
@@ -4602,15 +4603,17 @@ public class Oson {
 			String repeated = getPrettyIndentationln(level);
 			String repeatedItem = getPrettyIndentationln(++level);
 			StringBuilder sbuilder = new StringBuilder();
-			for (Object s : collection) {
-				FieldData newFieldData = new FieldData(s, componentType);
-				newFieldData.json2Java = objectDTO.json2Java;
-				
-				String str = object2String(newFieldData, level, set);
-				if (str != null && str.length() > 0) {
-					sbuilder.append(repeatedItem + str + ",");
+			try {
+				for (Object s : collection) {
+					FieldData newFieldData = new FieldData(s, componentType);
+					newFieldData.json2Java = objectDTO.json2Java;
+					
+					String str = object2String(newFieldData, level, set);
+					if (str != null && str.length() > 0) {
+						sbuilder.append(repeatedItem + str + ",");
+					}
 				}
-			}
+			} catch (Exception ex) {}
 
 			String str = sbuilder.toString();
 			int size = str.length();
@@ -4716,12 +4719,12 @@ public class Oson {
 			String str = sbuilder.toString();
 			int size = str.length();
 			if (size == 0) {
-				return "";
+				return "{}";
 			} else {
 				return "{" + str.substring(0, size - 1) + repeated + "}";
 			}
 
-		} else {
+		} else if (level < MAX_LEVEL) {
 			if (value == null) {
 				return null;
 			}
@@ -4736,6 +4739,8 @@ public class Oson {
 			//}
 
 			return serialize((E) value, returnType, level, set);
+		} else {
+			return " ... ";
 		}
 	}
 	
@@ -4906,7 +4911,7 @@ public class Oson {
 
 		int hash = ObjectUtil.hashCode(obj);
 		if (set.contains(hash)) {
-			return "";
+			return "{}";
 		} else {
 			set.add(ObjectUtil.hashCode(obj));
 		}
@@ -5537,17 +5542,27 @@ public class Oson {
 					str = object2String(objectDTO, level, set);
 
 					if (str == null) {
-						if (mapper.defaultType == JSON_INCLUDE.NON_NULL 
-								|| mapper.defaultType == JSON_INCLUDE.NON_NULL_EMPTY 
-								|| mapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
+						if (classMapper.defaultType == JSON_INCLUDE.NON_NULL 
+								|| classMapper.defaultType == JSON_INCLUDE.NON_NULL_EMPTY
+								 || classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
 							continue;
+							
 						} else {
 							str = "null";
 						}
-
-					} else if (str.length() == 0 || str.equals("\"\"") || str.equals("''") || str.equals("[]") || str.equals("{}")) {
-						if (mapper.defaultType == JSON_INCLUDE.NON_NULL_EMPTY)
+						
+					} else if (str.trim().length() == 0) {
+						if (classMapper.defaultType == JSON_INCLUDE.NON_NULL_EMPTY
+								 || classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
 							continue;
+						}
+						
+						str = "null";
+						
+					} else if (StringUtil.isEmpty(str)) {
+						if (classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
+							continue;
+						}
 					}
 				//}
 
@@ -5932,17 +5947,27 @@ public class Oson {
 					str = object2String(objectDTO, level, set);
 
 					if (str == null) {
-						if (mapper.defaultType == JSON_INCLUDE.NON_NULL 
-								|| mapper.defaultType == JSON_INCLUDE.NON_NULL_EMPTY 
-								|| mapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
+						if (classMapper.defaultType == JSON_INCLUDE.NON_NULL 
+								|| classMapper.defaultType == JSON_INCLUDE.NON_NULL_EMPTY
+								 || classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
 							continue;
+							
 						} else {
 							str = "null";
 						}
-
-					} else if (str.length() == 0 || str.equals("\"\"") || str.equals("''") || str.equals("[]") || str.equals("{}")) {
-						if (mapper.defaultType == JSON_INCLUDE.NON_NULL_EMPTY)
+						
+					} else if (str.trim().length() == 0) {
+						if (classMapper.defaultType == JSON_INCLUDE.NON_NULL_EMPTY
+								 || classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
 							continue;
+						}
+						
+						str = "null";
+						
+					} else if (StringUtil.isEmpty(str)) {
+						if (classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
+							continue;
+						}
 					}
 				//}
 
@@ -6012,12 +6037,23 @@ public class Oson {
 													|| classMapper.defaultType == JSON_INCLUDE.NON_NULL_EMPTY
 													 || classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
 												continue;
+												
 											} else {
 												str = "null";
 											}
-	
-										} else if (classMapper.defaultType == JSON_INCLUDE.NON_NULL_EMPTY && StringUtil.isEmpty(str)) {
-											continue;
+											
+										} else if (str.trim().length() == 0) {
+											if (classMapper.defaultType == JSON_INCLUDE.NON_NULL_EMPTY
+													 || classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
+												continue;
+											}
+											
+											str = "null";
+											
+										} else if (StringUtil.isEmpty(str)) {
+											if (classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
+												continue;
+											}
 										}
 	
 										StringBuffer sb = new StringBuffer();
@@ -6226,7 +6262,7 @@ public class Oson {
 			}
 
 		} catch (JSONException ex) {
-			//ex.printStackTrace();
+			ex.printStackTrace();
 		}
 
 		return null;
@@ -7477,7 +7513,13 @@ public class Oson {
 		//}
 	}
 
+	public <T> T deserialize(String source) {
+		return deserialize(source, null);
+	}
 	
+	public <T> T fromJson(String source) {
+		return deserialize(source);
+	}
 	public <T> T fromJson(String source, T obj) {
 		return deserialize(source, obj);
 	}
@@ -7492,6 +7534,9 @@ public class Oson {
 	}
 	public <T> String toJson(T source) {
 		return serialize(source);
+	}
+	public <T> T readValue(String source) {
+		return deserialize(source);
 	}
 	public <T> T readValue(String source, T obj) {
 		return deserialize(source, obj);
