@@ -10,7 +10,7 @@ This library implements its own Java to/from Json processor, and also provides a
 
 ###*Oson Documentation*
 
-  * Gson [user guide](https://github.com/osonus/oson/UserGuide.md): This guide contains examples on how to use Oson in your code.
+  * Gson [user guide](https://github.com/osonus/oson/blob/master/UserGuide.md): This guide contains examples on how to use Oson in your code.
 
 ###*License*
 
