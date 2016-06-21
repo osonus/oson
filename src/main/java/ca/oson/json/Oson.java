@@ -44,6 +44,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
@@ -148,6 +149,13 @@ public class Oson {
 		GSON, // use google's gson implementation
 		OSON // Oson Json processor in Java
 	};
+	
+	// used by annotations
+	public static enum BOOLEAN {
+		FALSE,
+		TRUE,
+		NONE // the same as null
+	}
 
 	public static enum FIELD_NAMING {
 		FIELD, // someField_name: use field name of a class/object, original field name
@@ -1392,10 +1400,18 @@ public class Oson {
 	private Options options = new Options();
 	private ObjectMapper jackson = null;
 	private Gson gson = null;
+	
+	private enum METHOD {
+		SET(0), GET(1), OTHER(2);
+		private int value;
+		 
+		private METHOD(int value) {
+			this.value = value;
+		}
+	}
 
 	private static Map<Class, Field[]> cachedFields = new ConcurrentHashMap<>();
-	private static Map<String, Method[]> cachedSetters = new ConcurrentHashMap<>();
-	private static Map<String, Method[]> cachedGetters = new ConcurrentHashMap<>();
+	private static Map<String, Map <String, Method>[]> cachedMethods = new ConcurrentHashMap<>();
 
 	////////////////////////////////////////////////////////////////////////////////
 	// END OF variables and class definition
@@ -4754,76 +4770,116 @@ public class Oson {
 		}
 	}
 	
-	
-	private static <T> Method getSetterByName(String name, T obj) {
+	private <T> Method getOtherMethodByName(String name, T obj) {
+		if (obj == null || name == null) {
+			return null;
+		}
 		Class<T> valueType = (Class<T>) obj.getClass();
+		if (valueType == null) {
+			return null;
+		}
+		return getOtherMethodByName(name, valueType);
+	}
 
+	private <T> Method getOtherMethodByName(String name, Class<T> valueType) {
+		Map <String, Method> otherMethods = getOtherMethods(valueType);
+
+		if (otherMethods == null || name == null) {
+			return null;
+		}
+		return otherMethods.get(name);
+	}
+	private <T> Method getSetterByName(String name, T obj) {
+		if (obj == null || name == null) {
+			return null;
+		}
+		Class<T> valueType = (Class<T>) obj.getClass();
+		if (valueType == null) {
+			return null;
+		}
 		return getSetterByName(name, valueType);
 	}
 
-	private static <T> Method getSetterByName(String name, Class<T> valueType) {
-		Method[] sets = getSetters(valueType);
+	private <T> Method getSetterByName(String name, Class<T> valueType) {
+		Map <String, Method> sets = getSetters(valueType);
 
-		name = "set" + name.toLowerCase();
-		
-		for (Method method: sets) {
-			if (name.equals(method.getName().toLowerCase())) {
-				return method;
-			}
+		if (sets == null || name == null) {
+			return null;
 		}
-
-		return null;
+		return sets.get(name);
 	}
 	
-	private static <T> Method getGetterByName(String name, T obj) {
+	private <T> Method getGetterByName(String name, T obj) {
+		if (obj == null || name == null) {
+			return null;
+		}
 		Class<T> valueType = (Class<T>) obj.getClass();
+		if (valueType == null) {
+			return null;
+		}
 
 		return getGetterByName(name, valueType);
 	}
 
-	private static <T> Method getGetterByName(String name, Class<T> valueType) {
-		Method[] gets = getGetters(valueType);
+	private <T> Method getGetterByName(String name, Class<T> valueType) {
+		Map <String, Method> gets = getGetters(valueType);
 
-		name = "get" + name.toLowerCase();
-		
-		for (Method method: gets) {
-			if (name.equals(method.getName().toLowerCase())) {
-				return method;
-			}
+		if (gets == null || name == null) {
+			return null;
 		}
-
-		return null;
+		return gets.get(name);
 	}
 	
-	private static <T> Method[] getSetters(T obj) {
+	private <T> Map <String, Method> getSetters(T obj) {
+		if (obj == null) {
+			return null;
+		}
 		Class<T> valueType = (Class<T>) obj.getClass();
 
 		return getSetters(valueType);
 	}
-	private static <T> Method[] getSetters(Class<T> valueType) {
-		return getMethods(valueType, false);
+	private <T> Map <String, Method> getSetters(Class<T> valueType) {
+		String fullName = valueType.getName();
+		if (!cachedMethods.containsKey(fullName)) {
+			processMethods(valueType, fullName);
+		}
+		
+		return cachedMethods.get(fullName)[METHOD.SET.value];
 	}
-	private static <T> Method[] getGetters(T obj) {
+	private <T> Map <String, Method> getGetters(T obj) {
+		if (obj == null) {
+			return null;
+		}
 		Class<T> valueType = (Class<T>) obj.getClass();
 
 		return getGetters(valueType);
 	}
-	private static <T> Method[] getGetters(Class<T> valueType) {
-		return getMethods(valueType, true);
-	}
-	private static <T> Method[] getMethods(Class<T> valueType, boolean isGetter) {
+	private <T> Map <String, Method> getGetters(Class<T> valueType) {
 		String fullName = valueType.getName();
-		
-		if (isGetter) {
-			if (cachedGetters.containsKey(fullName)) {
-				return cachedGetters.get(fullName);
-			}
-		} else {
-			if (cachedSetters.containsKey(fullName)) {
-				return cachedSetters.get(fullName);
-			}
+		if (!cachedMethods.containsKey(fullName)) {
+			processMethods(valueType, fullName);
 		}
+		
+		return cachedMethods.get(fullName)[METHOD.GET.value];
+	}
+	private <T> Map <String, Method> getOtherMethods(T obj) {
+		if (obj == null) {
+			return null;
+		}
+		Class<T> valueType = (Class<T>) obj.getClass();
 
+		return getGetters(valueType);
+	}
+	private <T> Map <String, Method> getOtherMethods(Class<T> valueType) {
+		String fullName = valueType.getName();
+		if (!cachedMethods.containsKey(fullName)) {
+			processMethods(valueType, fullName);
+		}
+		
+		return cachedMethods.get(fullName)[METHOD.GET.value];
+	}
+	
+	private <T> void processMethods(Class<T> valueType, String fullName) {
 		Stream<Method> stream = Arrays.stream(valueType.getDeclaredMethods());
 //		while (valueType != null && valueType != Object.class) {
 //			stream = Stream.concat(stream, Arrays.stream(valueType
@@ -4831,40 +4887,39 @@ public class Oson {
 //			valueType = (Class<T>) valueType.getSuperclass();
 //		}
 
-		List<Method> uniqueSetters = new ArrayList<>();
-		List<Method> uniqueGetters = new ArrayList<>();
-		Set<String> sets = new HashSet<>();
-		Set<String> gets = new HashSet<>();
+		Map <String, Method> setters = new HashMap<>();
+		Map <String, Method> getters = new HashMap<>();
+		Map <String, Method> others = new HashMap<>();
 		
 		String name;
 		for (Method method: stream.collect(Collectors.toList())) {
 			name = method.getName();
 			
 			if (name.startsWith("set")) {
-				if (name.length() > 3) {
-					if (method.getParameterCount() == 1 && !sets.contains(name)) {
-						sets.add(name);
-						uniqueSetters.add(method);
-					}
+				if (name.length() > 3 && method.getParameterCount() == 1) {
+					setters.put(name.substring(3).toLowerCase(), method);
+				} else {
+					others.put(name.toLowerCase(), method);
 				}
+				
 			} else if (name.startsWith("get")) {
-				if (name.length() > 3) {
-					if (method.getParameterCount() == 0 && !gets.contains(name)) {
-						gets.add(name);
-						uniqueGetters.add(method);
-					}
+				if (name.length() > 3 && method.getParameterCount() == 0) {
+					getters.put(name.substring(3).toLowerCase(), method);
+				} else {
+					others.put(name.toLowerCase(), method);
 				}
+				
+			} else {
+				others.put(name.toLowerCase(), method);
 			}
 		}
-
-		cachedSetters.put(fullName, uniqueSetters.toArray(new Method[uniqueSetters.size()]));
-		cachedGetters.put(fullName, uniqueGetters.toArray(new Method[uniqueGetters.size()]));
 		
-		if (isGetter) {
-			return cachedGetters.get(fullName);
-		} else {
-			return cachedSetters.get(fullName);
-		}
+		Map <String, Method>[] all = new HashMap[3];
+		
+		all[METHOD.GET.value] = getters;
+		all[METHOD.SET.value] = setters;
+		all[METHOD.OTHER.value] = others;
+		cachedMethods.put(fullName, all);
 	}
 	
 	
@@ -5145,26 +5200,17 @@ public class Oson {
 		Set<Class> ignoreFieldsWithAnnotations = classMapper.ignoreFieldsWithAnnotations;
 
 		Map<String, String> keyJsonStrings = new HashMap<>();
+		// to hold relation between name and changed name 
 		Map<String, String> fieldNames = new HashMap<>();
 		
 		Set<String> processedNameSet = new HashSet<>();
 		//StringBuffer sb = new StringBuffer();
 		
+		Map<String, Method> getters = getGetters(obj);
+		Map<String, Method> setters = getSetters(obj);
+		Map<String, Method> otherMethods = getOtherMethods(obj);
+		
 		try {
-			
-			//boolean nonNUll = (defaultType == DEFAULT_TYPE.NON_NULL);
-			//boolean nonNUllEmpty = (defaultType == DEFAULT_TYPE.NON_NULL_EMPTY);
-			
-			// get all getters, keep by field names
-			Map<String, Method> gettersByNames = new HashMap<>();
-			Method[] methods = getGetters(obj);
-			if (methods != null) {
-				for (Method getter: methods) {
-					gettersByNames.put(getter.getName().substring(3).toLowerCase(), getter);
-				}
-			}
-
-
 			//if ((classMapper.useField == null && DefaultValue.useField) || classMapper.useField) {
 			Field[] fields = getFields(obj);
 
@@ -5258,7 +5304,7 @@ public class Oson {
 								if (!fieldMapperAnnotation.useField()) {
 									mapper.useField = false;
 //									if (getterMethod != null && (mapper.useAttribute == null || mapper.useAttribute)) {
-//										gettersByNames.put(fieldName.toLowerCase(), getterMethod);
+//										getters.put(fieldName.toLowerCase(), getterMethod);
 //									}
 //									ignored = true;
 									break;
@@ -5448,58 +5494,16 @@ public class Oson {
 					continue;
 				}
 
-				
-				
 				if (mapper.useField != null && !mapper.useField) {
-//					if (getterMethod != null && (mapper.useAttribute == null || mapper.useAttribute)) {
-//						gettersByNames.put(fieldName.toLowerCase(), getterMethod);
-//					}
-					
 					continue;
 				}
 				
-
-//				Method getterMethod = gettersByNames.remove(name.toLowerCase());
-//				// in case the value is returned from the getter method only
-//				if (getterMethod != null && (value == null || value.toString().length() == 0)) {
-//					getterMethod.setAccessible(true);
-//					try {
-//						Object mvalue = getterMethod.invoke(obj, null);
-//	
-//						if (mvalue != null) {
-//							value = mvalue;
-//						}
-//						
-//					} catch (InvocationTargetException e) {
-//						// e.printStackTrace();
-//					}
-//				}
-//
-//				if (ignoreModifiers(f.getModifiers(), classMapper.includeFieldsWithModifiers)) {
-//					if (getterMethod != null) {
-//						if (ignoreModifiers(getterMethod.getModifiers(), classMapper.includeFieldsWithModifiers)) {
-//							continue;
-//						}
-//						
-//					} else {
-//						continue;
-//					}
-//				}
-
-
 				Object value = f.get(obj);
 				
-				if (mapper.useAttribute == null || mapper.useAttribute) {
-					if (value == null) {
-						continue;
-					}
-					
-				} else if (value != null) {
-					// just do not use getter method
-					
+				if ((mapper.useAttribute == null || mapper.useAttribute) 
+						&& getters.containsKey(name) && StringUtil.isEmpty(value)) {
+					continue;
 				}
-				
-				
 
 				// might be renamed by strategy
 				// here naming strategy configuration takes precedence
@@ -5598,15 +5602,15 @@ public class Oson {
 				sb.append(str);
 				sb.append(",");
 				
-				keyJsonStrings.put(fieldName, sb.toString());
-				fieldNames.put(fieldName, name);
+				keyJsonStrings.put(fieldName.toLowerCase(), sb.toString());
+				fieldNames.put(fieldName.toLowerCase(), name.toLowerCase());
 			}
 			//}
 			
 
 			//if ((classMapper.useAttribute == null && DefaultValue.useAttribute) || classMapper.useAttribute) {
 			// now process get methods
-			for (Entry<String, Method> entry: gettersByNames.entrySet()) {
+			for (Entry<String, Method> entry: getters.entrySet()) {
 				String methodName = entry.getKey();
 				Method method = entry.getValue();
 				
@@ -5901,8 +5905,9 @@ public class Oson {
 					continue;
 				}
 
-				// might be renamed by strategy
-				// here naming strategy configuration takes precedence
+				if (mapper.useAttribute != null && !mapper.useAttribute) {
+					continue;
+				}
 				
 				boolean jnameFixed = false;
 				String jname = java2Json(name);
@@ -6003,8 +6008,8 @@ public class Oson {
 				sb.append(str);
 				sb.append(",");
 				
-				keyJsonStrings.put(fieldName, sb.toString());
-				fieldNames.put(fieldName, name);
+				keyJsonStrings.put(fieldName.toLowerCase(), sb.toString());
+				fieldNames.put(fieldName.toLowerCase(), name.toLowerCase());
 			}
 
 			// handle @JsonAnyGetter
@@ -6116,6 +6121,7 @@ public class Oson {
 				StringBuffer sb = new StringBuffer();
 				if (classMapper.propertyOrders != null) {
 					for (String property: classMapper.propertyOrders) {
+						property = property.toLowerCase();
 						String jsonText = keyJsonStrings.get(property);
 						if (jsonText != null) {
 							sb.append(jsonText);
@@ -7764,8 +7770,84 @@ public class Oson {
 	}
 
 	public static class StringUtil {
-		public static boolean isEmpty(String str) {
-			return (str == null || str.length() == 0 || str.equals("\"\"") || str.equals("''") || str.equals("[]") || str.equals("{}"));
+		public static boolean isNull(Object obj) {
+			if (obj == null) return true;
+			
+			if (obj instanceof Optional) {
+				Optional<Object> opt = Optional.ofNullable(obj);
+				
+				if (!opt.isPresent()) {
+					return true;
+				}
+			}
+			
+			return false;
+		}
+		
+		public static boolean isEmpty(Object obj) {
+			if (isNull(obj)) {
+				return true;
+			}
+			
+			String str = obj.toString().trim();
+			return (str.length() == 0 || str.equals("\"\"") || str.equals("''"));
+		}
+
+		public static boolean isDefault(Object obj) {
+			if (isDefault(obj)) {
+				return true;
+			}
+			
+			Class type = obj.getClass();
+			
+			if (obj instanceof String) {
+				String str = obj.toString().trim();
+				return (str.equals("[]") || str.equals("{}"));
+			} else if (Collection.class.isAssignableFrom(type)) {
+				Collection list = (Collection)obj;
+				return (list.size() == 0);
+			} else if (Map.class.isAssignableFrom(type)) {
+				Map map = (Map)obj;
+				return (map.size() == 0);
+			} else if (type.isArray()) {
+				return ((Object[])obj).length == 0;
+
+			} else if (obj instanceof Integer || type == int.class) {
+				return DefaultValue.integer.equals(obj);
+				
+			} else if (obj instanceof BigInteger) {
+				return DefaultValue.bigInteger.equals(obj);
+				
+			} else if (obj instanceof BigDecimal) {
+				return DefaultValue.bigDecimal.equals(obj);
+				
+			} else if (obj instanceof Character || type == char.class) {
+				return DefaultValue.character.equals(obj);
+				
+			} else if (obj instanceof Short || type == short.class) {
+				return DefaultValue.dshort.equals(obj);
+				
+			} else if (obj instanceof Byte || type == byte.class) {
+				return DefaultValue.dbyte.equals(obj);
+				
+			} else if (obj instanceof Long || type == long.class) {
+				return DefaultValue.dlong.equals(obj);
+				
+			} else if (obj instanceof Float || type == float.class) {
+				return DefaultValue.dfloat.equals(obj);
+				
+			} else if (obj instanceof Float || type == float.class) {
+				return DefaultValue.dfloat.equals(obj);
+				
+			} else if (obj instanceof Double || type == double.class) {
+				return DefaultValue.ddouble.equals(obj);
+				
+			} else if (obj instanceof Short) {
+				return DefaultValue.dshort.equals(obj);
+				
+			}
+			
+			return false;
 		}
 		
 		public static String repeatSpace(int repeat) {
