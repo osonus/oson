@@ -7702,6 +7702,7 @@ public class Oson {
 							//ex.printStackTrace();
 						try {
 							Statement stmt = new Statement(obj, method.getName(), new Object[]{value});
+							stmt.execute();
 						} catch (Exception e) {
 							//e.printStackTrace();
 						}
@@ -7731,7 +7732,13 @@ public class Oson {
 										try {
 											method.invoke(obj, name, value);
 										} catch (InvocationTargetException e) {
-											//
+											// e.printStackTrace();
+											try {
+												Statement stmt = new Statement(obj, method.getName(), new Object[]{name, value});
+												stmt.execute();
+											} catch (Exception ex) {
+												//e.printStackTrace();
+											}
 										}
 									}
 	
