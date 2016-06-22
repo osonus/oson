@@ -13,6 +13,8 @@
  *******************************************************************************/
 package ca.oson.json;
 
+import java.beans.Expression;
+import java.beans.Statement;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
@@ -154,8 +156,20 @@ public class Oson {
 	public static enum BOOLEAN {
 		FALSE,
 		TRUE,
-		NONE // the same as null
-	}
+		NONE; // the same as null
+		
+		public static Boolean valueOf(BOOLEAN bool) {
+			switch (bool) {
+				case FALSE: return false;
+				case TRUE: return true;
+				default: return null;
+			}
+		}
+		
+		public Boolean value() {
+			return valueOf(this);
+		}
+	};
 
 	public static enum FIELD_NAMING {
 		FIELD, // someField_name: use field name of a class/object, original field name
@@ -176,7 +190,7 @@ public class Oson {
 	};
 
 	public static enum JSON_INCLUDE {
-		ALWAYS, NON_NULL, NON_NULL_EMPTY, NON_DEFAULT, DEFAULT, 
+		ALWAYS, NON_NULL, NON_EMPTY, NON_DEFAULT, DEFAULT, 
 		NONE // means it has no value
 	}
 
@@ -1223,6 +1237,7 @@ public class Oson {
 		public Type erasedType = null;
 		public boolean json2Java = true;
 		public Method getter;
+		public Method setter;
 		public FieldMapper mapper = null;
 		
 		
@@ -2204,7 +2219,7 @@ public class Oson {
 			case NON_NULL:
 				jackson.setSerializationInclusion(Include.NON_NULL);
 				break;
-			case NON_NULL_EMPTY:
+			case NON_EMPTY:
 				jackson.setSerializationInclusion(Include.NON_EMPTY);
 				break;
 			case DEFAULT:
@@ -2697,7 +2712,7 @@ public class Oson {
 				break;
 			case NON_NULL:
 				break;
-			case NON_NULL_EMPTY:
+			case NON_EMPTY:
 				break;
 			case DEFAULT:
 				gsonBuilder.serializeNulls();
@@ -4330,7 +4345,7 @@ public class Oson {
 				return null;
 			}
 			
-			if (!required && (objectDTO.defaultType == JSON_INCLUDE.NON_DEFAULT || objectDTO.defaultType == JSON_INCLUDE.NON_NULL_EMPTY)) {
+			if (!required && (objectDTO.defaultType == JSON_INCLUDE.NON_DEFAULT || objectDTO.defaultType == JSON_INCLUDE.NON_EMPTY)) {
 				if (value.equals(DefaultValue.string)) {
 					return null;
 				}
@@ -4647,7 +4662,7 @@ public class Oson {
 					return "[]";
 				case NON_NULL:
 					return "[]";
-				case NON_NULL_EMPTY:
+				case NON_EMPTY:
 					return null;
 				case DEFAULT:
 					return "[]";
@@ -4690,7 +4705,7 @@ public class Oson {
 					return "[]";
 				case NON_NULL:
 					return "[]";
-				case NON_NULL_EMPTY:
+				case NON_EMPTY:
 					return null;
 				case DEFAULT:
 					return "[]";
@@ -4844,7 +4859,8 @@ public class Oson {
 			processMethods(valueType, fullName);
 		}
 		
-		return cachedMethods.get(fullName)[METHOD.SET.value];
+		// return a new copy, so original copy will not get modified
+		return new HashMap(cachedMethods.get(fullName)[METHOD.SET.value]);
 	}
 	private <T> Map <String, Method> getGetters(T obj) {
 		if (obj == null) {
@@ -4860,7 +4876,7 @@ public class Oson {
 			processMethods(valueType, fullName);
 		}
 		
-		return cachedMethods.get(fullName)[METHOD.GET.value];
+		return new HashMap(cachedMethods.get(fullName)[METHOD.GET.value]);
 	}
 	private <T> Map <String, Method> getOtherMethods(T obj) {
 		if (obj == null) {
@@ -4876,10 +4892,10 @@ public class Oson {
 			processMethods(valueType, fullName);
 		}
 		
-		return cachedMethods.get(fullName)[METHOD.GET.value];
+		return new HashMap(cachedMethods.get(fullName)[METHOD.GET.value]);
 	}
 	
-	private <T> void processMethods(Class<T> valueType, String fullName) {
+	private static <T> void processMethods(Class<T> valueType, String fullName) {
 		Stream<Method> stream = Arrays.stream(valueType.getDeclaredMethods());
 //		while (valueType != null && valueType != Object.class) {
 //			stream = Stream.concat(stream, Arrays.stream(valueType
@@ -4909,6 +4925,8 @@ public class Oson {
 					others.put(name.toLowerCase(), method);
 				}
 				
+			} else if (method.getParameterCount() == 0) {
+				getters.put(name.toLowerCase(), method);
 			} else {
 				others.put(name.toLowerCase(), method);
 			}
@@ -5044,13 +5062,13 @@ public class Oson {
 					if (classMapperAnnotation.orderByKeyAndProperties()) {
 						classMapper.orderByKeyAndProperties = classMapperAnnotation.orderByKeyAndProperties();
 					}
-					
-					if (!classMapperAnnotation.useAttribute()) {
-						classMapper.useAttribute = false;
+
+					if (classMapperAnnotation.useField() != BOOLEAN.NONE) {
+						classMapper.useField = classMapperAnnotation.useField().value();
 					}
 					
-					if (!classMapperAnnotation.useField()) {
-						classMapper.useField = false;
+					if (classMapperAnnotation.useAttribute() != BOOLEAN.NONE) {
+						classMapper.useAttribute = classMapperAnnotation.useAttribute().value();
 					}
 					
 					if (classMapperAnnotation.ignoreVersionsAfter() > 0) {
@@ -5160,7 +5178,7 @@ public class Oson {
 							classMapper.defaultType = JSON_INCLUDE.NON_NULL;
 							break;
 						case NON_EMPTY:
-							classMapper.defaultType = JSON_INCLUDE.NON_NULL_EMPTY;
+							classMapper.defaultType = JSON_INCLUDE.NON_EMPTY;
 							break;
 						case NON_DEFAULT:
 							classMapper.defaultType = JSON_INCLUDE.NON_DEFAULT;
@@ -5219,20 +5237,32 @@ public class Oson {
 
 				String name = f.getName();
 				String fieldName = name;
+				String lcfieldName = fieldName.toLowerCase();
 
 				// in the ignored list
 				if (ObjectUtil.inSet(name, classMapper.jsonIgnoreProperties)) {
+					getters.remove(lcfieldName);
 					continue;
 				}
 				
 				FieldMapper mapper = getClassifiedFieldMapper(name, classMapper);
 				
 				if (mapper.ignore) {
+					getters.remove(lcfieldName);
 					continue;
 				}
 				
-				// options take precedence
-				if (mapper.useField != null && !mapper.useField) {
+				// control by visibility is not always a good idea
+				// here consider the visibility of field and related getter method together
+				if (ignoreModifiers(f.getModifiers(), classMapper.includeFieldsWithModifiers)) {
+					if (getters.containsKey(lcfieldName)) {
+						Method method = getters.get(lcfieldName);
+						
+						if (ignoreModifiers(method.getModifiers(), classMapper.includeFieldsWithModifiers)) {
+							getters.remove(lcfieldName);
+						}
+					}
+					
 					continue;
 				}
 
@@ -5242,20 +5272,10 @@ public class Oson {
 				
 				if (annotationSupport != ANNOTATION_SUPPORT.NO) {
 					annotations = f.getDeclaredAnnotations();//.getAnnotations();
-					// check get method
-					// if it exists, combine both into 1 array
-//					if (getterMethod != null && ((mapper.useAttribute == null && DefaultValue.useAttribute) || mapper.useAttribute)) {
-//						annotations = getterMethod.getDeclaredAnnotations();//.getAnnotations();
-//						annotations = Stream
-//								.concat(Arrays.stream(annotations),
-//										Arrays.stream(getterMethod
-//												.getAnnotations()))
-//								.toArray(Annotation[]::new);
-//					}
-
 
 					for (Annotation annotation : annotations) {
 						if (ignoreField(annotation, ignoreFieldsWithAnnotations)) {
+							getters.remove(lcfieldName);
 							ignored = true;
 							break;
 						}
@@ -5293,21 +5313,18 @@ public class Oson {
 								
 								if (fieldMapperAnnotation.JsonValue()) {
 									mapper.JsonValue = true;
-									ignored = true;
 									break;
 								}
 								
-								if (!fieldMapperAnnotation.useAttribute()) {
-									mapper.useAttribute = false;
+								if (fieldMapperAnnotation.useField() != BOOLEAN.NONE) {
+									mapper.useField = fieldMapperAnnotation.useField().value();
+									if (!mapper.useField) {
+										break;
+									}
 								}
 								
-								if (!fieldMapperAnnotation.useField()) {
-									mapper.useField = false;
-//									if (getterMethod != null && (mapper.useAttribute == null || mapper.useAttribute)) {
-//										getters.put(fieldName.toLowerCase(), getterMethod);
-//									}
-//									ignored = true;
-									break;
+								if (fieldMapperAnnotation.useAttribute() != BOOLEAN.NONE) {
+									mapper.useAttribute = fieldMapperAnnotation.useAttribute().value();
 								}
 								
 								if (fieldMapperAnnotation.defaultType() != JSON_INCLUDE.NONE) {
@@ -5346,10 +5363,17 @@ public class Oson {
 						case "com.fasterxml.jackson.annotation.JsonAnyGetter":
 						case "org.codehaus.jackson.annotate.JsonAnyGetter":
 							ignored = true;
+							if (getters.containsKey(lcfieldName)) {
+								otherMethods.put(lcfieldName, getters.get(lcfieldName));
+							}
 							break;
 							
 						case "com.fasterxml.jackson.annotation.JsonIgnore":
 						case "org.codehaus.jackson.annotate.JsonIgnore":
+							ignored = true;
+							break;
+							
+						case "javax.persistence.Transient":
 							ignored = true;
 							break;
 							
@@ -5389,7 +5413,7 @@ public class Oson {
 									mapper.defaultType = JSON_INCLUDE.NON_NULL;
 									break;
 								case NON_EMPTY:
-									mapper.defaultType = JSON_INCLUDE.NON_NULL_EMPTY;
+									mapper.defaultType = JSON_INCLUDE.NON_EMPTY;
 									break;
 								case NON_DEFAULT:
 									mapper.defaultType = JSON_INCLUDE.NON_DEFAULT;
@@ -5416,6 +5440,10 @@ public class Oson {
 						case "javax.persistence.Enumerated":
 							mapper.enumType = ((Enumerated) annotation).value();
 							break;
+							
+//						case "javax.persistence.MapKeyEnumerated":
+//							mapper.enumType = ((javax.persistence.MapKeyEnumerated) annotation).value();
+//							break;
 							
 						case "javax.validation.constraints.NotNull":
 							mapper.required = true;
@@ -5491,15 +5519,23 @@ public class Oson {
 				}
 
 				if (ignored) {
+					if (getters.containsKey(lcfieldName)) {
+						getters.remove(lcfieldName);
+					}
 					continue;
 				}
 
+				if (mapper.JsonValue) {
+					continue;
+				}
+				
 				if (mapper.useField != null && !mapper.useField) {
 					continue;
 				}
 				
 				Object value = f.get(obj);
 				
+				// in case attribute is used, and the current value is null, then just try the attribute
 				if ((mapper.useAttribute == null || mapper.useAttribute) 
 						&& getters.containsKey(name) && StringUtil.isEmpty(value)) {
 					continue;
@@ -5572,7 +5608,7 @@ public class Oson {
 
 					if (str == null) {
 						if (classMapper.defaultType == JSON_INCLUDE.NON_NULL 
-								|| classMapper.defaultType == JSON_INCLUDE.NON_NULL_EMPTY
+								|| classMapper.defaultType == JSON_INCLUDE.NON_EMPTY
 								 || classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
 							continue;
 							
@@ -5580,18 +5616,16 @@ public class Oson {
 							str = "null";
 						}
 						
-					} else if (str.trim().length() == 0) {
-						if (classMapper.defaultType == JSON_INCLUDE.NON_NULL_EMPTY
+					} else if (StringUtil.isEmpty(str)) {
+						if (classMapper.defaultType == JSON_INCLUDE.NON_EMPTY
 								 || classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
 							continue;
 						}
 						
 						str = "null";
 						
-					} else if (StringUtil.isEmpty(str)) {
-						if (classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
-							continue;
-						}
+					} else if (classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT && StringUtil.isDefault(str)) {
+						continue;
 					}
 				//}
 
@@ -5602,8 +5636,8 @@ public class Oson {
 				sb.append(str);
 				sb.append(",");
 				
-				keyJsonStrings.put(fieldName.toLowerCase(), sb.toString());
-				fieldNames.put(fieldName.toLowerCase(), name.toLowerCase());
+				keyJsonStrings.put(lcfieldName, sb.toString());
+				fieldNames.put(lcfieldName, name.toLowerCase());
 			}
 			//}
 			
@@ -5611,21 +5645,23 @@ public class Oson {
 			//if ((classMapper.useAttribute == null && DefaultValue.useAttribute) || classMapper.useAttribute) {
 			// now process get methods
 			for (Entry<String, Method> entry: getters.entrySet()) {
-				String methodName = entry.getKey();
+				String lcfieldName = entry.getKey();
 				Method method = entry.getValue();
-				
+
 				if (ignoreModifiers(method.getModifiers(), classMapper.includeFieldsWithModifiers)) {
 					continue;
 				}
 				
-				String name = StringUtil.uncapitalize(methodName.substring(3));
-
+				String name = StringUtil.uncapitalize(method.getName().substring(3));
+				// just use field name, even it might not be a field
+				String fieldName = name;
+				
 				// in the ignored list
 				if (ObjectUtil.inSet(name, classMapper.jsonIgnoreProperties)) {
 					continue;
 				}
 				
-				if (processedNameSet.contains(name)) {
+				if (processedNameSet.contains(name) || fieldNames.containsKey(lcfieldName)) {
 					continue;
 				}
 				
@@ -5634,16 +5670,7 @@ public class Oson {
 				if (mapper.ignore) {
 					continue;
 				}
-				
-				// options take precedence
-				if (mapper.useAttribute != null && !mapper.useAttribute) {
-					continue;
-				}
-				
-				
-				// just use field name, even it might not be a field
-				String fieldName = name;
-				
+
 				method.setAccessible(true);
 				
 				Object value = null;
@@ -5652,6 +5679,15 @@ public class Oson {
 					value = method.invoke(obj, null);
 				} catch (InvocationTargetException e) {
 					// e.printStackTrace();
+
+					try {
+						Expression expr = new Expression(obj, "getProperty1", new Object[0]);
+						expr.execute();
+						value = expr.getValue();
+						
+					} catch (Exception e1) {
+						// e1.printStackTrace();
+					}
 				}
 				
 				boolean ignored = false;
@@ -5701,16 +5737,20 @@ public class Oson {
 									if (value != null) {
 										return "\"" + StringUtil.escapeDoublequote(value) + "\"";
 									}
-								}
-								
-								if (!fieldMapperAnnotation.useAttribute()) {
-									mapper.useAttribute = false;
 									ignored = true;
 									break;
 								}
 								
-								if (!fieldMapperAnnotation.useField()) {
-									mapper.useField = false;
+								if (fieldMapperAnnotation.useField() != BOOLEAN.NONE) {
+									mapper.useField = fieldMapperAnnotation.useField().value();
+								}
+								
+								if (fieldMapperAnnotation.useAttribute() != BOOLEAN.NONE) {
+									mapper.useAttribute = fieldMapperAnnotation.useAttribute().value();
+									if (!mapper.useAttribute) {
+										ignored = true;
+										break;
+									}
 								}
 								
 								if (fieldMapperAnnotation.defaultType() != JSON_INCLUDE.NONE) {
@@ -5748,11 +5788,18 @@ public class Oson {
 						
 						case "com.fasterxml.jackson.annotation.JsonAnyGetter":
 						case "org.codehaus.jackson.annotate.JsonAnyGetter":
+							// handle this in other methods
+							otherMethods.put(lcfieldName, method);
+							
 							ignored = true;
 							break;
 							
 						case "com.fasterxml.jackson.annotation.JsonIgnore":
 						case "org.codehaus.jackson.annotate.JsonIgnore":
+							ignored = true;
+							break;
+							
+						case "javax.persistence.Transient":
 							ignored = true;
 							break;
 							
@@ -5800,7 +5847,7 @@ public class Oson {
 									mapper.defaultType = JSON_INCLUDE.NON_NULL;
 									break;
 								case NON_EMPTY:
-									mapper.defaultType = JSON_INCLUDE.NON_NULL_EMPTY;
+									mapper.defaultType = JSON_INCLUDE.NON_EMPTY;
 									break;
 								case NON_DEFAULT:
 									mapper.defaultType = JSON_INCLUDE.NON_DEFAULT;
@@ -5976,9 +6023,9 @@ public class Oson {
 
 					str = object2String(objectDTO, level, set);
 
-					if (str == null) {
+					if (StringUtil.isNull(str)) {
 						if (classMapper.defaultType == JSON_INCLUDE.NON_NULL 
-								|| classMapper.defaultType == JSON_INCLUDE.NON_NULL_EMPTY
+								|| classMapper.defaultType == JSON_INCLUDE.NON_EMPTY
 								 || classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
 							continue;
 							
@@ -5986,15 +6033,15 @@ public class Oson {
 							str = "null";
 						}
 						
-					} else if (str.trim().length() == 0) {
-						if (classMapper.defaultType == JSON_INCLUDE.NON_NULL_EMPTY
+					} else if (StringUtil.isEmpty(str)) {
+						if (classMapper.defaultType == JSON_INCLUDE.NON_EMPTY
 								 || classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
 							continue;
 						}
 						
 						str = "null";
 						
-					} else if (StringUtil.isEmpty(str)) {
+					} else if (StringUtil.isDefault(str)) {
 						if (classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
 							continue;
 						}
@@ -6008,6 +6055,7 @@ public class Oson {
 				sb.append(str);
 				sb.append(",");
 				
+				// overwrite field ones, in case existed, normally will not happen
 				keyJsonStrings.put(fieldName.toLowerCase(), sb.toString());
 				fieldNames.put(fieldName.toLowerCase(), name.toLowerCase());
 			}
@@ -6062,9 +6110,9 @@ public class Oson {
 										newFieldData.defaultType = classMapper.defaultType;
 										str = object2String(newFieldData, level, set);
 	
-										if (str == null) {
+										if (StringUtil.isNull(str)) {
 											if (classMapper.defaultType == JSON_INCLUDE.NON_NULL 
-													|| classMapper.defaultType == JSON_INCLUDE.NON_NULL_EMPTY
+													|| classMapper.defaultType == JSON_INCLUDE.NON_EMPTY
 													 || classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
 												continue;
 												
@@ -6072,15 +6120,15 @@ public class Oson {
 												str = "null";
 											}
 											
-										} else if (str.trim().length() == 0) {
-											if (classMapper.defaultType == JSON_INCLUDE.NON_NULL_EMPTY
+										} else if (StringUtil.isEmpty(str)) {
+											if (classMapper.defaultType == JSON_INCLUDE.NON_EMPTY
 													 || classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
 												continue;
 											}
 											
 											str = "null";
 											
-										} else if (StringUtil.isEmpty(str)) {
+										} else if (StringUtil.isDefault(str)) {
 											if (classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
 												continue;
 											}
@@ -6714,12 +6762,12 @@ public class Oson {
 //							classMapper.orderByKeyAndProperties = classMapperAnnotation.orderByKeyAndProperties();
 //						}
 						
-						if (!classMapperAnnotation.useAttribute()) {
-							classMapper.useAttribute = false;
+						if (classMapperAnnotation.useAttribute() != BOOLEAN.NONE) {
+							classMapper.useAttribute = classMapperAnnotation.useAttribute().value();
 						}
 						
-						if (!classMapperAnnotation.useField()) {
-							classMapper.useField = false;
+						if (classMapperAnnotation.useField() != BOOLEAN.NONE) {
+							classMapper.useField = classMapperAnnotation.useAttribute().value();
 						}
 						
 //						if (classMapperAnnotation.ignoreVersionsAfter() > 0) {
@@ -6829,7 +6877,7 @@ public class Oson {
 								classMapper.defaultType = JSON_INCLUDE.NON_NULL;
 								break;
 							case NON_EMPTY:
-								classMapper.defaultType = JSON_INCLUDE.NON_NULL_EMPTY;
+								classMapper.defaultType = JSON_INCLUDE.NON_EMPTY;
 								break;
 							case NON_DEFAULT:
 								classMapper.defaultType = JSON_INCLUDE.NON_DEFAULT;
@@ -6865,7 +6913,13 @@ public class Oson {
 					}
 				}
 			}
+			
 
+			Map<String, Method> getters = getGetters(obj);
+			Map<String, Method> setters = getSetters(obj);
+			Map<String, Method> otherMethods = getOtherMethods(obj);
+			Set<String> processedNameSet = new HashSet<>();
+			
 			Field[] fields = getFields(obj);
 
 			FIELD_NAMING format = getFieldNaming();
@@ -6875,9 +6929,11 @@ public class Oson {
 
 				String name = f.getName();
 				String fieldName = name;
+				String lcfieldName = name.toLowerCase();
 
 				// in the ignored list
 				if (ObjectUtil.inSet(name, classMapper.jsonIgnoreProperties)) {
+					setters.remove(lcfieldName);
 					nameKeys.remove(name);
 					continue;
 				}
@@ -6885,34 +6941,24 @@ public class Oson {
 				FieldMapper mapper = getClassifiedFieldMapper(name, classMapper);
 				
 				if (mapper.ignore) {
+					setters.remove(lcfieldName);
+					nameKeys.remove(name);
 					continue;
 				}
-				
-				// options take precedence
-//				if (mapper.useField != null && !mapper.useField) {
-//					continue;
-//				}
 				
 				// get value for name in map
 				//Object value = getMapValue(map, name, nameKeys);
 
 				Class<?> returnType = f.getType(); // value.getClass();
 
-				Method setterMethod = null;
-
 				boolean ignored = false;
-
-				String setterName = "set" + StringUtil.capitalize(name);
-
-				try {
-					setterMethod = obj.getClass().getMethod(setterName, returnType);
-				} catch (NoSuchMethodException e) {
-					// e.printStackTrace();
-				}
 				
 				if (ignoreModifiers(f.getModifiers(), classMapper.includeFieldsWithModifiers)) {
-					if (setterMethod != null) {
-						if (ignoreModifiers(setterMethod.getModifiers(), classMapper.includeFieldsWithModifiers)) {
+					if (setters.containsKey(lcfieldName)) {
+						Method setter = setters.get(lcfieldName);
+						if (ignoreModifiers(setter.getModifiers(), classMapper.includeFieldsWithModifiers)) {
+							setters.remove(lcfieldName);
+							nameKeys.remove(name);
 							continue;
 						}
 						
@@ -6925,37 +6971,6 @@ public class Oson {
 				
 				if (annotationSupport != ANNOTATION_SUPPORT.NO) {
 					annotations = f.getAnnotations();
-					// check set method
-					// if it exits, get its annotations
-					if (setterMethod != null) {
-						annotations = Stream
-								.concat(Arrays.stream(annotations),
-										Arrays.stream(setterMethod
-												.getAnnotations()))
-								.toArray(Annotation[]::new);
-					}
-
-					if (annotations == null || annotations.length == 0) {
-						String getterName = "get" + StringUtil.capitalize(name);
-
-						try {
-							Method getterMethod = obj.getClass().getMethod(getterName, null);
-
-							if (getterMethod != null) {
-								annotations = getterMethod.getAnnotations();
-								annotations = Stream
-										.concat(Arrays.stream(annotations),
-												Arrays.stream(getterMethod
-														.getAnnotations()))
-										.toArray(Annotation[]::new);
-							}
-
-						} catch (NoSuchMethodException e) {
-							// e.printStackTrace();
-						}
-
-					}
-
 					
 					for (Annotation annotation : annotations) {
 						if (ignoreField(annotation, classMapper.ignoreFieldsWithAnnotations)) {
@@ -6993,19 +7008,18 @@ public class Oson {
 								if (fieldMapperAnnotation.jsonRawValue()) {
 									mapper.jsonRawValue = true;
 								}
-								
+								// might make no sense to be used here
 								if (fieldMapperAnnotation.JsonValue()) {
 									mapper.JsonValue = true;
-									ignored = true;
 									break;
 								}
 								
-								if (!fieldMapperAnnotation.useAttribute()) {
-									mapper.useAttribute = false;
+								if (fieldMapperAnnotation.useAttribute() != BOOLEAN.NONE) {
+									mapper.useAttribute = fieldMapperAnnotation.useAttribute().value();
 								}
 								
-								if (!fieldMapperAnnotation.useField()) {
-									mapper.useField = false;
+								if (fieldMapperAnnotation.useField() != BOOLEAN.NONE) {
+									mapper.useField = fieldMapperAnnotation.useField().value();
 									break;
 								}
 								
@@ -7042,8 +7056,13 @@ public class Oson {
 							}
 							break;
 						
+							// might not used here
 						case "com.fasterxml.jackson.annotation.JsonAnySetter":
 						case "org.codehaus.jackson.annotate.JsonAnySetter":
+							ignored = true;
+							break;
+							
+						case "javax.persistence.Transient":
 							ignored = true;
 							break;
 							
@@ -7088,7 +7107,392 @@ public class Oson {
 									mapper.defaultType = JSON_INCLUDE.NON_NULL;
 									break;
 								case NON_EMPTY:
-									mapper.defaultType = JSON_INCLUDE.NON_NULL_EMPTY;
+									mapper.defaultType = JSON_INCLUDE.NON_EMPTY;
+									break;
+								case NON_DEFAULT:
+									mapper.defaultType = JSON_INCLUDE.NON_DEFAULT;
+									break;
+								case USE_DEFAULTS:
+									mapper.defaultType = JSON_INCLUDE.DEFAULT;
+									break;
+								}
+							}
+							break;
+							
+						case "com.fasterxml.jackson.annotation.JsonRawValue":
+							if (((JsonRawValue) annotation).value()) {
+								mapper.jsonRawValue = true;
+							}
+							break;
+							
+						case "org.codehaus.jackson.annotate.JsonRawValue":
+							if (((org.codehaus.jackson.annotate.JsonRawValue) annotation).value()) {
+								mapper.jsonRawValue = true;
+							}
+							break;
+							
+						case "javax.persistence.Enumerated":
+							mapper.enumType = ((Enumerated) annotation).value();
+							break;
+							
+						case "javax.validation.constraints.NotNull":
+							mapper.required = true;
+							break;
+							
+						case "com.fasterxml.jackson.annotation.JsonProperty":
+							JsonProperty jsonProperty = (JsonProperty) annotation;
+							switch (annotationSupport) {
+							case FULL:
+
+							case NAME:
+
+							case BASIC:
+								Access access = jsonProperty.access();
+								if (access == Access.READ_ONLY) {
+									ignored = true;
+									break;
+								}
+
+								if (jsonProperty.required()) {
+									mapper.required = true;
+								}
+
+								if (mapper.defaultValue == null) {
+									mapper.defaultValue = jsonProperty.defaultValue();
+								}
+
+							case NO:
+							}
+							break;
+							
+						case "javax.validation.constraints.Size":
+							 if (annotationSupport == ANNOTATION_SUPPORT.FULL) {
+									Size size = (Size) annotation;
+									if (mapper.min == 0) {
+										mapper.min = size.min();
+									}
+									if (mapper.max == 0) {
+										mapper.max = size.max();
+									}
+							 }
+							break;
+							
+						case "javax.persistence.Column":
+							Column column = (Column) annotation;
+							
+							switch (annotationSupport) {
+							case FULL:
+								if (mapper.length == 0) {
+									mapper.length = column.length();
+								}
+								if (mapper.scale == 0) {
+									mapper.scale = column.scale();
+								}
+
+							case NAME:
+
+							case BASIC:
+								boolean nullable = column.nullable();
+								if (!nullable) {
+									mapper.required = true;
+								}
+
+							case NO:
+							}
+							break;
+						}
+
+						if (annotationSupport == ANNOTATION_SUPPORT.NAME || annotationSupport == ANNOTATION_SUPPORT.FULL) {
+							names.add(ObjectUtil.getName(annotation));
+						}
+					}
+
+				
+				}
+				
+				if (ignored) {
+					nameKeys.remove(name);
+					setters.remove(lcfieldName);
+					continue;
+				}
+
+				if (mapper.useField != null && !mapper.useField) {
+					continue;
+				}
+				
+				// get value for name in map
+				Object value = getMapValue(map, name, nameKeys);
+				
+				boolean jnameFixed = false;
+				String jname = json2Java(name);
+
+				if (jname == null) {
+					continue;
+				} else if (!jname.equals(name)) {
+					Object jvalue = getMapValue(map, jname, nameKeys);
+					if (jvalue != null) {
+						value = jvalue;
+						name = jname;
+						
+						mapper.java = name;
+						mapper.json = jname;
+						jnameFixed = true;
+					}
+					
+				} else {
+					for (String nm: names) {
+						jname = json2Java(nm);
+						if (jname == null) {
+							ignored = true;
+							break;
+						}
+						if (!jname.equals(nm)) {
+							Object jvalue = getMapValue(map, jname, nameKeys);
+							if (jvalue != null) {
+								value = jvalue;
+								name = jname;
+								
+								mapper.java = nm;
+								mapper.json = jname;
+								jnameFixed = true;
+								break;
+							} else {
+								jvalue = getMapValue(map, nm, nameKeys);
+								if (jvalue != null) {
+									value = jvalue;
+									name = nm;
+									
+									mapper.java = name;
+									mapper.json = name;
+									jnameFixed = true;
+									break;
+								}
+							}
+						}
+					}
+				}
+				
+				if (ignored) {
+					setters.remove(lcfieldName);
+					nameKeys.remove(name);
+					continue;
+				}
+
+				if (value != null) {
+					FieldData objectDTO = new FieldData(obj, f, value, returnType, true, mapper);
+					value = string2Object(objectDTO);
+
+					if (StringUtil.isNull(value)) {
+						if (classMapper.defaultType == JSON_INCLUDE.NON_NULL 
+								|| classMapper.defaultType == JSON_INCLUDE.NON_EMPTY
+								 || classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
+							continue;
+							
+						}
+						
+					} else if (StringUtil.isEmpty(value)) {
+						if (classMapper.defaultType == JSON_INCLUDE.NON_EMPTY
+								 || classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
+							continue;
+						}
+						
+					} else if (StringUtil.isDefault(value)) {
+						if (classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
+							continue;
+						}
+					}
+
+					try {
+						f.set(obj, value);
+						setters.remove(lcfieldName);
+
+					} catch (IllegalAccessException
+							| IllegalArgumentException ex) {
+						//ex.printStackTrace();
+						Method method = setters.get(lcfieldName);
+						if (method != null) {
+							try {
+								Statement stmt = new Statement(obj, method.getName(), new Object[]{value});
+							} catch (Exception e) {
+								//e.printStackTrace();
+							}
+						}
+					}
+					
+					nameKeys.remove(name);
+				}
+			}
+
+			
+			for (Entry<String, Method> entry: setters.entrySet()) {
+				String lcfieldName = entry.getKey();
+				Method method = entry.getValue();
+				
+				String name = StringUtil.uncapitalize(method.getName().substring(3));
+				// just use field name, even it might not be a field
+				String fieldName = name;
+
+				// in the ignored list
+				if (ObjectUtil.inSet(name, classMapper.jsonIgnoreProperties)) {
+					nameKeys.remove(name);
+					continue;
+				}
+				
+				FieldMapper mapper = getClassifiedFieldMapper(name, classMapper);
+				
+				if (mapper.ignore) {
+					nameKeys.remove(name);
+					continue;
+				}
+
+				if (ignoreModifiers(method.getModifiers(), classMapper.includeFieldsWithModifiers)) {
+					nameKeys.remove(name);
+					continue;
+				}
+				
+				boolean ignored = false;
+				
+				Set<String> names = new HashSet<>();
+				
+				if (annotationSupport != ANNOTATION_SUPPORT.NO) {
+
+					for (Annotation annotation : method.getDeclaredAnnotations()) {
+						if (ignoreField(annotation, classMapper.ignoreFieldsWithAnnotations)) {
+							ignored = true;
+							break;
+						}
+						
+						// to improve performance, using swith on string
+						switch (annotation.annotationType().getName()) {
+						case "ca.oson.json.FieldMapper":
+							ca.oson.json.FieldMapper fieldMapperAnnotation = (ca.oson.json.FieldMapper) annotation;
+							
+							switch (annotationSupport) {
+							case FULL:
+								if (fieldMapperAnnotation.length() > 0) {
+									mapper.length = fieldMapperAnnotation.length();
+								}
+								
+								if (fieldMapperAnnotation.min() > 0) {
+									mapper.min = fieldMapperAnnotation.min();
+								}
+								
+								if (fieldMapperAnnotation.max() > 0) {
+									mapper.min = fieldMapperAnnotation.max();
+								}
+								
+							case NAME:
+								
+							case BASIC:
+								if (fieldMapperAnnotation.ignore()) {
+									ignored = true;
+									break;
+								}
+								
+								if (fieldMapperAnnotation.jsonRawValue()) {
+									mapper.jsonRawValue = true;
+								}
+								// might make no sense to be used here
+								if (fieldMapperAnnotation.JsonValue()) {
+									mapper.JsonValue = true;
+									break;
+								}
+								
+								if (fieldMapperAnnotation.useAttribute() != BOOLEAN.NONE) {
+									mapper.useAttribute = fieldMapperAnnotation.useAttribute().value();
+								}
+								
+								if (fieldMapperAnnotation.useField() != BOOLEAN.NONE) {
+									mapper.useField = fieldMapperAnnotation.useField().value();
+									break;
+								}
+								
+								if (fieldMapperAnnotation.defaultType() != JSON_INCLUDE.NONE) {
+									mapper.defaultType = fieldMapperAnnotation.defaultType();
+								}
+								
+								String defaultValue = fieldMapperAnnotation.defaultValue();
+								if (mapper.defaultValue == null && defaultValue != null && defaultValue.length() > 0) {
+									mapper.defaultValue = defaultValue;
+								}
+								
+								if (fieldMapperAnnotation.required()) {
+									mapper.required = fieldMapperAnnotation.required();
+								}
+
+								if (mapper.enumType == null) {
+									mapper.enumType = fieldMapperAnnotation.enumType();
+								}
+								
+								String simpleDateFormat = fieldMapperAnnotation.simpleDateFormat();
+								if (mapper.simpleDateFormat == null && simpleDateFormat != null && simpleDateFormat.length() > 0) {
+									mapper.simpleDateFormat = simpleDateFormat;
+								}
+								
+								if (fieldMapperAnnotation.defaultType() != JSON_INCLUDE.NONE) {
+									mapper.defaultType = fieldMapperAnnotation.defaultType();
+								}
+
+								if (fieldMapperAnnotation.ignoreVersionsAfter() > classMapper.ignoreVersionsAfter) {
+									ignored = true;
+									break;
+								}
+							}
+							break;
+						
+							// might not used here
+						case "com.fasterxml.jackson.annotation.JsonAnySetter":
+						case "org.codehaus.jackson.annotate.JsonAnySetter":
+							ignored = true;
+							otherMethods.put(lcfieldName, method);
+							break;
+							
+						case "javax.persistence.Transient":
+							ignored = true;
+							break;
+							
+						case "com.fasterxml.jackson.annotation.JsonIgnore":
+						case "org.codehaus.jackson.annotate.JsonIgnore":
+							ignored = true;
+							break;
+							
+						case "com.fasterxml.jackson.annotation.JsonIgnoreProperties":
+							JsonIgnoreProperties jsonIgnoreProperties = (JsonIgnoreProperties) annotation;
+							if (!jsonIgnoreProperties.allowSetters()) {
+								ignored = true;
+							}
+							break;
+							
+						case "com.google.gson.annotations.Expose":
+							Expose expose = (Expose) annotation;
+							if (!expose.deserialize()) {
+								ignored = true;
+							}
+							break;
+							
+						case "com.google.gson.annotations.Since":
+							Since since = (Since) annotation;
+							if (since.value() > classMapper.ignoreVersionsAfter) {
+								ignored = true;
+							}
+							break;
+							
+						case "com.fasterxml.jackson.annotation.JsonInclude":
+							if (mapper.defaultType == JSON_INCLUDE.NONE) {
+								JsonInclude jsonInclude = (JsonInclude) annotation;
+								
+								switch (jsonInclude.content()) {
+								case ALWAYS:
+									mapper.defaultType = JSON_INCLUDE.ALWAYS;
+									break;
+								case NON_NULL:
+									mapper.defaultType = JSON_INCLUDE.NON_NULL;
+									break;
+								case NON_ABSENT:
+									mapper.defaultType = JSON_INCLUDE.NON_NULL;
+									break;
+								case NON_EMPTY:
+									mapper.defaultType = JSON_INCLUDE.NON_EMPTY;
 									break;
 								case NON_DEFAULT:
 									mapper.defaultType = JSON_INCLUDE.NON_DEFAULT;
@@ -7196,7 +7600,8 @@ public class Oson {
 					continue;
 				}
 
-				if (mapper.useField != null && !mapper.useField) {
+				if (mapper.useAttribute != null && !mapper.useAttribute) {
+					nameKeys.remove(name);
 					continue;
 				}
 				
@@ -7253,80 +7658,66 @@ public class Oson {
 				}
 				
 				if (ignored) {
+					nameKeys.remove(name);
 					continue;
 				}
 
 				if (value != null) {
-					FieldData objectDTO = new FieldData(obj, f, value, returnType, true, mapper);
+					Class returnType = null;
+					Class[] types = method.getParameterTypes();
+					if (types != null && types.length > 0) {
+						returnType = types[0];
+					}
+					
+					FieldData objectDTO = new FieldData(obj, null, value, returnType, true, mapper);
+					objectDTO.setter = method;
+
 					value = string2Object(objectDTO);
 
-					if (value != null) {
-						try {
-							f.set(obj, value);
-						} catch (IllegalAccessException
-								| IllegalArgumentException ex) {
-							if (setterMethod == null
-									&& annotationSupport == ANNOTATION_SUPPORT.NO) {
-								setterName = "set" + StringUtil.capitalize(name);
-
-								try {
-									setterMethod = obj.getClass().getMethod(
-											setterName, returnType);
-								} catch (NoSuchMethodException e) {
-									// e.printStackTrace();
-								}
-							}
-
-							if (setterMethod != null) {
-								try {
-									setterMethod.invoke(obj, value);
-								} catch (InvocationTargetException | IllegalArgumentException e) {
-									// e.printStackTrace();
-									Object value2 = f.get(obj);
-									if (value2 != null
-											&& !value.equals(value2)
-											&& !Modifier.isStatic(f
-													.getModifiers())) {
-										boolean all = true;
-										switch (classMapper.defaultType) {
-										case ALWAYS:
-											all = true;
-											break;
-										case NON_NULL:
-											all = false;
-											break;
-										case NON_NULL_EMPTY:
-											all = false;
-											break;
-										case NON_DEFAULT:
-											all = false;
-											break;
-										case DEFAULT:
-											all = false;
-											break;
-										default:
-											all = true;
-											break;
-										}
-
-										CopyObjects.copy(value, value2, all);
-										f.set(obj, value2);
-									}
-
-								}
-							}
+					if (StringUtil.isNull(value)) {
+						if (classMapper.defaultType == JSON_INCLUDE.NON_NULL 
+								|| classMapper.defaultType == JSON_INCLUDE.NON_EMPTY
+								 || classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
+							continue;
+							
+						}
+						
+					} else if (StringUtil.isEmpty(value)) {
+						if (classMapper.defaultType == JSON_INCLUDE.NON_EMPTY
+								 || classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
+							continue;
+						}
+						
+					} else if (StringUtil.isDefault(value)) {
+						if (classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
+							continue;
 						}
 					}
+
+					try {
+						method.invoke(obj, value);
+
+					} catch (IllegalAccessException
+							| IllegalArgumentException | InvocationTargetException ex) {
+							//ex.printStackTrace();
+						try {
+							Statement stmt = new Statement(obj, method.getName(), new Object[]{value});
+						} catch (Exception e) {
+							//e.printStackTrace();
+						}
+					}
+					nameKeys.remove(name);
 				}
 			}
 
 
-			//@JsonAnySetter
-			if (nameKeys.size() > 0) {
-				for (Method method: valueType.getMethods()) {
-					for (Annotation annotation: method.getAnnotations()) {
-						if (annotation instanceof JsonAnySetter || annotation instanceof org.codehaus.jackson.annotate.JsonAnySetter) {
-
+			if (annotationSupport != ANNOTATION_SUPPORT.NO) {
+				//@JsonAnySetter
+				if (nameKeys.size() > 0) {
+					for (Method method: valueType.getMethods()) {
+						if (method.isAnnotationPresent(JsonAnySetter.class) 
+								|| method.isAnnotationPresent(org.codehaus.jackson.annotate.JsonAnySetter.class)) {
+	
 							if (ignoreModifiers(method.getModifiers(), classMapper.includeFieldsWithModifiers)) {
 								continue;
 							}
@@ -7335,7 +7726,7 @@ public class Oson {
 							if (parameters != null && parameters.length == 2) {
 								for (String name: nameKeys) {
 									Object value = map.get(name);
-
+	
 									if (value != null) {
 										try {
 											method.invoke(obj, name, value);
@@ -7343,14 +7734,13 @@ public class Oson {
 											//
 										}
 									}
-
+	
 								}
 							}
-
+	
 							break;
 						}
 					}
-
 				}
 			}
 
@@ -7794,7 +8184,7 @@ public class Oson {
 		}
 
 		public static boolean isDefault(Object obj) {
-			if (isDefault(obj)) {
+			if (isEmpty(obj)) {
 				return true;
 			}
 			

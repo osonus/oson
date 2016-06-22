@@ -19,6 +19,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import ca.oson.json.Oson.BOOLEAN;
 import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.Oson.MODIFIER;
 
@@ -41,13 +42,13 @@ public @interface ClassMapper {
 	/*
 	 * Use field first to get/set a field value
 	 */
-	boolean useField() default true;
+	BOOLEAN useField() default BOOLEAN.NONE;
 	
 	
 	/*
 	 * Use getter or setter method to get/set a field value
 	 */
-	boolean useAttribute() default true;
+	BOOLEAN useAttribute() default BOOLEAN.NONE;
 	
 	/*
 	 * Datetime format, for all Date fields inside this class

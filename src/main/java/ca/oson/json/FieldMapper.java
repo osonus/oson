@@ -8,6 +8,7 @@ import java.lang.annotation.Target;
 
 import javax.persistence.EnumType;
 
+import ca.oson.json.Oson.BOOLEAN;
 import ca.oson.json.Oson.JSON_INCLUDE;
 
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
@@ -29,11 +30,11 @@ public @interface FieldMapper {
 	/*
 	 * Use field first to get/set a field value
 	 */
-	boolean useField() default true;
+	BOOLEAN useField() default BOOLEAN.NONE;
 	/*
 	 * Use getter or setter method to get/set a field value
 	 */
-	boolean useAttribute() default true;
+	BOOLEAN useAttribute() default BOOLEAN.NONE;
 	
 	/*
 	 * Datetime format, for this Date field
