@@ -11,7 +11,7 @@ import javax.persistence.EnumType;
 import ca.oson.json.Oson.BOOLEAN;
 import ca.oson.json.Oson.JSON_INCLUDE;
 
-@Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
+@Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.CONSTRUCTOR})
 @Retention(RUNTIME)
 public @interface FieldMapper {
     
@@ -85,7 +85,7 @@ public @interface FieldMapper {
 	/*
 	 * in a class, only one method returning a String value is allowed to set this value to true
 	 */
-	boolean JsonValue() default false;
+	boolean jsonValue() default false;
 	
 	/*
 	 * Ignore this field if true
@@ -97,4 +97,24 @@ public @interface FieldMapper {
 	 * This is the version to ignore
 	 */
 	double ignoreVersionsAfter() default 0;
+	
+	/*
+	 * method with this value set to true will get all properties not specified earlier.
+	 * It will normally return a Map<String , Object>
+	 */
+	boolean jsonAnyGetter() default false;
+	
+	/*
+	 * method with this value set to true will set all properties not consumed earlier.
+	 * It will normally store all the other data into a Map<String , Object>
+	 */
+	boolean jsonAnySetter() default false;
+	
+	/*
+	 * Mark a constructor as a Json constructor, no effect on any other types.
+	 * Combined with name() to specify the parameter names for the constructor.
+	 */
+	boolean jsonCreator() default false;
+	
+	
 }
