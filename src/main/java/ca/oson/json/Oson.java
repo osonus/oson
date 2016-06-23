@@ -268,6 +268,114 @@ public class Oson {
 		 * deserialsize, use getter
 		 */
 		public static boolean useAttribute = true;
+		
+		
+		
+		public static Object getSystemDefault(Class type) {
+			if (type == String.class) {
+				return DefaultValue.string;
+			} else if (Collection.class.isAssignableFrom(type)) {
+				return DefaultValue.collection;
+			} else if (Map.class.isAssignableFrom(type)) {
+				return DefaultValue.map;
+			} else if (type.isArray()) {
+				return DefaultValue.array;
+
+			} else if (type == Integer.class || type == int.class) {
+				return DefaultValue.integer;
+				
+			} else if (type == BigInteger.class) {
+				return DefaultValue.bigInteger;
+				
+			} else if (type == BigDecimal.class) {
+				return DefaultValue.bigDecimal;
+				
+			} else if (type == Character.class || type == char.class) {
+				return DefaultValue.character;
+				
+			} else if (type == Short.class || type == short.class) {
+				return DefaultValue.dshort;
+				
+			} else if (type == Byte.class || type == byte.class) {
+				return DefaultValue.dbyte;
+				
+			} else if (type == Long.class || type == long.class) {
+				return DefaultValue.dlong;
+				
+			} else if (type == Float.class || type == float.class) {
+				return DefaultValue.dfloat;
+				
+			} else if (type == Float.class || type == float.class) {
+				return DefaultValue.dfloat;
+				
+			} else if (type == Double.class || type == double.class) {
+				return DefaultValue.ddouble;
+				
+			} else if (type == Short.class) {
+				return DefaultValue.dshort;
+				
+			}
+			
+			return null;
+		}
+		
+
+		public static boolean isDefault(Object obj) {
+			if (StringUtil.isEmpty(obj)) {
+				return true;
+			}
+			
+			Class type = obj.getClass();
+			
+			if (obj instanceof String) {
+				String str = obj.toString().trim();
+				return (str.equals("[]") || str.equals("{}"));
+			} else if (Collection.class.isAssignableFrom(type)) {
+				Collection list = (Collection)obj;
+				return (list.size() == 0);
+			} else if (Map.class.isAssignableFrom(type)) {
+				Map map = (Map)obj;
+				return (map.size() == 0);
+			} else if (type.isArray()) {
+				return ((Object[])obj).length == 0;
+
+			} else if (obj instanceof Integer || type == int.class) {
+				return DefaultValue.integer.equals(obj);
+				
+			} else if (obj instanceof BigInteger) {
+				return DefaultValue.bigInteger.equals(obj);
+				
+			} else if (obj instanceof BigDecimal) {
+				return DefaultValue.bigDecimal.equals(obj);
+				
+			} else if (obj instanceof Character || type == char.class) {
+				return DefaultValue.character.equals(obj);
+				
+			} else if (obj instanceof Short || type == short.class) {
+				return DefaultValue.dshort.equals(obj);
+				
+			} else if (obj instanceof Byte || type == byte.class) {
+				return DefaultValue.dbyte.equals(obj);
+				
+			} else if (obj instanceof Long || type == long.class) {
+				return DefaultValue.dlong.equals(obj);
+				
+			} else if (obj instanceof Float || type == float.class) {
+				return DefaultValue.dfloat.equals(obj);
+				
+			} else if (obj instanceof Float || type == float.class) {
+				return DefaultValue.dfloat.equals(obj);
+				
+			} else if (obj instanceof Double || type == double.class) {
+				return DefaultValue.ddouble.equals(obj);
+				
+			} else if (obj instanceof Short) {
+				return DefaultValue.dshort.equals(obj);
+				
+			}
+			
+			return false;
+		}
 	}
 	
 	
@@ -277,6 +385,18 @@ public class Oson {
 	public static class ClassMapper<T> {
 		public ClassMapper() {
 			super();
+		}
+		public ClassMapper(Class<T> type) {
+			super();
+			this.type = type;
+		}
+		public ClassMapper(String className) {
+			super();
+			try {
+				this.type = (Class<T>) Class.forName(className);
+			} catch (ClassNotFoundException e) {
+				// e.printStackTrace();
+			}
 		}
 		public ClassMapper setType(Class<T> type) {
 			this.type = type;
@@ -884,18 +1004,12 @@ public class Oson {
 
 
 		private Function getDeserializer(String name, Class valueType, Class enclosingType) {
-			if (name == null) {
-				return null;
+			if (StringUtil.isEmpty(name) || fieldMappers == null) {
+				return getDeserializer(valueType);
 			}
-			name = name.trim();
-			if (name.isEmpty()) {
-				return null;
-			}
-			String lname = name.toLowerCase();
 
-			if (fieldMappers == null) {
-				return null;
-			}
+			name = name.trim();
+			String lname = name.toLowerCase();
 
 			List<Function> functions = new ArrayList<>();
 
@@ -945,18 +1059,12 @@ public class Oson {
 		
 
 		private Function getSerializer(String name, Class valueType, Class enclosingType) {
-			if (name == null) {
-				return null;
+			if (StringUtil.isEmpty(name) || fieldMappers == null) {
+				return getSerializer(valueType);
 			}
+			
 			name = name.trim();
-			if (name.isEmpty()) {
-				return null;
-			}
 			String lname = name.toLowerCase();
-
-			if (fieldMappers == null) {
-				return null;
-			}
 
 			List<Function> functions = new ArrayList<>();
 
@@ -1003,6 +1111,25 @@ public class Oson {
 			}
 		}
 		
+		
+		private Object getDefaultValue(Class valueType) {
+			if (valueType == null) {
+				return null;
+			}
+			Object value = null;
+			
+			if (classMappers != null && classMappers.containsKey(valueType)) {
+				ClassMapper ClassMapper = classMappers.get(valueType);
+				
+				value = ClassMapper.defaultValue;
+			}
+			
+			if (value != null) {
+				return value;
+			}
+			
+			return null;
+		}
 
 		protected int getIndentation() {
 			return indentation;
@@ -1169,7 +1296,7 @@ public class Oson {
 			}
 		}
 		public void setClassMappers(ClassMapper classMapper) {
-			if (classMapper.type != null) {
+			if (classMapper.type == null) {
 				return;
 			}
 			if (this.classMappers == null) {
@@ -1299,18 +1426,16 @@ public class Oson {
 			this.returnType = returnType;
 		}
 
-		public FieldData(Object valueToProcess, Class<E> returnType, Boolean required) {
+		public FieldData(Object valueToProcess, Class<E> returnType, Boolean required, boolean json2Java) {
 			this(valueToProcess, returnType);
 			this.required = required;
+			this.json2Java = json2Java;
 		}
 
-		public FieldData(T enclosingObj, Object valueToProcess, Class<E> returnType) {
-			this(valueToProcess, returnType);
-			this.enclosingObj = enclosingObj;
-		}
 
 		public FieldData(T enclosingObj, Object valueToProcess, Class<E> returnType, E returnObj, boolean json2Java) {
-			this(enclosingObj, valueToProcess, returnType);
+			this(valueToProcess, returnType);
+			this.enclosingObj = enclosingObj;
 			this.returnObj = returnObj;
 			this.json2Java = json2Java;
 		}
@@ -1757,6 +1882,16 @@ public class Oson {
 	}
 	private Function getDeserializer(Class valueType) {
 		return options.getDeserializer(valueType);
+	}
+	
+	private Object getDefaultValue(Class valueType) {
+		Object value = options.getDefaultValue(valueType);
+		
+		if (value == null) {
+			value = DefaultValue.getSystemDefault(valueType);
+		}
+		
+		return value;
 	}
 	
 	private boolean ignoreClass(Class valueType) {
@@ -3511,22 +3646,17 @@ public class Oson {
 
 		if (value != null && value.toString().trim().length() > 0) {
 			Function function = null;
-			String str = value.toString().trim();
+			//String str = value.toString().trim();
 			try {
 				Integer valueToReturn = null;
-				if (value instanceof Integer) {
-					valueToReturn = (Integer)value;
-				} else {
-					valueToReturn = Integer.valueOf(str);
-				}
-	
+
 				// processing jsonFunction
 				if (json2Java) {
 					function = getDeserializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
 					if (function != null) {
 						try {
 							// suppose to return Integer, but in case not, try to process
-							Object returnedValue = function.apply(valueToReturn);
+							Object returnedValue = function.apply(value);
 							
 							if (returnedValue instanceof Optional) {
 								Optional opt = (Optional)returnedValue;
@@ -3567,8 +3697,16 @@ public class Oson {
 								valueToReturn = Integer.parseInt(returnedValue.toString());
 							}
 							
-							
 						} catch (Exception e) {}
+						
+					} else {
+						if (value instanceof Integer) {
+							valueToReturn = (Integer)value;
+						} else {
+							try {
+								valueToReturn = Integer.valueOf(value.toString().trim());
+							} catch (Exception ex) {}
+						}
 					}
 					
 				} else {
@@ -3576,7 +3714,7 @@ public class Oson {
 					if (function != null) {
 						try {
 							// expect a String, but in case not
-							Object returnedValue = function.apply(valueToReturn);
+							Object returnedValue = function.apply(value);
 							
 							if (returnedValue == null) {
 								return getDefaultInteger(objectDTO);
@@ -3590,6 +3728,12 @@ public class Oson {
 							
 						} catch (Exception e) {}
 					}
+					
+					return value;
+				}
+				
+				if (valueToReturn == null) {
+					return getDefaultInteger(objectDTO);
 				}
 	
 				if (min != null && min > valueToReturn.intValue()) {
@@ -3605,7 +3749,7 @@ public class Oson {
 			} catch (Exception err) {
 				if (function != null && !json2Java) {
 					try {
-						return function.apply(str);
+						return function.apply(value);
 					} catch (Exception e) {}
 				}
 			}
@@ -4496,7 +4640,7 @@ public class Oson {
 		if (returnType == null) {
 			if (value == null) {
 				return null;
-			} else if (jsonRawValue) {
+			} else if (jsonRawValue || level == 0) {
 				return value.toString();
 			} else {
 				return "\"" + StringUtil.escapeDoublequote(value.toString())
@@ -4516,7 +4660,7 @@ public class Oson {
 				}
 			}
 			
-			if (jsonRawValue) {
+			if (jsonRawValue || level == 0) {
 				return value.toString();
 			} else {
 				return "\"" + StringUtil.escapeDoublequote(value.toString()) + "\"";
@@ -4530,7 +4674,7 @@ public class Oson {
 			}
 			
 			if (valueToReturn instanceof String) {
-				if (jsonRawValue) {
+				if (jsonRawValue || level == 0) {
 					return (String) valueToReturn;
 				} else {
 					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
@@ -4554,7 +4698,7 @@ public class Oson {
 			}
 			
 			if (valueToReturn instanceof String) {
-				if (jsonRawValue) {
+				if (jsonRawValue || level == 0) {
 					return (String) valueToReturn;
 				} else {
 					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
@@ -4578,7 +4722,7 @@ public class Oson {
 			}
 			
 			if (valueToReturn instanceof String) {
-				if (jsonRawValue) {
+				if (jsonRawValue || level == 0) {
 					return (String) valueToReturn;
 				} else {
 					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
@@ -4601,7 +4745,7 @@ public class Oson {
 			}
 			
 			if (valueToReturn instanceof String) {
-				if (jsonRawValue) {
+				if (jsonRawValue || level == 0) {
 					return (String) valueToReturn;
 				} else {
 					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
@@ -4625,7 +4769,7 @@ public class Oson {
 			}
 			
 			if (valueToReturn instanceof String) {
-				if (jsonRawValue) {
+				if (jsonRawValue || level == 0) {
 					return (String) valueToReturn;
 				} else {
 					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
@@ -4649,7 +4793,7 @@ public class Oson {
 			}
 			
 			if (valueToReturn instanceof String) {
-				if (jsonRawValue) {
+				if (jsonRawValue || level == 0) {
 					return (String) valueToReturn;
 				} else {
 					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
@@ -4674,7 +4818,7 @@ public class Oson {
 			}
 
 			if (valueToReturn instanceof String) {
-				if (jsonRawValue) {
+				if (jsonRawValue || level == 0) {
 					return (String) valueToReturn;
 				} else {
 					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
@@ -4697,7 +4841,7 @@ public class Oson {
 			}
 			
 			if (valueToReturn instanceof String) {
-				if (jsonRawValue) {
+				if (jsonRawValue || level == 0) {
 					return (String) valueToReturn;
 				} else {
 					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
@@ -4720,7 +4864,7 @@ public class Oson {
 			}
 			
 			if (valueToReturn instanceof String) {
-				if (jsonRawValue) {
+				if (jsonRawValue || level == 0) {
 					return (String) valueToReturn;
 				} else {
 					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
@@ -4743,7 +4887,7 @@ public class Oson {
 			}
 			
 			if (valueToReturn instanceof String) {
-				if (jsonRawValue) {
+				if (jsonRawValue || level == 0) {
 					return (String) valueToReturn;
 				} else {
 					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
@@ -4771,7 +4915,7 @@ public class Oson {
 			}
 			
 			if (valueToReturn instanceof String) {
-				if (jsonRawValue) {
+				if (jsonRawValue || level == 0) {
 					return (String) valueToReturn;
 				} else {
 					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
@@ -4781,7 +4925,7 @@ public class Oson {
 			try {
 				DateFormat format = getDateFormat();
 
-				if (jsonRawValue) {
+				if (jsonRawValue || level == 0) {
 					return format.format((Date)valueToReturn);
 				} else {
 					return "\"" + format.format((Date)valueToReturn) + "\"";
@@ -5770,7 +5914,7 @@ public class Oson {
 					if (getterValue.equals(value) || StringUtil.isEmpty(value)) {
 						value = getterValue;
 						
-					} else if (StringUtil.isDefault(value) && !StringUtil.isDefault(getterValue)) {
+					} else if (DefaultValue.isDefault(value) && !DefaultValue.isDefault(getterValue)) {
 						value = getterValue;
 					} else if (getterValue.toString().length() > value.toString().length()) {
 						value = getterValue;
@@ -5875,7 +6019,7 @@ public class Oson {
 						
 						str = "null";
 						
-					} else if (classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT && StringUtil.isDefault(str)) {
+					} else if (classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT && DefaultValue.isDefault(str)) {
 						continue;
 					}
 				//}
@@ -6324,7 +6468,7 @@ public class Oson {
 						
 						str = "null";
 						
-					} else if (StringUtil.isDefault(str)) {
+					} else if (DefaultValue.isDefault(str)) {
 						if (classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
 							continue;
 						}
@@ -6453,7 +6597,7 @@ public class Oson {
 								
 								str = "null";
 								
-							} else if (StringUtil.isDefault(str)) {
+							} else if (DefaultValue.isDefault(str)) {
 								if (classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
 									continue;
 								}
@@ -6654,7 +6798,7 @@ public class Oson {
 				}
 
 			} else {
-				return null;
+				return string2Object(new FieldData(null, source, valueType, null, true));
 			}
 
 		} catch (JSONException ex) {
@@ -6713,6 +6857,16 @@ public class Oson {
 		}
 		
 		
+		T obj = null;
+		
+		if (valueType != null) {
+			obj = (T) getDefaultValue(valueType);
+			if (obj != null) {
+				return obj;
+			}
+		}
+		
+		
 		if (map == null) {
 			return null;
 		}
@@ -6760,7 +6914,7 @@ public class Oson {
 			return (T)map; // or null, which is better?
 		}
 
-		T obj = null;
+
 		try {
 			obj = valueType.newInstance();
 
@@ -7680,7 +7834,7 @@ public class Oson {
 							continue;
 						}
 						
-					} else if (StringUtil.isDefault(value)) {
+					} else if (DefaultValue.isDefault(value)) {
 						if (classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
 							continue;
 						}
@@ -8112,7 +8266,7 @@ public class Oson {
 							continue;
 						}
 						
-					} else if (StringUtil.isDefault(value)) {
+					} else if (DefaultValue.isDefault(value)) {
 						if (classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
 							continue;
 						}
@@ -8353,12 +8507,7 @@ public class Oson {
 			valueType = (Class<T>) source.getClass();
 		}
 
-		//if (Iterable.class.isAssignableFrom(valueType) || Map.class.isAssignableFrom(valueType)) {
-			return object2String(new FieldData(source, valueType, type, false, getDefaultType()), level, set);
-
-		//} else {
-		//	return serialize(source, valueType, level, set);
-		//}
+		return object2String(new FieldData(source, valueType, type, false, getDefaultType()), level, set);
 	}
 	public <T> String serialize(T source) {
 		if (source == null) {
@@ -8394,11 +8543,7 @@ public class Oson {
 		Set set = new HashSet();
 		Class<T> valueType = (Class<T>) source.getClass();
 		
-		//if (Iterable.class.isAssignableFrom(valueType) || valueType.isArray() || Map.class.isAssignableFrom(valueType)) {
-			return object2String(new FieldData(source, valueType, false), level, set);
-		//} else {
-		//	return toJson(source, valueType, level, set);
-		//}
+		return object2String(new FieldData(source, valueType, false, false), level, set);
 	}
 
 	public <T> T deserialize(String source) {
@@ -8638,62 +8783,6 @@ public class Oson {
 			return (str.length() == 0 || str.equals("\"\"") || str.equals("''"));
 		}
 
-		public static boolean isDefault(Object obj) {
-			if (isEmpty(obj)) {
-				return true;
-			}
-			
-			Class type = obj.getClass();
-			
-			if (obj instanceof String) {
-				String str = obj.toString().trim();
-				return (str.equals("[]") || str.equals("{}"));
-			} else if (Collection.class.isAssignableFrom(type)) {
-				Collection list = (Collection)obj;
-				return (list.size() == 0);
-			} else if (Map.class.isAssignableFrom(type)) {
-				Map map = (Map)obj;
-				return (map.size() == 0);
-			} else if (type.isArray()) {
-				return ((Object[])obj).length == 0;
-
-			} else if (obj instanceof Integer || type == int.class) {
-				return DefaultValue.integer.equals(obj);
-				
-			} else if (obj instanceof BigInteger) {
-				return DefaultValue.bigInteger.equals(obj);
-				
-			} else if (obj instanceof BigDecimal) {
-				return DefaultValue.bigDecimal.equals(obj);
-				
-			} else if (obj instanceof Character || type == char.class) {
-				return DefaultValue.character.equals(obj);
-				
-			} else if (obj instanceof Short || type == short.class) {
-				return DefaultValue.dshort.equals(obj);
-				
-			} else if (obj instanceof Byte || type == byte.class) {
-				return DefaultValue.dbyte.equals(obj);
-				
-			} else if (obj instanceof Long || type == long.class) {
-				return DefaultValue.dlong.equals(obj);
-				
-			} else if (obj instanceof Float || type == float.class) {
-				return DefaultValue.dfloat.equals(obj);
-				
-			} else if (obj instanceof Float || type == float.class) {
-				return DefaultValue.dfloat.equals(obj);
-				
-			} else if (obj instanceof Double || type == double.class) {
-				return DefaultValue.ddouble.equals(obj);
-				
-			} else if (obj instanceof Short) {
-				return DefaultValue.dshort.equals(obj);
-				
-			}
-			
-			return false;
-		}
 		
 		public static String repeatSpace(int repeat) {
 			return repeatChar(SPACE, repeat);

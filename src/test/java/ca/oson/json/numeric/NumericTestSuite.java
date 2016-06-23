@@ -1,4 +1,4 @@
-package ca.oson.json;
+package ca.oson.json.numeric;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
