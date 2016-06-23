@@ -1,7 +1,8 @@
-package ca.oson.json;
+package ca.oson.json.support;
 
 import org.junit.Before;
 
+import ca.oson.json.Oson;
 import ca.oson.json.Oson.JSON_PROCESSOR;
 import junit.framework.TestCase;
 

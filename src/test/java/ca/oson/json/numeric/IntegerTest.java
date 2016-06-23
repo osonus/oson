@@ -5,16 +5,18 @@ import java.util.function.Function;
 import org.junit.Test;
 
 import ca.oson.json.Oson.*;
-import ca.oson.json.TestCaseBase;
+import ca.oson.json.support.TestCaseBase;
 
 public class IntegerTest extends TestCaseBase {
 	   
 	   @Test
 	   public void testSerializeInt() {
 		   int value = 5;
-		   String text = oson.serialize(value);
+		   String expected = "5";
 		   
-		   assertEquals("5", text);
+		   String result = oson.serialize(value);
+		   
+		   assertEquals(expected, result);
 	   }
 	   
 	   
@@ -23,14 +25,15 @@ public class IntegerTest extends TestCaseBase {
 		   int value = 5;
 		   String text = oson.serialize(value);
 		   
-		   int returned = oson.deserialize(text, Integer.class);
+		   int result = oson.deserialize(text, Integer.class);
 		   
-		   assertEquals(value, returned);
+		   assertEquals(value, result);
 	   }
 	   
 	   @Test
 	   public void testSerializeIntWithFunction() {
 		   int value = 6;
+		   String expected = "Six";
 		   
 		   ClassMapper classMapper = new ClassMapper(Integer.class);
 
@@ -54,15 +57,15 @@ public class IntegerTest extends TestCaseBase {
 		   
 		   oson.setClassMappers(classMapper);
 		   
-		   String text = oson.serialize(value);
+		   String result = oson.serialize(value);
 		   
-		   assertEquals("Six", text);
+		   assertEquals(expected, result);
 	   }
 	   
 	   
 	   @Test
 	   public void testDeserializeIntWithFunction() {
-		   String text = "Seven";
+		   String value = "Seven";
 		   Integer expected = 7;
 
 		   oson.setClassMappers(new ClassMapper(Integer.class)
@@ -82,9 +85,34 @@ public class IntegerTest extends TestCaseBase {
 				   }
 			   }));
 
-		   Integer value = oson.deserialize(text, Integer.class);
+		   Integer result = oson.deserialize(value, Integer.class);
 		   
-		   assertEquals(expected, value);
+		   assertEquals(expected, result);
 	   }
 
+	   @Test
+	   public void testSerializeIntWithFunctionEnum() {
+		   int value = 1;
+		   String expected = "UNDERSCORE_UPPER_CAMELCASE";
+		   
+		   oson.setClassMappers(new ClassMapper(Integer.class)
+		   	.setSerializer(p -> FIELD_NAMING.UNDERSCORE_UPPER_CAMELCASE));
+		   
+		   String result = oson.serialize(value);
+
+		   assertEquals(expected, result);
+	   } 
+	   
+	   @Test
+	   public void testDeserializeIntWithFunctionEnum() {
+		   String value = "1";
+		   Integer expected = 4;
+		   
+		   oson.setClassMappers(new ClassMapper(Integer.class)
+		   	.setDeserializer(p -> FIELD_NAMING.UNDERSCORE_UPPER_CAMELCASE));
+		   
+		   Integer result = oson.deserialize(value, Integer.class);
+
+		   assertEquals(expected, result);
+	   }
 }
