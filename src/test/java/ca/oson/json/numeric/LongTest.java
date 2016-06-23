@@ -71,7 +71,7 @@ public class LongTest extends TestCaseBase {
 		   String expected = "10000";
 		   
 		   oson.setClassMappers(new ClassMapper(Long.class)
-		   	.setSerializer(p -> new java.math.BigDecimal(p.toString())));
+		   	.setSerializer((Object p) -> new java.math.BigDecimal(p.toString())));
 		   
 		   String result = oson.serialize(value);
 

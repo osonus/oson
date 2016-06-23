@@ -418,6 +418,10 @@ public class Oson {
 			this.serializer = serializer;
 			return this;
 		}
+		public ClassMapper setSerializer(Integer2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
 		public ClassMapper setDeserializer(Function deserializer) {
 			this.deserializer = deserializer;
 			return this;
@@ -1401,6 +1405,7 @@ public class Oson {
 		Integer min = null; // default (int) 0;
 		Integer max = null; // default (int) 2147483647;
 		public Object defaultValue = null;
+		public boolean jsonRawValue = false;
 
 		public FieldData(T enclosingObj, Field field, Object valueToProcess,
 				Class<E> returnType, boolean json2Java, FieldMapper mapper) {
@@ -1419,6 +1424,7 @@ public class Oson {
 			this.min = mapper.min;
 			this.max = mapper.max;
 			this.defaultValue = mapper.defaultValue;
+			this.jsonRawValue = mapper.jsonRawValue;
 		}
 
 		public FieldData(Object valueToProcess, Class<E> returnType) {
@@ -1488,13 +1494,6 @@ public class Oson {
 			return enclosingtype;
 		}
 
-		boolean jsonRawValue() {
-			if (mapper != null) {
-				return mapper.jsonRawValue;
-			}
-			
-			return false;
-		}
 		
 		public String getDefaultName() {
 			if (mapper != null) {
@@ -3512,7 +3511,7 @@ public class Oson {
 						Object returnedValue = function.apply(value);
 						
 						if (returnedValue == null) {
-							return defaultLong2Json(objectDTO);
+							return long2JsonDefault(objectDTO);
 						} else if (returnedValue instanceof String) {
 							return (String) returnedValue;
 						} else if (returnedValue instanceof Long) {
@@ -3552,7 +3551,7 @@ public class Oson {
 			}
 		}
 
-		return defaultLong2Json(objectDTO);
+		return long2JsonDefault(objectDTO);
 	}
 
 	
@@ -3581,7 +3580,7 @@ public class Oson {
 						}
 						
 						if (returnedValue == null) {
-							return getDefaultLong(objectDTO);
+							return json2LongDefault(objectDTO);
 						} else if (returnedValue instanceof String) {
 							valueToReturn = Long.parseLong((String) returnedValue);
 						} else if (returnedValue instanceof Long) {
@@ -3641,12 +3640,12 @@ public class Oson {
 			}
 		}
 
-		return getDefaultLong(objectDTO);
+		return json2LongDefault(objectDTO);
 	}
 	
 	
-	private String defaultLong2Json(FieldData objectDTO) {
-		Long value = getDefaultLong(objectDTO);
+	private String long2JsonDefault(FieldData objectDTO) {
+		Long value = json2LongDefault(objectDTO);
 		
 		if (value == null) {
 			return null;
@@ -3655,7 +3654,7 @@ public class Oson {
 		return value.toString();
 	}
 	
-	private <E> Long getDefaultLong(FieldData objectDTO) {
+	private <E> Long json2LongDefault(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
 		boolean required = objectDTO.required;
@@ -3716,7 +3715,7 @@ public class Oson {
 						}
 						
 						if (returnedValue == null) {
-							return getDefaultInteger(objectDTO);
+							return json2IntegerDefault(objectDTO);
 						} else if (returnedValue instanceof String) {
 							valueToReturn = Integer.parseInt((String) returnedValue);
 						} else if (returnedValue instanceof Integer) {
@@ -3762,7 +3761,7 @@ public class Oson {
 
 				
 				if (valueToReturn == null) {
-					return getDefaultInteger(objectDTO);
+					return json2IntegerDefault(objectDTO);
 				}
 	
 				if (min != null && min > valueToReturn.intValue()) {
@@ -3781,7 +3780,7 @@ public class Oson {
 		
 		}
 		
-		return getDefaultInteger(objectDTO);
+		return json2IntegerDefault(objectDTO);
 	}
 	
 
@@ -3802,9 +3801,14 @@ public class Oson {
 						Object returnedValue = function.apply(value);
 						
 						if (returnedValue == null) {
-							return defaultInteger2Json(objectDTO);
+							return integer2JsonDefault(objectDTO);
 						} else if (returnedValue instanceof String) {
-							return (String) returnedValue;
+							if (objectDTO.jsonRawValue) {
+								return (String) returnedValue;
+							} else {
+								return StringUtil.doublequote(returnedValue);
+							}
+							
 						} else if (returnedValue instanceof Integer) {
 							return ((Integer) returnedValue).toString();
 						} else {
@@ -3850,11 +3854,11 @@ public class Oson {
 			}
 		}
 		
-		return defaultInteger2Json(objectDTO);
+		return integer2JsonDefault(objectDTO);
 	}
 		
-	private String defaultInteger2Json(FieldData objectDTO) {
-		Integer valueToReturn = getDefaultInteger(objectDTO);
+	private String integer2JsonDefault(FieldData objectDTO) {
+		Integer valueToReturn = json2IntegerDefault(objectDTO);
 		
 		if (valueToReturn == null) {
 			return null;
@@ -3863,7 +3867,7 @@ public class Oson {
 		return valueToReturn.toString();
 	}
 		
-	private <E> Integer getDefaultInteger(FieldData objectDTO) {
+	private <E> Integer json2IntegerDefault(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
 		boolean required = objectDTO.required;
@@ -4734,7 +4738,10 @@ public class Oson {
 		Object value = objectDTO.valueToProcess;
 		Class<?> returnType = objectDTO.returnType;
 		boolean required = objectDTO.required;
-		boolean jsonRawValue = objectDTO.jsonRawValue();
+		if (level == 0) {
+			objectDTO.jsonRawValue = true;
+		}
+		boolean jsonRawValue = objectDTO.jsonRawValue;
 		if (objectDTO.defaultType == null) {
 			objectDTO.defaultType = getDefaultType();
 		}
@@ -4762,21 +4769,14 @@ public class Oson {
 				}
 			}
 			
-			if (jsonRawValue || level == 0) {
+			if (jsonRawValue) {
 				return value.toString();
 			} else {
-				return "\"" + StringUtil.escapeDoublequote(value.toString()) + "\"";
+				return StringUtil.doublequote(value.toString());
 			}
 
 		} else if (returnType == Integer.class || returnType == int.class) {
-			String valueToReturn = integer2Json(objectDTO);
-
-			if (jsonRawValue || level == 0) {
-				return (String) valueToReturn;
-			} else {
-				return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
-			}
-			
+			return integer2Json(objectDTO);
 
 		} else if (returnType == Double.class || returnType == double.class) {
 			Object valueToReturn = getDouble(objectDTO);
@@ -8967,6 +8967,20 @@ public class Oson {
 		public static String escapeDoublequote(Object obj) {
 			return escapeDoublequote(obj.toString());
 		}
+		public static String doublequote(String str) {
+			if (str == null) {
+				return null;
+			}
+			
+			if (str.startsWith("\"") && str.endsWith("\"")) {
+				return str;
+			}
+			
+			return "\"" + str.replaceAll("\"", "\\\\\"") + "\"";
+		}
+		public static String doublequote(Object obj) {
+			return doublequote(obj.toString());
+		}
 
 		public static String formatName(String name, FIELD_NAMING format) {
 			switch(format) {
@@ -9619,5 +9633,21 @@ public class Oson {
 			}
 			return classes[classes.length - 1].getName();
 		}
+	}
+	
+	
+	public static interface OsonFunction extends Function {
+		@Override
+		public default Object apply(Object t) {
+			return t;
+		}
+	}
+	
+	public static interface Integer2JsonFunction extends OsonFunction {
+		public String apply(Integer t);
+	}
+	
+	public static interface Json2IntegerFunction extends OsonFunction {
+		public Integer apply(String t);
 	}
 }

@@ -64,6 +64,67 @@ public class IntegerTest extends TestCaseBase {
 	   
 	   
 	   @Test
+	   public void testSerializeIntWithInteger2JsonFunction() {
+		   int value = 6;
+		   String expected = "Six";
+		   
+		   ClassMapper classMapper = new ClassMapper(Integer.class);
+
+		   Integer2JsonFunction serializer = p -> {
+			   switch (p) {
+			   case 1: return "One";
+			   case 2: return "Two";
+			   case 3: return "Three";
+			   case 4: return "Four";
+			   case 5: return "Five";
+			   case 6: return "Six";
+			   case 7: return "Seven";
+			   case 8: return "Eight";
+			   case 9: return "Nine";
+			   case 10: return "Ten";
+			   default: return p.toString();
+			   }
+		   };
+		   
+		   classMapper.setSerializer(serializer);
+		   
+		   oson.setClassMappers(classMapper);
+		   
+		   String result = oson.serialize(value);
+		   
+		   assertEquals(expected, result);
+	   }
+	   
+	   
+	   @Test
+	   public void testSerializeIntWithInteger2JsonFunctionDirect() {
+		   int value = 6;
+		   String expected = "Six";
+
+		   oson.setClassMappers(new ClassMapper(Integer.class).setSerializer(
+				   (Integer p) -> {
+			   switch (p) {
+			   case 1: return "One";
+			   case 2: return "Two";
+			   case 3: return "Three";
+			   case 4: return "Four";
+			   case 5: return "Five";
+			   case 6: return "Six";
+			   case 7: return "Seven";
+			   case 8: return "Eight";
+			   case 9: return "Nine";
+			   case 10: return "Ten";
+			   default: return p.toString();
+			   }
+		   }));
+		   
+		   String result = oson.serialize(value);
+		   
+		   assertEquals(expected, result);
+	   }
+	   
+	   
+	   @Test
 	   public void testDeserializeIntWithFunction() {
 		   String value = "Seven";
 		   Integer expected = 7;
@@ -96,7 +157,7 @@ public class IntegerTest extends TestCaseBase {
 		   String expected = "UNDERSCORE_UPPER_CAMELCASE";
 		   
 		   oson.setClassMappers(new ClassMapper(Integer.class)
-		   	.setSerializer(p -> FIELD_NAMING.UNDERSCORE_UPPER_CAMELCASE));
+		   	.setSerializer((Object p) -> FIELD_NAMING.UNDERSCORE_UPPER_CAMELCASE));
 		   
 		   String result = oson.serialize(value);
 
