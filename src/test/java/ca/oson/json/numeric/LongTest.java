@@ -37,28 +37,45 @@ public class LongTest extends TestCaseBase {
 		   long value = 6;
 		   String expected = "# 6";
 		   
-		   oson.setClassMappers(new ClassMapper(Long.class).setSerializer(p -> "# " + p));
+		   oson.setClassMappers(new ClassMapper(Long.class).setSerializer((Long p) -> "# " + p));
 
 		   String result = oson.serialize(value);
 		   
 		   assertEquals(expected, result);
 	   }
 	   
-	   
-	   @SuppressWarnings("rawtypes")
-	@Test
-	   public void testDeserializeLongWithFunction() {
+
+	   @Test
+	   public void testDeserializeLongWithFunctionObject2Object() {
 		   String value = "# 7";
 		   Long expected = 7l;
 
 		   oson.setClassMappers(new ClassMapper(Long.class)
-		   	.setDeserializer(p -> {
-		   			String str = p.toString();
-				   if (str.startsWith("# ")) {
-					   return str.substring(2);
+		   	.setDeserializer((Object p) -> {
+				   if (p.toString().startsWith("# ")) {
+					   return p.toString().substring(2);
 				   } else {
-					   return Long.parseLong(p.toString());
+					   return p;
 				   }
+			   }));
+
+		   Long result = oson.deserialize(value, Long.class);
+
+		   assertEquals(expected, result);
+	   }
+	   
+	   
+	   @Test
+	   public void testDeserializeLongWithFunctionString2Long() {
+		   String value = "# 7";
+		   Long expected = 7l;
+
+		   oson.setClassMappers(new ClassMapper(Long.class)
+		   	.setDeserializer((String p) -> {
+				   if (p.startsWith("# ")) {
+					   p = p.substring(2);
+				   }
+				return Long.parseLong(p);
 			   }));
 
 		   Long result = oson.deserialize(value, Long.class);
@@ -80,15 +97,16 @@ public class LongTest extends TestCaseBase {
 	   }
 	   
 	   @Test
-	   public void testDeserializeLongWithFunctionBigInteger() {
+	   public void testDeserializeLongWithFunctionObject2BigInteger() {
 		   String value = "10000";
 		   Long expected = 10000l;
 		   
 		   oson.setClassMappers(new ClassMapper(Long.class)
-		   	.setDeserializer(p -> BigInteger.valueOf(Long.parseLong(p.toString()))));
+		   	.setDeserializer((Object p) -> BigInteger.valueOf(Long.parseLong(p.toString()))));
 		   
 		   Long result = oson.deserialize(value, Long.class);
 
 		   assertEquals(expected, result);
 	   }
+
 }

@@ -426,6 +426,23 @@ public class Oson {
 			this.deserializer = deserializer;
 			return this;
 		}
+		public ClassMapper setSerializer(Integer2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public ClassMapper setDeserializer(Json2IntegerFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public ClassMapper setSerializer(Long2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public ClassMapper setDeserializer(Json2LongFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		
 		
 		public ClassMapper setUseField(Boolean useField) {
 			this.useField = useField;
@@ -3521,6 +3538,7 @@ public class Oson {
 		return null;
 	}
 
+
 	private <E> String long2Json(FieldData objectDTO) {
 		if (objectDTO == null || objectDTO.json2Java) {
 			return null;
@@ -3530,55 +3548,65 @@ public class Oson {
 		Class<E> returnType = objectDTO.returnType;
 
 		if (value != null && value.toString().trim().length() > 0) {
-			try {
-				Function function = getSerializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
-				if (function != null) {
-					try {
-						// expect a String, but in case not
-						Object returnedValue = function.apply(value);
-						
-						if (returnedValue == null) {
-							return long2JsonDefault(objectDTO);
-						} else {
-							return object2Json(returnedValue, objectDTO.jsonRawValue);
-						}
-
-					} catch (Exception e) {}
-					
-				} else {
-					Long valueToReturn = null;
-					if (value instanceof Long) {
-						valueToReturn = (Long)value;
-					} else {
+			Long valueToProcess = null;
+			
+			if (value instanceof Long) {
+				valueToProcess = (Long)value;
+			} else {
+				try {
+					valueToProcess = Long.valueOf(value.toString().trim());
+				} catch (Exception ex) {}
+			}
+			
+			if (valueToProcess != null) {
+				try {
+					Function function = objectDTO.getSerializer();
+					if (function != null) {
 						try {
-							valueToReturn = Long.valueOf(value.toString().trim());
-						} catch (Exception ex) {}
+							// expect a String, but in case not
+							Object returnedValue = null;
+							
+							if (function instanceof Long2JsonFunction) {
+								returnedValue = ((Long2JsonFunction)function).apply(valueToProcess);
+							} else {
+								returnedValue = function.apply(valueToProcess);
+							}
+							
+							if (returnedValue == null) {
+								return long2JsonDefault(objectDTO);
+							} else {
+								objectDTO.valueToProcess = returnedValue;
+								return object2Json(objectDTO);
+							}
+							
+						} catch (Exception e) {}
 					}
-					
-					if (valueToReturn != null) {
+
+					if (valueToProcess != null) {
 						Integer min = objectDTO.getMin();
 						Integer max = objectDTO.getMax();
 						
-						if (min != null && min > valueToReturn.longValue()) {
-							valueToReturn = min.longValue();
-						}
-			
-						if (max != null && valueToReturn.compareTo(Long.valueOf(max)) > 0) {
-							valueToReturn = Long.valueOf(max);
+						if (min != null && min > valueToProcess.longValue()) {
+							valueToProcess = min.longValue();
 						}
 						
-						return valueToReturn.toString();
+						if (max != null && valueToProcess.compareTo(Long.valueOf(max)) > 0) {
+							valueToProcess = Long.valueOf(max);
+						}
+						
+						return valueToProcess.toString();
 					}
+
+				} catch (Exception ex) {
+					// ex.printStackTrace();
 				}
-	
-			} catch (Exception err) {
 			}
 		}
-
+		
 		return long2JsonDefault(objectDTO);
 	}
-
 	
+
 	private <E> Long json2Long(FieldData objectDTO) {
 		if (objectDTO == null || !objectDTO.json2Java) {
 			return null;
@@ -3586,17 +3614,32 @@ public class Oson {
 		
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
+		boolean required = objectDTO.required;
+
+		Long valueToReturn = null;
 
 		if (value != null && value.toString().trim().length() > 0) {
-
+			String valueToProcess = value.toString().trim();
+			
 			try {
-				Long valueToReturn = null;
-
-				Function function = getDeserializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
+				Function function = objectDTO.getDeserializer();
+				
 				if (function != null) {
 					try {
 						// suppose to return Long, but in case not, try to process
-						Object returnedValue = function.apply(value);
+						Object returnedValue = null;
+						
+						if (function instanceof Json2LongFunction) {
+							returnedValue = ((Json2LongFunction)function).apply(valueToProcess);
+						} else {
+							returnedValue = function.apply(valueToProcess);
+						}
+						
+						
+						if (returnedValue instanceof Optional) {
+							Optional opt = (Optional)returnedValue;
+							returnedValue = opt.orElse(null);
+						}
 						
 						if (returnedValue instanceof Optional) {
 							Optional opt = (Optional)returnedValue;
@@ -3636,25 +3679,22 @@ public class Oson {
 						} else {
 							valueToReturn = Long.parseLong(returnedValue.toString());
 						}
-					} catch (Exception e) {}
+						
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
 					
 				} else {
-					if (value instanceof Long) {
-						valueToReturn = (Long)value;
-					} else {
-						try {
-							valueToReturn = Long.valueOf(value.toString().trim());
-						} catch (Exception ex) {}
-					}
+					valueToReturn = Long.parseLong(valueToProcess);
 				}
-	
+				
 				if (valueToReturn != null) {
 					Integer min = objectDTO.getMin();
 					Integer max = objectDTO.getMax();
 					if (min != null && min > valueToReturn.longValue()) {
 						return min.longValue();
 					}
-		
+					
 					if (max != null && valueToReturn.compareTo(Long.valueOf(max)) > 0) {
 						valueToReturn = Long.valueOf(max);
 					}
@@ -3665,8 +3705,9 @@ public class Oson {
 			} catch (Exception ex) {
 				//ex.printStackTrace();
 			}
+		
 		}
-
+		
 		return json2LongDefault(objectDTO);
 	}
 	
@@ -3720,19 +3761,25 @@ public class Oson {
 		Class<E> returnType = objectDTO.returnType;
 		boolean required = objectDTO.required;
 
+		Integer valueToReturn = null;
 
 		if (value != null && value.toString().trim().length() > 0) {
-			Function function = null;
-
+			String valueToProcess = value.toString().trim();
+			
 			try {
-				Integer valueToReturn = null;
-
-				function = getDeserializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
+				Function function = objectDTO.getDeserializer();
 				
 				if (function != null) {
 					try {
 						// suppose to return Integer, but in case not, try to process
-						Object returnedValue = function.apply(value);
+						Object returnedValue = null;
+						
+						if (function instanceof Json2IntegerFunction) {
+							returnedValue = ((Json2IntegerFunction)function).apply(valueToProcess);
+						} else {
+							returnedValue = function.apply(valueToProcess);
+						}
+						
 						
 						if (returnedValue instanceof Optional) {
 							Optional opt = (Optional)returnedValue;
@@ -3773,18 +3820,13 @@ public class Oson {
 							valueToReturn = Integer.parseInt(returnedValue.toString());
 						}
 						
-					} catch (Exception e) {}
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
 					
 				} else {
-					if (value instanceof Integer) {
-						valueToReturn = (Integer)value;
-					} else {
-						try {
-							valueToReturn = Integer.valueOf(value.toString().trim());
-						} catch (Exception ex) {}
-					}
+					valueToReturn = Integer.parseInt(valueToProcess);
 				}
-
 				
 				if (valueToReturn != null) {
 					Integer min = objectDTO.getMin();
@@ -3810,31 +3852,7 @@ public class Oson {
 	}
 	
 	
-	private String object2Json(Object returnedValue, boolean jsonRawValue) {
-		if (returnedValue == null) {
-			return null;
-			
-		} else if (returnedValue instanceof String) {
-			if (jsonRawValue) {
-				return (String) returnedValue;
-			} else {
-				return StringUtil.doublequote(returnedValue);
-			}
-		}
-		
-		Class type = returnedValue.getClass();
-		
-		if (type.isPrimitive()) {
-			return returnedValue + "";
-			
-		} else if (Number.class.isAssignableFrom(type)) {
-			return String.valueOf(returnedValue);
-			
-		} else {
-			return returnedValue.toString();
-		}
-	}
-	
+
 
 	private <E> String integer2Json(FieldData objectDTO) {
 		if (objectDTO == null || objectDTO.json2Java) {
@@ -3845,55 +3863,58 @@ public class Oson {
 		Class<E> returnType = objectDTO.returnType;
 
 		if (value != null && value.toString().trim().length() > 0) {
-			try {
-				Function function = objectDTO.getSerializer();
-				if (function != null) {
-					try {
-						// expect a String, but in case not
-						Object returnedValue = function.apply(value);
-						
-						if (returnedValue == null) {
-							return integer2JsonDefault(objectDTO);
-						} else {
-							return object2Json(returnedValue, objectDTO.jsonRawValue);
-						}
-						
-					} catch (Exception e) {}
-					
-				} else {
-
-					Integer valueToReturn = null;
-					
-					if (value instanceof Integer) {
-						valueToReturn = (Integer)value;
-					} else {
+			Integer valueToProcess = null;
+			
+			if (value instanceof Integer) {
+				valueToProcess = (Integer)value;
+			} else {
+				try {
+					valueToProcess = Integer.valueOf(value.toString().trim());
+				} catch (Exception ex) {}
+			}
+			
+			if (valueToProcess != null) {
+				try {
+					Function function = objectDTO.getSerializer();
+					if (function != null) {
 						try {
-							valueToReturn = Integer.valueOf(value.toString().trim());
-						} catch (Exception ex) {}
+							// expect a String, but in case not
+							Object returnedValue = null;
+							
+							if (function instanceof Integer2JsonFunction) {
+								returnedValue = ((Integer2JsonFunction)function).apply(valueToProcess);
+							} else {
+								returnedValue = function.apply(valueToProcess);
+							}
+							
+							if (returnedValue == null) {
+								return integer2JsonDefault(objectDTO);
+							} else {
+								objectDTO.valueToProcess = returnedValue;
+								return object2Json(objectDTO);
+							}
+							
+						} catch (Exception e) {}
 					}
-					
-					if (valueToReturn != null) {
+
+					if (valueToProcess != null) {
 						Integer min = objectDTO.getMin();
 						Integer max = objectDTO.getMax();
 						
-						if (min != null && min > valueToReturn.intValue()) {
-							valueToReturn = min;
+						if (min != null && min > valueToProcess.intValue()) {
+							valueToProcess = min;
 						}
 						
-						if (max != null && valueToReturn.compareTo(Integer.valueOf(max)) > 0) {
-							valueToReturn = Integer.valueOf(max);
+						if (max != null && valueToProcess.compareTo(Integer.valueOf(max)) > 0) {
+							valueToProcess = Integer.valueOf(max);
 						}
 						
-						return valueToReturn.toString();
+						return valueToProcess.toString();
 					}
-					
-					if (valueToReturn != null) {
-						return valueToReturn.toString();
-					}
+
+				} catch (Exception ex) {
+					//ex.printStackTrace();
 				}
-	
-			} catch (Exception ex) {
-				ex.printStackTrace();
 			}
 		}
 		
@@ -4691,6 +4712,11 @@ public class Oson {
 		if (returnType == null) {
 			returnType = (Class<E>) value.getClass();
 		}
+		
+		// first, get the class mapper
+		if (objectDTO.mapper == null && objectDTO.classMapper == null) {
+			objectDTO.classMapper = getGlobalizedClassMapper(returnType);
+		}
 
 		if (returnType == String.class) {
 			return (E) getString(objectDTO);
@@ -4747,36 +4773,82 @@ public class Oson {
 				mvalue = (Map<String, Object>)value;
 			}
 			
+
 			if (obj == null) {
 				return (E) deserialize(mvalue, returnType);
+				
 			} else {
-				return (E) deserialize(mvalue, returnType, obj);
+				if (returnType == null) {
+					returnType = (Class<E>) obj.getClass();
+					objectDTO.classMapper = getGlobalizedClassMapper(returnType);
+				}
+				
+				return (E) deserialize(mvalue, returnType, obj, objectDTO.classMapper);
 			}
 		}
 	}
 
-	private <E> String enumToJson(Object value, Class<E> valueType,
-			EnumType enumType) {
+	private <E> String enum2Json(FieldData objectDTO) {
+		Object value = objectDTO.valueToProcess;
+		Class<E> valueType = objectDTO.returnType;
+		EnumType enumType = objectDTO.enumType;
+		
 		if (value == null) {
 			return null;
 		}
+		
+		Enum en = (Enum)value;
+		
 		if (enumType == null) {
-			return "\"" + StringUtil.escapeDoublequote(value.toString()) + "\"";
+			return en.name();
 		}
 
 		switch (enumType) {
 		case STRING:
-			return "\"" + StringUtil.escapeDoublequote(value.toString()) + "\"";
+			return en.name();
 		case ORDINAL:
 		default:
-			FieldData newFieldData = new FieldData(value, valueType, true);
-			newFieldData.json2Java = false;
-			
-			Enum e = getEnum(newFieldData);
-			return "" + e.ordinal();
+//			FieldData newFieldData = new FieldData(value, valueType, true);
+//			newFieldData.json2Java = false;
+//			Enum e = getEnum(newFieldData);
+			return "" + en.ordinal();
 		}
 	}
 
+	
+	private String object2Json(FieldData objectDTO) {
+		Object returnedValue = objectDTO.valueToProcess;
+		boolean jsonRawValue = objectDTO.jsonRawValue;
+		
+		if (returnedValue == null) {
+			return null;
+			
+		} else if (returnedValue instanceof String) {
+			if (jsonRawValue) {
+				return (String) returnedValue;
+			} else {
+				return StringUtil.doublequote(returnedValue);
+			}
+		}
+		
+		Class type = returnedValue.getClass();
+		
+		if (type.isPrimitive()) {
+			return returnedValue + "";
+			
+		} else if (Number.class.isAssignableFrom(type)) {
+			return String.valueOf(returnedValue);
+			
+		} else if (Enum.class.isAssignableFrom(type)) {
+			return enum2Json(objectDTO);
+			
+			
+		} else {
+			return returnedValue.toString();
+		}
+	}
+	
+	
 	private <E> String object2Json(FieldData objectDTO, int level, Set set) {
 		if (objectDTO == null) {
 			return null;
@@ -5086,7 +5158,7 @@ public class Oson {
 
 		// returnType.isEnum()  || value instanceof Enum<?>
 		} else if (Enum.class.isAssignableFrom(returnType)) {
-			return enumToJson(value, returnType, objectDTO.enumType);
+			return enum2Json(objectDTO);
 
 		} else if (Collection.class.isAssignableFrom(returnType)) {
 			if (value == null) {
@@ -6936,7 +7008,10 @@ public class Oson {
 					if (object == null) {
 						return deserialize(map, valueType);
 					} else {
-						return deserialize(map, valueType, object);
+						
+						ClassMapper classMapper = getGlobalizedClassMapper(valueType);
+						
+						return deserialize(map, valueType, object, classMapper);
 					}
 				}
 
@@ -6985,8 +7060,10 @@ public class Oson {
 		}
 
 		T obj = newInstance(map, valueType);
+		
+		ClassMapper classMapper = getGlobalizedClassMapper(valueType);
 
-		return deserialize(map, valueType, obj);
+		return deserialize(map, valueType, obj, classMapper);
 	}
 
 	/*
@@ -7337,17 +7414,10 @@ public class Oson {
 	/*
 	 * string to object, deserialize, set method should be used
 	 */
-	<T> T deserialize(Map<String, Object> map, Class<T> valueType, T obj) {
+	<T> T deserialize(Map<String, Object> map, Class<T> valueType, T obj, ClassMapper classMapper) {
 
 		Set<String> nameKeys = new HashSet(map.keySet());
 
-		if (valueType == null) {
-			valueType = (Class<T>)obj.getClass();
-		}
-		
-		// first, get the class mapper
-		ClassMapper classMapper = getGlobalizedClassMapper(valueType);
-		
 		if (classMapper.ignore) {
 			return null;
 		}
@@ -9699,4 +9769,33 @@ public class Oson {
 			return classes[classes.length - 1].getName();
 		}
 	}
+	
+	
+	public static interface OsonFunction extends Function {
+		@Override
+		public default Object apply(Object t) {
+			return t;
+		}
+	}
+	
+	@FunctionalInterface
+	public static interface Integer2JsonFunction extends OsonFunction {
+		public String apply(Integer t);
+	}
+	
+	@FunctionalInterface
+	public static interface Json2IntegerFunction extends OsonFunction {
+		public Integer apply(String t);
+	}
+	
+	@FunctionalInterface
+	public static interface Long2JsonFunction extends OsonFunction {
+		public String apply(Long t);
+	}
+	
+	@FunctionalInterface
+	public static interface Json2LongFunction extends OsonFunction {
+		public Long apply(String t);
+	}
+	
 }

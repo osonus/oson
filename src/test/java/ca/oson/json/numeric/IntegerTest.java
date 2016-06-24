@@ -34,11 +34,9 @@ public class IntegerTest extends TestCaseBase {
 	   public void testSerializeIntWithFunction() {
 		   int value = 6;
 		   String expected = "Six";
-		   
-		   ClassMapper classMapper = new ClassMapper(Integer.class);
 
-		   Function serializer = p -> {
-			   switch (Integer.parseInt(p.toString())) {
+		   oson.setClassMappers(new ClassMapper(Integer.class).setSerializer((Integer p) -> {
+			   switch (p) {
 			   case 1: return "One";
 			   case 2: return "Two";
 			   case 3: return "Three";
@@ -49,13 +47,9 @@ public class IntegerTest extends TestCaseBase {
 			   case 8: return "Eight";
 			   case 9: return "Nine";
 			   case 10: return "Ten";
-			   default: return p;
+			   default: return p + "";
 			   }
-		   };
-		   
-		   classMapper.setSerializer(serializer);
-		   
-		   oson.setClassMappers(classMapper);
+		   }));
 		   
 		   String result = oson.serialize(value);
 		   
@@ -67,11 +61,9 @@ public class IntegerTest extends TestCaseBase {
 	   public void testSerializeIntWithInteger2JsonFunction() {
 		   int value = 6;
 		   String expected = "Six";
-		   
-		   ClassMapper classMapper = new ClassMapper(Integer.class);
 
-		   classMapper.setSerializer(p -> {
-			   switch (Integer.parseInt(p.toString())) {
+		   oson.setClassMappers(new ClassMapper(Integer.class).setSerializer((Integer p) -> {
+			   switch (p) {
 			   case 1: return "One";
 			   case 2: return "Two";
 			   case 3: return "Three";
@@ -82,11 +74,9 @@ public class IntegerTest extends TestCaseBase {
 			   case 8: return "Eight";
 			   case 9: return "Nine";
 			   case 10: return "Ten";
-			   default: return p.toString();
+			   default: return p + "";
 			   }
-		   });
-		   
-		   oson.setClassMappers(classMapper);
+		   }));
 		   
 		   String result = oson.serialize(value);
 		   
@@ -100,8 +90,8 @@ public class IntegerTest extends TestCaseBase {
 		   String expected = "Six";
 
 		   oson.setClassMappers(new ClassMapper(Integer.class).setSerializer(
-				   p -> {
-			   switch (Integer.parseInt(p.toString())) {
+				   (Integer p) -> {
+			   switch (p) {
 			   case 1: return "One";
 			   case 2: return "Two";
 			   case 3: return "Three";
@@ -112,7 +102,7 @@ public class IntegerTest extends TestCaseBase {
 			   case 8: return "Eight";
 			   case 9: return "Nine";
 			   case 10: return "Ten";
-			   default: return p;
+			   default: return p + "";
 			   }
 		   }));
 		   
@@ -128,8 +118,8 @@ public class IntegerTest extends TestCaseBase {
 		   Integer expected = 7;
 
 		   oson.setClassMappers(new ClassMapper(Integer.class)
-		   	.setDeserializer(p -> {
-				   switch (p.toString()) {
+		   	.setDeserializer((String p) -> {
+				   switch (p) {
 				   case "One": return 1;
 				   case "Two": return 2;
 				   case "Three": return 3;
@@ -140,7 +130,7 @@ public class IntegerTest extends TestCaseBase {
 				   case "Eight": return 8;
 				   case "Nine": return 9;
 				   case "Ten": return 10;
-				   default: return p;
+				   default: return Integer.parseInt(p);
 				   }
 			   }));
 
@@ -155,7 +145,7 @@ public class IntegerTest extends TestCaseBase {
 		   String expected = "UNDERSCORE_UPPER_CAMELCASE";
 		   
 		   oson.setClassMappers(new ClassMapper(Integer.class)
-		   	.setSerializer(p -> FIELD_NAMING.UNDERSCORE_UPPER_CAMELCASE));
+		   	.setSerializer((Object p) -> FIELD_NAMING.UNDERSCORE_UPPER_CAMELCASE));
 		   
 		   String result = oson.serialize(value);
 
@@ -168,7 +158,7 @@ public class IntegerTest extends TestCaseBase {
 		   Integer expected = 4;
 		   
 		   oson.setClassMappers(new ClassMapper(Integer.class)
-		   	.setDeserializer(p -> FIELD_NAMING.UNDERSCORE_UPPER_CAMELCASE));
+		   	.setDeserializer((Object p) -> FIELD_NAMING.UNDERSCORE_UPPER_CAMELCASE));
 		   
 		   Integer result = oson.deserialize(value, Integer.class);
 
