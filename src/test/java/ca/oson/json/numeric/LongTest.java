@@ -45,7 +45,8 @@ public class LongTest extends TestCaseBase {
 	   }
 	   
 	   
-	   @Test
+	   @SuppressWarnings("rawtypes")
+	@Test
 	   public void testDeserializeLongWithFunction() {
 		   String value = "# 7";
 		   Long expected = 7l;
@@ -76,7 +77,7 @@ public class LongTest extends TestCaseBase {
 		   String result = oson.serialize(value);
 
 		   assertEquals(expected, result);
-	   } 
+	   }
 	   
 	   @Test
 	   public void testDeserializeLongWithFunctionBigInteger() {

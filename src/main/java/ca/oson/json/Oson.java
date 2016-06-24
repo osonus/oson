@@ -50,6 +50,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -70,6 +72,8 @@ import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.commons.EmptyVisitor;
+
+import ca.oson.json.Oson.ClassMapper;
 
 import com.fasterxml.jackson.databind.introspect.AnnotatedField;
 import com.fasterxml.jackson.databind.introspect.AnnotatedMethod;
@@ -418,14 +422,11 @@ public class Oson {
 			this.serializer = serializer;
 			return this;
 		}
-		public ClassMapper setSerializer(Integer2JsonFunction serializer) {
-			this.serializer = serializer;
-			return this;
-		}
 		public ClassMapper setDeserializer(Function deserializer) {
 			this.deserializer = deserializer;
 			return this;
 		}
+		
 		public ClassMapper setUseField(Boolean useField) {
 			this.useField = useField;
 			return this;
@@ -509,6 +510,10 @@ public class Oson {
 		public Set<String> jsonIgnoreProperties;
 		
 		public JSON_INCLUDE defaultType = null; // JSON_INCLUDE.NONE;
+		
+		public Integer scale = null; // Default: 0
+		public Integer min = null; // default (int) 0;
+		public Integer max = null; // default (int) 2147483647;
 	}
 	
 	/*
@@ -1391,9 +1396,12 @@ public class Oson {
 		public E returnObj = null;
 		public Type erasedType = null;
 		public boolean json2Java = true;
+		
+		// extra field information
 		public Method getter;
 		public Method setter;
 		public FieldMapper mapper = null;
+		public ClassMapper classMapper = null;
 		
 		
 		Boolean required = false;
@@ -1404,12 +1412,12 @@ public class Oson {
 		Integer scale = null; // Default: 0
 		Integer min = null; // default (int) 0;
 		Integer max = null; // default (int) 2147483647;
+
 		public Object defaultValue = null;
 		public boolean jsonRawValue = false;
 
 		public FieldData(T enclosingObj, Field field, Object valueToProcess,
 				Class<E> returnType, boolean json2Java, FieldMapper mapper) {
-			
 			this.enclosingObj = enclosingObj; // enclosing object
 			this.field = field;
 			this.valueToProcess = valueToProcess;
@@ -1427,52 +1435,31 @@ public class Oson {
 			this.jsonRawValue = mapper.jsonRawValue;
 		}
 
+
 		public FieldData(Object valueToProcess, Class<E> returnType) {
 			this.valueToProcess = valueToProcess;
 			this.returnType = returnType;
 		}
 
-		public FieldData(Object valueToProcess, Class<E> returnType, Boolean required, boolean json2Java) {
+		public FieldData(Object valueToProcess, Class<E> returnType, boolean json2Java) {
 			this(valueToProcess, returnType);
-			this.required = required;
-			this.json2Java = json2Java;
-		}
-
-
-		public FieldData(T enclosingObj, Object valueToProcess, Class<E> returnType, E returnObj, boolean json2Java) {
-			this(valueToProcess, returnType);
-			this.enclosingObj = enclosingObj;
-			this.returnObj = returnObj;
 			this.json2Java = json2Java;
 		}
 		
+		public FieldData(Object valueToProcess, Class<E> returnType, boolean json2Java, E returnObj) {
+			this(valueToProcess, returnType, json2Java);
+			this.returnObj = returnObj;
+		}
 
-		public FieldData(Object valueToProcess, Class<E> returnType, Type type, boolean json2Java, JSON_INCLUDE defaultType) {
+		public FieldData(Object valueToProcess, Class<E> returnType, boolean json2Java, Type type) {
+			this(valueToProcess, returnType, json2Java);
+			this.erasedType = type; // generic type information
+		}
+
+		public FieldData(Object valueToProcess, Type type, boolean json2Java) {
 			this.valueToProcess = valueToProcess; // value to interpret
-			this.returnType = returnType;
 			this.erasedType = type; // generic type information
 			this.json2Java = json2Java;
-			this.defaultType = defaultType;
-		}
-
-		public FieldData(T enclosingObj, Object valueToProcess, Type type, boolean json2Java, JSON_INCLUDE defaultType) {
-			this.valueToProcess = valueToProcess; // value to interpret
-			this.enclosingObj = enclosingObj; // enclosing object
-			this.erasedType = type; // generic type information
-			this.json2Java = json2Java;
-			this.defaultType = defaultType;
-		}
-
-		public FieldData(T enclosingObj, Object valueToProcess, E returnObj) {
-			this.valueToProcess = valueToProcess; // value to interpret
-			this.enclosingObj = enclosingObj; // enclosing object
-			this.returnObj = returnObj; // object to return
-		}
-
-		public FieldData(Object valueToProcess, Class<E> returnType, boolean json2Java, JSON_INCLUDE defaultType) {
-			this(valueToProcess, returnType);
-			this.json2Java = json2Java;
-			this.defaultType = defaultType;
 		}
 
 
@@ -1507,22 +1494,57 @@ public class Oson {
 			return null;
 		}
 		
+		public Function getFunction() {
+			if (this.json2Java) {
+				return getDeserializer();
+			} else {
+				return getSerializer();
+			}
+		}
+		
 		public Function getDeserializer() {
-			if (mapper != null) {
+			if (mapper != null && mapper.deserializer != null) {
 				return mapper.deserializer;
+			}
+			if (classMapper != null && classMapper.deserializer != null) {
+				return classMapper.deserializer;
 			}
 			
 			return null;
 		}
 		
 		public Function getSerializer() {
-			if (mapper != null) {
+			if (mapper != null && mapper.serializer != null) {
 				return mapper.serializer;
+			}
+			if (classMapper != null && classMapper.serializer != null) {
+				return classMapper.serializer;
 			}
 			
 			return null;
 		}
 
+		public Integer getMin() {
+			if (min != null) {
+				return min;
+			}
+			if (classMapper != null) {
+				min = classMapper.min;
+			}
+			
+			return min;
+		}
+		public Integer getMax() {
+			if (max != null) {
+				return max;
+			}
+			if (classMapper != null) {
+				max = classMapper.max;
+			}
+			
+			return max;
+		}
+		
 		public Object getDefaultValue() {
 			
 			if (defaultValue != null) {
@@ -1550,8 +1572,13 @@ public class Oson {
 						defaultValue = getter.invoke(enclosingObj, null);
 					} catch (InvocationTargetException | IllegalAccessException | IllegalArgumentException e) {
 						// e.printStackTrace();
+						defaultValue = getter.getDefaultValue();
 					}
 				}
+			}
+			
+			if (defaultValue == null && classMapper != null) {
+				defaultValue = classMapper.defaultValue;
 			}
 
 			return defaultValue;
@@ -3512,13 +3539,10 @@ public class Oson {
 						
 						if (returnedValue == null) {
 							return long2JsonDefault(objectDTO);
-						} else if (returnedValue instanceof String) {
-							return (String) returnedValue;
-						} else if (returnedValue instanceof Long) {
-							return ((Long) returnedValue).toString();
 						} else {
-							return returnedValue.toString();
+							return object2Json(returnedValue, objectDTO.jsonRawValue);
 						}
+
 					} catch (Exception e) {}
 					
 				} else {
@@ -3532,8 +3556,8 @@ public class Oson {
 					}
 					
 					if (valueToReturn != null) {
-						Integer min = objectDTO.min;
-						Integer max = objectDTO.max;
+						Integer min = objectDTO.getMin();
+						Integer max = objectDTO.getMax();
 						
 						if (min != null && min > valueToReturn.longValue()) {
 							valueToReturn = min.longValue();
@@ -3581,10 +3605,11 @@ public class Oson {
 						
 						if (returnedValue == null) {
 							return json2LongDefault(objectDTO);
-						} else if (returnedValue instanceof String) {
-							valueToReturn = Long.parseLong((String) returnedValue);
 						} else if (returnedValue instanceof Long) {
 							valueToReturn = (Long) returnedValue;
+							
+						} else if (returnedValue instanceof String) {
+							valueToReturn = Long.parseLong((String) returnedValue);
 						//  byte, double, float, int, long, and short. 
 						} else if (returnedValue instanceof Number) {
 							valueToReturn = ((Number) returnedValue).longValue();
@@ -3623,17 +3648,19 @@ public class Oson {
 					}
 				}
 	
-				Integer min = objectDTO.min;
-				Integer max = objectDTO.max;
-				if (min != null && min > valueToReturn.longValue()) {
-					return min.longValue();
+				if (valueToReturn != null) {
+					Integer min = objectDTO.getMin();
+					Integer max = objectDTO.getMax();
+					if (min != null && min > valueToReturn.longValue()) {
+						return min.longValue();
+					}
+		
+					if (max != null && valueToReturn.compareTo(Long.valueOf(max)) > 0) {
+						valueToReturn = Long.valueOf(max);
+					}
+					
+					return valueToReturn;
 				}
-	
-				if (max != null && valueToReturn.compareTo(Long.valueOf(max)) > 0) {
-					valueToReturn = Long.valueOf(max);
-				}
-				
-				return valueToReturn;
 	
 			} catch (Exception ex) {
 				//ex.printStackTrace();
@@ -3659,8 +3686,8 @@ public class Oson {
 		Class<E> returnType = objectDTO.returnType;
 		boolean required = objectDTO.required;
 		
-		Integer min = objectDTO.min;
-		Integer max = objectDTO.max;
+		Integer min = objectDTO.getMin();
+		Integer max = objectDTO.getMax();
 		
 		if (returnType == long.class
 				|| getDefaultType() == JSON_INCLUDE.DEFAULT || required) {
@@ -3692,9 +3719,7 @@ public class Oson {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
 		boolean required = objectDTO.required;
-		
-		Integer min = objectDTO.min;
-		Integer max = objectDTO.max;
+
 
 		if (value != null && value.toString().trim().length() > 0) {
 			Function function = null;
@@ -3716,10 +3741,11 @@ public class Oson {
 						
 						if (returnedValue == null) {
 							return json2IntegerDefault(objectDTO);
-						} else if (returnedValue instanceof String) {
-							valueToReturn = Integer.parseInt((String) returnedValue);
 						} else if (returnedValue instanceof Integer) {
 							valueToReturn = (Integer) returnedValue;
+							
+						} else if (returnedValue instanceof String) {
+							valueToReturn = Integer.parseInt((String) returnedValue);
 						//  byte, double, float, int, long, and short. 
 						} else if (returnedValue instanceof Number) {
 							valueToReturn = ((Number) returnedValue).intValue();
@@ -3760,19 +3786,19 @@ public class Oson {
 				}
 
 				
-				if (valueToReturn == null) {
-					return json2IntegerDefault(objectDTO);
+				if (valueToReturn != null) {
+					Integer min = objectDTO.getMin();
+					Integer max = objectDTO.getMax();
+					if (min != null && min > valueToReturn.intValue()) {
+						return min;
+					}
+					
+					if (max != null && valueToReturn.compareTo(Integer.valueOf(max)) > 0) {
+						valueToReturn = Integer.valueOf(max);
+					}
+					
+					return valueToReturn;
 				}
-	
-				if (min != null && min > valueToReturn.intValue()) {
-					return min;
-				}
-				
-				if (max != null && valueToReturn.compareTo(Integer.valueOf(max)) > 0) {
-					valueToReturn = Integer.valueOf(max);
-				}
-				
-				return valueToReturn;
 	
 			} catch (Exception ex) {
 				//ex.printStackTrace();
@@ -3781,6 +3807,32 @@ public class Oson {
 		}
 		
 		return json2IntegerDefault(objectDTO);
+	}
+	
+	
+	private String object2Json(Object returnedValue, boolean jsonRawValue) {
+		if (returnedValue == null) {
+			return null;
+			
+		} else if (returnedValue instanceof String) {
+			if (jsonRawValue) {
+				return (String) returnedValue;
+			} else {
+				return StringUtil.doublequote(returnedValue);
+			}
+		}
+		
+		Class type = returnedValue.getClass();
+		
+		if (type.isPrimitive()) {
+			return returnedValue + "";
+			
+		} else if (Number.class.isAssignableFrom(type)) {
+			return String.valueOf(returnedValue);
+			
+		} else {
+			return returnedValue.toString();
+		}
 	}
 	
 
@@ -3794,7 +3846,7 @@ public class Oson {
 
 		if (value != null && value.toString().trim().length() > 0) {
 			try {
-				Function function = getSerializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
+				Function function = objectDTO.getSerializer();
 				if (function != null) {
 					try {
 						// expect a String, but in case not
@@ -3802,17 +3854,8 @@ public class Oson {
 						
 						if (returnedValue == null) {
 							return integer2JsonDefault(objectDTO);
-						} else if (returnedValue instanceof String) {
-							if (objectDTO.jsonRawValue) {
-								return (String) returnedValue;
-							} else {
-								return StringUtil.doublequote(returnedValue);
-							}
-							
-						} else if (returnedValue instanceof Integer) {
-							return ((Integer) returnedValue).toString();
 						} else {
-							return returnedValue.toString();
+							return object2Json(returnedValue, objectDTO.jsonRawValue);
 						}
 						
 					} catch (Exception e) {}
@@ -3830,8 +3873,8 @@ public class Oson {
 					}
 					
 					if (valueToReturn != null) {
-						Integer min = objectDTO.min;
-						Integer max = objectDTO.max;
+						Integer min = objectDTO.getMin();
+						Integer max = objectDTO.getMax();
 						
 						if (min != null && min > valueToReturn.intValue()) {
 							valueToReturn = min;
@@ -3850,7 +3893,7 @@ public class Oson {
 				}
 	
 			} catch (Exception ex) {
-				//  ex.printStackTrace();
+				ex.printStackTrace();
 			}
 		}
 		
@@ -3872,8 +3915,8 @@ public class Oson {
 		Class<E> returnType = objectDTO.returnType;
 		boolean required = objectDTO.required;
 		
-		Integer min = objectDTO.min;
-		Integer max = objectDTO.max;
+		Integer min = objectDTO.getMin();
+		Integer max = objectDTO.getMax();
 		boolean json2Java = objectDTO.json2Java;
 
 		if (returnType == int.class
@@ -4418,7 +4461,7 @@ public class Oson {
 			Object obj = entry.getValue();
 			FieldData newFieldData = new FieldData(obj, obj.getClass());
 			newFieldData.json2Java = objectDTO.json2Java;
-			returnObj.put(entry.getKey(), string2Object(newFieldData));
+			returnObj.put(entry.getKey(), json2Object(newFieldData));
 		}
 		
 		return returnObj;
@@ -4501,7 +4544,7 @@ public class Oson {
 				for (E val : values) {
 					FieldData newFieldData = new FieldData(val, componentType);
 					newFieldData.json2Java = objectDTO.json2Java;
-					returnObj.add(string2Object(newFieldData));
+					returnObj.add(json2Object(newFieldData));
 				}
 				
 				return returnObj;
@@ -4606,7 +4649,7 @@ public class Oson {
 					for (Object val: values) {
 						FieldData newFieldData = new FieldData(val, componentType);
 						newFieldData.json2Java = objectDTO.json2Java;
-						arr[i++] = string2Object(newFieldData);
+						arr[i++] = json2Object(newFieldData);
 					}
 					
 					return arr;
@@ -4641,7 +4684,7 @@ public class Oson {
 	 * deserialize, convert Json value to Java data
 	 */
 	@SuppressWarnings("unchecked")
-	private <E> E string2Object(FieldData objectDTO) {
+	private <E> E json2Object(FieldData objectDTO) {
 		// String value, Class<E> returnType
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
@@ -4734,10 +4777,25 @@ public class Oson {
 		}
 	}
 
-	private <E> String object2String(FieldData objectDTO, int level, Set set) {
+	private <E> String object2Json(FieldData objectDTO, int level, Set set) {
+		if (objectDTO == null) {
+			return null;
+		}
+		
 		Object value = objectDTO.valueToProcess;
 		Class<?> returnType = objectDTO.returnType;
+		
+		if (returnType == null) {
+			returnType = value.getClass();
+		}
+		
+		// first, get the class mapper
+		if (objectDTO.mapper == null && objectDTO.classMapper == null) {
+			objectDTO.classMapper = getGlobalizedClassMapper(returnType);
+		}
+
 		boolean required = objectDTO.required;
+		
 		if (level == 0) {
 			objectDTO.jsonRawValue = true;
 		}
@@ -4775,130 +4833,179 @@ public class Oson {
 				return StringUtil.doublequote(value.toString());
 			}
 
-		} else if (returnType == Integer.class || returnType == int.class) {
-			return integer2Json(objectDTO);
+		} else if (Number.class.isAssignableFrom(returnType) || returnType.isPrimitive()) {
+			
+			if (returnType == Integer.class || returnType == int.class) {
+				return integer2Json(objectDTO);
+				
+			} else if (returnType == Long.class || returnType == long.class) {
+				String valueToReturn = long2Json(objectDTO);
+				
+				if (valueToReturn == null) {
+					return null;
+				}
 
-		} else if (returnType == Double.class || returnType == double.class) {
-			Object valueToReturn = getDouble(objectDTO);
-			
-			if (valueToReturn == null) {
-				return null;
-			}
-			
-			if (valueToReturn instanceof String) {
 				if (jsonRawValue || level == 0) {
 					return (String) valueToReturn;
 				} else {
 					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
 				}
-			}
-			
-			if (!required && objectDTO.defaultType == JSON_INCLUDE.NON_DEFAULT) {
-				if (valueToReturn.equals(DefaultValue.ddouble)) {
+				
+			} else if (returnType == Byte.class || returnType == byte.class) {
+				Object valueToReturn = getByte(objectDTO);
+				
+				if (valueToReturn == null) {
 					return null;
 				}
-			}
-			
-			return String.valueOf(valueToReturn);
+				
+				if (valueToReturn instanceof String) {
+					if (jsonRawValue || level == 0) {
+						return (String) valueToReturn;
+					} else {
+						return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+					}
+				}
+				
+				if (!required && objectDTO.defaultType == JSON_INCLUDE.NON_DEFAULT) {
+					if (valueToReturn.equals(DefaultValue.dbyte)) {
+						return null;
+					}
+				}
+				
+				return String.valueOf(valueToReturn);
 
-			
-		} else if (returnType == Short.class || returnType == short.class) {
-			Object valueToReturn = getShort(objectDTO);
-			
-			if (valueToReturn == null) {
-				return null;
-			}
-			
-			if (valueToReturn instanceof String) {
-				if (jsonRawValue || level == 0) {
-					return (String) valueToReturn;
-				} else {
-					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
-				}
-			}
-			
-			if (!required && objectDTO.defaultType == JSON_INCLUDE.NON_DEFAULT) {
-				if (valueToReturn.equals(DefaultValue.dshort)) {
+				
+			} else if (returnType == Double.class || returnType == double.class) {
+				Object valueToReturn = getDouble(objectDTO);
+				
+				if (valueToReturn == null) {
 					return null;
 				}
-			}
-			
-			return String.valueOf(valueToReturn);
-
-		} else if (returnType == Float.class || returnType == float.class) {
-			Object valueToReturn = getFloat(objectDTO);
-			
-			if (valueToReturn == null) {
-				return null;
-			}
-			
-			if (valueToReturn instanceof String) {
-				if (jsonRawValue || level == 0) {
-					return (String) valueToReturn;
-				} else {
-					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+				
+				if (valueToReturn instanceof String) {
+					if (jsonRawValue || level == 0) {
+						return (String) valueToReturn;
+					} else {
+						return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+					}
 				}
-			}
-			
-			if (!required && objectDTO.defaultType == JSON_INCLUDE.NON_DEFAULT) {
-				if (valueToReturn.equals(DefaultValue.dfloat)) {
+				
+				if (!required && objectDTO.defaultType == JSON_INCLUDE.NON_DEFAULT) {
+					if (valueToReturn.equals(DefaultValue.ddouble)) {
+						return null;
+					}
+				}
+				
+				return String.valueOf(valueToReturn);
+	
+				
+			} else if (returnType == Short.class || returnType == short.class) {
+				Object valueToReturn = getShort(objectDTO);
+				
+				if (valueToReturn == null) {
 					return null;
 				}
-			}
-			
-			return String.valueOf(valueToReturn);
-
-			
-		} else if (returnType == BigDecimal.class) {
-			Object valueToReturn = getBigDecimal(objectDTO);
-			
-			if (valueToReturn == null) {
-				return null;
-			}
-			
-			if (valueToReturn instanceof String) {
-				if (jsonRawValue || level == 0) {
-					return (String) valueToReturn;
-				} else {
-					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+				
+				if (valueToReturn instanceof String) {
+					if (jsonRawValue || level == 0) {
+						return (String) valueToReturn;
+					} else {
+						return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+					}
 				}
-			}
-			
-			if (!required && objectDTO.defaultType == JSON_INCLUDE.NON_DEFAULT) {
-				if (valueToReturn.equals(DefaultValue.bigDecimal)) {
+				
+				if (!required && objectDTO.defaultType == JSON_INCLUDE.NON_DEFAULT) {
+					if (valueToReturn.equals(DefaultValue.dshort)) {
+						return null;
+					}
+				}
+				
+				return String.valueOf(valueToReturn);
+	
+			} else if (returnType == Float.class || returnType == float.class) {
+				Object valueToReturn = getFloat(objectDTO);
+				
+				if (valueToReturn == null) {
 					return null;
 				}
-			}
-			
-			return String.valueOf(valueToReturn);
-			
-			
-		} else if (returnType == BigInteger.class) {
-			Object valueToReturn = getBigInteger(objectDTO);
-			
-			if (valueToReturn == null) {
-				return null;
-			}
-			
-			if (valueToReturn instanceof String) {
-				if (jsonRawValue || level == 0) {
-					return (String) valueToReturn;
-				} else {
-					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+				
+				if (valueToReturn instanceof String) {
+					if (jsonRawValue || level == 0) {
+						return (String) valueToReturn;
+					} else {
+						return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+					}
 				}
-			}
-			
-			if (!required && objectDTO.defaultType == JSON_INCLUDE.NON_DEFAULT) {
-				if (valueToReturn.equals(DefaultValue.bigInteger)) {
+				
+				if (!required && objectDTO.defaultType == JSON_INCLUDE.NON_DEFAULT) {
+					if (valueToReturn.equals(DefaultValue.dfloat)) {
+						return null;
+					}
+				}
+				
+				return String.valueOf(valueToReturn);
+	
+				
+			} else if (returnType == BigDecimal.class) {
+				Object valueToReturn = getBigDecimal(objectDTO);
+				
+				if (valueToReturn == null) {
 					return null;
 				}
+				
+				if (valueToReturn instanceof String) {
+					if (jsonRawValue || level == 0) {
+						return (String) valueToReturn;
+					} else {
+						return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+					}
+				}
+				
+				if (!required && objectDTO.defaultType == JSON_INCLUDE.NON_DEFAULT) {
+					if (valueToReturn.equals(DefaultValue.bigDecimal)) {
+						return null;
+					}
+				}
+				
+				return String.valueOf(valueToReturn);
+				
+				
+			} else if (returnType == BigInteger.class) {
+				Object valueToReturn = getBigInteger(objectDTO);
+				
+				if (valueToReturn == null) {
+					return null;
+				}
+				
+				if (valueToReturn instanceof String) {
+					if (jsonRawValue || level == 0) {
+						return (String) valueToReturn;
+					} else {
+						return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+					}
+				}
+				
+				if (!required && objectDTO.defaultType == JSON_INCLUDE.NON_DEFAULT) {
+					if (valueToReturn.equals(DefaultValue.bigInteger)) {
+						return null;
+					}
+				}
+				
+				return String.valueOf(valueToReturn);
+				
+				
+			} else if (returnType == AtomicInteger.class) {
+				return null;
+				
+			} else if (returnType == AtomicLong.class) {
+				return null;
+				
+			} else {
+				return null;
 			}
+		
 			
-			return String.valueOf(valueToReturn);
-			
-			
-		} else if (Character.class.isAssignableFrom(returnType)
-				|| char.class.isAssignableFrom(returnType)) {
+		} else if (Character.class.isAssignableFrom(returnType) || char.class.isAssignableFrom(returnType)) {
 			Object valueToReturn = getChar(objectDTO);
 
 			if (valueToReturn == null) {
@@ -4920,42 +5027,6 @@ public class Oson {
 			}
 			
 			return "\"" + StringUtil.escapeDoublequote(valueToReturn.toString()) + "\"";
-
-		} else if (returnType == Byte.class || returnType == byte.class) {
-			Object valueToReturn = getByte(objectDTO);
-			
-			if (valueToReturn == null) {
-				return null;
-			}
-			
-			if (valueToReturn instanceof String) {
-				if (jsonRawValue || level == 0) {
-					return (String) valueToReturn;
-				} else {
-					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
-				}
-			}
-			
-			if (!required && objectDTO.defaultType == JSON_INCLUDE.NON_DEFAULT) {
-				if (valueToReturn.equals(DefaultValue.dbyte)) {
-					return null;
-				}
-			}
-			
-			return String.valueOf(valueToReturn);
-			
-		} else if (returnType == Long.class || returnType == long.class) {
-			String valueToReturn = long2Json(objectDTO);
-			
-			if (valueToReturn == null) {
-				return null;
-			}
-
-			if (jsonRawValue || level == 0) {
-				return (String) valueToReturn;
-			} else {
-				return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
-			}
 
 		} else if (returnType == Boolean.class || returnType == boolean.class) {
 			Object valueToReturn = getBoolean(objectDTO);
@@ -4984,8 +5055,8 @@ public class Oson {
 //					return null;
 //				}
 //				return String.valueOf(value);
-			
-		} else if (returnType == Date.class || Date.class.isAssignableFrom(returnType)) {
+		//returnType == Date.class || 
+		} else if (Date.class.isAssignableFrom(returnType)) {
 			Object valueToReturn = getDate(objectDTO);
 			
 			if (valueToReturn == null) {
@@ -5013,7 +5084,8 @@ public class Oson {
 				return null;
 			}
 
-		} else if (returnType.isEnum() || Enum.class.isAssignableFrom(returnType) || value instanceof Enum<?>) {
+		// returnType.isEnum()  || value instanceof Enum<?>
+		} else if (Enum.class.isAssignableFrom(returnType)) {
 			return enumToJson(value, returnType, objectDTO.enumType);
 
 		} else if (Collection.class.isAssignableFrom(returnType)) {
@@ -5034,7 +5106,7 @@ public class Oson {
 					FieldData newFieldData = new FieldData(s, componentType);
 					newFieldData.json2Java = objectDTO.json2Java;
 					
-					String str = object2String(newFieldData, level, set);
+					String str = object2Json(newFieldData, level, set);
 					if (str != null && str.length() > 0) {
 						sbuilder.append(repeatedItem + str + ",");
 					}
@@ -5078,7 +5150,7 @@ public class Oson {
 				
 				FieldData newFieldData = new FieldData(componentValue, componentType);
 				newFieldData.json2Java = objectDTO.json2Java;
-				String str = object2String(newFieldData, level, set);
+				String str = object2Json(newFieldData, level, set);
 				if (str != null && str.length() > 0) {
 					sbuilder.append(repeatedItem + str + ",");
 				}
@@ -5136,7 +5208,7 @@ public class Oson {
 						
 						FieldData newFieldData = new FieldData(v, v.getClass());
 						newFieldData.json2Java = objectDTO.json2Java;
-						sbuilder.append(object2String(newFieldData, level, set));
+						sbuilder.append(object2Json(newFieldData, level, set));
 						sbuilder.append(",");
 					}
 				}
@@ -5157,16 +5229,12 @@ public class Oson {
 				return null;
 			}
 
-			// return "\"" + escapeDoublequote(value.toString()) +
-			// "\"";//toJson(value); // null; //
-			Class valueType = value.getClass();
-			//if (returnType == null) {
-				returnType = valueType;
-			//} else if (valueType != null && returnType.isAssignableFrom(valueType)) {
-			//	returnType = valueType;
-			//}
+			if (objectDTO.classMapper == null) {
+				objectDTO.classMapper = getGlobalizedClassMapper(returnType);
+			}
 
-			return serialize((E) value, returnType, level, set);
+			return serialize((E) value, returnType, objectDTO.classMapper, level, set);
+			
 		} else {
 			return "{}";
 		}
@@ -5374,7 +5442,7 @@ public class Oson {
 	 */
 	// private <T> String toJson(T source, Class<T> valueType, int level, Set
 	// set) {
-	private <T> String serialize(Object obj, Class<T> valueType, int level, Set set) {
+	private <T> String serialize(Object obj, Class<T> valueType, ClassMapper classMapper, int level, Set set) {
 		if (obj == null) {
 			return "";
 		}
@@ -5385,9 +5453,6 @@ public class Oson {
 		} else {
 			set.add(ObjectUtil.hashCode(obj));
 		}
-		
-		// first, get the class mapper
-		ClassMapper classMapper = getGlobalizedClassMapper(valueType);
 		
 		if (classMapper.ignore) {
 			return "";
@@ -6077,7 +6142,7 @@ public class Oson {
 					Class<?> returnType = f.getType(); // value.getClass();
 					FieldData objectDTO = new FieldData(obj, f, value, returnType, false, mapper);
 
-					str = object2String(objectDTO, level, set);
+					str = object2Json(objectDTO, level, set);
 
 					if (StringUtil.isNull(str)) {
 						if (classMapper.defaultType == JSON_INCLUDE.NON_NULL 
@@ -6526,7 +6591,7 @@ public class Oson {
 					FieldData objectDTO = new FieldData(obj, null, value, returnType, false, mapper);
 					objectDTO.getter = getter;
 
-					str = object2String(objectDTO, level, set);
+					str = object2Json(objectDTO, level, set);
 
 					if (StringUtil.isNull(str)) {
 						if (classMapper.defaultType == JSON_INCLUDE.NON_NULL 
@@ -6655,7 +6720,7 @@ public class Oson {
 							FieldData newFieldData = new FieldData(value, value.getClass());
 							newFieldData.json2Java = false;
 							newFieldData.defaultType = classMapper.defaultType;
-							str = object2String(newFieldData, level, set);
+							str = object2Json(newFieldData, level, set);
 	
 							if (StringUtil.isNull(str)) {
 								if (classMapper.defaultType == JSON_INCLUDE.NON_NULL 
@@ -6809,8 +6874,8 @@ public class Oson {
 
 				List list = (List)fromJsonMap(obj);
 
-				FieldData fieldData = new FieldData(null, list, type, true, getDefaultType());
-				return string2Object(fieldData);
+				FieldData fieldData = new FieldData(list, type, true);
+				return json2Object(fieldData);
 
 			} else if (source.startsWith("{")) {
 				JSONObject obj = new JSONObject(source);
@@ -6820,10 +6885,10 @@ public class Oson {
 				Class<T> valueType = ObjectUtil.getTypeClass(type);
 
 				if (Iterable.class.isAssignableFrom(valueType) || Map.class.isAssignableFrom(valueType)) {
-					FieldData fieldData = new FieldData(null, map, type, true, getDefaultType());
+					FieldData fieldData = new FieldData(map, type, true);
 					fieldData.returnType = valueType;
 
-					return string2Object(fieldData);
+					return json2Object(fieldData);
 				} else {
 					return (T) deserialize(map, valueType);
 				}
@@ -6857,7 +6922,7 @@ public class Oson {
 
 				List list = (List)fromJsonMap(obj);
 
-				return string2Object(new FieldData(null, list, valueType, object, true));
+				return json2Object(new FieldData(list, valueType, true, object));
 
 			} else if (source.startsWith("{")) {
 				JSONObject obj = new JSONObject(source);
@@ -6865,7 +6930,7 @@ public class Oson {
 				Map<String, Object> map = (Map)fromJsonMap(obj);
 
 				if (valueType != null && Map.class.isAssignableFrom(valueType)) {
-					return string2Object(new FieldData(null, map, valueType, object, true));
+					return json2Object(new FieldData(map, valueType, true, object));
 
 				} else {
 					if (object == null) {
@@ -6876,7 +6941,7 @@ public class Oson {
 				}
 
 			} else {
-				return string2Object(new FieldData(null, source, valueType, null, true));
+				return json2Object(new FieldData(source, valueType, true, null));
 			}
 
 		} catch (JSONException ex) {
@@ -7040,7 +7105,7 @@ public class Oson {
 							if (parameterValue == null) {
 								FieldData objectDTO = new FieldData(null, parameters[i].getType());
 								objectDTO.required = true;
-								parameterValue = string2Object(objectDTO);
+								parameterValue = json2Object(objectDTO);
 							}
 
 							parameterValues[i++] = parameterValue;
@@ -7105,7 +7170,7 @@ public class Oson {
 								if (parameterValue == null) {
 									FieldData objectDTO = new FieldData(null, parameterTypes[i]);
 									objectDTO.required = true;
-									parameterValue = string2Object(objectDTO);
+									parameterValue = json2Object(objectDTO);
 								}
 
 								parameterValues[i] = parameterValue;
@@ -7148,7 +7213,7 @@ public class Oson {
 				for (int i = 0; i < length; i++) {
 					FieldData objectDTO = new FieldData(null, parameterTypes[i]);
 					objectDTO.required = true;
-					parameterValues[i] = string2Object(objectDTO);
+					parameterValues[i] = json2Object(objectDTO);
 				}
 
 				try {
@@ -7220,7 +7285,7 @@ public class Oson {
 								if (parameterValue == null) {
 									FieldData objectDTO = new FieldData(null, parameterTypes[i]);
 									objectDTO.required = true;
-									parameterValue = string2Object(objectDTO);
+									parameterValue = json2Object(objectDTO);
 								}
 
 								parameterValues[i] = parameterValue;
@@ -7239,7 +7304,7 @@ public class Oson {
 								if (parameterValue == null) {
 									FieldData objectDTO = new FieldData(null, parameters[i].getType());
 									objectDTO.required = true;
-									parameterValue = string2Object(objectDTO);
+									parameterValue = json2Object(objectDTO);
 								}
 
 								parameterValues[i++] = parameterValue;
@@ -7896,7 +7961,7 @@ public class Oson {
 				if (value != null) {
 					FieldData objectDTO = new FieldData(obj, f, value, returnType, true, mapper);
 					objectDTO.setter = setter;
-					value = string2Object(objectDTO);
+					value = json2Object(objectDTO);
 
 					if (StringUtil.isNull(value)) {
 						if (classMapper.defaultType == JSON_INCLUDE.NON_NULL 
@@ -8328,7 +8393,7 @@ public class Oson {
 					FieldData objectDTO = new FieldData(obj, null, value, returnType, true, mapper);
 					objectDTO.setter = setter;
 
-					value = string2Object(objectDTO);
+					value = json2Object(objectDTO);
 
 					if (StringUtil.isNull(value)) {
 						if (classMapper.defaultType == JSON_INCLUDE.NON_NULL 
@@ -8585,7 +8650,7 @@ public class Oson {
 			valueType = (Class<T>) source.getClass();
 		}
 
-		return object2String(new FieldData(source, valueType, type, false, getDefaultType()), level, set);
+		return object2Json(new FieldData(source, valueType, false, type), level, set);
 	}
 	public <T> String serialize(T source) {
 		if (source == null) {
@@ -8621,7 +8686,7 @@ public class Oson {
 		Set set = new HashSet();
 		Class<T> valueType = (Class<T>) source.getClass();
 		
-		return object2String(new FieldData(source, valueType, false, false), level, set);
+		return object2Json(new FieldData(source, valueType, false), level, set);
 	}
 
 	public <T> T deserialize(String source) {
@@ -9633,21 +9698,5 @@ public class Oson {
 			}
 			return classes[classes.length - 1].getName();
 		}
-	}
-	
-	
-	public static interface OsonFunction extends Function {
-		@Override
-		public default Object apply(Object t) {
-			return t;
-		}
-	}
-	
-	public static interface Integer2JsonFunction extends OsonFunction {
-		public String apply(Integer t);
-	}
-	
-	public static interface Json2IntegerFunction extends OsonFunction {
-		public Integer apply(String t);
 	}
 }
