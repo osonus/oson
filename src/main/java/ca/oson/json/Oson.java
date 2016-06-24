@@ -1825,21 +1825,43 @@ public class Oson {
 		}
 
 		public Integer getMin() {
-			if (min != null) {
-				return min;
-			}
-			if (classMapper != null) {
+			if (min == null && classMapper != null) {
 				min = classMapper.min;
+			}
+			
+			if (min != null && returnType != null && (Number.class.isAssignableFrom(returnType)
+					|| returnType.isPrimitive())) {
+				if (returnType == Short.class || returnType == short.class) {
+					if (min.intValue() < Short.MIN_VALUE) {
+						min = (int) Short.MIN_VALUE;
+					}
+					
+				} else if (returnType == Byte.class || returnType == byte.class) {
+					if (min.intValue() < Byte.MIN_VALUE) {
+						min = (int) Byte.MIN_VALUE;
+					}
+				}
 			}
 			
 			return min;
 		}
 		public Integer getMax() {
-			if (max != null) {
-				return max;
-			}
-			if (classMapper != null) {
+			if (max == null && classMapper != null) {
 				max = classMapper.max;
+			}
+			
+			if (max != null && returnType != null && (Number.class.isAssignableFrom(returnType)
+					|| returnType.isPrimitive())) {
+				if (returnType == Short.class || returnType == short.class) {
+					if (max.intValue() > Short.MAX_VALUE) {
+						max = (int) Short.MAX_VALUE;
+					}
+					
+				} else if (returnType == Byte.class || returnType == byte.class) {
+					if (max.intValue() > Byte.MAX_VALUE) {
+						max = (int) Byte.MAX_VALUE;
+					}
+				}
 			}
 			
 			return max;
@@ -3438,71 +3460,217 @@ public class Oson {
 		return getSerializer(objectDTO.getDefaultName(), objectDTO.returnType, objectDTO.getEnclosingType());
 	}
 
-	private <E> Object getDouble(FieldData objectDTO) {
+
+	private <E> Double json2Double(FieldData objectDTO) {
+		if (objectDTO == null || !objectDTO.json2Java) {
+			return null;
+		}
+		
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
 		boolean required = objectDTO.required;
-		Integer min = objectDTO.min;
-		Integer max = objectDTO.max;
-		Integer scale = objectDTO.scale;
-		boolean json2Java = objectDTO.json2Java;
 
 		if (value != null && value.toString().trim().length() > 0) {
-			Function function = null;
-			String str = value.toString().trim();
+			String valueToProcess = value.toString().trim();
+			Double valueToReturn = null;
+			
 			try {
-				Double valueToReturn = null;
-				if (value instanceof Double) {
-					valueToReturn = (Double)value;
-				} else {
-					valueToReturn = Double.valueOf(str);
-				}
-
-				if (json2Java) {
-					function = getDeserializer(objectDTO);
-					if (function != null) {
-						try {
-							valueToReturn = (Double)function.apply(valueToReturn);
-						} catch (Exception e) {}
-					}
-					
-				} else {
-					function = getSerializer(objectDTO);
-					if (function != null) {
-						try {
-							return function.apply(valueToReturn);
-						} catch (Exception e) {}
-					}
-				}
-	
-				if (min != null && min > valueToReturn.doubleValue()) {
-					valueToReturn = min.doubleValue();
-					
-				} else if (max != null && valueToReturn.doubleValue() > max) {
-					valueToReturn = max.doubleValue();
-				}
+				Function function = objectDTO.getDeserializer();
 				
-				if (scale != null) {
-					valueToReturn = new BigDecimal(valueToReturn).setScale(scale, BigDecimal.ROUND_HALF_UP).doubleValue();
-				}
-				
-				return valueToReturn;
-	
-			} catch (Exception err) {
-				if (function != null && !json2Java) {
+				if (function != null) {
 					try {
-						return function.apply(str);
-					} catch (Exception e) {}
+						// suppose to return Double, but in case not, try to process
+						if (function instanceof Json2DoubleFunction) {
+							valueToReturn = ((Json2DoubleFunction)function).apply(valueToProcess);
+						} else {
+							
+							Object returnedValue = function.apply(valueToProcess);
+
+							if (returnedValue instanceof Optional) {
+								Optional opt = (Optional)returnedValue;
+								returnedValue = opt.orElse(null);
+							}
+							
+							if (returnedValue == null) {
+								return json2DoubleDefault(objectDTO);
+								
+							} else if (Number.class.isAssignableFrom(returnedValue.getClass()) || returnedValue.getClass().isPrimitive()) {
+								
+								if (returnedValue instanceof Double) {
+									valueToReturn = (Double) returnedValue;
+								} else if (returnedValue instanceof String) {
+									valueToReturn = Double.parseDouble((String) returnedValue);
+									
+								} else if (returnedValue instanceof Integer) {
+									valueToReturn = ((Integer) returnedValue).doubleValue();
+								} else if (returnedValue instanceof Long) {
+									valueToReturn = ((Long) returnedValue).doubleValue();
+								} else if (returnedValue instanceof Byte) {
+									valueToReturn = ((Byte) returnedValue).doubleValue();
+								} else if (returnedValue instanceof Short) {
+									valueToReturn = ((Short) returnedValue).doubleValue();
+								} else if (returnedValue instanceof Float) {
+									valueToReturn = ((Float) returnedValue).doubleValue();
+								} else if (returnedValue instanceof BigInteger) {
+									valueToReturn = ((BigInteger) returnedValue).doubleValue();
+								} else if (returnedValue instanceof BigDecimal) {
+									valueToReturn = ((BigDecimal) returnedValue).doubleValue();
+								} else if (returnedValue instanceof AtomicInteger) {
+									valueToReturn = ((AtomicInteger) returnedValue).doubleValue();
+								} else if (returnedValue instanceof AtomicLong) {
+									valueToReturn = ((AtomicLong) returnedValue).doubleValue();
+								} else {
+									valueToReturn = ((Number) returnedValue).doubleValue();
+								}
+								
+							} else if (returnedValue instanceof Character) {
+								valueToReturn = (double)(((Character) returnedValue).charValue());
+								
+							} else if (returnedValue instanceof Boolean) {
+								if ((Boolean) returnedValue)
+									valueToReturn = 1d;
+								else
+									valueToReturn = 0d;
+								
+							} else if (Enum.class.isAssignableFrom(returnedValue.getClass())) {
+								valueToReturn = ((Integer)((Enum) returnedValue).ordinal()).doubleValue();
+								
+							} else if (Date.class.isAssignableFrom(returnedValue.getClass())) {
+								valueToReturn = (double) ((Date) returnedValue).getTime();
+								
+							} else {
+								valueToReturn = Double.parseDouble(returnedValue.toString());
+							}
+							
+						}
+						
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					
+				} else {
+					valueToReturn = Double.parseDouble(valueToProcess);
 				}
+				
+				if (valueToReturn != null) {
+					Integer min = objectDTO.getMin();
+					Integer max = objectDTO.getMax();
+					
+					if (min != null && min.doubleValue() > valueToReturn) {
+						return min.doubleValue();
+					}
+					
+					if (max != null && max.doubleValue() < valueToReturn) {
+						valueToReturn = max.doubleValue();
+					}
+					
+					return valueToReturn;
+				}
+	
+			} catch (Exception ex) {
+				//ex.printStackTrace();
 			}
 		
 		}
 		
+		return json2DoubleDefault(objectDTO);
+	}
+	
+	
+
+
+	private <E> String double2Json(FieldData objectDTO) {
+		if (objectDTO == null || objectDTO.json2Java) {
+			return null;
+		}
+		
+		Object value = objectDTO.valueToProcess;
+		Class<E> returnType = objectDTO.returnType;
+
+		if (value != null && value.toString().trim().length() > 0) {
+			Double valueToProcess = null;
+			String valueToReturn = null;
+			
+			if (value instanceof Double) {
+				valueToProcess = (Double)value;
+			} else {
+				try {
+					valueToProcess = Double.valueOf(value.toString().trim());
+				} catch (Exception ex) {}
+			}
+			
+			if (valueToProcess != null) {
+				try {
+					Function function = objectDTO.getSerializer();
+					if (function != null) {
+						try {
+							if (function instanceof Double2JsonFunction) {
+								return ((Double2JsonFunction)function).apply(valueToProcess);
+								
+							} else {
+								
+								Object returnedValue = function.apply(valueToProcess);
+							
+								if (returnedValue == null) {
+									return double2JsonDefault(objectDTO);
+								} else {
+									objectDTO.valueToProcess = returnedValue;
+									return object2Json(objectDTO);
+								}
+								
+							}
+							
+						} catch (Exception e) {}
+					}
+
+					if (valueToProcess != null) {
+						Integer min = objectDTO.getMin();
+						Integer max = objectDTO.getMax();
+						
+						if (min != null && min.doubleValue() > valueToProcess) {
+							valueToProcess = min.doubleValue();
+						}
+						
+						if (max != null && max.doubleValue() < valueToProcess) {
+							valueToProcess = max.doubleValue();
+						}
+						
+						return valueToProcess.toString();
+					}
+
+				} catch (Exception ex) {
+					//ex.printStackTrace();
+				}
+			}
+		}
+		
+		return double2JsonDefault(objectDTO);
+	}
+		
+	private String double2JsonDefault(FieldData objectDTO) {
+		Double valueToReturn = json2DoubleDefault(objectDTO);
+		
+		if (valueToReturn == null) {
+			return null;
+		}
+		
+		return valueToReturn.toString();
+	}
+		
+	private <E> Double json2DoubleDefault(FieldData objectDTO) {
+		Object value = objectDTO.valueToProcess;
+		Class<E> returnType = objectDTO.returnType;
+		boolean required = objectDTO.required;
+		
+		Integer min = objectDTO.getMin();
+		Integer max = objectDTO.getMax();
+		boolean json2Java = objectDTO.json2Java;
+
 		if (returnType == double.class
 				|| getDefaultType() == JSON_INCLUDE.DEFAULT || required) {
 			Double defaultValue = (Double)objectDTO.getDefaultValue();
 			if (defaultValue != null) {
-				if (min != null && min > defaultValue.doubleValue()) {
+				if (min != null && min.doubleValue() > defaultValue) {
 					return min.doubleValue();
 				}
 
@@ -3936,8 +4104,16 @@ public class Oson {
 								} else if (returnedValue instanceof String) {
 									valueToReturn = Long.parseLong((String) returnedValue);
 								//  byte, double, float, int, long, and short. 
-								} else if (returnedValue instanceof Number) {
-									valueToReturn = ((Number) returnedValue).longValue();
+								} else if (returnedValue instanceof Integer) {
+									valueToReturn = ((Integer) returnedValue).longValue();
+								} else if (returnedValue instanceof Double) {
+									valueToReturn = ((Double) returnedValue).longValue();
+								} else if (returnedValue instanceof Float) {
+									valueToReturn = ((Float) returnedValue).longValue();
+								} else if (returnedValue instanceof Byte) {
+									valueToReturn = ((Byte) returnedValue).longValue();
+								} else if (returnedValue instanceof Short) {
+									valueToReturn = ((Short) returnedValue).longValue();
 								} else if (returnedValue instanceof BigInteger) {
 									valueToReturn = ((BigInteger) returnedValue).longValue();
 								} else if (returnedValue instanceof BigDecimal) {
@@ -3946,6 +4122,8 @@ public class Oson {
 									valueToReturn = ((AtomicInteger) returnedValue).longValue();
 								} else if (returnedValue instanceof AtomicLong) {
 									valueToReturn = ((AtomicLong) returnedValue).longValue();
+								} else {
+									valueToReturn = ((Number) returnedValue).longValue();
 								}
 
 							} else if (returnedValue instanceof Character) {
@@ -4081,8 +4259,16 @@ public class Oson {
 								} else if (returnedValue instanceof String) {
 									valueToReturn = Integer.parseInt((String) returnedValue);
 								//  byte, double, float, int, long, and short. 
-								} else if (returnedValue instanceof Number) {
-									valueToReturn = ((Number) returnedValue).intValue();
+								} else if (returnedValue instanceof Long) {
+									valueToReturn = ((Long) returnedValue).intValue();
+								} else if (returnedValue instanceof Byte) {
+									valueToReturn = ((Byte) returnedValue).intValue();
+								} else if (returnedValue instanceof Short) {
+									valueToReturn = ((Short) returnedValue).intValue();
+								} else if (returnedValue instanceof Float) {
+									valueToReturn = ((Float) returnedValue).intValue();
+								} else if (returnedValue instanceof Double) {
+									valueToReturn = ((Double) returnedValue).intValue();
 								} else if (returnedValue instanceof BigInteger) {
 									valueToReturn = ((BigInteger) returnedValue).intValue();
 								} else if (returnedValue instanceof BigDecimal) {
@@ -4091,6 +4277,8 @@ public class Oson {
 									valueToReturn = ((AtomicInteger) returnedValue).intValue();
 								} else if (returnedValue instanceof AtomicLong) {
 									valueToReturn = ((AtomicLong) returnedValue).intValue();
+								} else {
+									valueToReturn = ((Number) returnedValue).intValue();
 								}
 								
 							} else if (returnedValue instanceof Character) {
@@ -4256,77 +4444,232 @@ public class Oson {
 		return null;
 	}
 
-	
-	private <E> Object getByte(FieldData objectDTO) {
+	private <E> Byte json2Byte(FieldData objectDTO) {
+		if (objectDTO == null || !objectDTO.json2Java) {
+			return null;
+		}
+		
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
 		boolean required = objectDTO.required;
-		
-		Integer min = objectDTO.min;
-		Integer max = objectDTO.max;
-		boolean json2Java = objectDTO.json2Java;
-		
+
 		if (value != null && value.toString().trim().length() > 0) {
-			Function function = null;
-			String str = value.toString().trim();
+			String valueToProcess = value.toString().trim();
+			Byte valueToReturn = null;
+			
 			try {
-				Byte valueToReturn = null;
-				if (value instanceof Byte) {
-					valueToReturn = (Byte)value;
-				} else {
-					valueToReturn = Byte.valueOf(str);
-				}
+				Function function = objectDTO.getDeserializer();
 				
-				// processing jsonFunction
-				if (json2Java) {
-					function = getDeserializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
-					if (function != null) {
-						try {
-							valueToReturn = (Byte)function.apply(valueToReturn);
-						} catch (Exception e) {}
+				if (function != null) {
+					try {
+						// suppose to return Byte, but in case not, try to process
+						if (function instanceof Json2ByteFunction) {
+							valueToReturn = ((Json2ByteFunction)function).apply(valueToProcess);
+						} else {
+							
+							Object returnedValue = function.apply(valueToProcess);
+
+							if (returnedValue instanceof Optional) {
+								Optional opt = (Optional)returnedValue;
+								returnedValue = opt.orElse(null);
+							}
+							
+							if (returnedValue == null) {
+								return json2ByteDefault(objectDTO);
+								
+							} else if (Number.class.isAssignableFrom(returnedValue.getClass()) || returnedValue.getClass().isPrimitive()) {
+								
+								if (returnedValue instanceof Byte) {
+									valueToReturn = (Byte) returnedValue;
+								} else if (returnedValue instanceof String) {
+									valueToReturn = Byte.parseByte((String) returnedValue);
+									
+								} else if (returnedValue instanceof Integer) {
+									valueToReturn = ((Integer) returnedValue).byteValue();
+								} else if (returnedValue instanceof Long) {
+									valueToReturn = ((Long) returnedValue).byteValue();
+								} else if (returnedValue instanceof Short) {
+									valueToReturn = ((Short) returnedValue).byteValue();
+								} else if (returnedValue instanceof Double) {
+									valueToReturn = ((Double) returnedValue).byteValue();
+								} else if (returnedValue instanceof Float) {
+									valueToReturn = ((Float) returnedValue).byteValue();
+								} else if (returnedValue instanceof BigInteger) {
+									valueToReturn = ((BigInteger) returnedValue).byteValue();
+								} else if (returnedValue instanceof BigDecimal) {
+									valueToReturn = ((BigDecimal) returnedValue).byteValue();
+								} else if (returnedValue instanceof AtomicInteger) {
+									valueToReturn = ((AtomicInteger) returnedValue).byteValue();
+								} else if (returnedValue instanceof AtomicLong) {
+									valueToReturn = ((AtomicLong) returnedValue).byteValue();
+								} else {
+									valueToReturn = ((Number) returnedValue).byteValue();
+								}
+								
+							} else if (returnedValue instanceof Character) {
+								char c = (Character) returnedValue;
+								valueToReturn = (byte)c;
+								
+							} else if (returnedValue instanceof Boolean) {
+								if ((Boolean) returnedValue)
+									valueToReturn = 1;
+								else
+									valueToReturn = 0;
+								
+							} else if (Enum.class.isAssignableFrom(returnedValue.getClass())) {
+								valueToReturn = ((Integer)((Enum) returnedValue).ordinal()).byteValue();
+								
+							} else if (Date.class.isAssignableFrom(returnedValue.getClass())) {
+								valueToReturn = (byte) ((Date) returnedValue).getTime();
+								
+							} else {
+								valueToReturn = Byte.parseByte(returnedValue.toString());
+							}
+							
+						}
+						
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
 					
 				} else {
-					function = getSerializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
+					long longValue = Long.parseLong(valueToProcess);
+					
+					if (longValue > Byte.MAX_VALUE) {
+						valueToReturn = Byte.MAX_VALUE;
+					} else {
+						valueToReturn = (byte)longValue;
+					}
+					
+					// valueToReturn = Byte.parseByte(valueToProcess);
+				}
+				
+				if (valueToReturn != null) {
+					Integer min = objectDTO.getMin();
+					Integer max = objectDTO.getMax();
+					
+					if (min != null && min.byteValue() > valueToReturn) {
+						return min.byteValue();
+					}
+					
+					if (max != null && max.byteValue() < valueToReturn) {
+						valueToReturn = max.byteValue();
+					}
+					
+					return valueToReturn;
+				}
+	
+			} catch (Exception ex) {
+				//ex.printStackTrace();
+			}
+		
+		}
+		
+		return json2ByteDefault(objectDTO);
+	}
+	
+	
+
+
+	private <E> String byte2Json(FieldData objectDTO) {
+		if (objectDTO == null || objectDTO.json2Java) {
+			return null;
+		}
+		
+		Object value = objectDTO.valueToProcess;
+		Class<E> returnType = objectDTO.returnType;
+
+		if (value != null && value.toString().trim().length() > 0) {
+			Byte valueToProcess = null;
+			String valueToReturn = null;
+			
+			if (value instanceof Byte) {
+				valueToProcess = (Byte)value;
+			} else {
+				try {
+					valueToProcess = Byte.valueOf(value.toString().trim());
+				} catch (Exception ex) {}
+			}
+			
+			if (valueToProcess != null) {
+				try {
+					Function function = objectDTO.getSerializer();
 					if (function != null) {
 						try {
-							return function.apply(valueToReturn);
+							if (function instanceof Byte2JsonFunction) {
+								return ((Byte2JsonFunction)function).apply(valueToProcess);
+								
+							} else {
+								
+								Object returnedValue = function.apply(valueToProcess);
+							
+								if (returnedValue == null) {
+									return byte2JsonDefault(objectDTO);
+								} else {
+									objectDTO.valueToProcess = returnedValue;
+									return object2Json(objectDTO);
+								}
+								
+							}
+							
 						} catch (Exception e) {}
 					}
-				}
-				
-				if (min != null && min > valueToReturn.byteValue()) {
-					return min.byteValue();
-				}
-				
-				if (max != null && valueToReturn.byteValue() > max) {
-					valueToReturn = max.byteValue();
-				}
-				
-				return valueToReturn;
-				
-			} catch (Exception err) {
-				if (function != null && !json2Java) {
-					try {
-						return function.apply(str);
-					} catch (Exception e) {}
+
+					if (valueToProcess != null) {
+						Integer min = objectDTO.getMin();
+						Integer max = objectDTO.getMax();
+						
+						if (min != null && min.byteValue() > valueToProcess) {
+							valueToProcess = min.byteValue();
+						}
+						
+						if (max != null && max.byteValue() < valueToProcess) {
+							valueToProcess = max.byteValue();
+						}
+						
+						return valueToProcess.toString();
+					}
+
+				} catch (Exception ex) {
+					//ex.printStackTrace();
 				}
 			}
 		}
 		
+		return byte2JsonDefault(objectDTO);
+	}
 		
+	private String byte2JsonDefault(FieldData objectDTO) {
+		Byte valueToReturn = json2ByteDefault(objectDTO);
+		
+		if (valueToReturn == null) {
+			return null;
+		}
+		
+		return valueToReturn.toString();
+	}
+		
+	private <E> Byte json2ByteDefault(FieldData objectDTO) {
+		Object value = objectDTO.valueToProcess;
+		Class<E> returnType = objectDTO.returnType;
+		boolean required = objectDTO.required;
+		
+		Integer min = objectDTO.getMin();
+		Integer max = objectDTO.getMax();
+		boolean json2Java = objectDTO.json2Java;
+
 		if (returnType == byte.class
 				|| getDefaultType() == JSON_INCLUDE.DEFAULT || required) {
 			Byte defaultValue = (Byte)objectDTO.getDefaultValue();
 			if (defaultValue != null) {
-				if (min != null && min > defaultValue.byteValue()) {
+				if (min != null && min.byteValue() > defaultValue) {
 					return min.byteValue();
 				}
 
 				return defaultValue;
 			}
 
-			if (min != null && min > DefaultValue.dbyte) {
+			if (min != null && min.byteValue() > DefaultValue.dbyte) {
 				return min.byteValue();
 			}
 
@@ -4335,6 +4678,7 @@ public class Oson {
 
 		return null;
 	}
+	
 
 	private <E> Object getChar(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
@@ -4438,6 +4782,14 @@ public class Oson {
 									
 								} else if (returnedValue instanceof Integer) {
 									valueToReturn = ((Integer) returnedValue).shortValue();
+								} else if (returnedValue instanceof Long) {
+									valueToReturn = ((Long) returnedValue).shortValue();
+								} else if (returnedValue instanceof Byte) {
+									valueToReturn = ((Byte) returnedValue).shortValue();
+								} else if (returnedValue instanceof Double) {
+									valueToReturn = ((Double) returnedValue).shortValue();
+								} else if (returnedValue instanceof Float) {
+									valueToReturn = ((Float) returnedValue).shortValue();
 								} else if (returnedValue instanceof BigInteger) {
 									valueToReturn = ((BigInteger) returnedValue).shortValue();
 								} else if (returnedValue instanceof BigDecimal) {
@@ -4476,7 +4828,15 @@ public class Oson {
 					}
 					
 				} else {
-					valueToReturn = Short.parseShort(valueToProcess);
+					long longValue = Long.parseLong(valueToProcess);
+					
+					if (longValue > Short.MAX_VALUE) {
+						valueToReturn = Short.MAX_VALUE;
+					} else {
+						valueToReturn = (short)longValue;
+					}
+					
+					// valueToReturn = Short.parseShort(valueToProcess);
 				}
 				
 				if (valueToReturn != null) {
@@ -5170,16 +5530,16 @@ public class Oson {
 				return (E) json2Long(objectDTO);
 	
 			} else if (returnType == Double.class || returnType == double.class) {
-				return (E) getDouble(objectDTO);
+				return (E) json2Double(objectDTO);
 	
 			} else if (returnType == Byte.class || returnType == byte.class) {
-				return (E) getByte(objectDTO);
+				return (E) json2Byte(objectDTO);
 	
 			} else if (returnType == Short.class || returnType == short.class) {
 				return (E) json2Short(objectDTO);
 	
 			} else if (returnType == Float.class || returnType == float.class) {
-				return (E) getFloat(objectDTO);
+				return (E) json2Float(objectDTO);
 	
 			} else if (returnType == BigDecimal.class) {
 				return (E) getBigDecimal(objectDTO);
@@ -5406,79 +5766,16 @@ public class Oson {
 				returnedValue = long2Json(objectDTO);
 				
 			} else if (returnType == Byte.class || returnType == byte.class) {
-				Object valueToReturn = getByte(objectDTO);
-				
-				if (valueToReturn == null) {
-					return null;
-				}
-				
-				if (valueToReturn instanceof String) {
-					if (jsonRawValue || level == 0) {
-						return (String) valueToReturn;
-					} else {
-						return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
-					}
-				}
-				
-				if (!required && objectDTO.defaultType == JSON_INCLUDE.NON_DEFAULT) {
-					if (valueToReturn.equals(DefaultValue.dbyte)) {
-						return null;
-					}
-				}
-				
-				return String.valueOf(valueToReturn);
+				returnedValue = byte2Json(objectDTO);
 
-				
 			} else if (returnType == Double.class || returnType == double.class) {
-				Object valueToReturn = getDouble(objectDTO);
-				
-				if (valueToReturn == null) {
-					return null;
-				}
-				
-				if (valueToReturn instanceof String) {
-					if (jsonRawValue || level == 0) {
-						return (String) valueToReturn;
-					} else {
-						return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
-					}
-				}
-				
-				if (!required && objectDTO.defaultType == JSON_INCLUDE.NON_DEFAULT) {
-					if (valueToReturn.equals(DefaultValue.ddouble)) {
-						return null;
-					}
-				}
-				
-				return String.valueOf(valueToReturn);
-	
-				
+				returnedValue = double2Json(objectDTO);
+
 			} else if (returnType == Short.class || returnType == short.class) {
 				returnedValue = short2Json(objectDTO);
 	
 			} else if (returnType == Float.class || returnType == float.class) {
-				Object valueToReturn = getFloat(objectDTO);
-				
-				if (valueToReturn == null) {
-					return null;
-				}
-				
-				if (valueToReturn instanceof String) {
-					if (jsonRawValue || level == 0) {
-						return (String) valueToReturn;
-					} else {
-						return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
-					}
-				}
-				
-				if (!required && objectDTO.defaultType == JSON_INCLUDE.NON_DEFAULT) {
-					if (valueToReturn.equals(DefaultValue.dfloat)) {
-						return null;
-					}
-				}
-				
-				return String.valueOf(valueToReturn);
-	
+				returnedValue = float2Json(objectDTO);
 				
 			} else if (returnType == BigDecimal.class) {
 				Object valueToReturn = getBigDecimal(objectDTO);
