@@ -1,12 +1,9 @@
 package ca.oson.json.numeric;
 
 import java.math.BigInteger;
-import java.util.function.Function;
-
 import org.junit.Test;
 
 import ca.oson.json.Oson.ClassMapper;
-import ca.oson.json.Oson.FIELD_NAMING;
 import ca.oson.json.support.TestCaseBase;
 
 public class LongTest extends TestCaseBase {
@@ -109,4 +106,55 @@ public class LongTest extends TestCaseBase {
 		   assertEquals(expected, result);
 	   }
 
+	   @Test
+	   public void testSerializeLongWithMin() {
+		   Long value = 1l;
+		   Integer min = 10;
+		   String expected = min + "";
+		   
+		   oson.setClassMappers(new ClassMapper(Long.class).setMin(min));
+		   
+		   String result = oson.serialize(value);
+
+		   assertEquals(expected, result);
+	   }
+	   
+	   @Test
+	   public void testSerializeLongWithMax() {
+		   Long value = 1000000000l;
+		   Integer max = 2000;
+		   String expected = max + "";
+		   
+		   oson.setClassMappers(new ClassMapper(Long.class).setMax(max));
+		   
+		   String result = oson.serialize(value);
+
+		   assertEquals(expected, result);
+	   }
+	   
+	   @Test
+	   public void testDeserializeLongWithMin() {
+		   String value = "1";
+		   Integer min = 10;
+		   Long expected = min.longValue();
+		   
+		   oson.setClassMappers(new ClassMapper(Long.class).setMin(min));
+		   
+		   Long result = oson.deserialize(value, Long.class);
+
+		   assertEquals(expected, result);
+	   }
+	   
+	   @Test
+	   public void testDeserializeLongWithMax() {
+		   String value = "19999999";
+		   Integer max = 10000;
+		   Long expected = max.longValue();
+		   
+		   oson.setClassMappers(new ClassMapper(Long.class).setMax(max));
+		   
+		   Long result = oson.deserialize(value, Long.class);
+
+		   assertEquals(expected, result);
+	   }
 }

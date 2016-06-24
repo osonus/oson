@@ -1,7 +1,5 @@
 package ca.oson.json.numeric;
 
-import java.util.function.Function;
-
 import org.junit.Test;
 
 import ca.oson.json.Oson.*;
@@ -164,4 +162,57 @@ public class IntegerTest extends TestCaseBase {
 
 		   assertEquals(expected, result);
 	   }
+	   
+	   @Test
+	   public void testSerializeIntWithMin() {
+		   Integer value = 1;
+		   Integer min = 10;
+		   String expected = min + "";
+		   
+		   oson.setClassMappers(new ClassMapper(Integer.class).setMin(min));
+		   
+		   String result = oson.serialize(value);
+
+		   assertEquals(expected, result);
+	   }
+	   
+	   @Test
+	   public void testSerializeIntWithMax() {
+		   Integer value = 1000000000;
+		   Integer max = 2000;
+		   String expected = max + "";
+		   
+		   oson.setClassMappers(new ClassMapper(Integer.class).setMax(max));
+		   
+		   String result = oson.serialize(value);
+
+		   assertEquals(expected, result);
+	   }
+	   
+	   @Test
+	   public void testDeserializeIntWithMin() {
+		   String value = "1";
+		   Integer min = 10;
+		   Integer expected = min;
+		   
+		   oson.setClassMappers(new ClassMapper(Integer.class).setMin(min));
+		   
+		   Integer result = oson.deserialize(value, Integer.class);
+
+		   assertEquals(expected, result);
+	   }
+	   
+	   @Test
+	   public void testDeserializeIntWithMax() {
+		   String value = "19999999";
+		   Integer max = 10000;
+		   Integer expected = max;
+		   
+		   oson.setClassMappers(new ClassMapper(Integer.class).setMax(max));
+		   
+		   Integer result = oson.deserialize(value, Integer.class);
+
+		   assertEquals(expected, result);
+	   }
+	   
 }

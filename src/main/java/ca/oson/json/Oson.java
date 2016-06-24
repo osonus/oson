@@ -442,7 +442,134 @@ public class Oson {
 			this.deserializer = deserializer;
 			return this;
 		}
-		
+		public ClassMapper setSerializer(Double2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public ClassMapper setDeserializer(Json2DoubleFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public ClassMapper setSerializer(Short2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public ClassMapper setDeserializer(Json2ShortFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public ClassMapper setSerializer(Float2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public ClassMapper setDeserializer(Json2FloatFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public ClassMapper setSerializer(BigDecimal2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public ClassMapper setDeserializer(Json2BigDecimalFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public ClassMapper setSerializer(BigInteger2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public ClassMapper setDeserializer(Json2BigIntegerFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public ClassMapper setSerializer(Character2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public ClassMapper setDeserializer(Json2CharacterFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public ClassMapper setSerializer(Byte2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public ClassMapper setDeserializer(Json2ByteFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public ClassMapper setSerializer(Boolean2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public ClassMapper setDeserializer(Json2BooleanFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public ClassMapper setSerializer(Date2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public ClassMapper setDeserializer(Json2DateFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public ClassMapper setSerializer(Date2LongFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public ClassMapper setDeserializer(Long2DateFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public ClassMapper setSerializer(Enum2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public ClassMapper setDeserializer(Json2EnumFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public ClassMapper setSerializer(Collection2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public ClassMapper setDeserializer(Json2CollectionFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public ClassMapper setSerializer(Map2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public ClassMapper setDeserializer(Json2MapFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public ClassMapper setSerializer(Array2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public ClassMapper setDeserializer(Json2ArrayFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public ClassMapper setSerializer(AtomicInteger2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public ClassMapper setDeserializer(Json2AtomicIntegerFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public ClassMapper setSerializer(AtomicLong2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public ClassMapper setDeserializer(Json2AtomicLongFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
 		
 		public ClassMapper setUseField(Boolean useField) {
 			this.useField = useField;
@@ -491,6 +618,19 @@ public class Oson {
 			return this;
 		}
 		
+		public ClassMapper setScale(Integer scale) {
+			this.scale = scale;
+			return this;
+		}
+		public ClassMapper setMin(Integer min) {
+			this.min = min;
+			return this;
+		}
+		public ClassMapper setMax(Integer max) {
+			this.max = max;
+			return this;
+		}
+
 		public Class<T> type;
 
 		// class level
@@ -592,8 +732,151 @@ public class Oson {
 			this.serializer = serializer;
 			return this;
 		}
-
 		public FieldMapper setDeserializer(Function deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public FieldMapper setSerializer(Integer2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public FieldMapper setDeserializer(Json2IntegerFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public FieldMapper setSerializer(Long2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public FieldMapper setDeserializer(Json2LongFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public FieldMapper setSerializer(Double2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public FieldMapper setDeserializer(Json2DoubleFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public FieldMapper setSerializer(Short2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public FieldMapper setDeserializer(Json2ShortFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public FieldMapper setSerializer(Float2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public FieldMapper setDeserializer(Json2FloatFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public FieldMapper setSerializer(BigDecimal2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public FieldMapper setDeserializer(Json2BigDecimalFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public FieldMapper setSerializer(BigInteger2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public FieldMapper setDeserializer(Json2BigIntegerFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public FieldMapper setSerializer(Character2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public FieldMapper setDeserializer(Json2CharacterFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public FieldMapper setSerializer(Byte2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public FieldMapper setDeserializer(Json2ByteFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public FieldMapper setSerializer(Boolean2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public FieldMapper setDeserializer(Json2BooleanFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public FieldMapper setSerializer(Date2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public FieldMapper setDeserializer(Json2DateFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public FieldMapper setSerializer(Date2LongFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public FieldMapper setDeserializer(Long2DateFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public FieldMapper setSerializer(Enum2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public FieldMapper setDeserializer(Json2EnumFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public FieldMapper setSerializer(Collection2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public FieldMapper setDeserializer(Json2CollectionFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public FieldMapper setSerializer(Map2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public FieldMapper setDeserializer(Json2MapFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public FieldMapper setSerializer(Array2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public FieldMapper setDeserializer(Json2ArrayFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public FieldMapper setSerializer(AtomicInteger2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public FieldMapper setDeserializer(Json2AtomicIntegerFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		public FieldMapper setSerializer(AtomicLong2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public FieldMapper setDeserializer(Json2AtomicLongFunction deserializer) {
 			this.deserializer = deserializer;
 			return this;
 		}
@@ -3560,26 +3843,25 @@ public class Oson {
 			
 			if (valueToProcess != null) {
 				try {
+					
 					Function function = objectDTO.getSerializer();
 					if (function != null) {
-						try {
-							// expect a String, but in case not
-							Object returnedValue = null;
+						if (function instanceof Long2JsonFunction) {
+							return ((Long2JsonFunction)function).apply(valueToProcess);
 							
-							if (function instanceof Long2JsonFunction) {
-								returnedValue = ((Long2JsonFunction)function).apply(valueToProcess);
-							} else {
-								returnedValue = function.apply(valueToProcess);
-							}
+						} else {
 							
+							Object returnedValue = function.apply(valueToProcess);
+						
 							if (returnedValue == null) {
-								return long2JsonDefault(objectDTO);
+								return integer2JsonDefault(objectDTO);
 							} else {
 								objectDTO.valueToProcess = returnedValue;
 								return object2Json(objectDTO);
 							}
 							
-						} catch (Exception e) {}
+						}
+
 					}
 
 					if (valueToProcess != null) {
@@ -3627,57 +3909,64 @@ public class Oson {
 				if (function != null) {
 					try {
 						// suppose to return Long, but in case not, try to process
-						Object returnedValue = null;
-						
 						if (function instanceof Json2LongFunction) {
-							returnedValue = ((Json2LongFunction)function).apply(valueToProcess);
+							valueToReturn = ((Json2LongFunction)function).apply(valueToProcess);
 						} else {
-							returnedValue = function.apply(valueToProcess);
-						}
+							Object returnedValue = function.apply(valueToProcess);
+
+							if (returnedValue instanceof Optional) {
+								Optional opt = (Optional)returnedValue;
+								returnedValue = opt.orElse(null);
+							}
+							
+							if (returnedValue instanceof Optional) {
+								Optional opt = (Optional)returnedValue;
+								returnedValue = opt.orElse(null);
+							}
+							
+							if (returnedValue == null) {
+								return json2LongDefault(objectDTO);
+								
+								//  || returnedValue.getClass().isPrimitive()
+							} else if (Number.class.isAssignableFrom(returnedValue.getClass())) {
+								
+								if (returnedValue instanceof Long) {
+									valueToReturn = (Long) returnedValue;
+									
+								} else if (returnedValue instanceof String) {
+									valueToReturn = Long.parseLong((String) returnedValue);
+								//  byte, double, float, int, long, and short. 
+								} else if (returnedValue instanceof Number) {
+									valueToReturn = ((Number) returnedValue).longValue();
+								} else if (returnedValue instanceof BigInteger) {
+									valueToReturn = ((BigInteger) returnedValue).longValue();
+								} else if (returnedValue instanceof BigDecimal) {
+									valueToReturn = ((BigDecimal) returnedValue).longValue();
+								} else if (returnedValue instanceof AtomicInteger) {
+									valueToReturn = ((AtomicInteger) returnedValue).longValue();
+								} else if (returnedValue instanceof AtomicLong) {
+									valueToReturn = ((AtomicLong) returnedValue).longValue();
+								}
+
+							} else if (returnedValue instanceof Character) {
+								valueToReturn = Long.valueOf((Character.getNumericValue((Character) returnedValue)));
+								
+							} else if (Enum.class.isAssignableFrom(returnedValue.getClass())) {
+								valueToReturn = Long.valueOf(((Enum) returnedValue).ordinal());
+								
+							} else if (returnedValue instanceof Boolean) {
+								if ((Boolean) returnedValue)
+									valueToReturn = 1l;
+								else
+									valueToReturn = 0l;
+								
+							} else if (Date.class.isAssignableFrom(returnedValue.getClass())) {
+								valueToReturn = ((Date) returnedValue).getTime();
+								
+							} else {
+								valueToReturn = Long.parseLong(returnedValue.toString());
+							}
 						
-						
-						if (returnedValue instanceof Optional) {
-							Optional opt = (Optional)returnedValue;
-							returnedValue = opt.orElse(null);
-						}
-						
-						if (returnedValue instanceof Optional) {
-							Optional opt = (Optional)returnedValue;
-							returnedValue = opt.orElse(null);
-						}
-						
-						if (returnedValue == null) {
-							return json2LongDefault(objectDTO);
-						} else if (returnedValue instanceof Long) {
-							valueToReturn = (Long) returnedValue;
-							
-						} else if (returnedValue instanceof String) {
-							valueToReturn = Long.parseLong((String) returnedValue);
-						//  byte, double, float, int, long, and short. 
-						} else if (returnedValue instanceof Number) {
-							valueToReturn = ((Number) returnedValue).longValue();
-						} else if (returnedValue instanceof BigInteger) {
-							valueToReturn = ((BigInteger) returnedValue).longValue();
-						} else if (returnedValue instanceof BigDecimal) {
-							valueToReturn = ((BigDecimal) returnedValue).longValue();
-							
-						} else if (returnedValue instanceof Character) {
-							valueToReturn = Long.valueOf((Character.getNumericValue((Character) returnedValue)));
-							
-						} else if (Enum.class.isAssignableFrom(returnedValue.getClass())) {
-							valueToReturn = Long.valueOf(((Enum) returnedValue).ordinal());
-							
-						} else if (returnedValue instanceof Boolean) {
-							if ((Boolean) returnedValue)
-								valueToReturn = 1l;
-							else
-								valueToReturn = 0l;
-							
-						} else if (Date.class.isAssignableFrom(returnedValue.getClass())) {
-							valueToReturn = ((Date) returnedValue).getTime();
-							
-						} else {
-							valueToReturn = Long.parseLong(returnedValue.toString());
 						}
 						
 					} catch (Exception e) {
@@ -3761,10 +4050,9 @@ public class Oson {
 		Class<E> returnType = objectDTO.returnType;
 		boolean required = objectDTO.required;
 
-		Integer valueToReturn = null;
-
 		if (value != null && value.toString().trim().length() > 0) {
 			String valueToProcess = value.toString().trim();
+			Integer valueToReturn = null;
 			
 			try {
 				Function function = objectDTO.getDeserializer();
@@ -3772,52 +4060,58 @@ public class Oson {
 				if (function != null) {
 					try {
 						// suppose to return Integer, but in case not, try to process
-						Object returnedValue = null;
-						
 						if (function instanceof Json2IntegerFunction) {
-							returnedValue = ((Json2IntegerFunction)function).apply(valueToProcess);
+							valueToReturn = ((Json2IntegerFunction)function).apply(valueToProcess);
 						} else {
-							returnedValue = function.apply(valueToProcess);
-						}
-						
-						
-						if (returnedValue instanceof Optional) {
-							Optional opt = (Optional)returnedValue;
-							returnedValue = opt.orElse(null);
-						}
-						
-						if (returnedValue == null) {
-							return json2IntegerDefault(objectDTO);
-						} else if (returnedValue instanceof Integer) {
-							valueToReturn = (Integer) returnedValue;
 							
-						} else if (returnedValue instanceof String) {
-							valueToReturn = Integer.parseInt((String) returnedValue);
-						//  byte, double, float, int, long, and short. 
-						} else if (returnedValue instanceof Number) {
-							valueToReturn = ((Number) returnedValue).intValue();
-						} else if (returnedValue instanceof BigInteger) {
-							valueToReturn = ((BigInteger) returnedValue).intValue();
-						} else if (returnedValue instanceof BigDecimal) {
-							valueToReturn = ((BigDecimal) returnedValue).intValue();
+							Object returnedValue = function.apply(valueToProcess);
+
+							if (returnedValue instanceof Optional) {
+								Optional opt = (Optional)returnedValue;
+								returnedValue = opt.orElse(null);
+							}
 							
-						} else if (returnedValue instanceof Character) {
-							valueToReturn = Character.getNumericValue((Character) returnedValue);
+							if (returnedValue == null) {
+								return json2IntegerDefault(objectDTO);
+								
+							} else if (Number.class.isAssignableFrom(returnedValue.getClass()) || returnedValue.getClass().isPrimitive()) {
+								
+								if (returnedValue instanceof Integer) {
+									valueToReturn = (Integer) returnedValue;
+								} else if (returnedValue instanceof String) {
+									valueToReturn = Integer.parseInt((String) returnedValue);
+								//  byte, double, float, int, long, and short. 
+								} else if (returnedValue instanceof Number) {
+									valueToReturn = ((Number) returnedValue).intValue();
+								} else if (returnedValue instanceof BigInteger) {
+									valueToReturn = ((BigInteger) returnedValue).intValue();
+								} else if (returnedValue instanceof BigDecimal) {
+									valueToReturn = ((BigDecimal) returnedValue).intValue();
+								} else if (returnedValue instanceof AtomicInteger) {
+									valueToReturn = ((AtomicInteger) returnedValue).intValue();
+								} else if (returnedValue instanceof AtomicLong) {
+									valueToReturn = ((AtomicLong) returnedValue).intValue();
+								}
+								
+							} else if (returnedValue instanceof Character) {
+								valueToReturn = Character.getNumericValue((Character) returnedValue);
+								
+							} else if (returnedValue instanceof Boolean) {
+								if ((Boolean) returnedValue)
+									valueToReturn = 1;
+								else
+									valueToReturn = 0;
+								
+							} else if (Enum.class.isAssignableFrom(returnedValue.getClass())) {
+								valueToReturn = ((Enum) returnedValue).ordinal();
+								
+							} else if (Date.class.isAssignableFrom(returnedValue.getClass())) {
+								valueToReturn = (int) ((Date) returnedValue).getTime();
+								
+							} else {
+								valueToReturn = Integer.parseInt(returnedValue.toString());
+							}
 							
-						} else if (Enum.class.isAssignableFrom(returnedValue.getClass())) {
-							valueToReturn = ((Enum) returnedValue).ordinal();
-							
-						} else if (returnedValue instanceof Boolean) {
-							if ((Boolean) returnedValue)
-								valueToReturn = 1;
-							else
-								valueToReturn = 0;
-							
-						} else if (Date.class.isAssignableFrom(returnedValue.getClass())) {
-							valueToReturn = (int) ((Date) returnedValue).getTime();
-							
-						} else {
-							valueToReturn = Integer.parseInt(returnedValue.toString());
 						}
 						
 					} catch (Exception e) {
@@ -3864,6 +4158,7 @@ public class Oson {
 
 		if (value != null && value.toString().trim().length() > 0) {
 			Integer valueToProcess = null;
+			String valueToReturn = null;
 			
 			if (value instanceof Integer) {
 				valueToProcess = (Integer)value;
@@ -3878,20 +4173,20 @@ public class Oson {
 					Function function = objectDTO.getSerializer();
 					if (function != null) {
 						try {
-							// expect a String, but in case not
-							Object returnedValue = null;
-							
 							if (function instanceof Integer2JsonFunction) {
-								returnedValue = ((Integer2JsonFunction)function).apply(valueToProcess);
+								return ((Integer2JsonFunction)function).apply(valueToProcess);
+								
 							} else {
-								returnedValue = function.apply(valueToProcess);
-							}
+								
+								Object returnedValue = function.apply(valueToProcess);
 							
-							if (returnedValue == null) {
-								return integer2JsonDefault(objectDTO);
-							} else {
-								objectDTO.valueToProcess = returnedValue;
-								return object2Json(objectDTO);
+								if (returnedValue == null) {
+									return integer2JsonDefault(objectDTO);
+								} else {
+									objectDTO.valueToProcess = returnedValue;
+									return object2Json(objectDTO);
+								}
+								
 							}
 							
 						} catch (Exception e) {}
@@ -3950,7 +4245,6 @@ public class Oson {
 
 				return defaultValue;
 			}
-
 
 			if (min != null && min > DefaultValue.integer) {
 				return min;
@@ -4102,75 +4396,215 @@ public class Oson {
 	}
 
 
-	private <E> Object getShort(FieldData objectDTO) {
+	private <E> Short json2Short(FieldData objectDTO) {
+		if (objectDTO == null || !objectDTO.json2Java) {
+			return null;
+		}
+		
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
 		boolean required = objectDTO.required;
-		
-		Integer min = objectDTO.min;
-		Integer max = objectDTO.max;
-		boolean json2Java = objectDTO.json2Java;
 
 		if (value != null && value.toString().trim().length() > 0) {
-			Function function = null;
-			String str = value.toString().trim();
+			String valueToProcess = value.toString().trim();
+			Short valueToReturn = null;
+			
 			try {
-				Short valueToReturn = null;
-				if (value instanceof Short) {
-					valueToReturn = (Short)value;
-				} else {
-					valueToReturn = Short.valueOf(str);
-				}
-	
-				if (json2Java) {
-					function = getDeserializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
-					if (function != null) {
-						try {
-							valueToReturn = (Short)function.apply(valueToReturn);
-						} catch (Exception e) {}
+				Function function = objectDTO.getDeserializer();
+				
+				if (function != null) {
+					try {
+						// suppose to return Short, but in case not, try to process
+						if (function instanceof Json2ShortFunction) {
+							valueToReturn = ((Json2ShortFunction)function).apply(valueToProcess);
+						} else {
+							
+							Object returnedValue = function.apply(valueToProcess);
+
+							if (returnedValue instanceof Optional) {
+								Optional opt = (Optional)returnedValue;
+								returnedValue = opt.orElse(null);
+							}
+							
+							if (returnedValue == null) {
+								return json2ShortDefault(objectDTO);
+								
+							} else if (Number.class.isAssignableFrom(returnedValue.getClass()) || returnedValue.getClass().isPrimitive()) {
+								
+								if (returnedValue instanceof Short) {
+									valueToReturn = (Short) returnedValue;
+								} else if (returnedValue instanceof String) {
+									valueToReturn = Short.parseShort((String) returnedValue);
+									
+								} else if (returnedValue instanceof Integer) {
+									valueToReturn = ((Integer) returnedValue).shortValue();
+								} else if (returnedValue instanceof BigInteger) {
+									valueToReturn = ((BigInteger) returnedValue).shortValue();
+								} else if (returnedValue instanceof BigDecimal) {
+									valueToReturn = ((BigDecimal) returnedValue).shortValue();
+								} else if (returnedValue instanceof AtomicInteger) {
+									valueToReturn = ((AtomicInteger) returnedValue).shortValue();
+								} else if (returnedValue instanceof AtomicLong) {
+									valueToReturn = ((AtomicLong) returnedValue).shortValue();
+								} else {
+									valueToReturn = ((Number) returnedValue).shortValue();
+								}
+								
+							} else if (returnedValue instanceof Character) {
+								valueToReturn = (short)(((Character) returnedValue).charValue());
+								
+							} else if (returnedValue instanceof Boolean) {
+								if ((Boolean) returnedValue)
+									valueToReturn = 1;
+								else
+									valueToReturn = 0;
+								
+							} else if (Enum.class.isAssignableFrom(returnedValue.getClass())) {
+								valueToReturn = ((Integer)((Enum) returnedValue).ordinal()).shortValue();
+								
+							} else if (Date.class.isAssignableFrom(returnedValue.getClass())) {
+								valueToReturn = (short) ((Date) returnedValue).getTime();
+								
+							} else {
+								valueToReturn = Short.parseShort(returnedValue.toString());
+							}
+							
+						}
+						
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
 					
 				} else {
-					function = getSerializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
+					valueToReturn = Short.parseShort(valueToProcess);
+				}
+				
+				if (valueToReturn != null) {
+					Integer min = objectDTO.getMin();
+					Integer max = objectDTO.getMax();
+					
+					if (min != null && min.shortValue() > valueToReturn) {
+						return min.shortValue();
+					}
+					
+					if (max != null && max.shortValue() < valueToReturn) {
+						valueToReturn = max.shortValue();
+					}
+					
+					return valueToReturn;
+				}
+	
+			} catch (Exception ex) {
+				//ex.printStackTrace();
+			}
+		
+		}
+		
+		return json2ShortDefault(objectDTO);
+	}
+	
+	
+
+
+	private <E> String short2Json(FieldData objectDTO) {
+		if (objectDTO == null || objectDTO.json2Java) {
+			return null;
+		}
+		
+		Object value = objectDTO.valueToProcess;
+		Class<E> returnType = objectDTO.returnType;
+
+		if (value != null && value.toString().trim().length() > 0) {
+			Short valueToProcess = null;
+			String valueToReturn = null;
+			
+			if (value instanceof Short) {
+				valueToProcess = (Short)value;
+			} else {
+				try {
+					valueToProcess = Short.valueOf(value.toString().trim());
+				} catch (Exception ex) {}
+			}
+			
+			if (valueToProcess != null) {
+				try {
+					Function function = objectDTO.getSerializer();
 					if (function != null) {
 						try {
-							return function.apply(valueToReturn);
+							if (function instanceof Short2JsonFunction) {
+								return ((Short2JsonFunction)function).apply(valueToProcess);
+								
+							} else {
+								
+								Object returnedValue = function.apply(valueToProcess);
+							
+								if (returnedValue == null) {
+									return short2JsonDefault(objectDTO);
+								} else {
+									objectDTO.valueToProcess = returnedValue;
+									return object2Json(objectDTO);
+								}
+								
+							}
+							
 						} catch (Exception e) {}
 					}
-				}
-				
-				if (min != null && min > valueToReturn.shortValue()) {
-					return min.shortValue();
-				}
-				
-				if (max != null && valueToReturn.shortValue() > max) {
-					valueToReturn = max.shortValue();
-				}
-				
-				return valueToReturn;
-				
-			} catch (Exception err) {
-				if (function != null && !json2Java) {
-					try {
-						return function.apply(str);
-					} catch (Exception e) {}
+
+					if (valueToProcess != null) {
+						Integer min = objectDTO.getMin();
+						Integer max = objectDTO.getMax();
+						
+						if (min != null && min.shortValue() > valueToProcess) {
+							valueToProcess = min.shortValue();
+						}
+						
+						if (max != null && max.shortValue() < valueToProcess) {
+							valueToProcess = max.shortValue();
+						}
+						
+						return valueToProcess.toString();
+					}
+
+				} catch (Exception ex) {
+					//ex.printStackTrace();
 				}
 			}
 		}
 		
+		return short2JsonDefault(objectDTO);
+	}
 		
+	private String short2JsonDefault(FieldData objectDTO) {
+		Short valueToReturn = json2ShortDefault(objectDTO);
+		
+		if (valueToReturn == null) {
+			return null;
+		}
+		
+		return valueToReturn.toString();
+	}
+		
+	private <E> Short json2ShortDefault(FieldData objectDTO) {
+		Object value = objectDTO.valueToProcess;
+		Class<E> returnType = objectDTO.returnType;
+		boolean required = objectDTO.required;
+		
+		Integer min = objectDTO.getMin();
+		Integer max = objectDTO.getMax();
+		boolean json2Java = objectDTO.json2Java;
+
 		if (returnType == short.class
 				|| getDefaultType() == JSON_INCLUDE.DEFAULT || required) {
 			Short defaultValue = (Short)objectDTO.getDefaultValue();
 			if (defaultValue != null) {
-				if (min != null && min > defaultValue) {
+				if (min != null && min.shortValue() > defaultValue) {
 					return min.shortValue();
 				}
 
 				return defaultValue;
 			}
 
-			if (min != null && min > DefaultValue.dshort) {
+			if (min != null && min.shortValue() > DefaultValue.dshort) {
 				return min.shortValue();
 			}
 
@@ -4179,6 +4613,7 @@ public class Oson {
 
 		return null;
 	}
+
 
 	private <E> Object getString(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
@@ -4723,39 +5158,51 @@ public class Oson {
 
 		} else if (returnType == Character.class || returnType == char.class) {
 			return (E) getChar(objectDTO);
-
-		} else if (returnType == Long.class || returnType == long.class) {
-			return (E) json2Long(objectDTO);
-
-		} else if (returnType == Integer.class || returnType == int.class) {
-			return (E) json2Integer(objectDTO);
-
-		} else if (returnType == Double.class || returnType == double.class) {
-			return (E) getDouble(objectDTO);
-
+			
 		} else if (returnType == Boolean.class || returnType == boolean.class) {
 			return (E) getBoolean(objectDTO);
-
-		} else if (returnType == Date.class || Date.class.isAssignableFrom(returnType)) {
-			return (E) getDate(objectDTO);
-
-		} else if (returnType == Byte.class || returnType == byte.class) {
-			return (E) getByte(objectDTO);
-
-		} else if (returnType == Short.class || returnType == short.class) {
-			return (E) getShort(objectDTO);
-
-		} else if (returnType == Float.class || returnType == float.class) {
-			return (E) getFloat(objectDTO);
-
-		} else if (returnType == BigDecimal.class) {
-			return (E) getBigDecimal(objectDTO);
-
-		} else if (returnType == BigInteger.class) {
-			return (E) getBigInteger(objectDTO);
-
+			
+		} else if (Number.class.isAssignableFrom(returnType) || returnType.isPrimitive()) {
+			
+			if (returnType == Integer.class || returnType == int.class) {
+				return (E) json2Integer(objectDTO);
+			} else if (returnType == Long.class || returnType == long.class) {
+				return (E) json2Long(objectDTO);
+	
+			} else if (returnType == Double.class || returnType == double.class) {
+				return (E) getDouble(objectDTO);
+	
+			} else if (returnType == Byte.class || returnType == byte.class) {
+				return (E) getByte(objectDTO);
+	
+			} else if (returnType == Short.class || returnType == short.class) {
+				return (E) json2Short(objectDTO);
+	
+			} else if (returnType == Float.class || returnType == float.class) {
+				return (E) getFloat(objectDTO);
+	
+			} else if (returnType == BigDecimal.class) {
+				return (E) getBigDecimal(objectDTO);
+	
+			} else if (returnType == BigInteger.class) {
+				return (E) getBigInteger(objectDTO);
+				
+				
+			} else if (returnType == AtomicInteger.class) {
+				return null;
+				
+			} else if (returnType == AtomicLong.class) {
+				return null;
+				
+			} else {
+				return null;
+			}
+			
 		} else if (returnType.isEnum() || Enum.class.isAssignableFrom(returnType)) {
 			return (E) getEnum(objectDTO);
+				
+		} else if (returnType == Date.class || Date.class.isAssignableFrom(returnType)) {
+			return (E) getDate(objectDTO);
 
 		} else if (Collection.class.isAssignableFrom(returnType)) {
 			return (E) getCollection(objectDTO);
@@ -4905,23 +5352,58 @@ public class Oson {
 				return StringUtil.doublequote(value.toString());
 			}
 
-		} else if (Number.class.isAssignableFrom(returnType) || returnType.isPrimitive()) {
 			
-			if (returnType == Integer.class || returnType == int.class) {
-				return integer2Json(objectDTO);
-				
-			} else if (returnType == Long.class || returnType == long.class) {
-				String valueToReturn = long2Json(objectDTO);
-				
-				if (valueToReturn == null) {
-					return null;
-				}
+			
+		} else if (Character.class.isAssignableFrom(returnType) || char.class.isAssignableFrom(returnType)) {
+			Object valueToReturn = getChar(objectDTO);
 
+			if (valueToReturn == null) {
+				return null;
+			}
+
+			if (valueToReturn instanceof String) {
 				if (jsonRawValue || level == 0) {
 					return (String) valueToReturn;
 				} else {
 					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
 				}
+			}
+			
+			if (!required && objectDTO.defaultType == JSON_INCLUDE.NON_DEFAULT) {
+				if (valueToReturn.equals(DefaultValue.character)) {
+					return null;
+				}
+			}
+			
+			return "\"" + StringUtil.escapeDoublequote(valueToReturn.toString()) + "\"";
+
+		} else if (returnType == Boolean.class || returnType == boolean.class) {
+			Object valueToReturn = getBoolean(objectDTO);
+			
+			if (valueToReturn == null) {
+				return null;
+			}
+			
+			if (valueToReturn instanceof String) {
+				if (jsonRawValue || level == 0) {
+					return (String) valueToReturn;
+				} else {
+					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+				}
+			}
+			
+			return String.valueOf(valueToReturn);
+			
+			
+		} else if (Number.class.isAssignableFrom(returnType) || returnType.isPrimitive()) {
+			
+			String returnedValue = null;
+			
+			if (returnType == Integer.class || returnType == int.class) {
+				returnedValue = integer2Json(objectDTO);
+				
+			} else if (returnType == Long.class || returnType == long.class) {
+				returnedValue = long2Json(objectDTO);
 				
 			} else if (returnType == Byte.class || returnType == byte.class) {
 				Object valueToReturn = getByte(objectDTO);
@@ -4972,27 +5454,7 @@ public class Oson {
 	
 				
 			} else if (returnType == Short.class || returnType == short.class) {
-				Object valueToReturn = getShort(objectDTO);
-				
-				if (valueToReturn == null) {
-					return null;
-				}
-				
-				if (valueToReturn instanceof String) {
-					if (jsonRawValue || level == 0) {
-						return (String) valueToReturn;
-					} else {
-						return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
-					}
-				}
-				
-				if (!required && objectDTO.defaultType == JSON_INCLUDE.NON_DEFAULT) {
-					if (valueToReturn.equals(DefaultValue.dshort)) {
-						return null;
-					}
-				}
-				
-				return String.valueOf(valueToReturn);
+				returnedValue = short2Json(objectDTO);
 	
 			} else if (returnType == Float.class || returnType == float.class) {
 				Object valueToReturn = getFloat(objectDTO);
@@ -5075,59 +5537,22 @@ public class Oson {
 			} else {
 				return null;
 			}
-		
 			
-		} else if (Character.class.isAssignableFrom(returnType) || char.class.isAssignableFrom(returnType)) {
-			Object valueToReturn = getChar(objectDTO);
-
-			if (valueToReturn == null) {
-				return null;
-			}
-
-			if (valueToReturn instanceof String) {
-				if (jsonRawValue || level == 0) {
-					return (String) valueToReturn;
+			
+			if (returnedValue != null) {
+				if (objectDTO.jsonRawValue) {
+					return returnedValue;
+					
+				} else if (StringUtil.isNumeric(returnedValue)) {
+					return returnedValue;
+					
 				} else {
-					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+					return StringUtil.doublequote(returnedValue);
 				}
 			}
 			
-			if (!required && objectDTO.defaultType == JSON_INCLUDE.NON_DEFAULT) {
-				if (valueToReturn.equals(DefaultValue.character)) {
-					return null;
-				}
-			}
-			
-			return "\"" + StringUtil.escapeDoublequote(valueToReturn.toString()) + "\"";
+			return null;
 
-		} else if (returnType == Boolean.class || returnType == boolean.class) {
-			Object valueToReturn = getBoolean(objectDTO);
-			
-			if (valueToReturn == null) {
-				return null;
-			}
-			
-			if (valueToReturn instanceof String) {
-				if (jsonRawValue || level == 0) {
-					return (String) valueToReturn;
-				} else {
-					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
-				}
-			}
-			
-			return String.valueOf(valueToReturn);
-
-			// the primitive types byte, double, float, int, long, and short
-//			} else if (Number.class.isAssignableFrom(returnType) || returnType.isPrimitive()) {
-//				if (value == null) {
-//					if (returnType.isPrimitive()
-//							|| objectDTO.defaultType == DEFAULT_TYPE.DEFAULT || required) {
-//						return "0";
-//					}
-//					return null;
-//				}
-//				return String.valueOf(value);
-		//returnType == Date.class || 
 		} else if (Date.class.isAssignableFrom(returnType)) {
 			Object valueToReturn = getDate(objectDTO);
 			
@@ -9167,6 +9592,16 @@ public class Oson {
 
 			return name;
 		}
+		
+		
+		public static boolean isNumeric(String str) {
+			try {
+				double d = Double.parseDouble(str);
+			} catch (NumberFormatException nfe) {
+				return str.matches("-?\\d+(\\.\\d+)?");
+			}
+			return true;
+		}
 	}
 
 	public static class ObjectUtil {
@@ -9798,4 +10233,163 @@ public class Oson {
 		public Long apply(String t);
 	}
 	
+	@FunctionalInterface
+	public static interface Double2JsonFunction extends OsonFunction {
+		public String apply(Double t);
+	}
+	
+	@FunctionalInterface
+	public static interface Json2DoubleFunction extends OsonFunction {
+		public Double apply(String t);
+	}
+	
+	@FunctionalInterface
+	public static interface Short2JsonFunction extends OsonFunction {
+		public String apply(Short t);
+	}
+	
+	@FunctionalInterface
+	public static interface Json2ShortFunction extends OsonFunction {
+		public Short apply(String t);
+	}
+	
+	@FunctionalInterface
+	public static interface Float2JsonFunction extends OsonFunction {
+		public String apply(Float t);
+	}
+	
+	@FunctionalInterface
+	public static interface Json2FloatFunction extends OsonFunction {
+		public Float apply(String t);
+	}
+	
+	@FunctionalInterface
+	public static interface BigDecimal2JsonFunction extends OsonFunction {
+		public String apply(BigDecimal t);
+	}
+	
+	@FunctionalInterface
+	public static interface Json2BigDecimalFunction extends OsonFunction {
+		public BigDecimal apply(String t);
+	}
+	
+	@FunctionalInterface
+	public static interface BigInteger2JsonFunction extends OsonFunction {
+		public String apply(BigInteger t);
+	}
+	
+	@FunctionalInterface
+	public static interface Json2BigIntegerFunction extends OsonFunction {
+		public BigInteger apply(String t);
+	}
+	
+	@FunctionalInterface
+	public static interface Character2JsonFunction extends OsonFunction {
+		public String apply(Character t);
+	}
+	
+	@FunctionalInterface
+	public static interface Json2CharacterFunction extends OsonFunction {
+		public Character apply(String t);
+	}
+	
+	@FunctionalInterface
+	public static interface Byte2JsonFunction extends OsonFunction {
+		public String apply(Byte t);
+	}
+	
+	@FunctionalInterface
+	public static interface Json2ByteFunction extends OsonFunction {
+		public Byte apply(String t);
+	}
+	
+	@FunctionalInterface
+	public static interface Boolean2JsonFunction extends OsonFunction {
+		public String apply(Boolean t);
+	}
+	
+	@FunctionalInterface
+	public static interface Json2BooleanFunction extends OsonFunction {
+		public Boolean apply(String t);
+	}
+	
+	@FunctionalInterface
+	public static interface Date2JsonFunction extends OsonFunction {
+		public String apply(Date t);
+	}
+	
+	@FunctionalInterface
+	public static interface Json2DateFunction extends OsonFunction {
+		public Date apply(String t);
+	}
+	
+	@FunctionalInterface
+	public static interface Date2LongFunction extends OsonFunction {
+		public Long apply(Date t);
+	}
+	
+	@FunctionalInterface
+	public static interface Long2DateFunction extends OsonFunction {
+		public Date apply(Long t);
+	}
+	
+	@FunctionalInterface
+	public static interface Enum2JsonFunction extends OsonFunction {
+		public String apply(Enum t);
+	}
+	
+	@FunctionalInterface
+	public static interface Json2EnumFunction extends OsonFunction {
+		public Enum apply(String t);
+	}
+	
+	@FunctionalInterface
+	public static interface Collection2JsonFunction extends OsonFunction {
+		public String apply(Collection t);
+	}
+	
+	@FunctionalInterface
+	public static interface Json2CollectionFunction extends OsonFunction {
+		public Collection apply(String t);
+	}
+	
+	@FunctionalInterface
+	public static interface Map2JsonFunction extends OsonFunction {
+		public String apply(Map t);
+	}
+	
+	@FunctionalInterface
+	public static interface Json2MapFunction extends OsonFunction {
+		public Map apply(String t);
+	}
+	
+	@FunctionalInterface
+	public static interface Array2JsonFunction extends OsonFunction {
+		public String apply(Object[] t);
+	}
+	
+	@FunctionalInterface
+	public static interface Json2ArrayFunction extends OsonFunction {
+		public Object[] apply(String t);
+	}
+
+	@FunctionalInterface
+	public static interface AtomicInteger2JsonFunction extends OsonFunction {
+		public String apply(AtomicInteger t);
+	}
+	
+	@FunctionalInterface
+	public static interface Json2AtomicIntegerFunction extends OsonFunction {
+		public AtomicInteger apply(String t);
+	}
+	
+	@FunctionalInterface
+	public static interface AtomicLong2JsonFunction extends OsonFunction {
+		public String apply(AtomicLong t);
+	}
+	
+	@FunctionalInterface
+	public static interface Json2AtomicLongFunction extends OsonFunction {
+		public AtomicLong apply(String t);
+	}
 }
