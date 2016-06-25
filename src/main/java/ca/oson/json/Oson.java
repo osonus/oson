@@ -271,7 +271,7 @@ public class Oson {
 		/*
 		 * The default behaviour is: 
 		 * serialize, use getter
-		 * deserialsize, use getter
+		 * deserialsize, use setter
 		 */
 		public static boolean useAttribute = true;
 		
@@ -336,48 +336,79 @@ public class Oson {
 			if (obj instanceof String) {
 				String str = obj.toString().trim();
 				return (str.equals("[]") || str.equals("{}"));
+				
 			} else if (Collection.class.isAssignableFrom(type)) {
 				Collection list = (Collection)obj;
-				return (list.size() == 0);
+				if (list.size() == 0) {
+					return true;
+				}
+
+				for (Object item: list) {
+					if (!isDefault(item)) {
+						return false;
+					}
+				}
+				
+				return true;
+				
 			} else if (Map.class.isAssignableFrom(type)) {
 				Map map = (Map)obj;
 				return (map.size() == 0);
 			} else if (type.isArray()) {
-				return ((Object[])obj).length == 0;
+				Object[] array = (Object[])obj;
+				
+				if (array.length == 0) {
+					return true;
+				}
+				
+				for (Object item: array) {
+					if (!isDefault(item)) {
+						return false;
+					}
+				}
+				
+				return true;
 
-			} else if (obj instanceof Integer || type == int.class) {
-				return DefaultValue.integer.equals(obj);
-				
-			} else if (obj instanceof BigInteger) {
-				return DefaultValue.bigInteger.equals(obj);
-				
-			} else if (obj instanceof BigDecimal) {
-				return DefaultValue.bigDecimal.equals(obj);
-				
 			} else if (obj instanceof Character || type == char.class) {
 				return DefaultValue.character.equals(obj);
 				
-			} else if (obj instanceof Short || type == short.class) {
-				return DefaultValue.dshort.equals(obj);
-				
-			} else if (obj instanceof Byte || type == byte.class) {
-				return DefaultValue.dbyte.equals(obj);
-				
-			} else if (obj instanceof Long || type == long.class) {
-				return DefaultValue.dlong.equals(obj);
-				
-			} else if (obj instanceof Float || type == float.class) {
-				return DefaultValue.dfloat.equals(obj);
-				
-			} else if (obj instanceof Float || type == float.class) {
-				return DefaultValue.dfloat.equals(obj);
-				
-			} else if (obj instanceof Double || type == double.class) {
-				return DefaultValue.ddouble.equals(obj);
-				
-			} else if (obj instanceof Short) {
-				return DefaultValue.dshort.equals(obj);
-				
+			} else if (Number.class.isAssignableFrom(obj.getClass()) || obj.getClass().isPrimitive()) {
+
+				if (obj instanceof Integer || type == int.class) {
+					return DefaultValue.integer.equals(obj);
+					
+				} else if (obj instanceof BigInteger) {
+					return DefaultValue.bigInteger.equals(obj);
+					
+				} else if (obj instanceof BigDecimal) {
+					return DefaultValue.bigDecimal.equals(obj);
+					
+				} else if (obj instanceof Short || type == short.class) {
+					return DefaultValue.dshort.equals(obj);
+					
+				} else if (obj instanceof Byte || type == byte.class) {
+					return DefaultValue.dbyte.equals(obj);
+					
+				} else if (obj instanceof Long || type == long.class) {
+					return DefaultValue.dlong.equals(obj);
+					
+				} else if (obj instanceof Float || type == float.class) {
+					return DefaultValue.dfloat.equals(obj);
+					
+				} else if (obj instanceof AtomicInteger) {
+					return (DefaultValue.atomicInteger.intValue() == ((AtomicInteger)obj).intValue());
+					
+				} else if (obj instanceof AtomicLong) {
+					return (DefaultValue.atomicLong.longValue() == ((AtomicLong)obj).longValue());
+					
+				} else if (obj instanceof Double || type == double.class) {
+					return DefaultValue.ddouble.equals(obj);
+					
+				} else if (obj instanceof Short) {
+					return DefaultValue.dshort.equals(obj);
+				} else {
+				}
+			
 			}
 			
 			return false;
@@ -632,7 +663,11 @@ public class Oson {
 			this.max = max;
 			return this;
 		}
-
+		public ClassMapper setEnumType(EnumType enumType) {
+			this.enumType = enumType;
+			return this;
+		}
+		
 		public Class<T> type;
 
 		// class level
@@ -673,6 +708,9 @@ public class Oson {
 		public Integer scale = null; // Default: 0
 		public Integer min = null; // default (int) 0;
 		public Integer max = null; // default (int) 2147483647;
+		
+		public EnumType enumType = null;
+
 	}
 	
 	/*
@@ -1035,7 +1073,17 @@ public class Oson {
 		private Map<Class, ClassMapper> classMappers = null;
 		private Set<FieldMapper> fieldMappers = null;
 		
+		private EnumType enumType = null;
 		
+		
+		private EnumType getEnumType() {
+			return enumType;
+		}
+
+		public void setEnumType(EnumType enumType) {
+			this.enumType = enumType;
+		}
+
 		private Set<Class> getIgnoreClassWithAnnotations() {
 			return ignoreClassWithAnnotations;
 		}
@@ -1907,6 +1955,14 @@ public class Oson {
 
 			return defaultValue;
 		}
+		
+		public EnumType getEnumType() {
+			if (enumType == null && classMapper != null) {
+				enumType = classMapper.enumType;
+			}
+			
+			return enumType;
+		}
 	}
 
 	//private static Oson converter = null;
@@ -2544,6 +2600,10 @@ public class Oson {
 			mapper.defaultType =  getDefaultType();
 		}
 		
+		if (mapper.enumType == null) {
+			mapper.enumType =  getEnumType();
+		}
+		
 		return mapper;
 	}
 	
@@ -2669,6 +2729,10 @@ public class Oson {
 		if (fieldMapper.defaultType == null) {
 			fieldMapper.defaultType = classMapper.defaultType;
 		}
+		
+		if (fieldMapper.enumType == null) {
+			fieldMapper.enumType = classMapper.enumType;
+		}
 
 		return fieldMapper;
 	}
@@ -2726,6 +2790,15 @@ public class Oson {
 		return this;
 	}
 	
+	private EnumType getEnumType() {
+		return options.getEnumType();
+	}
+
+	public Oson setEnumType(EnumType enumType) {
+		options.setEnumType(enumType);
+		
+		return this;
+	}
 	
 	private void reset() {
 		jackson = null;
@@ -6015,7 +6088,7 @@ public class Oson {
 
 
 	// deserialize only
-	private <E> Enum<?> getEnum(FieldData objectDTO) {
+	private <E> Enum<?> json2Enum(FieldData objectDTO) {
 		Object valueToProcess = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
 		boolean required = objectDTO.required;
@@ -6030,11 +6103,51 @@ public class Oson {
 			return null;
 		}
 
-		String value = valueToProcess.toString();
-		value = value.trim();
+		String value = valueToProcess.toString().trim();
 
 		Class<Enum> enumType = (Class<Enum>) returnType;
 
+		try {
+			Function function = objectDTO.getDeserializer();
+			
+			if (function != null) {
+				Object valueToReturn = null;
+				if (function instanceof Json2EnumFunction) {
+					valueToReturn = ((Json2EnumFunction)function).apply(valueToProcess);
+				} else {
+					valueToReturn = function.apply(valueToProcess);
+				}
+				
+				if (valueToReturn != null) {
+					Class type = valueToReturn.getClass();
+					if (Enum.class.isAssignableFrom(type)) {
+						return (Enum<?>) valueToReturn;
+						
+					} else if (Number.class.isAssignableFrom(type)) {
+						int ordinal = ((Number)valueToReturn).intValue();
+						
+						for (Enum enumValue : enumType.getEnumConstants()) {
+							if (enumValue.ordinal() == ordinal) {
+								return enumValue;
+							}
+						}
+						
+					} else {
+						String name = valueToReturn.toString();
+						
+						for (Enum enumValue : enumType.getEnumConstants()) {
+							if (enumValue.toString().equalsIgnoreCase(value)
+									|| enumValue.name().equalsIgnoreCase(value)) {
+								return enumValue;
+							}
+						}
+					}
+				}
+			}
+			
+		} catch (Exception ex) {
+		}
+		
 		try {
 			return Enum.valueOf(enumType, value.toUpperCase());
 		} catch (IllegalArgumentException ex) {
@@ -6415,7 +6528,7 @@ public class Oson {
 			}
 			
 		} else if (returnType.isEnum() || Enum.class.isAssignableFrom(returnType)) {
-			return (E) getEnum(objectDTO);
+			return (E) json2Enum(objectDTO);
 				
 		} else if (returnType == Date.class || Date.class.isAssignableFrom(returnType)) {
 			return (E) getDate(objectDTO);
@@ -6454,13 +6567,41 @@ public class Oson {
 	private <E> String enum2Json(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Class<E> valueType = objectDTO.returnType;
-		EnumType enumType = objectDTO.enumType;
+		EnumType enumType = objectDTO.getEnumType();
 		
 		if (value == null) {
 			return null;
 		}
 		
 		Enum en = (Enum)value;
+
+		try {
+			Function function = objectDTO.getSerializer();
+			if (function != null) {
+				try {
+					if (function instanceof Enum2JsonFunction) {
+						return ((Enum2JsonFunction)function).apply(en);
+						
+					} else {
+						
+						Object returnedValue = function.apply(en);
+					
+						if (returnedValue == null) {
+							//return null; // just ignore it, right?
+						} else if (Enum.class.isAssignableFrom(returnedValue.getClass())) {
+							en = (Enum) returnedValue;
+							
+						} else {
+							objectDTO.valueToProcess = returnedValue;
+							return object2Json(objectDTO);
+						}
+						
+					}
+					
+				} catch (Exception e) {}
+			}
+		} catch (Exception ex) {}
+		
 		
 		if (enumType == null) {
 			return en.name();
@@ -6512,12 +6653,14 @@ public class Oson {
 			return ((Boolean) returnedValue).toString();
 			
 		} else if (Enum.class.isAssignableFrom(returnedValue.getClass())) {
+			// so it will not go into an endless loop
+			objectDTO.classMapper = null;
+			objectDTO.mapper = null;
 			return enum2Json(objectDTO);
 			
 		} else if (Date.class.isAssignableFrom(returnedValue.getClass())) {
-			// should prevent endless calls
-			
-			
+			objectDTO.classMapper = null;
+			objectDTO.mapper = null;
 			//return date2Json(objectDTO);
 			
 			return returnedValue.toString();
