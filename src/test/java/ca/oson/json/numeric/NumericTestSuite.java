@@ -12,7 +12,9 @@ import org.junit.runners.Suite;
 	FloatTest.class,
 	BigIntegerTest.class,
 	BigDecimalTest.class,
-	ByteTest.class
+	ByteTest.class,
+	AtomicIntegerTest.class,
+	AtomicLongTest.class
 })
 public class NumericTestSuite {
 

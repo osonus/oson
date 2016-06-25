@@ -10,7 +10,7 @@ import ca.oson.json.support.TestCaseBase;
 public class BigIntegerTest extends TestCaseBase {
 	   
 	   @Test
-	   public void testSerializeInt() {
+	   public void testSerializeBigInteger() {
 		   BigInteger value = BigInteger.valueOf(5);
 		   String expected = "5";
 		   
@@ -21,7 +21,7 @@ public class BigIntegerTest extends TestCaseBase {
 	   
 	   
 	   @Test
-	   public void testDeserializeInt() {
+	   public void testDeserializeBigInteger() {
 		   BigInteger value = BigInteger.valueOf(5);
 		   String text = oson.serialize(value);
 		   
@@ -31,7 +31,7 @@ public class BigIntegerTest extends TestCaseBase {
 	   }
 	   
 	   @Test
-	   public void testSerializeIntWithFunction() {
+	   public void testSerializeBigIntegerWithFunction() {
 		   BigInteger value = BigInteger.valueOf(1);
 		   String expected = "One";
 
@@ -58,7 +58,7 @@ public class BigIntegerTest extends TestCaseBase {
 	   
 	   
 	   @Test
-	   public void testSerializeIntWithBigInteger2JsonFunction() {
+	   public void testSerializeBigIntegerWithBigInteger2JsonFunction() {
 		   BigInteger value = BigInteger.valueOf(6);
 		   String expected = "Six";
 
@@ -85,7 +85,7 @@ public class BigIntegerTest extends TestCaseBase {
 	   
 	   
 	   @Test
-	   public void testSerializeIntWithBigInteger2JsonFunctionDirect() {
+	   public void testSerializeBigIntegerWithBigInteger2JsonFunctionDirect() {
 		   BigInteger value = BigInteger.valueOf(8);
 		   String expected = "Eight";
 
@@ -113,7 +113,7 @@ public class BigIntegerTest extends TestCaseBase {
 	   
 	   
 	   @Test
-	   public void testDeserializeIntWithFunction() {
+	   public void testDeserializeBigIntegerWithFunction() {
 		   String value = "Seven";
 		   BigInteger expected = BigInteger.valueOf (7);
 
@@ -142,7 +142,7 @@ public class BigIntegerTest extends TestCaseBase {
 	   }
 
 	   @Test
-	   public void testSerializeIntWithFunctionEnum() {
+	   public void testSerializeBigIntegerWithFunctionEnum() {
 		   BigInteger value = BigInteger.valueOf (1);
 		   String expected = "UNDERSCORE_UPPER_CAMELCASE";
 		   
@@ -155,7 +155,7 @@ public class BigIntegerTest extends TestCaseBase {
 	   } 
 	   
 	   @Test
-	   public void testDeserializeIntWithFunctionEnum() {
+	   public void testDeserializeBigIntegerWithFunctionEnum() {
 		   String value = "1";
 		   BigInteger expected = BigInteger.valueOf(4);
 		   
@@ -168,7 +168,7 @@ public class BigIntegerTest extends TestCaseBase {
 	   }
 	   
 	   @Test
-	   public void testSerializeIntWithMin() {
+	   public void testSerializeBigIntegerWithMin() {
 		   BigInteger value = BigInteger.valueOf(1);
 		   Integer min = 10;
 		   String expected = min + "";
@@ -181,7 +181,7 @@ public class BigIntegerTest extends TestCaseBase {
 	   }
 	   
 	   @Test
-	   public void testSerializeIntWithMax() {
+	   public void testSerializeBigIntegerWithMax() {
 		   BigInteger value = BigInteger.valueOf(1000000000);
 		   Integer max = 2000;
 		   String expected = max + "";
@@ -194,7 +194,7 @@ public class BigIntegerTest extends TestCaseBase {
 	   }
 	   
 	   @Test
-	   public void testDeserializeIntWithMin() {
+	   public void testDeserializeBigIntegerWithMin() {
 		   String value = "1";
 		   Integer min = 10;
 		   BigInteger expected = BigInteger.valueOf(min);
@@ -207,7 +207,7 @@ public class BigIntegerTest extends TestCaseBase {
 	   }
 	   
 	   @Test
-	   public void testDeserializeIntWithMax() {
+	   public void testDeserializeBigIntegerWithMax() {
 		   String value = "19999999";
 		   Integer max = 10000;
 		   BigInteger expected = BigInteger.valueOf(max);

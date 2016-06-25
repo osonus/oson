@@ -10,7 +10,7 @@ import ca.oson.json.support.TestCaseBase;
 public class BigDecimalTest extends TestCaseBase {
 	   
 	   @Test
-	   public void testSerializeInt() {
+	   public void testSerializeBigDecimal() {
 		   BigDecimal value = new BigDecimal(5);
 		   String expected = "5";
 		   
@@ -21,7 +21,7 @@ public class BigDecimalTest extends TestCaseBase {
 	   
 	   
 	   @Test
-	   public void testDeserializeInt() {
+	   public void testDeserializeBigDecimal() {
 		   BigDecimal value = new BigDecimal(5);
 		   String text = oson.serialize(value);
 		   
@@ -31,7 +31,7 @@ public class BigDecimalTest extends TestCaseBase {
 	   }
 	   
 	   @Test
-	   public void testSerializeIntWithFunction() {
+	   public void testSerializeBigDecimalWithFunction() {
 		   BigDecimal value = new BigDecimal(1);
 		   String expected = "One";
 
@@ -58,7 +58,7 @@ public class BigDecimalTest extends TestCaseBase {
 	   
 	   
 	   @Test
-	   public void testSerializeIntWithBigDecimal2JsonFunction() {
+	   public void testSerializeBigDecimalWithBigDecimal2JsonFunction() {
 		   BigDecimal value = new BigDecimal(6);
 		   String expected = "Six";
 
@@ -85,7 +85,7 @@ public class BigDecimalTest extends TestCaseBase {
 	   
 	   
 	   @Test
-	   public void testSerializeIntWithBigDecimal2JsonFunctionDirect() {
+	   public void testSerializeBigDecimalWithBigDecimal2JsonFunctionDirect() {
 		   BigDecimal value = new BigDecimal(8);
 		   String expected = "Eight";
 
@@ -113,7 +113,7 @@ public class BigDecimalTest extends TestCaseBase {
 	   
 	   
 	   @Test
-	   public void testDeserializeIntWithFunction() {
+	   public void testDeserializeBigDecimalWithFunction() {
 		   String value = "Seven";
 		   BigDecimal expected = new BigDecimal (7);
 
@@ -142,7 +142,7 @@ public class BigDecimalTest extends TestCaseBase {
 	   }
 
 	   @Test
-	   public void testSerializeIntWithFunctionEnum() {
+	   public void testSerializeBigDecimalWithFunctionEnum() {
 		   BigDecimal value = new BigDecimal (1);
 		   String expected = "UNDERSCORE_UPPER_CAMELCASE";
 		   
@@ -155,7 +155,7 @@ public class BigDecimalTest extends TestCaseBase {
 	   } 
 	   
 	   @Test
-	   public void testDeserializeIntWithFunctionEnum() {
+	   public void testDeserializeBigDecimalWithFunctionEnum() {
 		   String value = "1";
 		   BigDecimal expected = new BigDecimal(4);
 		   
@@ -168,7 +168,7 @@ public class BigDecimalTest extends TestCaseBase {
 	   }
 	   
 	   @Test
-	   public void testSerializeIntWithMin() {
+	   public void testSerializeBigDecimalWithMin() {
 		   BigDecimal value = new BigDecimal(1);
 		   Integer min = 10;
 		   String expected = min + "";
@@ -181,7 +181,7 @@ public class BigDecimalTest extends TestCaseBase {
 	   }
 	   
 	   @Test
-	   public void testSerializeIntWithMax() {
+	   public void testSerializeBigDecimalWithMax() {
 		   BigDecimal value = new BigDecimal(1000000000);
 		   Integer max = 2000;
 		   String expected = max + "";
@@ -194,7 +194,7 @@ public class BigDecimalTest extends TestCaseBase {
 	   }
 	   
 	   @Test
-	   public void testDeserializeIntWithMin() {
+	   public void testDeserializeBigDecimalWithMin() {
 		   String value = "1";
 		   Integer min = 10;
 		   BigDecimal expected = new BigDecimal(min);
@@ -207,7 +207,7 @@ public class BigDecimalTest extends TestCaseBase {
 	   }
 	   
 	   @Test
-	   public void testDeserializeIntWithMax() {
+	   public void testDeserializeBigDecimalWithMax() {
 		   String value = "19999999";
 		   Integer max = 10000;
 		   BigDecimal expected = new BigDecimal(max);

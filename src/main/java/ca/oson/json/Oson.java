@@ -254,6 +254,8 @@ public class Oson {
 		public static Double ddouble = 0d;
 		public static String simpleDateFormat = "yyyy-MM-dd'T'HH:mm:ss.SS'Z'";
 		public static Date date = Calendar.getInstance().getTime(); // new Date();
+		public static AtomicInteger atomicInteger = new AtomicInteger();
+		public static AtomicLong atomicLong = new AtomicLong();
 		
 		public static Date getDate() {
 			date = Calendar.getInstance().getTime();
@@ -4390,6 +4392,460 @@ public class Oson {
 		return null;
 	}
 
+	private <E> AtomicInteger json2AtomicInteger(FieldData objectDTO) {
+		if (objectDTO == null || !objectDTO.json2Java) {
+			return null;
+		}
+		
+		Object value = objectDTO.valueToProcess;
+		Class<E> returnType = objectDTO.returnType;
+		boolean required = objectDTO.required;
+
+		if (value != null && value.toString().trim().length() > 0) {
+			String valueToProcess = value.toString().trim();
+			AtomicInteger valueToReturn = null;
+			
+			try {
+				Function function = objectDTO.getDeserializer();
+				
+				if (function != null) {
+					try {
+						// suppose to return AtomicInteger, but in case not, try to process
+						if (function instanceof Json2AtomicIntegerFunction) {
+							valueToReturn = ((Json2AtomicIntegerFunction)function).apply(valueToProcess);
+						} else {
+							
+							Object returnedValue = function.apply(valueToProcess);
+
+							if (returnedValue instanceof Optional) {
+								Optional opt = (Optional)returnedValue;
+								returnedValue = opt.orElse(null);
+							}
+							
+							if (returnedValue == null) {
+								return json2AtomicIntegerDefault(objectDTO);
+								
+							} else if (Number.class.isAssignableFrom(returnedValue.getClass()) || returnedValue.getClass().isPrimitive()) {
+								
+								if (returnedValue instanceof AtomicInteger) {
+									valueToReturn = (AtomicInteger) returnedValue;
+								} else if (returnedValue instanceof String) {
+									valueToReturn = new AtomicInteger(Integer.parseInt((String) returnedValue));
+									
+								} else if (returnedValue instanceof Integer) {
+									valueToReturn = new AtomicInteger((Integer) returnedValue);
+								} else if (returnedValue instanceof Long) {
+									valueToReturn = new AtomicInteger(((Long) returnedValue).intValue());
+								} else if (returnedValue instanceof Short) {
+									valueToReturn = new AtomicInteger((Short) returnedValue);
+								} else if (returnedValue instanceof Double) {
+									valueToReturn = new AtomicInteger(((Double) returnedValue).intValue());
+								} else if (returnedValue instanceof Float) {
+									valueToReturn = new AtomicInteger(((Float) returnedValue).intValue());
+								} else if (returnedValue instanceof BigDecimal) {
+									valueToReturn = new AtomicInteger(((BigDecimal) returnedValue).intValue());
+								} else if (returnedValue instanceof Byte) {
+									valueToReturn = new AtomicInteger((Byte) returnedValue);
+								} else if (returnedValue instanceof BigInteger) {
+									valueToReturn = new AtomicInteger(((BigInteger) returnedValue).intValue());
+								} else if (returnedValue instanceof AtomicLong) {
+									valueToReturn = new AtomicInteger(((AtomicLong) returnedValue).intValue());
+								} else {
+									valueToReturn = new AtomicInteger(((Number) returnedValue).intValue());
+								}
+								
+							} else if (returnedValue instanceof Character) {
+								valueToReturn = new AtomicInteger(((Character) returnedValue));
+								
+							} else if (returnedValue instanceof Boolean) {
+								if ((Boolean) returnedValue)
+									valueToReturn = new AtomicInteger(1);
+								else
+									valueToReturn = new AtomicInteger(0);
+								
+							} else if (Enum.class.isAssignableFrom(returnedValue.getClass())) {
+								valueToReturn = new AtomicInteger(((Enum) returnedValue).ordinal());
+								
+							} else if (Date.class.isAssignableFrom(returnedValue.getClass())) {
+								valueToReturn = new AtomicInteger((int)((Date) returnedValue).getTime());
+								
+							} else {
+								valueToReturn = new AtomicInteger(Integer.parseInt(returnedValue.toString()));
+							}
+							
+						}
+						
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					
+				} else {
+					valueToReturn = new AtomicInteger(Integer.parseInt(valueToProcess));
+				}
+				
+				if (valueToReturn != null) {
+					Integer min = objectDTO.getMin();
+					Integer max = objectDTO.getMax();
+					
+					if (min != null && min > valueToReturn.intValue()) {
+						return new AtomicInteger(min);
+					}
+		
+					if (max != null && valueToReturn.intValue() > max ) {
+						valueToReturn = new AtomicInteger(max);
+					}
+					
+					return valueToReturn;
+				}
+	
+			} catch (Exception ex) {
+				//ex.printStackTrace();
+			}
+		
+		}
+		
+		return json2AtomicIntegerDefault(objectDTO);
+	}
+
+
+	private <E> String atomicInteger2Json(FieldData objectDTO) {
+		if (objectDTO == null || objectDTO.json2Java) {
+			return null;
+		}
+		
+		Object value = objectDTO.valueToProcess;
+		Class<E> returnType = objectDTO.returnType;
+
+		if (value != null && value.toString().trim().length() > 0) {
+			AtomicInteger valueToProcess = null;
+			String valueToReturn = null;
+			
+			if (value instanceof AtomicInteger) {
+				valueToProcess = (AtomicInteger)value;
+			} else {
+				try {
+					valueToProcess = new AtomicInteger(Integer.parseInt(value.toString().trim()));
+				} catch (Exception ex) {}
+			}
+			
+			if (valueToProcess != null) {
+				try {
+					Function function = objectDTO.getSerializer();
+					if (function != null) {
+						try {
+							if (function instanceof AtomicInteger2JsonFunction) {
+								return ((AtomicInteger2JsonFunction)function).apply(valueToProcess);
+								
+							} else {
+								
+								Object returnedValue = function.apply(valueToProcess);
+							
+								if (returnedValue == null) {
+									return atomicInteger2JsonDefault(objectDTO);
+								} else {
+									objectDTO.valueToProcess = returnedValue;
+									return object2Json(objectDTO);
+								}
+								
+							}
+							
+						} catch (Exception e) {}
+					}
+
+					if (valueToProcess != null) {
+						Integer min = objectDTO.getMin();
+						Integer max = objectDTO.getMax();
+						
+						if (min != null && min > valueToProcess.intValue()) {
+							valueToProcess = new AtomicInteger(min);
+						}
+						
+						if (max != null && max < valueToProcess.intValue()) {
+							valueToProcess = new AtomicInteger(max);
+						}
+						
+						return valueToProcess.toString();
+					}
+
+				} catch (Exception ex) {
+					//ex.printStackTrace();
+				}
+			}
+		}
+		
+		return atomicInteger2JsonDefault(objectDTO);
+	}
+		
+	private String atomicInteger2JsonDefault(FieldData objectDTO) {
+		AtomicInteger valueToReturn = json2AtomicIntegerDefault(objectDTO);
+		
+		if (valueToReturn == null) {
+			return null;
+		}
+		
+		return valueToReturn.toString();
+	}
+		
+	private <E> AtomicInteger json2AtomicIntegerDefault(FieldData objectDTO) {
+		Object value = objectDTO.valueToProcess;
+		Class<E> returnType = objectDTO.returnType;
+		boolean required = objectDTO.required;
+		
+		Integer min = objectDTO.getMin();
+		Integer max = objectDTO.getMax();
+		
+		if (getDefaultType() == JSON_INCLUDE.DEFAULT || required) {
+			AtomicInteger defaultValue = (AtomicInteger)objectDTO.getDefaultValue();
+			if (defaultValue != null) {
+				if (min != null && min > defaultValue.intValue()) {
+					return new AtomicInteger(min);
+				}
+
+				if (max != null && max < defaultValue.intValue()) {
+					return new AtomicInteger(max);
+				}				
+				
+				return defaultValue;
+			}
+
+			if (min != null && min > DefaultValue.atomicInteger.intValue()) {
+				return new AtomicInteger(min);
+			}
+
+			return DefaultValue.atomicInteger;
+		}
+
+		return null;
+	}
+	
+	
+	private <E> AtomicLong json2AtomicLong(FieldData objectDTO) {
+		if (objectDTO == null || !objectDTO.json2Java) {
+			return null;
+		}
+		
+		Object value = objectDTO.valueToProcess;
+		Class<E> returnType = objectDTO.returnType;
+		boolean required = objectDTO.required;
+
+		if (value != null && value.toString().trim().length() > 0) {
+			String valueToProcess = value.toString().trim();
+			AtomicLong valueToReturn = null;
+			
+			try {
+				Function function = objectDTO.getDeserializer();
+				
+				if (function != null) {
+					try {
+						// suppose to return AtomicLong, but in case not, try to process
+						if (function instanceof Json2AtomicLongFunction) {
+							valueToReturn = ((Json2AtomicLongFunction)function).apply(valueToProcess);
+						} else {
+							
+							Object returnedValue = function.apply(valueToProcess);
+
+							if (returnedValue instanceof Optional) {
+								Optional opt = (Optional)returnedValue;
+								returnedValue = opt.orElse(null);
+							}
+							
+							if (returnedValue == null) {
+								return json2AtomicLongDefault(objectDTO);
+								
+							} else if (Number.class.isAssignableFrom(returnedValue.getClass()) || returnedValue.getClass().isPrimitive()) {
+								
+								if (returnedValue instanceof AtomicLong) {
+									valueToReturn = (AtomicLong) returnedValue;
+								} else if (returnedValue instanceof String) {
+									valueToReturn = new AtomicLong(Integer.parseInt((String) returnedValue));
+									
+								} else if (returnedValue instanceof Integer) {
+									valueToReturn = new AtomicLong((Integer) returnedValue);
+								} else if (returnedValue instanceof Long) {
+									valueToReturn = new AtomicLong(((Long) returnedValue).longValue());
+								} else if (returnedValue instanceof Short) {
+									valueToReturn = new AtomicLong((Short) returnedValue);
+								} else if (returnedValue instanceof Double) {
+									valueToReturn = new AtomicLong(((Double) returnedValue).longValue());
+								} else if (returnedValue instanceof Float) {
+									valueToReturn = new AtomicLong(((Float) returnedValue).intValue());
+								} else if (returnedValue instanceof BigDecimal) {
+									valueToReturn = new AtomicLong(((BigDecimal) returnedValue).longValue());
+								} else if (returnedValue instanceof Byte) {
+									valueToReturn = new AtomicLong((Byte) returnedValue);
+								} else if (returnedValue instanceof BigInteger) {
+									valueToReturn = new AtomicLong(((BigInteger) returnedValue).longValue());
+								} else if (returnedValue instanceof AtomicInteger) {
+									valueToReturn = new AtomicLong(((AtomicInteger) returnedValue).intValue());
+								} else {
+									valueToReturn = new AtomicLong(((Number) returnedValue).longValue());
+								}
+								
+							} else if (returnedValue instanceof Character) {
+								valueToReturn = new AtomicLong(((Character) returnedValue));
+								
+							} else if (returnedValue instanceof Boolean) {
+								if ((Boolean) returnedValue)
+									valueToReturn = new AtomicLong(1);
+								else
+									valueToReturn = new AtomicLong(0);
+								
+							} else if (Enum.class.isAssignableFrom(returnedValue.getClass())) {
+								valueToReturn = new AtomicLong(((Enum) returnedValue).ordinal());
+								
+							} else if (Date.class.isAssignableFrom(returnedValue.getClass())) {
+								valueToReturn = new AtomicLong(((Date) returnedValue).getTime());
+								
+							} else {
+								valueToReturn = new AtomicLong(Long.parseLong(returnedValue.toString()));
+							}
+							
+						}
+						
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					
+				} else {
+					valueToReturn = new AtomicLong(Long.parseLong(valueToProcess));
+				}
+				
+				if (valueToReturn != null) {
+					Integer min = objectDTO.getMin();
+					Integer max = objectDTO.getMax();
+					
+					if (min != null && min > valueToReturn.longValue()) {
+						return new AtomicLong(min);
+					}
+		
+					if (max != null && valueToReturn.longValue() > max ) {
+						valueToReturn = new AtomicLong(max);
+					}
+					
+					return valueToReturn;
+				}
+	
+			} catch (Exception ex) {
+				//ex.printStackTrace();
+			}
+		
+		}
+		
+		return json2AtomicLongDefault(objectDTO);
+	}
+
+
+	private <E> String atomicLong2Json(FieldData objectDTO) {
+		if (objectDTO == null || objectDTO.json2Java) {
+			return null;
+		}
+		
+		Object value = objectDTO.valueToProcess;
+		Class<E> returnType = objectDTO.returnType;
+
+		if (value != null && value.toString().trim().length() > 0) {
+			AtomicLong valueToProcess = null;
+			String valueToReturn = null;
+			
+			if (value instanceof AtomicLong) {
+				valueToProcess = (AtomicLong)value;
+			} else {
+				try {
+					valueToProcess = new AtomicLong(Long.parseLong(value.toString().trim()));
+				} catch (Exception ex) {}
+			}
+			
+			if (valueToProcess != null) {
+				try {
+					Function function = objectDTO.getSerializer();
+					if (function != null) {
+						try {
+							if (function instanceof AtomicLong2JsonFunction) {
+								return ((AtomicLong2JsonFunction)function).apply(valueToProcess);
+								
+							} else {
+								
+								Object returnedValue = function.apply(valueToProcess);
+							
+								if (returnedValue == null) {
+									return atomicLong2JsonDefault(objectDTO);
+								} else {
+									objectDTO.valueToProcess = returnedValue;
+									return object2Json(objectDTO);
+								}
+								
+							}
+							
+						} catch (Exception e) {}
+					}
+
+					if (valueToProcess != null) {
+						Integer min = objectDTO.getMin();
+						Integer max = objectDTO.getMax();
+						
+						if (min != null && min > valueToProcess.longValue()) {
+							valueToProcess = new AtomicLong(min);
+						}
+						
+						if (max != null && max < valueToProcess.longValue()) {
+							valueToProcess = new AtomicLong(max);
+						}
+						
+						return valueToProcess.toString();
+					}
+
+				} catch (Exception ex) {
+					//ex.printStackTrace();
+				}
+			}
+		}
+		
+		return atomicLong2JsonDefault(objectDTO);
+	}
+		
+	private String atomicLong2JsonDefault(FieldData objectDTO) {
+		AtomicLong valueToReturn = json2AtomicLongDefault(objectDTO);
+		
+		if (valueToReturn == null) {
+			return null;
+		}
+		
+		return valueToReturn.toString();
+	}
+		
+	private <E> AtomicLong json2AtomicLongDefault(FieldData objectDTO) {
+		Object value = objectDTO.valueToProcess;
+		Class<E> returnType = objectDTO.returnType;
+		boolean required = objectDTO.required;
+		
+		Integer min = objectDTO.getMin();
+		Integer max = objectDTO.getMax();
+		
+		if (getDefaultType() == JSON_INCLUDE.DEFAULT || required) {
+			AtomicLong defaultValue = (AtomicLong)objectDTO.getDefaultValue();
+			if (defaultValue != null) {
+				if (min != null && min > defaultValue.longValue()) {
+					return new AtomicLong(min);
+				}
+
+				if (max != null && max < defaultValue.longValue()) {
+					return new AtomicLong(max);
+				}				
+				
+				return defaultValue;
+			}
+
+			if (min != null && min > DefaultValue.atomicLong.longValue()) {
+				return new AtomicLong(min);
+			}
+
+			return DefaultValue.atomicLong;
+		}
+
+		return null;
+	}
+	
+	
 	private <E> String long2Json(FieldData objectDTO) {
 		if (objectDTO == null || objectDTO.json2Java) {
 			return null;
@@ -5949,10 +6405,10 @@ public class Oson {
 				
 				
 			} else if (returnType == AtomicInteger.class) {
-				return null;
+				return (E) json2AtomicInteger(objectDTO);
 				
 			} else if (returnType == AtomicLong.class) {
-				return null;
+				return (E) json2AtomicLong(objectDTO);
 				
 			} else {
 				return null;
@@ -6049,6 +6505,22 @@ public class Oson {
 		} else if (Enum.class.isAssignableFrom(type)) {
 			return enum2Json(objectDTO);
 			
+		} else if (returnedValue instanceof Character) {
+			return ((Character)returnedValue).toString();
+			
+		} else if (returnedValue instanceof Boolean) {
+			return ((Boolean) returnedValue).toString();
+			
+		} else if (Enum.class.isAssignableFrom(returnedValue.getClass())) {
+			return enum2Json(objectDTO);
+			
+		} else if (Date.class.isAssignableFrom(returnedValue.getClass())) {
+			// should prevent endless calls
+			
+			
+			//return date2Json(objectDTO);
+			
+			return returnedValue.toString();
 			
 		} else {
 			return returnedValue.toString();
@@ -6184,10 +6656,10 @@ public class Oson {
 				returnedValue = bigInteger2Json(objectDTO);
 
 			} else if (returnType == AtomicInteger.class) {
-				return null;
+				returnedValue = atomicInteger2Json(objectDTO);
 				
 			} else if (returnType == AtomicLong.class) {
-				return null;
+				returnedValue = atomicLong2Json(objectDTO);
 				
 			} else {
 				return null;
