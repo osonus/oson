@@ -10,8 +10,8 @@ public class TestRunner {
 	   public static void main(String[] args) {
 		      Result result = JUnitCore.runClasses(NumericTestSuite.class);
 		      for (Failure failure : result.getFailures()) {
-		         System.err.println(failure.toString());
+		         System.err.println("failure: " + failure.toString());
 		      }
-		      System.out.println(result.wasSuccessful());
+		      System.out.println("wasSuccessful: " + result.wasSuccessful());
 		   }
 }

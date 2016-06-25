@@ -5,7 +5,14 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-	IntegerTest.class
+	IntegerTest.class,
+	LongTest.class,
+	ShortTest.class,
+	DoubleTest.class,
+	FloatTest.class,
+	BigIntegerTest.class,
+	BigDecimalTest.class,
+	ByteTest.class
 })
 public class NumericTestSuite {
 
