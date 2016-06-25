@@ -4,10 +4,6 @@ import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 
-import ca.oson.json.Oson.JSON_INCLUDE;
-import ca.oson.json.enumbooleandate.EnumBooleanDateTestSuite;
-import ca.oson.json.numeric.NumericTestSuite;
-
 public class TestRunner {
 	public static void main(String[] args) {
 		Class[] testSuites = new Class[] {NumericTestSuite.class, EnumBooleanDateTestSuite.class};
