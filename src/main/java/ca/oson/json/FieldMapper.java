@@ -9,6 +9,7 @@ import java.lang.annotation.Target;
 import javax.persistence.EnumType;
 
 import ca.oson.json.Oson.BOOLEAN;
+import ca.oson.json.Oson.ENUM_TYPE;
 import ca.oson.json.Oson.JSON_INCLUDE;
 
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.CONSTRUCTOR})
@@ -44,12 +45,17 @@ public @interface FieldMapper {
 	/*
 	 *  in case a enumType, define its type to (de)serialize
 	 */
-	EnumType enumType() default EnumType.STRING;
+	ENUM_TYPE enumType() default ENUM_TYPE.NONE;
+	
+	/*
+	 * convert a datetime to a long or not
+	 */
+	BOOLEAN date2Long() default BOOLEAN.NONE;
 	
 	/*
 	 * Require this field must have some value, instead of being null
 	 */
-	boolean required() default false;
+	BOOLEAN required() default BOOLEAN.NONE;
 	
 	/*
 	 * Maximum length this string field can have
@@ -60,7 +66,12 @@ public @interface FieldMapper {
 	 * scale value for this BigDecimal field
 	 */
 	int scale() default 0;
-
+	
+	/*
+	 * number of digits for this BigDecimal field
+	 */
+	int precision() default 0;
+	
 	/*
 	 * minimum value this field should have
 	 */
@@ -80,17 +91,17 @@ public @interface FieldMapper {
 	/*
 	 * Specify this field should not use double quotes in serialization, if true
 	 */
-	boolean jsonRawValue() default false;
+	BOOLEAN jsonRawValue() default BOOLEAN.NONE;
 	
 	/*
 	 * in a class, only one method returning a String value is allowed to set this value to true
 	 */
-	boolean jsonValue() default false;
+	BOOLEAN jsonValue() default BOOLEAN.NONE;
 	
 	/*
 	 * Ignore this field if true
 	 */
-	boolean ignore() default false;
+	BOOLEAN ignore() default BOOLEAN.NONE;
 	
 	
 	/*
@@ -102,19 +113,19 @@ public @interface FieldMapper {
 	 * method with this value set to true will get all properties not specified earlier.
 	 * It will normally return a Map<String , Object>
 	 */
-	boolean jsonAnyGetter() default false;
+	BOOLEAN jsonAnyGetter() default BOOLEAN.NONE;
 	
 	/*
 	 * method with this value set to true will set all properties not consumed earlier.
 	 * It will normally store all the other data into a Map<String , Object>
 	 */
-	boolean jsonAnySetter() default false;
+	BOOLEAN jsonAnySetter() default BOOLEAN.NONE;
 	
 	/*
 	 * Mark a constructor as a Json constructor, no effect on any other types.
 	 * Combined with name() to specify the parameter names for the constructor.
 	 */
-	boolean jsonCreator() default false;
+	BOOLEAN jsonCreator() default BOOLEAN.NONE;
 	
 	
 }

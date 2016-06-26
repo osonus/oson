@@ -20,10 +20,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 import ca.oson.json.Oson.BOOLEAN;
+import ca.oson.json.Oson.ENUM_TYPE;
 import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.Oson.MODIFIER;
-
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 
 @Target({ ElementType.TYPE})
 @Retention(RUNTIME)
@@ -58,7 +57,7 @@ public @interface ClassMapper {
 	/*
 	 * During serialization, order attribute names naturally if true
 	 */
-	boolean orderByKeyAndProperties() default false;
+	BOOLEAN orderByKeyAndProperties() default BOOLEAN.NONE;
 	
     /**
      * Specific ordered list of properties.
@@ -69,7 +68,7 @@ public @interface ClassMapper {
 	 * During serialization, include class name in the Json output if true
 	 * default to @class attribute
 	 */
-	boolean includeClassTypeInJson() default false;
+    BOOLEAN includeClassTypeInJson() default BOOLEAN.NONE;
 	
 	/*
 	 * ignore attributes with version number greater than the provided value
@@ -98,6 +97,15 @@ public @interface ClassMapper {
 	/*
 	 * Ignore this type if true
 	 */
-	boolean ignore() default false;
+    BOOLEAN ignore() default BOOLEAN.NONE;
 
+	/*
+	 * convert a datetime to a long or not
+	 */
+	BOOLEAN date2Long() default BOOLEAN.NONE;
+	
+	/*
+	 *  in case a enumType, define its type to (de)serialize
+	 */
+	ENUM_TYPE enumType() default ENUM_TYPE.NONE;
 }
