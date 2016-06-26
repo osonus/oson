@@ -1096,8 +1096,8 @@ public class Oson {
 	// make sure options have valid values
 	public static class Options {
 		// global level configurations
-		private String simpleDateFormat = null; // DefaultValue.simpleDateFormat;
-		private DateFormat dateFormat = null; // new SimpleDateFormat(simpleDateFormat);
+		private String simpleDateFormat = DefaultValue.simpleDateFormat;
+		private DateFormat dateFormat = new SimpleDateFormat(simpleDateFormat);
 		private JSON_PROCESSOR jsonProcessor = JSON_PROCESSOR.OSON;
 		private FIELD_NAMING fieldNaming = FIELD_NAMING.FIELD;
 		private JSON_INCLUDE defaultType = JSON_INCLUDE.NONE;
@@ -2070,6 +2070,47 @@ public class Oson {
 			}
 			
 			return enumType;
+		}
+		
+		private DateFormat dateFormat = null;
+		public DateFormat getDateFormat() {
+			if (dateFormat != null) {
+				return dateFormat;
+			}
+			if (mapper != null) {
+				if (mapper.simpleDateFormat != null) {
+					dateFormat = new SimpleDateFormat(mapper.simpleDateFormat);
+					
+					return dateFormat;
+				}
+			}
+			if (classMapper != null) {
+				if (classMapper.simpleDateFormat != null) {
+					dateFormat = new SimpleDateFormat(classMapper.simpleDateFormat);
+					
+					return dateFormat;
+				}
+			}
+			
+			
+			dateFormat = new SimpleDateFormat(DefaultValue.simpleDateFormat);
+			
+			return dateFormat;
+		}
+		
+		public Boolean getDate2Long() {
+			if (mapper != null) {
+				if (mapper.date2Long != null) {
+					return mapper.date2Long;
+				}
+			}
+			if (classMapper != null) {
+				if (classMapper.date2Long != null) {
+					return classMapper.date2Long;
+				}
+			}
+
+			return null;
 		}
 	}
 
@@ -3356,7 +3397,6 @@ public class Oson {
 					}
 					
 				} catch (Exception e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				mapper.setProcessed(true);
@@ -4113,6 +4153,172 @@ public class Oson {
 		return null;
 	}
 
+	
+ 	private <E> Date json2Date(FieldData objectDTO) {
+ 		if (objectDTO == null || !objectDTO.json2Java) {
+ 			return null;
+ 		}
+ 		
+ 		Object value = objectDTO.valueToProcess;
+ 		Class<E> returnType = objectDTO.returnType;
+ 		boolean required = objectDTO.required;
+ 
+ 		if (value != null && value.toString().trim().length() > 0) {
+ 			String valueToProcess = value.toString().trim();
+
+ 			try {
+ 				Function function = objectDTO.getDeserializer();
+ 				
+ 				if (function != null) {
+ 					try {
+ 						// suppose to return Date, but in case not, try to process
+ 						if (function instanceof Json2DateFunction) {
+ 							return ((Json2DateFunction)function).apply(valueToProcess);
+ 							
+ 						} else if (function instanceof Long2DateFunction) {
+ 							long longtoprocess = Long.parseLong(valueToProcess);
+ 							return ((Long2DateFunction)function).apply(longtoprocess);
+ 						
+ 						} else {
+ 							
+ 							Object returnedValue = function.apply(valueToProcess);
+ 
+ 							if (returnedValue instanceof Optional) {
+ 								Optional opt = (Optional)returnedValue;
+ 								returnedValue = opt.orElse(null);
+ 							}
+ 							
+ 							if (returnedValue == null) {
+ 								return json2DateDefault(objectDTO);
+ 								
+ 							} else if (Date.class.isAssignableFrom(returnedValue.getClass())) {
+ 									return (Date) returnedValue;
+ 									
+ 							} else {
+ 									valueToProcess = String.valueOf(returnedValue);
+ 							}
+ 							
+ 						}
+ 						
+ 					} catch (Exception e) {
+ 						e.printStackTrace();
+ 					}
+ 					
+ 				}
+ 				
+ 				if (valueToProcess != null) {
+					DateFormat format = objectDTO.getDateFormat();
+					return format.parse(valueToProcess);
+ 				}
+ 	
+ 			} catch (Exception ex) {
+ 				//ex.printStackTrace();
+ 				if (StringUtil.isNumeric(valueToProcess)) {
+ 					try {
+ 						long longtoprocess = Long.parseLong(valueToProcess);
+ 						return new Date(longtoprocess);
+ 					} catch (Exception e) {}
+ 				}
+ 			}
+ 		
+ 		}
+ 		
+ 		return json2DateDefault(objectDTO);
+ 	}
+ 	
+ 	
+ 	private <E> String date2Json(FieldData objectDTO) {
+ 		if (objectDTO == null || objectDTO.json2Java) {
+ 			return null;
+ 		}
+ 		
+ 		Object value = objectDTO.valueToProcess;
+ 		Class<E> returnType = objectDTO.returnType;
+ 
+ 		if (value != null && value.toString().trim().length() > 0) {
+ 			DateFormat format = objectDTO.getDateFormat();
+ 			Date valueToProcess = null;
+ 			String valueToReturn = null;
+ 			
+ 			if (value instanceof Date) {
+ 				valueToProcess = (Date)value;
+ 			} else {
+ 				try {
+ 					valueToProcess = format.parse(value.toString().trim());
+ 				} catch (Exception ex) {}
+ 			}
+ 			
+ 			if (valueToProcess != null) {
+ 				try {
+ 					Function function = objectDTO.getSerializer();
+ 					if (function != null) {
+ 						try {
+ 							if (function instanceof Date2JsonFunction) {
+ 								return ((Date2JsonFunction)function).apply(valueToProcess);
+ 								
+ 							} else if (function instanceof Date2LongFunction) {
+ 	 								Long longtoprocess = ((Date2LongFunction)function).apply(valueToProcess);
+ 	 								return longtoprocess.toString();
+ 	 								
+ 							} else {
+ 								
+ 								Object returnedValue = function.apply(valueToProcess);
+ 							
+ 								if (returnedValue == null) {
+ 									return date2JsonDefault(objectDTO);
+ 								} else {
+ 									objectDTO.valueToProcess = returnedValue;
+ 									return object2Json(objectDTO);
+ 								}
+ 								
+ 							}
+ 							
+ 						} catch (Exception e) {}
+ 					}
+ 
+ 					if (valueToProcess != null) {
+ 						Boolean date2Long = objectDTO.getDate2Long();
+ 						if (date2Long != null && date2Long) {
+ 							long longtoprocess = valueToProcess.getTime();
+ 							return longtoprocess + "";
+ 						} else {
+ 							return format.format(valueToProcess);
+ 						}
+ 					}
+ 
+ 				} catch (Exception ex) {
+ 					//ex.printStackTrace();
+ 				}
+ 			}
+ 		}
+ 		
+ 		return date2JsonDefault(objectDTO);
+ 	}
+ 		
+ 	private String date2JsonDefault(FieldData objectDTO) {
+ 		Date valueToReturn = json2DateDefault(objectDTO);
+ 		
+ 		if (valueToReturn == null) {
+ 			return null;
+ 		}
+ 		
+		objectDTO.valueToProcess = valueToReturn;
+		return object2Json(objectDTO);
+ 	}
+ 		
+ 	private <E> Date json2DateDefault(FieldData objectDTO) {
+		if (getDefaultType() == JSON_INCLUDE.DEFAULT || objectDTO.required) {
+			Date defaultValue = (Date)objectDTO.getDefaultValue();
+			if (defaultValue != null) {
+				return defaultValue;
+			}
+
+			return DefaultValue.getDate();
+		}
+ 
+ 		return null;
+	}
+ 	
 
 	private <E> BigDecimal json2BigDecimal(FieldData objectDTO) {
 		if (objectDTO == null || !objectDTO.json2Java) {
@@ -6258,71 +6464,7 @@ public class Oson {
 		return null;
 	}
 
-	private <E> Object getDate(FieldData objectDTO) {
-		Object value = objectDTO.valueToProcess;
-		Class<E> returnType = objectDTO.returnType;
-		boolean required = objectDTO.required;
-		
-		boolean json2Java = objectDTO.json2Java;
-		
-		if (value != null && value.toString().trim().length() > 0) {
-			Function function = null;
-			String str = value.toString().trim();
-			try {
-				Date valueToReturn = null;
-				if (value instanceof Date) {
-					valueToReturn = (Date)value;
-				} else {
-					DateFormat format = getDateFormat();
-					
-					valueToReturn = format.parse(value.toString());
-				}
-	
-				// processing jsonFunction
-				if (json2Java) {
-					function = getDeserializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
-					if (function != null) {
-						try {
-							valueToReturn = (Date)function.apply(valueToReturn);
-						} catch (Exception e) {}
-					}
-					
-				} else {
-					function = getSerializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
-					if (function != null) {
-						try {
-							return function.apply(valueToReturn);
-						} catch (Exception e) {}
-					}
-				}
-				
-				return valueToReturn;
-				
-			} catch (Exception err) {
-				if (function != null && !json2Java) {
-					try {
-						return function.apply(str);
-					} catch (Exception e) {}
-				}
-				if (str.matches("\\d*")) {
-					try {
-						return new Date(Long.parseLong(value.toString()));
-					} catch (NumberFormatException e) {}
-				}
-			}
-		}
-		
-		if (getDefaultType() == JSON_INCLUDE.DEFAULT || required) {
-			Date defaultValue = (Date)objectDTO.getDefaultValue();
-			if (defaultValue != null) {
-				return defaultValue;
-			}
 
-			return DefaultValue.getDate();
-		}
-
-		return null;
-	}
 
 
 	// deserialize only
@@ -6769,7 +6911,7 @@ public class Oson {
 			return (E) json2Enum(objectDTO);
 				
 		} else if (returnType == Date.class || Date.class.isAssignableFrom(returnType)) {
-			return (E) getDate(objectDTO);
+			return (E) json2Date(objectDTO);
 
 		} else if (Collection.class.isAssignableFrom(returnType)) {
 			return (E) getCollection(objectDTO);
@@ -6845,9 +6987,6 @@ public class Oson {
 			return en.name();
 		case ORDINAL:
 		default:
-//			FieldData newFieldData = new FieldData(value, valueType, true);
-//			newFieldData.json2Java = false;
-//			Enum e = getEnum(newFieldData);
 			return "" + en.ordinal();
 		}
 	}
@@ -6891,9 +7030,22 @@ public class Oson {
 				return str;
 			}
 			
+		} else if (Date.class.isAssignableFrom(returnedValue.getClass())) {
+			Date valueToProcess = (Date)returnedValue;
+			
+			Boolean date2Long = objectDTO.getDate2Long();
+			
+			
+			if (date2Long != null && date2Long) {
+				long longtoprocess = valueToProcess.getTime();
+				return valueToProcess + "";
+			} else {
+				return objectDTO.getDateFormat().format(valueToProcess);
+			}
+			
 		} else if (returnedValue instanceof Boolean) {
 			return ((Boolean) returnedValue).toString();
-			
+
 		} else {
 			
 			// might lead to endless loop, so limit it here, by reducing it maxlevel by 1
@@ -6903,13 +7055,7 @@ public class Oson {
 			}
 			
 			if (Enum.class.isAssignableFrom(returnedValue.getClass())) {
-				return enum2Json(objectDTO);
-			
-			} else if (Date.class.isAssignableFrom(returnedValue.getClass())) {
-
-				//return date2Json(objectDTO);
-				
-				return returnedValue.toString();
+				return enum2Json(objectDTO);			
 				
 			} else {
 				return serialize(objectDTO, objectDTO.level, objectDTO.set);
@@ -7077,32 +7223,21 @@ public class Oson {
 			return null;
 
 		} else if (Date.class.isAssignableFrom(returnType)) {
-			Object valueToReturn = getDate(objectDTO);
+			String returnedValue = date2Json(objectDTO);
 			
-			if (valueToReturn == null) {
-				return null;
-			}
-			
-			if (valueToReturn instanceof String) {
-				if (jsonRawValue || level == 0) {
-					return (String) valueToReturn;
+			if (returnedValue != null) {
+				if (objectDTO.jsonRawValue) {
+					return returnedValue;
+					
+				} else if (StringUtil.isNumeric(returnedValue)) {
+					return returnedValue;
+					
 				} else {
-					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
+					return StringUtil.doublequote(returnedValue);
 				}
 			}
-
-			try {
-				DateFormat format = getDateFormat();
-
-				if (jsonRawValue || level == 0) {
-					return format.format((Date)valueToReturn);
-				} else {
-					return "\"" + format.format((Date)valueToReturn) + "\"";
-				}
-				
-			} catch (Exception err) {
-				return null;
-			}
+			
+			return null;
 
 		// returnType.isEnum()  || value instanceof Enum<?>
 		} else if (Enum.class.isAssignableFrom(returnType)) {
