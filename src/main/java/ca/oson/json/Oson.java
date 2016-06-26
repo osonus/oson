@@ -1987,16 +1987,23 @@ public class Oson {
 				min = classMapper.min;
 			}
 			
-			if (min != null && returnType != null && (Number.class.isAssignableFrom(returnType)
-					|| returnType.isPrimitive())) {
-				if (returnType == Short.class || returnType == short.class) {
-					if (min.intValue() < Short.MIN_VALUE) {
-						min = (int) Short.MIN_VALUE;
+			if (max != null && returnType != null) {
+				if ((returnType == Character.class || returnType == char.class)) {
+					if (min.intValue() < Character.MIN_CODE_POINT) {
+						min = Character.MIN_CODE_POINT;
 					}
 					
-				} else if (returnType == Byte.class || returnType == byte.class) {
-					if (min.intValue() < Byte.MIN_VALUE) {
-						min = (int) Byte.MIN_VALUE;
+				} else if (Number.class.isAssignableFrom(returnType)
+						|| returnType.isPrimitive()) {
+					if (returnType == Short.class || returnType == short.class) {
+						if (min.intValue() < Short.MIN_VALUE) {
+							min = (int) Short.MIN_VALUE;
+						}
+						
+					} else if (returnType == Byte.class || returnType == byte.class) {
+						if (min.intValue() < Byte.MIN_VALUE) {
+							min = (int) Byte.MIN_VALUE;
+						}
 					}
 				}
 			}
@@ -2008,16 +2015,24 @@ public class Oson {
 				max = classMapper.max;
 			}
 			
-			if (max != null && returnType != null && (Number.class.isAssignableFrom(returnType)
-					|| returnType.isPrimitive())) {
-				if (returnType == Short.class || returnType == short.class) {
-					if (max.intValue() > Short.MAX_VALUE) {
-						max = (int) Short.MAX_VALUE;
+			
+			if (max != null && returnType != null) {
+				if ((returnType == Character.class || returnType == char.class)) {
+					if (max.intValue() > Character.MAX_CODE_POINT) {
+						max = Character.MAX_CODE_POINT;
 					}
 					
-				} else if (returnType == Byte.class || returnType == byte.class) {
-					if (max.intValue() > Byte.MAX_VALUE) {
-						max = (int) Byte.MAX_VALUE;
+				} else if (Number.class.isAssignableFrom(returnType)
+						|| returnType.isPrimitive()) {
+					if (returnType == Short.class || returnType == short.class) {
+						if (max.intValue() > Short.MAX_VALUE) {
+							max = (int) Short.MAX_VALUE;
+						}
+						
+					} else if (returnType == Byte.class || returnType == byte.class) {
+						if (max.intValue() > Byte.MAX_VALUE) {
+							max = (int) Byte.MAX_VALUE;
+						}
 					}
 				}
 			}
@@ -5930,60 +5945,241 @@ public class Oson {
 		return null;
 	}
 	
+	private Character long2Character(long longvalue, Integer min, Integer max) {
+		Character valueToReturn;
+		
+		if (min == null && longvalue < Character.MIN_CODE_POINT) {
+			valueToReturn = null;
+		} else if (max == null && longvalue > Character.MAX_CODE_POINT) {
+			valueToReturn = null;
+		} else if (min != null && min > longvalue) {
+			valueToReturn = (char)min.intValue();
+			
+		} else if (max != null && max < longvalue) {
+			valueToReturn = (char)max.intValue();
+		} else  {
+			valueToReturn = (char)longvalue;
+		}
+		
+		return valueToReturn;
+		
+	}
 
-	private <E> Object getChar(FieldData objectDTO) {
+	private <E> Character json2Character(FieldData objectDTO) {
+		if (objectDTO == null || !objectDTO.json2Java) {
+			return null;
+		}
+		
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
 		boolean required = objectDTO.required;
-		
-		boolean json2Java = objectDTO.json2Java;
 
 		if (value != null && value.toString().trim().length() > 0) {
-			Function function = null;
-			String str = value.toString().trim();
+			String valueToProcess = value.toString().trim();
+			Character valueToReturn = null;
+			
+			Integer min = objectDTO.getMin();
+			Integer max = objectDTO.getMax();
+			
 			try {
-				Character valueToReturn = null;
-				if (value instanceof Character) {
-					valueToReturn = (Character)value;
-				} else {
-					valueToReturn = str.charAt(0);
-				}
+				Function function = objectDTO.getDeserializer();
 				
-				if (json2Java) {
-					function = getDeserializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
-					if (function != null) {
-						try {
-							valueToReturn = (Character)function.apply(valueToReturn);
-						} catch (Exception e) {}
+				if (function != null) {
+					try {
+						// suppose to return Character, but in case not, try to process
+						if (function instanceof Json2CharacterFunction) {
+							valueToReturn = ((Json2CharacterFunction)function).apply(valueToProcess);
+						} else {
+							
+							Object returnedValue = function.apply(valueToProcess);
+
+							if (returnedValue instanceof Optional) {
+								Optional opt = (Optional)returnedValue;
+								returnedValue = opt.orElse(null);
+							}
+							
+							if (returnedValue == null) {
+								return json2CharacterDefault(objectDTO);
+								
+							} else if (Number.class.isAssignableFrom(returnedValue.getClass()) || returnedValue.getClass().isPrimitive()) {
+								long longvalue = ((Number) returnedValue).longValue();
+								
+								valueToReturn = long2Character(longvalue, min, max);
+								
+							} else if (returnedValue instanceof Character) {
+								valueToReturn = (Character) returnedValue;
+								
+							} else if (returnedValue instanceof Boolean) {
+								if ((Boolean) returnedValue)
+									valueToReturn = (char)1;
+								else
+									valueToReturn = (char)0;
+								
+							} else if (Enum.class.isAssignableFrom(returnedValue.getClass())) {
+								int intvalue = ((Enum) returnedValue).ordinal();
+								
+								valueToReturn = long2Character(intvalue, min, max);
+
+							} else if (Date.class.isAssignableFrom(returnedValue.getClass())) {
+								long longvalue = ((Date) returnedValue).getTime();
+								
+								valueToReturn = long2Character(longvalue, min, max);
+
+							} else {
+								long longvalue = Long.parseLong(returnedValue.toString());
+								
+								valueToReturn = long2Character(longvalue, min, max);
+							}
+							
+						}
+						
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
 					
 				} else {
-					function = getSerializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
+					if (StringUtil.isNumeric(valueToProcess)) {
+						long longvalue = Long.parseLong(valueToProcess);
+						
+						valueToReturn = long2Character(longvalue, min, max);
+						
+					} else {
+						valueToReturn = valueToProcess.charAt(0);
+					}
+
+				}
+				
+				if (valueToReturn != null) {
+					
+					if (min != null && min > (int)valueToReturn) {
+						valueToReturn = (char)min.intValue();
+					}
+					
+					if (max != null && max < (int)valueToReturn) {
+						valueToReturn = (char)max.intValue();
+					}
+					
+					return valueToReturn;
+				}
+	
+			} catch (Exception ex) {
+				//ex.printStackTrace();
+			}
+		
+		}
+		
+		return json2CharacterDefault(objectDTO);
+	}
+	
+	
+
+
+	private <E> String character2Json(FieldData objectDTO) {
+		if (objectDTO == null || objectDTO.json2Java) {
+			return null;
+		}
+		
+		Object value = objectDTO.valueToProcess;
+		Class<E> returnType = objectDTO.returnType;
+
+		if (value != null && value.toString().trim().length() > 0) {
+			Character valueToProcess = null;
+			String valueToReturn = null;
+			
+			if (value instanceof Character) {
+				valueToProcess = (Character)value;
+			} else {
+				try {
+					valueToProcess = value.toString().trim().charAt(0);
+				} catch (Exception ex) {}
+			}
+			
+			if (valueToProcess != null) {
+				try {
+					Function function = objectDTO.getSerializer();
 					if (function != null) {
 						try {
-							return function.apply(valueToReturn);
+							if (function instanceof Character2JsonFunction) {
+								return ((Character2JsonFunction)function).apply(valueToProcess);
+								
+							} else {
+								
+								Object returnedValue = function.apply(valueToProcess);
+							
+								if (returnedValue == null) {
+									return character2JsonDefault(objectDTO);
+									
+								} else if (returnedValue instanceof Character || returnedValue.getClass() == char.class) {
+									return ((Character)returnedValue).toString();
+									
+								} else {
+									objectDTO.valueToProcess = returnedValue;
+									return object2Json(objectDTO);
+								}
+								
+							}
+							
 						} catch (Exception e) {}
 					}
-				}
 
-				return valueToReturn;
-				
-			} catch (Exception err) {
-				if (function != null && !json2Java) {
-					try {
-						return function.apply(str);
-					} catch (Exception e) {}
+					if (valueToProcess != null) {
+						Integer min = objectDTO.getMin();
+						Integer max = objectDTO.getMax();
+						
+						if (min != null && min > (int)valueToProcess) {
+							valueToProcess = (char)min.intValue();
+						}
+						
+						if (max != null && max < (int)valueToProcess) {
+							valueToProcess = (char)max.intValue();
+						}
+						
+						return valueToProcess.toString();
+					}
+
+				} catch (Exception ex) {
+					//ex.printStackTrace();
 				}
 			}
 		}
 		
+		return character2JsonDefault(objectDTO);
+	}
+		
+	private String character2JsonDefault(FieldData objectDTO) {
+		Character valueToReturn = json2CharacterDefault(objectDTO);
+		
+		if (valueToReturn == null) {
+			return null;
+		}
+		
+		return valueToReturn.toString();
+	}
+		
+	private <E> Character json2CharacterDefault(FieldData objectDTO) {
+		Object value = objectDTO.valueToProcess;
+		Class<E> returnType = objectDTO.returnType;
+		boolean required = objectDTO.required;
+		
+		Integer min = objectDTO.getMin();
+		Integer max = objectDTO.getMax();
+		boolean json2Java = objectDTO.json2Java;
+
 		if (returnType == char.class
 				|| getDefaultType() == JSON_INCLUDE.DEFAULT || required) {
 			Character defaultValue = (Character)objectDTO.getDefaultValue();
 			if (defaultValue != null) {
+				if (min != null && min > (int)defaultValue) {
+					return (char)min.intValue();
+				}
+
 				return defaultValue;
 			}
-			
+
+			if (min != null && min > (int)DefaultValue.character) {
+				return (char)min.intValue();
+			}
+
 			return DefaultValue.character;
 		}
 
@@ -6359,11 +6555,12 @@ public class Oson {
 		
 		str = str.trim().toLowerCase();
 	
-		if (str.equals("false") || str.equals("0") || str.equals("\0") || str.equals("f") ) {
+		if (str.equals("false") || str.equals("null") || str.equals("no") || str.equals("f")
+				 || str.equals("null") || str.equals("0") || str.equals("\0") ) {
 			return false;
 		}
 	
-		if (str.equals("true") || str.equals("1") || str.equals("t")) {
+		if (str.equals("true") || str.equals("t") || str.equals("yes") ||  str.equals("1") || str.equals("t")) {
 			return true;
 		}
 		
@@ -6371,7 +6568,7 @@ public class Oson {
 			return Boolean.parseBoolean(str);
 		} catch (Exception ex) {}
 	
-		return DefaultValue.bool;
+		return null; // DefaultValue.bool;
 	}
 
 
@@ -6866,7 +7063,7 @@ public class Oson {
 			return (E) getString(objectDTO);
 
 		} else if (returnType == Character.class || returnType == char.class) {
-			return (E) getChar(objectDTO);
+			return (E) json2Character(objectDTO);
 			
 		} else if (returnType == Boolean.class || returnType == boolean.class) {
 			return (E) json2Boolean(objectDTO);
@@ -7086,7 +7283,6 @@ public class Oson {
 		if (level == 0) {
 			objectDTO.jsonRawValue = true;
 		}
-		boolean jsonRawValue = objectDTO.jsonRawValue;
 		if (objectDTO.defaultType == null) {
 			objectDTO.defaultType = getDefaultType();
 		}
@@ -7094,11 +7290,10 @@ public class Oson {
 		if (returnType == null) {
 			if (value == null) {
 				return null;
-			} else if (jsonRawValue || level == 0) {
+			} else if (objectDTO.jsonRawValue) {
 				return value.toString();
 			} else {
-				return "\"" + StringUtil.escapeDoublequote(value.toString())
-						+ "\"";
+				return StringUtil.doublequote(value.toString());
 			}
 
 		} else if (returnType == String.class) {
@@ -7114,7 +7309,7 @@ public class Oson {
 				}
 			}
 			
-			if (jsonRawValue) {
+			if (objectDTO.jsonRawValue) {
 				return value.toString();
 			} else {
 				return StringUtil.doublequote(value.toString());
@@ -7123,27 +7318,17 @@ public class Oson {
 			
 			
 		} else if (Character.class.isAssignableFrom(returnType) || char.class.isAssignableFrom(returnType)) {
-			Object valueToReturn = getChar(objectDTO);
+			String valueToReturn = character2Json(objectDTO);
 
 			if (valueToReturn == null) {
 				return null;
 			}
 
-			if (valueToReturn instanceof String) {
-				if (jsonRawValue || level == 0) {
-					return (String) valueToReturn;
-				} else {
-					return "\"" + StringUtil.escapeDoublequote(valueToReturn) + "\"";
-				}
+			if (objectDTO.jsonRawValue) {
+				return (String) valueToReturn;
+			} else {
+				return StringUtil.doublequote(valueToReturn);
 			}
-			
-			if (!required && objectDTO.defaultType == JSON_INCLUDE.NON_DEFAULT) {
-				if (valueToReturn.equals(DefaultValue.character)) {
-					return null;
-				}
-			}
-			
-			return "\"" + StringUtil.escapeDoublequote(valueToReturn.toString()) + "\"";
 
 		} else if (returnType == Boolean.class || returnType == boolean.class) {
 			String returnedValue = boolean2Json(objectDTO);
@@ -9241,10 +9426,9 @@ public class Oson {
 	}
 
 	<T> T fromJsonMap(String source, Class<T> valueType, T object) {
-		// use gson TypeToken
-		// Gson gson = new Gson();
-		// map = gson.fromJson(source, new TypeToken<Map<String,
-		// Object>>(){}.getType());
+		if (source == null) {
+			return null;
+		}
 
 		try {
 			source = source.trim();
