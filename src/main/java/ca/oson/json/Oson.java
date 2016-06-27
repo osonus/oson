@@ -254,7 +254,10 @@ public class Oson {
 	 * 4. finally, use this systen default value.
 	 */
 	public static class DefaultValue {
-		public static Collection collection = new ArrayList();
+		//public static Collection collection = new ArrayList();
+		public static Collection collection() {
+			return new ArrayList();
+		}
 		public static Map map = new HashMap();
 		public static Integer integer = new Integer(0);
 		public static BigInteger bigInteger = BigInteger.ZERO;
@@ -297,7 +300,7 @@ public class Oson {
 			if (type == String.class) {
 				return DefaultValue.string;
 			} else if (Collection.class.isAssignableFrom(type)) {
-				return DefaultValue.collection;
+				return DefaultValue.collection();
 			} else if (Map.class.isAssignableFrom(type)) {
 				return DefaultValue.map;
 			} else if (type.isArray()) {
@@ -6970,7 +6973,7 @@ public class Oson {
 			}
 
 			if (returnType == null) {
-				returnType = (Class<Collection<E>>) DefaultValue.collection.getClass();
+				returnType = (Class<Collection<E>>) DefaultValue.collection().getClass();
 			}
 		}
 		
@@ -7020,7 +7023,7 @@ public class Oson {
 					}
 		
 					if (returnObj == null) {
-						returnObj = DefaultValue.collection;
+						returnObj = DefaultValue.collection();
 					}
 				}
 				
@@ -7414,7 +7417,7 @@ public class Oson {
 				return defaultValue;
 			}
 
-			return DefaultValue.collection;
+			return DefaultValue.collection();
 		}
 
 		return null;
