@@ -254,15 +254,24 @@ public class Oson {
 	 * 4. finally, use this systen default value.
 	 */
 	public static class DefaultValue {
-		//public static Collection collection = new ArrayList();
 		public static Collection collection() {
 			return new ArrayList();
 		}
-		public static Map map = new HashMap();
+		public static Map map() {
+			return new HashMap();
+		}
+		public static Object[] array() {
+			return new Object[0];
+		}
+		public static Date getDate() {
+			date = Calendar.getInstance().getTime();
+			
+			return date;
+		}
+		
 		public static Integer integer = new Integer(0);
 		public static BigInteger bigInteger = BigInteger.ZERO;
 		public static BigDecimal bigDecimal = BigDecimal.ZERO;
-		public static Object[] array = new Object[0];
 		public static Boolean bool = false;
 		public static String string = "";
 		public static Character character = '\u0000';
@@ -275,13 +284,7 @@ public class Oson {
 		public static Date date = Calendar.getInstance().getTime(); // new Date();
 		public static AtomicInteger atomicInteger = new AtomicInteger();
 		public static AtomicLong atomicLong = new AtomicLong();
-		
-		public static Date getDate() {
-			date = Calendar.getInstance().getTime();
-			
-			return date;
-		}
-		
+
 		/*
 		 * this is the default behavior: use both field and attribute, to try the best
 		 */
@@ -302,9 +305,9 @@ public class Oson {
 			} else if (Collection.class.isAssignableFrom(type)) {
 				return DefaultValue.collection();
 			} else if (Map.class.isAssignableFrom(type)) {
-				return DefaultValue.map;
+				return DefaultValue.map();
 			} else if (type.isArray()) {
-				return DefaultValue.array;
+				return DefaultValue.array();
 
 			} else if (type == Integer.class || type == int.class) {
 				return DefaultValue.integer;
@@ -6901,7 +6904,7 @@ public class Oson {
 					return returnObj;
 				}
 
-				return DefaultValue.map;
+				return DefaultValue.map();
 			}
 
 			return null;
@@ -6917,7 +6920,7 @@ public class Oson {
 			}
 
 			if (returnObj == null) {
-				returnObj = DefaultValue.map;
+				returnObj = DefaultValue.map();
 			}
 		}
 
@@ -7075,7 +7078,7 @@ public class Oson {
 			}
 
 			if (returnType == null) {
-				returnType = (Class<E[]>) DefaultValue.array.getClass();
+				returnType = (Class<E[]>) DefaultValue.array().getClass();
 			}
 		}
 		
@@ -7154,7 +7157,7 @@ public class Oson {
 				return returnObj;
 			}
 
-			return (E[]) DefaultValue.array;
+			return (E[]) DefaultValue.array();
 		}
 
 		return returnObj;
