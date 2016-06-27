@@ -1,8 +1,6 @@
 package ca.oson.json.domain;
 
-import com.google.gson.annotations.Since;
-
-class Car {
+public class Car {
 
     public String brand = "Chevron";
 

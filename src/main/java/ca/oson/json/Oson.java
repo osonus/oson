@@ -627,6 +627,14 @@ public class Oson {
 			this.deserializer = deserializer;
 			return this;
 		}
+		public ClassMapper setSerializer(String2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public ClassMapper setDeserializer(Json2StringFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
 		
 		public ClassMapper setUseField(Boolean useField) {
 			this.useField = useField;
@@ -949,7 +957,15 @@ public class Oson {
 			this.deserializer = deserializer;
 			return this;
 		}
-
+		public FieldMapper setSerializer(String2JsonFunction serializer) {
+			this.serializer = serializer;
+			return this;
+		}
+		public FieldMapper setDeserializer(Json2StringFunction deserializer) {
+			this.deserializer = deserializer;
+			return this;
+		}
+		
 		public FieldMapper setSimpleDateFormat(String simpleDateFormat) {
 			this.simpleDateFormat = simpleDateFormat;
 			return this;
@@ -1247,7 +1263,7 @@ public class Oson {
 
 				if (java != null && lname.equals(java.toLowerCase())) {
 					// if is null, ignore it
-					if (mapper.ignore) {
+					if (mapper.ignore != null && mapper.ignore) {
 						return null;
 					} else {
 						return mapper.json;
@@ -1282,7 +1298,7 @@ public class Oson {
 
 				if (json != null && lname.equals(json.toLowerCase())) {
 					// if is null, ignore it
-					if (mapper.ignore) {
+					if (mapper.ignore != null && mapper.ignore) {
 						return null;
 					} else {
 						return mapper.java;
@@ -1328,7 +1344,7 @@ public class Oson {
 							fld = type.getDeclaredField(name);
 
 							if (fld != null && fld.equals(field)) {
-								if (mapper.ignore) {
+								if (mapper.ignore != null && mapper.ignore) {
 									return null;
 								} else {
 									return mapper.json;
@@ -1346,7 +1362,7 @@ public class Oson {
 			}
 
 			for (FieldMapper mapper: names) {
-				if (mapper.ignore) {
+				if (mapper.ignore != null && mapper.ignore) {
 					return null;
 				} else {
 					return mapper.json;
@@ -1390,7 +1406,7 @@ public class Oson {
 							fld = type.getDeclaredField(name);
 
 							if (fld != null && fld.equals(field)) {
-								if (mapper.ignore) {
+								if (mapper.ignore != null && mapper.ignore) {
 									return null;
 								}
 								return mapper.java;
@@ -1407,7 +1423,7 @@ public class Oson {
 			}
 
 			for (FieldMapper mapper: names) {
-				if (mapper.ignore) {
+				if (mapper.ignore != null && mapper.ignore) {
 					return null;
 				} else {
 					return mapper.java;
@@ -1861,12 +1877,13 @@ public class Oson {
 		private Class enclosingtype = null;
 		EnumType enumType = null;
 		Integer length = null; // Default: 255
+		Integer precision = null;
 		Integer scale = null; // Default: 0
 		Integer min = null; // default (int) 0;
 		Integer max = null; // default (int) 2147483647;
 
 		public Object defaultValue = null;
-		public boolean jsonRawValue = false;
+		public Boolean jsonRawValue = false;
 		
 		public int level;
 		public Set set;
@@ -1886,6 +1903,7 @@ public class Oson {
 			this.required = mapper.required;
 			this.defaultType = mapper.defaultType;
 			this.length = mapper.length;
+			this.precision = mapper.precision;
 			this.scale = mapper.scale;
 			this.min = mapper.min;
 			this.max = mapper.max;
@@ -3399,7 +3417,7 @@ public class Oson {
 			}
 
 			String className = mapper.type.getName();
-			if (mapper.ignore) {
+			if (mapper.ignore != null && mapper.ignore) {
 				
 				try {
 					if (java != null) {
@@ -3615,7 +3633,7 @@ public class Oson {
 					if (mapper.type == null) {
 						mapper.type = entry.getKey();
 					}
-					if (mapper.ignore) {
+					if (mapper.ignore != null && mapper.ignore) {
 						strategies.add(new ExclusionStrategy() {
 
 							@Override
@@ -3714,7 +3732,6 @@ public class Oson {
 		
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = objectDTO.required;
 
 		if (value != null && value.toString().trim().length() > 0) {
 			String valueToProcess = value.toString().trim();
@@ -3906,7 +3923,7 @@ public class Oson {
 	private <E> Double json2DoubleDefault(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = objectDTO.required;
+		boolean required = (objectDTO.required != null && objectDTO.required);
 		
 		Integer min = objectDTO.getMin();
 		Integer max = objectDTO.getMax();
@@ -3940,7 +3957,6 @@ public class Oson {
 		
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = objectDTO.required;
 
 		if (value != null && value.toString().trim().length() > 0) {
 			String valueToProcess = value.toString().trim();
@@ -4141,7 +4157,7 @@ public class Oson {
 	private <E> Float json2FloatDefault(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = objectDTO.required;
+		boolean required = (objectDTO.required != null && objectDTO.required);
 		
 		Integer min = objectDTO.getMin();
 		Integer max = objectDTO.getMax();
@@ -4176,8 +4192,7 @@ public class Oson {
  		
  		Object value = objectDTO.valueToProcess;
  		Class<E> returnType = objectDTO.returnType;
- 		boolean required = objectDTO.required;
- 
+
  		if (value != null && value.toString().trim().length() > 0) {
  			String valueToProcess = value.toString().trim();
 
@@ -4342,7 +4357,6 @@ public class Oson {
 		
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = objectDTO.required;
 
 		if (value != null && value.toString().trim().length() > 0) {
 			String valueToProcess = value.toString().trim();
@@ -4543,7 +4557,7 @@ public class Oson {
 	private <E> BigDecimal json2BigDecimalDefault(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = objectDTO.required;
+		boolean required = (objectDTO.required != null && objectDTO.required);
 		
 		Integer min = objectDTO.getMin();
 		Integer max = objectDTO.getMax();
@@ -4580,7 +4594,6 @@ public class Oson {
 		
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = objectDTO.required;
 
 		if (value != null && value.toString().trim().length() > 0) {
 			String valueToProcess = value.toString().trim();
@@ -4772,7 +4785,7 @@ public class Oson {
 	private <E> BigInteger json2BigIntegerDefault(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = objectDTO.required;
+		boolean required = (objectDTO.required != null && objectDTO.required);
 		
 		Integer min = objectDTO.getMin();
 		Integer max = objectDTO.getMax();
@@ -4809,7 +4822,6 @@ public class Oson {
 		
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = objectDTO.required;
 
 		if (value != null && value.toString().trim().length() > 0) {
 			String valueToProcess = value.toString().trim();
@@ -4999,7 +5011,7 @@ public class Oson {
 	private <E> AtomicInteger json2AtomicIntegerDefault(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = objectDTO.required;
+		boolean required = (objectDTO.required != null && objectDTO.required);
 		
 		Integer min = objectDTO.getMin();
 		Integer max = objectDTO.getMax();
@@ -5036,7 +5048,6 @@ public class Oson {
 		
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = objectDTO.required;
 
 		if (value != null && value.toString().trim().length() > 0) {
 			String valueToProcess = value.toString().trim();
@@ -5226,7 +5237,7 @@ public class Oson {
 	private <E> AtomicLong json2AtomicLongDefault(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = objectDTO.required;
+		boolean required = (objectDTO.required != null && objectDTO.required);
 		
 		Integer min = objectDTO.getMin();
 		Integer max = objectDTO.getMax();
@@ -5330,7 +5341,6 @@ public class Oson {
 		
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = objectDTO.required;
 
 		Long valueToReturn = null;
 
@@ -5458,7 +5468,7 @@ public class Oson {
 	private <E> Long json2LongDefault(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = objectDTO.required;
+		boolean required = (objectDTO.required != null && objectDTO.required);
 		
 		Integer min = objectDTO.getMin();
 		Integer max = objectDTO.getMax();
@@ -5492,7 +5502,6 @@ public class Oson {
 		
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = objectDTO.required;
 
 		if (value != null && value.toString().trim().length() > 0) {
 			String valueToProcess = value.toString().trim();
@@ -5683,7 +5692,7 @@ public class Oson {
 	private <E> Integer json2IntegerDefault(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = objectDTO.required;
+		boolean required = (objectDTO.required != null && objectDTO.required);
 		
 		Integer min = objectDTO.getMin();
 		Integer max = objectDTO.getMax();
@@ -5717,7 +5726,6 @@ public class Oson {
 		
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = objectDTO.required;
 
 		if (value != null && value.toString().trim().length() > 0) {
 			String valueToProcess = value.toString().trim();
@@ -5918,7 +5926,7 @@ public class Oson {
 	private <E> Byte json2ByteDefault(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = objectDTO.required;
+		boolean required = (objectDTO.required != null && objectDTO.required);
 		
 		Integer min = objectDTO.getMin();
 		Integer max = objectDTO.getMax();
@@ -5972,7 +5980,6 @@ public class Oson {
 		
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = objectDTO.required;
 
 		if (value != null && value.toString().trim().length() > 0) {
 			String valueToProcess = value.toString().trim();
@@ -6159,7 +6166,7 @@ public class Oson {
 	private <E> Character json2CharacterDefault(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = objectDTO.required;
+		boolean required = (objectDTO.required != null && objectDTO.required);
 		
 		Integer min = objectDTO.getMin();
 		Integer max = objectDTO.getMax();
@@ -6194,7 +6201,6 @@ public class Oson {
 		
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = objectDTO.required;
 
 		if (value != null && value.toString().trim().length() > 0) {
 			String valueToProcess = value.toString().trim();
@@ -6394,7 +6400,7 @@ public class Oson {
 	private <E> Short json2ShortDefault(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = objectDTO.required;
+		boolean required = (objectDTO.required != null && objectDTO.required);
 		
 		Integer min = objectDTO.getMin();
 		Integer max = objectDTO.getMax();
@@ -6422,53 +6428,169 @@ public class Oson {
 	}
 
 
-	private <E> Object getString(FieldData objectDTO) {
-		Object value = objectDTO.valueToProcess;
-		Class<E> returnType = objectDTO.returnType;
-		boolean required = objectDTO.required;
-		String defaultValue = (String)objectDTO.getDefaultValue();
-		Integer length = objectDTO.length; // not handled yet, some dummy string might be good for testing?
-		boolean json2Java = objectDTO.json2Java;
-		
-		if (value == null || value.toString().trim().length() == 0 || value.toString().trim().equalsIgnoreCase("null")) {
-			if (getDefaultType() == JSON_INCLUDE.DEFAULT || required) {
-
-				if (defaultValue != null) {
-					return defaultValue;
-				}
-
-				return DefaultValue.string;
-			}
-
+	private <E> String json2String(FieldData objectDTO) {
+		if (objectDTO == null || !objectDTO.json2Java) {
 			return null;
 		}
 		
-		String valueToReturn = null;
-		if (value instanceof String) {
-			valueToReturn = ((String)value).trim();
-		} else {
-			valueToReturn = value.toString().trim();
+		Object value = objectDTO.valueToProcess;
+		Class<E> returnType = objectDTO.returnType;
+
+		if (value != null && value.toString().trim().length() > 0) {
+			String valueToProcess = value.toString().trim();
+
+			try {
+				Function function = objectDTO.getDeserializer();
+				
+				if (function != null) {
+					try {
+						// suppose to return String, but in case not, try to process
+						if (function instanceof Json2StringFunction) {
+							valueToProcess = ((Json2StringFunction)function).apply(valueToProcess);
+						} else {
+							
+							Object returnedValue = function.apply(valueToProcess);
+
+							if (returnedValue instanceof Optional) {
+								Optional opt = (Optional)returnedValue;
+								returnedValue = opt.orElse(null);
+							}
+							
+							if (returnedValue == null) {
+								return json2StringDefault(objectDTO);
+								
+							} else if (returnedValue instanceof String) {
+								valueToProcess = (String) returnedValue;
+
+							} else {
+								objectDTO.valueToProcess = returnedValue;
+								valueToProcess = object2Json(objectDTO);
+							}
+							
+						}
+						
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					
+				}
+				
+				if (valueToProcess != null) {
+					Integer length = objectDTO.length;
+
+					if (length != null && length < valueToProcess.length()) {
+						valueToProcess = valueToProcess.substring(0, length);
+					}
+					
+					return valueToProcess;
+				}
+	
+			} catch (Exception ex) {
+				//ex.printStackTrace();
+			}
+		
 		}
 		
-		Function function = null;
-		if (json2Java) {
-			function = getDeserializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
-			if (function != null) {
+		return json2StringDefault(objectDTO);
+	}
+	
+	
+
+
+	private <E> String string2Json(FieldData objectDTO) {
+		if (objectDTO == null || objectDTO.json2Java) {
+			return null;
+		}
+		
+		Object value = objectDTO.valueToProcess;
+		Class<E> returnType = objectDTO.returnType;
+
+		if (value != null && value.toString().trim().length() > 0) {
+			String valueToProcess = (String)value;
+
+			if (valueToProcess != null) {
 				try {
-					valueToReturn = (String)function.apply(valueToReturn);
-				} catch (Exception e) {}
-			}
-			
-		} else {
-			function = getSerializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
-			if (function != null) {
-				try {
-					return function.apply(valueToReturn);
-				} catch (Exception e) {}
+					Function function = objectDTO.getSerializer();
+					if (function != null) {
+						try {
+							if (function instanceof String2JsonFunction) {
+								valueToProcess = ((String2JsonFunction)function).apply(valueToProcess);
+								
+							} else {
+								
+								Object returnedValue = function.apply(valueToProcess);
+							
+								if (returnedValue == null) {
+									return string2JsonDefault(objectDTO);
+									
+								} else if (returnedValue instanceof String) {
+									valueToProcess = (String)returnedValue;
+									
+								} else {
+									objectDTO.valueToProcess = returnedValue;
+									valueToProcess = object2Json(objectDTO);
+								}
+								
+							}
+							
+						} catch (Exception e) {}
+					}
+
+					if (valueToProcess != null) {
+						if ( (valueToProcess.startsWith("{") && valueToProcess.endsWith("}") && valueToProcess.contains(this.getJsonClassType()))
+								|| (valueToProcess.startsWith("[") && valueToProcess.endsWith("]"))
+								) {
+							return valueToProcess;
+						}
+						
+						Integer length = objectDTO.length;
+
+						if (length != null && length < valueToProcess.length()) {
+							valueToProcess = valueToProcess.substring(0, length);
+						}
+						
+						return valueToProcess;
+					}
+
+				} catch (Exception ex) {
+					//ex.printStackTrace();
+				}
 			}
 		}
+		
+		return string2JsonDefault(objectDTO);
+	}
+		
+	private String string2JsonDefault(FieldData objectDTO) {
+		String valueToReturn = json2StringDefault(objectDTO);
+		
+		if (valueToReturn == null) {
+			return null;
+		}
+		
+		return valueToReturn.toString();
+	}
+		
+	private <E> String json2StringDefault(FieldData objectDTO) {
+		Object value = objectDTO.valueToProcess;
+		Class<E> returnType = objectDTO.returnType;
+		boolean required = (objectDTO.required != null && objectDTO.required);
+		
+		Integer min = objectDTO.getMin();
+		Integer max = objectDTO.getMax();
+		boolean json2Java = objectDTO.json2Java;
 
-		return valueToReturn;
+		if (returnType == char.class
+				|| getDefaultType() == JSON_INCLUDE.DEFAULT || required) {
+			String defaultValue = (String)objectDTO.getDefaultValue();
+			if (defaultValue != null) {
+				return defaultValue;
+			}
+
+			return DefaultValue.string;
+		}
+
+		return null;
 	}
 
 
@@ -6479,7 +6601,6 @@ public class Oson {
 		
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = objectDTO.required;
 
 		if (value != null && value.toString().trim().length() > 0) {
 			String valueToProcess = value.toString().trim();
@@ -6642,7 +6763,7 @@ public class Oson {
 	private <E> Boolean json2BooleanDefault(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = objectDTO.required;
+		boolean required = (objectDTO.required != null && objectDTO.required);
 		
 		Integer min = objectDTO.getMin();
 		Integer max = objectDTO.getMax();
@@ -6668,7 +6789,7 @@ public class Oson {
 	private <E> Enum<?> json2Enum(FieldData objectDTO) {
 		Object valueToProcess = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = objectDTO.required;
+		boolean required = (objectDTO.required != null && objectDTO.required);
 		Enum defaultValue = (Enum)objectDTO.defaultValue;
 		boolean json2Java = objectDTO.json2Java;
 
@@ -6755,7 +6876,7 @@ public class Oson {
 		Object value = objectDTO.valueToProcess;
 		Map returnObj = (Map)objectDTO.returnObj;
 		Class<Map> returnType = objectDTO.returnType;
-		boolean required = objectDTO.required;
+		boolean required = (objectDTO.required != null && objectDTO.required);
 		Map defaultValue = (Map)objectDTO.defaultValue;
 		boolean json2Java = objectDTO.json2Java;
 
@@ -6834,7 +6955,7 @@ public class Oson {
 		Object value = objectDTO.valueToProcess;
 		Collection<E> returnObj = (Collection<E>)objectDTO.returnObj;
 		Class<Collection<E>> returnType = objectDTO.returnType;
-		boolean required = objectDTO.required;
+		boolean required = (objectDTO.required != null && objectDTO.required);
 		Collection<E> defaultValue = (Collection<E>)objectDTO.defaultValue;
 		Type erasedType = objectDTO.erasedType;
 		boolean json2Java = objectDTO.json2Java;
@@ -6943,7 +7064,7 @@ public class Oson {
 		Object value = objectDTO.valueToProcess;
 		E[] returnObj = (E[])objectDTO.returnObj;
 		Class<E[]> returnType = objectDTO.returnType;
-		boolean required = objectDTO.required;
+		boolean required = (objectDTO.required != null && objectDTO.required);
 		
 		Type erasedType = objectDTO.erasedType;
 		
@@ -7060,7 +7181,7 @@ public class Oson {
 		}
 
 		if (returnType == String.class) {
-			return (E) getString(objectDTO);
+			return (E) json2String(objectDTO);
 
 		} else if (returnType == Character.class || returnType == char.class) {
 			return (E) json2Character(objectDTO);
@@ -7197,7 +7318,7 @@ public class Oson {
 			
 		} else if (returnedValue instanceof String) {
 			String str = (String) returnedValue;
-			if (objectDTO.jsonRawValue) {
+			if (objectDTO.jsonRawValue != null && objectDTO.jsonRawValue) {
 				return str;
 			} else if (objectDTO.doubleQuote) {
 				return StringUtil.doublequote(str);
@@ -7219,7 +7340,7 @@ public class Oson {
 			
 		} else if (returnedValue instanceof Character) {
 			String str = ((Character)returnedValue).toString();
-			if (objectDTO.jsonRawValue) {
+			if (objectDTO.jsonRawValue != null && objectDTO.jsonRawValue) {
 				return str;
 			} else if (objectDTO.doubleQuote) {
 				return StringUtil.doublequote(str);
@@ -7244,18 +7365,38 @@ public class Oson {
 			return ((Boolean) returnedValue).toString();
 
 		} else {
-			
-			// might lead to endless loop, so limit it here, by reducing it maxlevel by 1
-			int maxlevel = getLevel();
-			if (maxlevel > 3) {
-				this.setLevel(maxlevel - 1);
-			}
-			
 			if (Enum.class.isAssignableFrom(returnedValue.getClass())) {
+				// might lead to endless loop, so limit it here, by reducing it maxlevel by 1
+				int maxlevel = getLevel();
+				if (maxlevel > 5) {
+					this.setLevel(maxlevel - 1);
+				}
+				
 				return enum2Json(objectDTO);			
 				
 			} else {
-				return serialize(objectDTO, objectDTO.level, objectDTO.set);
+				int oldLevel = this.getLevel();
+				boolean oldPrettyPrinting = this.getPrettyPrinting();
+				Boolean oldIncludeClassTypeInJson = this.getIncludeClassTypeInJson();
+				
+				// now change it
+				this.setLevel(5);
+				this.pretty(false);
+				this.includeClassTypeInJson(true);
+				
+//				objectDTO.returnType = type;
+//				if (objectDTO.set ==  null) {
+//					objectDTO.set = new HashSet();
+//				}
+				FieldData fieldData = new FieldData(objectDTO.valueToProcess, type, false);
+				String json = serialize(fieldData, 0, new HashSet());
+				
+				// set it back
+				this.setLevel(oldLevel);
+				this.pretty(oldPrettyPrinting);
+				this.includeClassTypeInJson(oldIncludeClassTypeInJson);
+				
+				return json;
 			}
 		}
 	}
@@ -7278,8 +7419,6 @@ public class Oson {
 			objectDTO.classMapper = getGlobalizedClassMapper(returnType);
 		}
 
-		boolean required = objectDTO.required;
-		
 		if (level == 0) {
 			objectDTO.jsonRawValue = true;
 		}
@@ -7290,29 +7429,32 @@ public class Oson {
 		if (returnType == null) {
 			if (value == null) {
 				return null;
-			} else if (objectDTO.jsonRawValue) {
+			} else if (objectDTO.jsonRawValue != null && objectDTO.jsonRawValue) {
 				return value.toString();
 			} else {
 				return StringUtil.doublequote(value.toString());
 			}
 
 		} else if (returnType == String.class) {
-			value = getString(objectDTO);
+			value = string2Json(objectDTO);
 
 			if (value == null) {
 				return null;
 			}
 			
-			if (!required && (objectDTO.defaultType == JSON_INCLUDE.NON_DEFAULT || objectDTO.defaultType == JSON_INCLUDE.NON_EMPTY)) {
-				if (value.equals(DefaultValue.string)) {
-					return null;
-				}
-			}
-			
-			if (objectDTO.jsonRawValue) {
-				return value.toString();
+			String str = value.toString();
+
+			if (objectDTO.jsonRawValue != null && objectDTO.jsonRawValue) {
+				return str;
 			} else {
-				return StringUtil.doublequote(value.toString());
+				if ( (str.startsWith("{") && str.endsWith("}") && str.contains(this.getJsonClassType()))
+						|| (str.startsWith("[") && str.endsWith("]"))
+						) {
+					return str;
+					
+				} else {
+					return StringUtil.doublequote(str);
+				}
 			}
 
 			
@@ -7324,7 +7466,7 @@ public class Oson {
 				return null;
 			}
 
-			if (objectDTO.jsonRawValue) {
+			if (objectDTO.jsonRawValue != null && objectDTO.jsonRawValue) {
 				return (String) valueToReturn;
 			} else {
 				return StringUtil.doublequote(valueToReturn);
@@ -7334,7 +7476,7 @@ public class Oson {
 			String returnedValue = boolean2Json(objectDTO);
 			
 			if (returnedValue != null) {
-				if (objectDTO.jsonRawValue) {
+				if (objectDTO.jsonRawValue != null && objectDTO.jsonRawValue) {
 					return returnedValue;
 					
 				} else if ("true".equalsIgnoreCase(returnedValue)) {
@@ -7394,7 +7536,7 @@ public class Oson {
 			
 			
 			if (returnedValue != null) {
-				if (objectDTO.jsonRawValue) {
+				if (objectDTO.jsonRawValue != null && objectDTO.jsonRawValue) {
 					return returnedValue;
 					
 				} else if (StringUtil.isNumeric(returnedValue)) {
@@ -7411,7 +7553,7 @@ public class Oson {
 			String returnedValue = date2Json(objectDTO);
 			
 			if (returnedValue != null) {
-				if (objectDTO.jsonRawValue) {
+				if (objectDTO.jsonRawValue != null && objectDTO.jsonRawValue) {
 					return returnedValue;
 					
 				} else if (StringUtil.isNumeric(returnedValue)) {
@@ -8147,7 +8289,7 @@ public class Oson {
 		if (set.contains(hash)) {
 			return "{}";
 		} else {
-			set.add(ObjectUtil.hashCode(obj));
+			set.add(hash);
 		}
 		
 		// first build up the class-level processing rules
@@ -8396,8 +8538,8 @@ public class Oson {
 					
 					// field and getter should be treated the same way, if allowed in the class level
 					// might not be 100% correct, as the useAttribute as not be applied from annotations yet
-					if (getter != null && (javaFieldMapper.useAttribute == null && (mapper.useAttribute == null || mapper.useAttribute))
-							|| (javaFieldMapper.useAttribute != null && javaFieldMapper.useAttribute) ) {
+					if (getter != null && ((javaFieldMapper == null || javaFieldMapper.useAttribute == null) && (mapper.useAttribute == null || mapper.useAttribute))
+							|| (javaFieldMapper != null && javaFieldMapper.useAttribute != null && javaFieldMapper.useAttribute) ) {
 						annotations = Stream
 								.concat(Arrays.stream(annotations),
 										Arrays.stream(getter.getDeclaredAnnotations()))
@@ -8723,9 +8865,9 @@ public class Oson {
 				}
 
 
-				if (mapper.jsonValue) {
+				if (mapper.jsonValue != null && mapper.jsonValue) {
 					if (value != null) {
-						if (mapper.jsonRawValue) {
+						if (mapper.jsonRawValue != null && mapper.jsonRawValue) {
 							return value.toString();
 						} else {
 							return StringUtil.doublequote(value);
@@ -9097,7 +9239,7 @@ public class Oson {
 
 				if (mapper.jsonValue != null && mapper.jsonValue) {
 					if (value != null) {
-						if (mapper.jsonRawValue) {
+						if (mapper.jsonRawValue != null && mapper.jsonRawValue) {
 							return value.toString();
 						} else {
 							return StringUtil.doublequote(value);
@@ -9866,6 +10008,10 @@ public class Oson {
 	<T> T deserialize(Map<String, Object> map, Class<T> valueType, T obj) {
 
 		Set<String> nameKeys = new HashSet(map.keySet());
+		
+		if (valueType == null) {
+			valueType = (Class<T>) obj.getClass();
+		}
 
 		// first build up the class-level processing rules
 		
@@ -10098,8 +10244,8 @@ public class Oson {
 				if (annotationSupport) {
 					annotations = f.getAnnotations();
 					
-					if (setter != null && (javaFieldMapper.useAttribute == null && (mapper.useAttribute == null || mapper.useAttribute))
-							|| (javaFieldMapper.useAttribute != null && javaFieldMapper.useAttribute) ) {
+					if (setter != null && ((javaFieldMapper == null || javaFieldMapper.useAttribute == null) && (mapper.useAttribute == null || mapper.useAttribute))
+							|| (javaFieldMapper != null && javaFieldMapper.useAttribute != null && javaFieldMapper.useAttribute) ) {
 						annotations = Stream
 								.concat(Arrays.stream(annotations),
 										Arrays.stream(setter.getDeclaredAnnotations()))
@@ -12284,6 +12430,16 @@ public class Oson {
 	@FunctionalInterface
 	public static interface Json2ClassDataFunction <T> extends OsonFunction {
 		public T apply(String t);
+	}
+	
+	@FunctionalInterface
+	public static interface String2JsonFunction extends OsonFunction {
+		public String apply(String t);
+	}
+	
+	@FunctionalInterface
+	public static interface Json2StringFunction extends OsonFunction {
+		public String apply(String t);
 	}
 	
 }
