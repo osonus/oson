@@ -371,20 +371,13 @@ public class Oson {
 			} else if (Map.class.isAssignableFrom(type)) {
 				Map map = (Map)obj;
 				return (map.size() == 0);
-			} else if (type.isArray()) {
-				Object[] array = (Object[])obj;
 				
-				if (array.length == 0) {
+			} else if (type.isArray()) {
+				if (Array.getLength(obj) == 0) {
 					return true;
 				}
 				
-				for (Object item: array) {
-					if (!isDefault(item)) {
-						return false;
-					}
-				}
-				
-				return true;
+				return false;
 
 			} else if (obj instanceof Character || type == char.class) {
 				return DefaultValue.character.equals(obj);
@@ -1874,7 +1867,7 @@ public class Oson {
 		}
 	}
 
-	private static class FieldData<T, E> {
+	private static class FieldData<T, E, R> {
 		public T enclosingObj;
 		public Field field;
 		public Object valueToProcess;
@@ -1882,6 +1875,8 @@ public class Oson {
 		public E returnObj = null;
 		public Type erasedType = null;
 		public boolean json2Java = true;
+		
+		public Class<R> componentType = null;
 		
 		// extra field information
 		public Method getter;
@@ -3931,8 +3926,17 @@ public class Oson {
 								
 								Object returnedValue = function.apply(valueToProcess);
 							
+								if (returnedValue instanceof Optional) {
+									Optional opt = (Optional)returnedValue;
+									returnedValue = opt.orElse(null);
+								}
+								
 								if (returnedValue == null) {
 									return double2JsonDefault(objectDTO);
+									
+								} else if (returnedValue instanceof Double) {
+									valueToProcess = (Double) returnedValue;
+									
 								} else {
 									objectDTO.valueToProcess = returnedValue;
 									return object2String(objectDTO);
@@ -4165,8 +4169,17 @@ public class Oson {
 								
 								Object returnedValue = function.apply(valueToProcess);
 							
+								if (returnedValue instanceof Optional) {
+									Optional opt = (Optional)returnedValue;
+									returnedValue = opt.orElse(null);
+								}
+								
 								if (returnedValue == null) {
 									return float2JsonDefault(objectDTO);
+									
+								} else if (returnedValue instanceof Float) {
+									valueToProcess = (Float) returnedValue;
+									
 								} else {
 									objectDTO.valueToProcess = returnedValue;
 									return object2String(objectDTO);
@@ -4351,8 +4364,17 @@ public class Oson {
  								
  								Object returnedValue = function.apply(valueToProcess);
  							
+								if (returnedValue instanceof Optional) {
+									Optional opt = (Optional)returnedValue;
+									returnedValue = opt.orElse(null);
+								}
+ 								
  								if (returnedValue == null) {
  									return date2JsonDefault(objectDTO);
+ 									
+								} else if (returnedValue instanceof Date) {
+									valueToProcess = (Date) returnedValue;
+ 									
  								} else {
  									objectDTO.valueToProcess = returnedValue;
  									return object2String(objectDTO);
@@ -4561,8 +4583,17 @@ public class Oson {
 								
 								Object returnedValue = function.apply(valueToProcess);
 							
+								if (returnedValue instanceof Optional) {
+									Optional opt = (Optional)returnedValue;
+									returnedValue = opt.orElse(null);
+								}
+								
 								if (returnedValue == null) {
 									return bigDecimal2JsonDefault(objectDTO);
+									
+								} else if (returnedValue instanceof BigDecimal) {
+									valueToProcess = (BigDecimal) returnedValue;
+									
 								} else {
 									objectDTO.valueToProcess = returnedValue;
 									return object2String(objectDTO);
@@ -4793,8 +4824,17 @@ public class Oson {
 								
 								Object returnedValue = function.apply(valueToProcess);
 							
+								if (returnedValue instanceof Optional) {
+									Optional opt = (Optional)returnedValue;
+									returnedValue = opt.orElse(null);
+								}
+								
 								if (returnedValue == null) {
 									return bigInteger2JsonDefault(objectDTO);
+									
+								} else if (returnedValue instanceof BigInteger) {
+									valueToProcess = (BigInteger) returnedValue;
+								
 								} else {
 									objectDTO.valueToProcess = returnedValue;
 									return object2String(objectDTO);
@@ -5019,8 +5059,17 @@ public class Oson {
 								
 								Object returnedValue = function.apply(valueToProcess);
 							
+								if (returnedValue instanceof Optional) {
+									Optional opt = (Optional)returnedValue;
+									returnedValue = opt.orElse(null);
+								}
+								
 								if (returnedValue == null) {
 									return atomicInteger2JsonDefault(objectDTO);
+									
+								} else if (returnedValue instanceof AtomicInteger) {
+									valueToProcess = (AtomicInteger) returnedValue;
+									
 								} else {
 									objectDTO.valueToProcess = returnedValue;
 									return object2String(objectDTO);
@@ -5245,8 +5294,17 @@ public class Oson {
 								
 								Object returnedValue = function.apply(valueToProcess);
 							
+								if (returnedValue instanceof Optional) {
+									Optional opt = (Optional)returnedValue;
+									returnedValue = opt.orElse(null);
+								}
+								
 								if (returnedValue == null) {
 									return atomicLong2JsonDefault(objectDTO);
+									
+								} else if (returnedValue instanceof AtomicLong) {
+									valueToProcess = (AtomicLong) returnedValue;
+									
 								} else {
 									objectDTO.valueToProcess = returnedValue;
 									return object2String(objectDTO);
@@ -5354,9 +5412,18 @@ public class Oson {
 						} else {
 							
 							Object returnedValue = function.apply(valueToProcess);
+							
+							if (returnedValue instanceof Optional) {
+								Optional opt = (Optional)returnedValue;
+								returnedValue = opt.orElse(null);
+							}
 						
 							if (returnedValue == null) {
 								return integer2JsonDefault(objectDTO);
+								
+							} else if (returnedValue instanceof Long) {
+								valueToProcess = (Long) returnedValue;
+								
 							} else {
 								objectDTO.valueToProcess = returnedValue;
 								return object2String(objectDTO);
@@ -5700,8 +5767,17 @@ public class Oson {
 								
 								Object returnedValue = function.apply(valueToProcess);
 							
+								if (returnedValue instanceof Optional) {
+									Optional opt = (Optional)returnedValue;
+									returnedValue = opt.orElse(null);
+								}
+								
 								if (returnedValue == null) {
 									return integer2JsonDefault(objectDTO);
+									
+								} else if (returnedValue instanceof Integer) {
+									valueToProcess = (Integer) returnedValue;
+									
 								} else {
 									objectDTO.valueToProcess = returnedValue;
 									return object2String(objectDTO);
@@ -5933,9 +6009,18 @@ public class Oson {
 							} else {
 								
 								Object returnedValue = function.apply(valueToProcess);
+								
+								if (returnedValue instanceof Optional) {
+									Optional opt = (Optional)returnedValue;
+									returnedValue = opt.orElse(null);
+								}
 							
 								if (returnedValue == null) {
 									return byte2JsonDefault(objectDTO);
+									
+								} else if (returnedValue instanceof Byte) {
+									valueToProcess = (Byte) returnedValue;
+									
 								} else {
 									objectDTO.valueToProcess = returnedValue;
 									return object2String(objectDTO);
@@ -6170,11 +6255,16 @@ public class Oson {
 								
 								Object returnedValue = function.apply(valueToProcess);
 							
+								if (returnedValue instanceof Optional) {
+									Optional opt = (Optional)returnedValue;
+									returnedValue = opt.orElse(null);
+								}
+								
 								if (returnedValue == null) {
 									return character2JsonDefault(objectDTO);
 									
 								} else if (returnedValue instanceof Character || returnedValue.getClass() == char.class) {
-									return ((Character)returnedValue).toString();
+									valueToProcess = (Character)returnedValue;
 									
 								} else {
 									objectDTO.valueToProcess = returnedValue;
@@ -6408,8 +6498,17 @@ public class Oson {
 								
 								Object returnedValue = function.apply(valueToProcess);
 							
+								if (returnedValue instanceof Optional) {
+									Optional opt = (Optional)returnedValue;
+									returnedValue = opt.orElse(null);
+								}
+								
 								if (returnedValue == null) {
 									return short2JsonDefault(objectDTO);
+									
+								} else if (returnedValue instanceof Short) {
+									valueToProcess = (Short) returnedValue;
+									
 								} else {
 									objectDTO.valueToProcess = returnedValue;
 									return object2String(objectDTO);
@@ -6780,8 +6879,17 @@ public class Oson {
 								
 								Object returnedValue = function.apply(valueToProcess);
 							
+								if (returnedValue instanceof Optional) {
+									Optional opt = (Optional)returnedValue;
+									returnedValue = opt.orElse(null);
+								}
+								
 								if (returnedValue == null) {
 									return boolean2JsonDefault(objectDTO);
+									
+								} else if (returnedValue instanceof Boolean) {
+									valueToProcess = (Boolean) returnedValue;
+									
 								} else {
 									objectDTO.valueToProcess = returnedValue;
 									return object2String(objectDTO);
@@ -7126,6 +7234,104 @@ public class Oson {
 		return type;
 	}
 	
+	
+	
+	private int[] json2ArrayInt(Collection<Integer> values) {
+		int size = values.size();
+		int[] arr = new int[size];
+		int i = 0;
+		for (Integer value: values) {
+			if (value != null) {
+				arr[i] = value.intValue();
+			}
+			i++;
+		}
+		return arr;
+	}
+	private byte[] json2ArrayByte(Collection<Integer> values) {
+		int size = values.size();
+		byte[] arr = new byte[size];
+		int i = 0;
+		for (Integer value: values) {
+			if (value != null) {
+				arr[i] = value.byteValue();
+			}
+			i++;
+		}
+		return arr;
+	}
+	private char[] json2ArrayChar(Collection<String> values) {
+		int size = values.size();
+		char[] arr = new char[size];
+		int i = 0;
+		for (String value: values) {
+			if (value != null) {
+				arr[i] = value.charAt(0);
+			}
+			i++;
+		}
+		return arr;
+	}
+	private float[] json2ArrayFloat(Collection<Double> values) {
+		int size = values.size();
+		float[] arr = new float[size];
+		int i = 0;
+		for (Double value: values) {
+			if (value != null) {
+				arr[i] = value.floatValue();
+			}
+			i++;
+		}
+		return arr;
+	}
+	private double[] json2ArrayDouble(Collection<Double> values) {
+		int size = values.size();
+		double[] arr = new double[size];
+		int i = 0;
+		for (Double value: values) {
+			if (value != null) {
+				arr[i] = value;
+			}
+			i++;
+		}
+		return arr;
+	}
+	private long[] json2ArrayLong(Collection<Integer> values) {
+		int size = values.size();
+		long[] arr = new long[size];
+		int i = 0;
+		for (Integer value: values) {
+			if (value != null) {
+				arr[i] = value;
+			}
+			i++;
+		}
+		return arr;
+	}
+	private short[] json2ArrayShort(Collection<Integer> values) {
+		int size = values.size();
+		short[] arr = new short[size];
+		int i = 0;
+		for (Integer value: values) {
+			if (value != null) {
+				arr[i] = value.shortValue();
+			}
+			i++;
+		}
+		return arr;
+	}
+	private boolean[] json2ArrayBoolean(Collection<Boolean> values) {
+		int size = values.size();
+		boolean[] arr = new boolean[size];
+		int i = 0;
+		for (Boolean value: values) {
+			if (value != null) {
+				arr[i] = value;
+			}
+			i++;
+		}
+		return arr;
+	}
 
 	private <E> E[] json2Array(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
@@ -7149,15 +7355,9 @@ public class Oson {
 		}
 		
 		if (value != null && value.toString().length() > 0) {	
-			Collection<E> values = null;
-			Class<?> valueType = value.getClass();
-			if (Collection.class.isAssignableFrom(valueType)) {
-				values = (Collection<E>) value;
-			} else if (valueType.isArray()) {
-				values = Arrays.asList((E[]) value);
-			}
+			Collection<E> values = (Collection<E>) value;
+			Class<?> valueType = values.getClass();
 			
-
 			int size = values.size();
 			if (size > 0) {
 				Function function = objectDTO.getDeserializer();
@@ -7209,22 +7409,24 @@ public class Oson {
 					}
 				}
 				
-				Class<E> componentType = null;
-				
-				if (objectDTO.erasedType != null) {
-					componentType = ObjectUtil.getTypeComponentClass(objectDTO.erasedType);
-				} else {
-					componentType = (Class<E>) returnType.getComponentType();
-				}
+				Class<E> componentType = objectDTO.componentType;
 				
 				if (componentType == null) {
-					componentType = CollectionArrayTypeGuesser.guessElementType(values, (Class<Collection<E>>)values.getClass(),  getJsonClassType());
-				}
-				
-				if (componentType == null) componentType = (Class<E>) Object.class;
-				
-				if (componentType.isPrimitive()) {
-					componentType = getObjectType(componentType);
+					if (objectDTO.erasedType != null) {
+						componentType = ObjectUtil.getTypeComponentClass(objectDTO.erasedType);
+					} else {
+						componentType = (Class<E>) returnType.getComponentType();
+					}
+					
+					if (componentType == null) {
+						componentType = CollectionArrayTypeGuesser.guessElementType(values, (Class<Collection<E>>)values.getClass(),  getJsonClassType());
+					}
+					
+					if (componentType == null) componentType = (Class<E>) Object.class;
+					
+					if (componentType.isPrimitive()) {
+						componentType = getObjectType(componentType);
+					}
 				}
 				
 				E[] arr = (E[]) Array.newInstance(componentType, values.size());
@@ -7443,7 +7645,56 @@ public class Oson {
 			return (E) json2Collection(objectDTO);
 
 		} else if (returnType.isArray()) {
-			return (E) json2Array(objectDTO);
+			
+			Class<E> componentType = null;
+			
+			if (objectDTO.erasedType != null) {
+				componentType = ObjectUtil.getTypeComponentClass(objectDTO.erasedType);
+			} else {
+				componentType = (Class<E>) returnType.getComponentType();
+			}
+			
+			Collection<E> values = null;
+			Class<?> valueType = value.getClass();
+			if (Collection.class.isAssignableFrom(valueType)) {
+				values = (Collection<E>) value;
+			} else if (valueType.isArray()) {
+				values = Arrays.asList((E[]) value);
+			}
+			objectDTO.valueToProcess = values;
+			
+			if (componentType == null) {
+				componentType = CollectionArrayTypeGuesser.guessElementType(values, (Class<Collection<E>>)values.getClass(),  getJsonClassType());
+			}
+			
+			if (componentType == null) componentType = (Class<E>) Object.class;
+			
+			objectDTO.componentType = componentType;
+			
+			if (componentType.isPrimitive()) {
+				if (componentType == int.class) {
+					return (E)json2ArrayInt((Collection<Integer>) values);
+				} else if (componentType == byte.class) {
+					return (E)json2ArrayByte((Collection<Integer>) values);
+				} else if (componentType == char.class) {
+					return (E)json2ArrayChar((Collection<String>) values);
+				} else if (componentType == float.class) {
+					return (E)json2ArrayFloat((Collection<Double>) values);
+				} else if (componentType == double.class) {
+					return (E)json2ArrayDouble((Collection<Double>) values);
+				} else if (componentType == long.class) {
+					return (E)json2ArrayLong((Collection<Integer>) values);
+				} else if (componentType == short.class) {
+					return (E)json2ArrayShort((Collection<Integer>) values);
+				} else if (componentType == boolean.class) {
+					return (E)json2ArrayBoolean((Collection<Boolean>) values);
+				} else {
+					return null;
+				}
+				
+			} else {
+				return (E) json2Array(objectDTO);
+			}
 
 		} else if (Map.class.isAssignableFrom(returnType)) {
 			return (E) getMap(objectDTO);
@@ -7487,6 +7738,11 @@ public class Oson {
 						
 						Object returnedValue = function.apply(en);
 					
+						if (returnedValue instanceof Optional) {
+							Optional opt = (Optional)returnedValue;
+							returnedValue = opt.orElse(null);
+						}
+						
 						if (returnedValue == null) {
 							//return null; // just ignore it, right?
 						} else if (Enum.class.isAssignableFrom(returnedValue.getClass())) {
@@ -7750,6 +8006,16 @@ public class Oson {
 		}
 		
 		Object value = objectDTO.valueToProcess;
+		
+		if (value instanceof Optional) {
+			Optional opt = (Optional)value;
+			value = opt.orElse(null);
+			
+			if (value != null) {
+				objectDTO.returnType = value.getClass();
+			}
+		}
+		
 		Class<?> returnType = objectDTO.returnType;
 		
 		if (returnType == null) {
