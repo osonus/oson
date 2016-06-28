@@ -124,9 +124,9 @@ public class ByteTest extends TestCaseBase {
 	   
 	   @Test
 	   public void testSerializeByteWithMax() {
-		   Byte value = 100;
-		   Integer max = 300;
-		   String expected = "100";
+		   Byte value = 127;
+		   Integer max = 125;
+		   String expected = max + "";
 		   
 		   oson.setClassMappers(new ClassMapper(Byte.class).setMax(max));
 		   

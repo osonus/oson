@@ -28,7 +28,6 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.text.DateFormat;
@@ -59,7 +58,6 @@ import java.util.stream.Stream;
 import javax.persistence.Column;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.json.JSONArray;
@@ -73,8 +71,6 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.commons.EmptyVisitor;
 
-import ca.oson.json.Oson.ClassMapper;
-
 import com.fasterxml.jackson.databind.introspect.AnnotatedField;
 import com.fasterxml.jackson.databind.introspect.AnnotatedMethod;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
@@ -82,7 +78,6 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -710,6 +705,13 @@ public class Oson {
 			return this;
 		}
 		
+		public boolean ignore() {
+			if (ignore != null && ignore) {
+				return true;
+			}
+			return false;
+		}
+		
 		public Class<T> type;
 
 		// class level
@@ -1037,6 +1039,14 @@ public class Oson {
 		 */
 		public void setPrecision(Integer precision) {
 			this.precision = precision;
+		}
+		
+		public boolean isJsonRawValue() {
+			if (jsonRawValue != null && jsonRawValue) {
+				return true;
+			} else {
+				return false;
+			}
 		}
 		
 		// how to match field name, and its enclosing class
@@ -1891,16 +1901,37 @@ public class Oson {
 		Integer max = null; // default (int) 2147483647;
 
 		public Object defaultValue = null;
-		public Boolean jsonRawValue = false;
+		public Boolean jsonRawValue = null;
 		
-		public int level;
-		public Set set;
+		private int level = 0;
+		private Set set;
 		// for internal use
 		public boolean doubleQuote = false;
 		
+		public void incrLevel() {
+			this.level++;
+		}
+		
+		//true if this set did not already contain the specified element
+		public boolean goAhead(int hash) {
+			return set.add(hash) || level < 2;
+		}
+		
+		public boolean isJsonRawValue() {
+			if (level == 0 || (jsonRawValue != null && jsonRawValue)) {
+				return true;
+			} else {
+				return false;
+			}
+		}
 
 		public FieldData(T enclosingObj, Field field, Object valueToProcess,
 				Class<E> returnType, boolean json2Java, FieldMapper mapper) {
+			this(enclosingObj, field, valueToProcess, returnType, json2Java, mapper, 0, Collections.synchronizedSet(new HashSet()));
+		}
+
+		public FieldData(T enclosingObj, Field field, Object valueToProcess,
+				Class<E> returnType, boolean json2Java, FieldMapper mapper, int level, Set set) {
 			this.enclosingObj = enclosingObj; // enclosing object
 			this.field = field;
 			this.valueToProcess = valueToProcess;
@@ -1917,35 +1948,53 @@ public class Oson {
 			this.max = mapper.max;
 			this.defaultValue = mapper.defaultValue;
 			this.jsonRawValue = mapper.jsonRawValue;
+			
+			this.level = level;
+			this.set = set;
 		}
-
 
 		public FieldData(Object valueToProcess, Class<E> returnType) {
 			this.valueToProcess = valueToProcess;
 			this.returnType = returnType;
+			this.level = 0;
+			this.set = Collections.synchronizedSet(new HashSet());
+		}
+
+		
+		public FieldData(Object valueToProcess, Class<E> returnType, boolean json2Java, E returnObj) {
+			this.valueToProcess = valueToProcess;
+			this.returnType = returnType;
+			this.json2Java = json2Java;
+			this.returnObj = returnObj;
+			this.level = 0;
+			this.set = Collections.synchronizedSet(new HashSet());
 		}
 
 		public FieldData(Object valueToProcess, Class<E> returnType, boolean json2Java) {
-			this(valueToProcess, returnType);
+			this.valueToProcess = valueToProcess; // value to interpret
+			this.returnType = returnType; // generic type information
 			this.json2Java = json2Java;
+			this.level = 0;
+			this.set = Collections.synchronizedSet(new HashSet());
 		}
 		
-		public FieldData(Object valueToProcess, Class<E> returnType, boolean json2Java, E returnObj) {
-			this(valueToProcess, returnType, json2Java);
-			this.returnObj = returnObj;
-		}
-
-		public FieldData(Object valueToProcess, Class<E> returnType, boolean json2Java, Type type) {
-			this(valueToProcess, returnType, json2Java);
-			this.erasedType = type; // generic type information
-		}
-
 		public FieldData(Object valueToProcess, Type type, boolean json2Java) {
 			this.valueToProcess = valueToProcess; // value to interpret
 			this.erasedType = type; // generic type information
 			this.json2Java = json2Java;
+			this.level = 0;
+			this.set = Collections.synchronizedSet(new HashSet());
 		}
+		
 
+		public FieldData(Object valueToProcess, Class<E> returnType, boolean json2Java, int level, Set set) {
+			this.valueToProcess = valueToProcess;
+			this.returnType = returnType;
+			this.json2Java = json2Java;
+			this.level = level;
+			this.set = set;
+		}
+		
 
 		public Class getEnclosingType() {
 			if (enclosingtype != null) {
@@ -2442,7 +2491,7 @@ public class Oson {
 	private InstanceCreator getTypeAdapter(Class type) {
 		ClassMapper classMapper = getClassMapper(type);
 		
-		if (classMapper == null || classMapper.ignore) {
+		if (classMapper == null || classMapper.ignore()) {
 			return null;
 		}
 		
@@ -3886,7 +3935,7 @@ public class Oson {
 									return double2JsonDefault(objectDTO);
 								} else {
 									objectDTO.valueToProcess = returnedValue;
-									return object2Json(objectDTO);
+									return object2String(objectDTO);
 								}
 								
 							}
@@ -4120,7 +4169,7 @@ public class Oson {
 									return float2JsonDefault(objectDTO);
 								} else {
 									objectDTO.valueToProcess = returnedValue;
-									return object2Json(objectDTO);
+									return object2String(objectDTO);
 								}
 								
 							}
@@ -4306,7 +4355,7 @@ public class Oson {
  									return date2JsonDefault(objectDTO);
  								} else {
  									objectDTO.valueToProcess = returnedValue;
- 									return object2Json(objectDTO);
+ 									return object2String(objectDTO);
  								}
  								
  							}
@@ -4341,7 +4390,7 @@ public class Oson {
  		}
  		
 		objectDTO.valueToProcess = valueToReturn;
-		return object2Json(objectDTO);
+		return object2String(objectDTO);
  	}
  		
  	private <E> Date json2DateDefault(FieldData objectDTO) {
@@ -4516,7 +4565,7 @@ public class Oson {
 									return bigDecimal2JsonDefault(objectDTO);
 								} else {
 									objectDTO.valueToProcess = returnedValue;
-									return object2Json(objectDTO);
+									return object2String(objectDTO);
 								}
 								
 							}
@@ -4748,7 +4797,7 @@ public class Oson {
 									return bigInteger2JsonDefault(objectDTO);
 								} else {
 									objectDTO.valueToProcess = returnedValue;
-									return object2Json(objectDTO);
+									return object2String(objectDTO);
 								}
 								
 							}
@@ -4974,7 +5023,7 @@ public class Oson {
 									return atomicInteger2JsonDefault(objectDTO);
 								} else {
 									objectDTO.valueToProcess = returnedValue;
-									return object2Json(objectDTO);
+									return object2String(objectDTO);
 								}
 								
 							}
@@ -5200,7 +5249,7 @@ public class Oson {
 									return atomicLong2JsonDefault(objectDTO);
 								} else {
 									objectDTO.valueToProcess = returnedValue;
-									return object2Json(objectDTO);
+									return object2String(objectDTO);
 								}
 								
 							}
@@ -5310,7 +5359,7 @@ public class Oson {
 								return integer2JsonDefault(objectDTO);
 							} else {
 								objectDTO.valueToProcess = returnedValue;
-								return object2Json(objectDTO);
+								return object2String(objectDTO);
 							}
 							
 						}
@@ -5655,7 +5704,7 @@ public class Oson {
 									return integer2JsonDefault(objectDTO);
 								} else {
 									objectDTO.valueToProcess = returnedValue;
-									return object2Json(objectDTO);
+									return object2String(objectDTO);
 								}
 								
 							}
@@ -5889,7 +5938,7 @@ public class Oson {
 									return byte2JsonDefault(objectDTO);
 								} else {
 									objectDTO.valueToProcess = returnedValue;
-									return object2Json(objectDTO);
+									return object2String(objectDTO);
 								}
 								
 							}
@@ -6129,7 +6178,7 @@ public class Oson {
 									
 								} else {
 									objectDTO.valueToProcess = returnedValue;
-									return object2Json(objectDTO);
+									return object2String(objectDTO);
 								}
 								
 							}
@@ -6363,7 +6412,7 @@ public class Oson {
 									return short2JsonDefault(objectDTO);
 								} else {
 									objectDTO.valueToProcess = returnedValue;
-									return object2Json(objectDTO);
+									return object2String(objectDTO);
 								}
 								
 							}
@@ -6472,7 +6521,7 @@ public class Oson {
 
 							} else {
 								objectDTO.valueToProcess = returnedValue;
-								valueToProcess = object2Json(objectDTO);
+								valueToProcess = object2String(objectDTO);
 							}
 							
 						}
@@ -6536,7 +6585,7 @@ public class Oson {
 									
 								} else {
 									objectDTO.valueToProcess = returnedValue;
-									valueToProcess = object2Json(objectDTO);
+									valueToProcess = object2String(objectDTO);
 								}
 								
 							}
@@ -6545,9 +6594,7 @@ public class Oson {
 					}
 
 					if (valueToProcess != null) {
-						if ( (valueToProcess.startsWith("{") && valueToProcess.endsWith("}") && valueToProcess.contains(this.getJsonClassType()))
-								|| (valueToProcess.startsWith("[") && valueToProcess.endsWith("]"))
-								) {
+						if ( isMapListArrayObject(valueToProcess) ) {
 							return valueToProcess;
 						}
 						
@@ -6737,7 +6784,7 @@ public class Oson {
 									return boolean2JsonDefault(objectDTO);
 								} else {
 									objectDTO.valueToProcess = returnedValue;
-									return object2Json(objectDTO);
+									return object2String(objectDTO);
 								}
 								
 							}
@@ -6866,8 +6913,7 @@ public class Oson {
 			}
 		}
 
-		FieldData fieldData = new FieldData(value, int.class, true);
-		fieldData.json2Java = true;
+		FieldData fieldData = new FieldData(value, Integer.class, true);
 		Integer ordinal = json2Integer(fieldData);
 
 		for (Enum enumValue : enumType.getEnumConstants()) {
@@ -6950,7 +6996,7 @@ public class Oson {
 
 		for (Entry<String, Object> entry: values.entrySet()) {
 			Object obj = entry.getValue();
-			FieldData newFieldData = new FieldData(obj, obj.getClass());
+			FieldData newFieldData = new FieldData(obj, obj.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
 			newFieldData.json2Java = objectDTO.json2Java;
 			returnObj.put(entry.getKey(), json2Object(newFieldData));
 		}
@@ -6959,7 +7005,7 @@ public class Oson {
 	}
 
 
-	private <E> Object json2Collection(FieldData objectDTO) {
+	private <E> Collection json2Collection(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Collection<E> returnObj = (Collection<E>)objectDTO.returnObj;
 		Class<Collection<E>> returnType = objectDTO.returnType;
@@ -7044,8 +7090,7 @@ public class Oson {
 				}
 		
 				for (E val : collection) {
-					FieldData newFieldData = new FieldData(val, componentType);
-					newFieldData.json2Java = objectDTO.json2Java;
+					FieldData newFieldData = new FieldData(val, componentType, objectDTO.json2Java, objectDTO.level, objectDTO.set);
 					returnObj.add(json2Object(newFieldData));
 				}
 				
@@ -7057,17 +7102,13 @@ public class Oson {
 	}
 
 
-	/*
-	 * deserialize only
-	 */
-	private <E> Object getArray(FieldData objectDTO) {
+	private <E> E[] json2Array(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		E[] returnObj = (E[])objectDTO.returnObj;
 		Class<E[]> returnType = objectDTO.returnType;
-		boolean required = (objectDTO.required != null && objectDTO.required);
-		
+		E[] defaultValue = (E[])objectDTO.defaultValue;
 		Type erasedType = objectDTO.erasedType;
-		
+
 		if (returnType == null) {
 			if (erasedType != null) {
 				returnType = ObjectUtil.getTypeClass(erasedType);
@@ -7082,8 +7123,7 @@ public class Oson {
 			}
 		}
 		
-		
-		if (value != null && value.toString().length() > 0) {
+		if (value != null && value.toString().length() > 0) {	
 			Collection<E> values = null;
 			Class<?> valueType = value.getClass();
 			if (Collection.class.isAssignableFrom(valueType)) {
@@ -7092,76 +7132,216 @@ public class Oson {
 				values = Arrays.asList((E[]) value);
 			}
 			
-			Class<E> componentType = (Class<E>) returnType.getComponentType();
-			
-			if (objectDTO.erasedType != null) {
-				componentType = ObjectUtil.getTypeComponentClass(objectDTO.erasedType);
-			}
-			
-			if (values != null) {
+
+			int size = values.size();
+			if (size > 0) {
+				Function function = objectDTO.getDeserializer();
+
+				if (function != null) {
+					try {
+						// suppose to return String, but in case not, try to process
+						if (function instanceof Json2ClassDataFunction) {
+							ClassData classData = new ClassData(returnType, values, objectDTO.classMapper);
+							Collection collection = ((Json2ClassDataFunction)function).apply(classData);
+							return (E[]) collection.toArray();
+							
+						} else if (function instanceof Json2ArrayFunction) {
+							return (E[]) ((Json2ArrayFunction)function).apply(values);
+								
+						} else {
+							
+							Object returnedValue = function.apply(values);
+						
+							if (returnedValue == null) {
+								return json2ArrayDefault(objectDTO);
+								
+							} else if (returnedValue.getClass().isArray()) {
+								return (E[]) returnedValue;
+								
+							} else if (Collection.class.isAssignableFrom(returnedValue.getClass())) {
+								Collection collection = (Collection)returnedValue;
+								return (E[]) collection.toArray();
+
+							} else {
+								// do not know what to do
+							}
+						}
+					} catch (Exception e) {}
+				}
+
+				
+				if (returnObj == null) {
+					if (defaultValue != null) {
+						returnObj = defaultValue;
+					}
+		
+					if (returnObj == null) {
+						returnObj = (E[]) newInstance(new HashMap(), returnType);
+					}
+		
+					if (returnObj == null) {
+						returnObj = (E[]) DefaultValue.array();
+					}
+				}
+				
+				Class<E> componentType = null;
+				
+				if (objectDTO.erasedType != null) {
+					componentType = ObjectUtil.getTypeComponentClass(objectDTO.erasedType);
+				} else {
+					componentType = (Class<E>) returnType.getComponentType();
+				}
+				
 				if (componentType == null) {
 					componentType = CollectionArrayTypeGuesser.guessElementType(values, (Class<Collection<E>>)values.getClass(),  getJsonClassType());
 				}
 				
 				if (componentType == null) componentType = (Class<E>) Object.class;
 				
-				if (values.size() > 0) {
-					boolean json2Java = objectDTO.json2Java;
-					Function function = null;
-					if (json2Java) {
-						function = getDeserializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
-						if (function != null) {
-							try {
-								return function.apply(values);
-							} catch (Exception e) {}
-						}
-						
-					} else {
-						function = getSerializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
-						if (function != null) {
-							try {
-								return function.apply(values);
-							} catch (Exception e) {}
-						}
-					}
-					
-					
-					E[] arr = (E[]) Array.newInstance(componentType, values.size());
-	
-					int i = 0;
-					for (Object val: values) {
-						FieldData newFieldData = new FieldData(val, componentType);
-						newFieldData.json2Java = objectDTO.json2Java;
-						arr[i++] = json2Object(newFieldData);
-					}
-					
-					return arr;
+				E[] arr = (E[]) Array.newInstance(componentType, values.size());
+				
+				int i = 0;
+				for (Object val: values) {
+					FieldData newFieldData = new FieldData(val, componentType, objectDTO.json2Java, objectDTO.level, objectDTO.set);
+					newFieldData.json2Java = objectDTO.json2Java;
+					arr[i++] = json2Object(newFieldData);
 				}
+				
+				return arr;
 			}
 		}
+		
+		return json2ArrayDefault(objectDTO);
+	}
+	
+	
+	private <E> String array2Json(FieldData objectDTO) {
+		Object value = objectDTO.valueToProcess;
+		Class<?> returnType = objectDTO.returnType;
+		
+		int size = 0;
+		if (value != null && (size = Array.getLength(value)) > 0) {
+			Function function = objectDTO.getSerializer();
+			String valueToReturn = null;
+			
+			if (function != null) {
+				try {
 
-
-		if (required) {
-			if (returnObj != null) {
-				return returnObj;
+					// suppose to return String, but in case not, try to process
+					if (function instanceof ClassData2JsonFunction) {
+						ClassData classData = new ClassData(returnType, value, objectDTO.classMapper, objectDTO.level);
+						return ((ClassData2JsonFunction)function).apply(classData);
+						
+					} else if (function instanceof Array2JsonFunction) {
+						return ((Array2JsonFunction)function).apply((E[])value);
+							
+					} else {
+						
+						Object returnedValue = function.apply(value);
+	
+						if (returnedValue instanceof Optional) {
+							Optional opt = (Optional)returnedValue;
+							returnedValue = opt.orElse(null);
+						}
+						
+						if (returnedValue == null) {
+							return array2JsonDefault(objectDTO);
+							
+						} else if (Array.class.isAssignableFrom(returnedValue.getClass())) {
+							// keep on processing
+							value = returnedValue;
+							size = Array.getLength(value);
+							
+						} else {
+							objectDTO.valueToProcess = returnedValue;
+							return object2String(objectDTO);
+						}
+					}
+					
+				} catch (Exception ex) {}
+			}
+			
+			Class<E> componentType = null;
+			
+			if (objectDTO.erasedType != null) {
+				componentType = ObjectUtil.getTypeComponentClass(objectDTO.erasedType);
+			} else {
+				componentType = (Class<E>) returnType.getComponentType();
+			}
+			
+			if (componentType == null) {
+				componentType = CollectionArrayTypeGuesser.guessElementType((E[])value, value.getClass());
+			}
+			
+			if (componentType == null) componentType = (Class<E>) Object.class;
+	
+			String repeated = getPrettyIndentationln(objectDTO.level);
+			objectDTO.incrLevel();
+			String repeatedItem = getPrettyIndentationln(objectDTO.level);
+			StringBuilder sbuilder = new StringBuilder();
+			
+			for (int i = 0; i < size; i++) {
+				Object componentValue = Array.get(value, i);
+				
+				FieldData newFieldData = new FieldData(componentValue, componentType, objectDTO.json2Java, objectDTO.level, objectDTO.set);
+				String str = object2Json(newFieldData);
+				if (str != null && str.length() > 0) {
+					sbuilder.append(repeatedItem + str + ",");
+				}
 			}
 
-			E[] defaultValue = (E[])objectDTO.defaultValue;
+			String str = sbuilder.toString();
+			size = str.length();
+			if (size > 0) {
+				return "[" + str.substring(0, size - 1) + repeated + "]";
+			}
+		}
+		
+		return array2JsonDefault(objectDTO);
+	}
+	
+	
+	private <E> String array2JsonDefault(FieldData objectDTO) {
+		E[] valueToReturn = json2ArrayDefault(objectDTO);
+		
+		if (valueToReturn == null) {
+			return null;
+		}
+
+		switch (objectDTO.defaultType) {
+		case ALWAYS:
+			return "[]";
+		case NON_NULL:
+			return "[]";
+		case NON_EMPTY:
+			return null;
+		case NON_DEFAULT:
+			return null;
+		case DEFAULT:
+			return "[]";
+		default:
+			return "[]";
+		}
+	}
+
+	
+	private <E> E[] json2ArrayDefault(FieldData objectDTO) {
+		//Object value = objectDTO.valueToProcess;
+		//Class<E> returnType = objectDTO.returnType;
+		boolean required = (objectDTO.required != null && objectDTO.required);
+
+		if (getDefaultType() == JSON_INCLUDE.DEFAULT || required) {
+			E[] defaultValue = (E[])objectDTO.getDefaultValue();
 			if (defaultValue != null) {
 				return defaultValue;
-			}
-
-			returnObj = (E[]) newInstance(new HashMap(), returnType);
-
-			if (returnObj != null) {
-				return returnObj;
 			}
 
 			return (E[]) DefaultValue.array();
 		}
 
-		return returnObj;
+		return null;
 	}
+	
 
 	/*
 	 * deserialize, convert Json value to Java data
@@ -7213,8 +7393,7 @@ public class Oson {
 	
 			} else if (returnType == BigInteger.class) {
 				return (E) json2BigInteger(objectDTO);
-				
-				
+
 			} else if (returnType == AtomicInteger.class) {
 				return (E) json2AtomicInteger(objectDTO);
 				
@@ -7235,7 +7414,7 @@ public class Oson {
 			return (E) json2Collection(objectDTO);
 
 		} else if (returnType.isArray()) {
-			return (E) getArray(objectDTO);
+			return (E) json2Array(objectDTO);
 
 		} else if (Map.class.isAssignableFrom(returnType)) {
 			return (E) getMap(objectDTO);
@@ -7286,7 +7465,7 @@ public class Oson {
 							
 						} else {
 							objectDTO.valueToProcess = returnedValue;
-							return object2Json(objectDTO);
+							return object2String(objectDTO);
 						}
 						
 					}
@@ -7311,7 +7490,7 @@ public class Oson {
 	
 	
 	
-	private <E> String collection2Json(FieldData objectDTO, int level, Set set) {
+	private <E> String collection2Json(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Class<?> returnType = objectDTO.returnType;
 		
@@ -7326,7 +7505,7 @@ public class Oson {
 
 					// suppose to return String, but in case not, try to process
 					if (function instanceof ClassData2JsonFunction) {
-						ClassData classData = new ClassData(returnType, collection, objectDTO.classMapper, level);
+						ClassData classData = new ClassData(returnType, collection, objectDTO.classMapper, objectDTO.level);
 						return ((ClassData2JsonFunction)function).apply(classData);
 						
 					} else if (function instanceof Collection2JsonFunction) {
@@ -7350,7 +7529,7 @@ public class Oson {
 							
 						} else {
 							objectDTO.valueToProcess = returnedValue;
-							return object2Json(objectDTO);
+							return object2String(objectDTO);
 						}
 					}
 					
@@ -7360,15 +7539,14 @@ public class Oson {
 			Class componentType = CollectionArrayTypeGuesser
 					.guessElementType(collection, (Class<Collection<E>>) returnType, getJsonClassType());
 	
-			String repeated = getPrettyIndentationln(level);
-			String repeatedItem = getPrettyIndentationln(++level);
+			String repeated = getPrettyIndentationln(objectDTO.level);
+			objectDTO.incrLevel();
+			String repeatedItem = getPrettyIndentationln(objectDTO.level);
 			StringBuilder sbuilder = new StringBuilder();
 			try {
 				for (Object s : collection) {
-					FieldData newFieldData = new FieldData(s, componentType);
-					newFieldData.json2Java = objectDTO.json2Java;
-					
-					String str = object2Json(newFieldData, level, set);
+					FieldData newFieldData = new FieldData(s, componentType, objectDTO.json2Java, objectDTO.level, objectDTO.set);
+					String str = object2Json(newFieldData);
 					if (str != null && str.length() > 0) {
 						sbuilder.append(repeatedItem + str + ",");
 					}
@@ -7427,7 +7605,7 @@ public class Oson {
 	}
 	
 	
-	private String object2Json(FieldData objectDTO) {
+	private String object2String(FieldData objectDTO) {
 		Object returnedValue = objectDTO.valueToProcess;
 
 		if (returnedValue == null) {
@@ -7435,7 +7613,7 @@ public class Oson {
 			
 		} else if (returnedValue instanceof String) {
 			String str = (String) returnedValue;
-			if (objectDTO.jsonRawValue != null && objectDTO.jsonRawValue) {
+			if (objectDTO.isJsonRawValue()) {
 				return str;
 			} else if (objectDTO.doubleQuote) {
 				return StringUtil.doublequote(str);
@@ -7457,7 +7635,7 @@ public class Oson {
 			
 		} else if (returnedValue instanceof Character) {
 			String str = ((Character)returnedValue).toString();
-			if (objectDTO.jsonRawValue != null && objectDTO.jsonRawValue) {
+			if (objectDTO.isJsonRawValue()) {
 				return str;
 			} else if (objectDTO.doubleQuote) {
 				return StringUtil.doublequote(str);
@@ -7469,57 +7647,75 @@ public class Oson {
 			Date valueToProcess = (Date)returnedValue;
 			
 			Boolean date2Long = objectDTO.getDate2Long();
-			
-			
+
 			if (date2Long != null && date2Long) {
 				long longtoprocess = valueToProcess.getTime();
 				return valueToProcess + "";
 			} else {
-				return objectDTO.getDateFormat().format(valueToProcess);
+				String str = objectDTO.getDateFormat().format(valueToProcess);
+				
+				if (objectDTO.isJsonRawValue()) {
+					return str;
+				} else if (objectDTO.doubleQuote) {
+					return StringUtil.doublequote(str);
+				} else {
+					return str;
+				}
 			}
 			
 		} else if (returnedValue instanceof Boolean) {
 			return ((Boolean) returnedValue).toString();
 
 		} else {
-			if (Enum.class.isAssignableFrom(returnedValue.getClass())) {
-				// might lead to endless loop, so limit it here, by reducing it maxlevel by 1
-				int maxlevel = getLevel();
-				if (maxlevel > 5) {
-					this.setLevel(maxlevel - 1);
-				}
+			
+			int oldLevel = this.getLevel();
+			boolean oldPrettyPrinting = this.getPrettyPrinting();
+			Boolean oldIncludeClassTypeInJson = this.getIncludeClassTypeInJson();
+			
+			// now change it
+			this.setLevel(5);
+			this.pretty(false);
+			this.includeClassTypeInJson(true);
+			
+			String json = null;
+			
+			objectDTO.returnType = type;
+			
+			if (Enum.class.isAssignableFrom(type)) {
+				json = enum2Json(objectDTO);			
+
+			} else if (Collection.class.isAssignableFrom(type)) {
+				json = collection2Json(objectDTO);
 				
-				return enum2Json(objectDTO);			
+			} else if (type.isArray()) {
+				json = array2Json(objectDTO);
 				
 			} else {
-				int oldLevel = this.getLevel();
-				boolean oldPrettyPrinting = this.getPrettyPrinting();
-				Boolean oldIncludeClassTypeInJson = this.getIncludeClassTypeInJson();
-				
-				// now change it
-				this.setLevel(5);
-				this.pretty(false);
-				this.includeClassTypeInJson(true);
-				
-//				objectDTO.returnType = type;
-//				if (objectDTO.set ==  null) {
-//					objectDTO.set = new HashSet();
-//				}
-				FieldData fieldData = new FieldData(objectDTO.valueToProcess, type, false);
-				String json = serialize(fieldData, 0, new HashSet());
-				
-				// set it back
-				this.setLevel(oldLevel);
-				this.pretty(oldPrettyPrinting);
-				this.includeClassTypeInJson(oldIncludeClassTypeInJson);
-				
-				return json;
+				json = object2Serialize(objectDTO);
 			}
+			
+			// set it back
+			this.setLevel(oldLevel);
+			this.pretty(oldPrettyPrinting);
+			this.includeClassTypeInJson(oldIncludeClassTypeInJson);
+			
+			return json;
 		}
 	}
 	
 	
-	private <E> String object2Json(FieldData objectDTO, int level, Set set) {
+	private boolean isMapListArrayObject(String str) {
+		if ( (str.startsWith("{") && str.endsWith("}") && str.contains(this.getJsonClassType()))
+				|| (str.startsWith("[") && str.endsWith("]"))
+				) {
+			return true;
+		}
+		
+		return false;
+	}
+	
+	//, int level, Set set
+	private <E> String object2Json(FieldData objectDTO) {
 		if (objectDTO == null) {
 			return null;
 		}
@@ -7532,13 +7728,10 @@ public class Oson {
 		}
 		
 		// first, get the class mapper
-		if (objectDTO.mapper == null && objectDTO.classMapper == null) {
+		//if (objectDTO.mapper == null && objectDTO.classMapper == null) {
 			objectDTO.classMapper = getGlobalizedClassMapper(returnType);
-		}
+		//}
 
-		if (level == 0) {
-			objectDTO.jsonRawValue = true;
-		}
 		if (objectDTO.defaultType == null) {
 			objectDTO.defaultType = getDefaultType();
 		}
@@ -7546,7 +7739,7 @@ public class Oson {
 		if (returnType == null) {
 			if (value == null) {
 				return null;
-			} else if (objectDTO.jsonRawValue != null && objectDTO.jsonRawValue) {
+			} else if (objectDTO.isJsonRawValue()) {
 				return value.toString();
 			} else {
 				return StringUtil.doublequote(value.toString());
@@ -7561,12 +7754,10 @@ public class Oson {
 			
 			String str = value.toString();
 
-			if (objectDTO.jsonRawValue != null && objectDTO.jsonRawValue) {
+			if (objectDTO.isJsonRawValue()) {
 				return str;
 			} else {
-				if ( (str.startsWith("{") && str.endsWith("}") && str.contains(this.getJsonClassType()))
-						|| (str.startsWith("[") && str.endsWith("]"))
-						) {
+				if ( isMapListArrayObject(str) ) {
 					return str;
 					
 				} else {
@@ -7582,7 +7773,7 @@ public class Oson {
 				return null;
 			}
 
-			if (objectDTO.jsonRawValue != null && objectDTO.jsonRawValue) {
+			if (objectDTO.isJsonRawValue()) {
 				return (String) valueToReturn;
 			} else {
 				return StringUtil.doublequote(valueToReturn);
@@ -7592,7 +7783,7 @@ public class Oson {
 			String returnedValue = boolean2Json(objectDTO);
 			
 			if (returnedValue != null) {
-				if (objectDTO.jsonRawValue != null && objectDTO.jsonRawValue) {
+				if (objectDTO.isJsonRawValue()) {
 					return returnedValue;
 					
 				} else if ("true".equalsIgnoreCase(returnedValue)) {
@@ -7652,7 +7843,7 @@ public class Oson {
 			
 			
 			if (returnedValue != null) {
-				if (objectDTO.jsonRawValue != null && objectDTO.jsonRawValue) {
+				if (objectDTO.isJsonRawValue()) {
 					return returnedValue;
 					
 				} else if (StringUtil.isNumeric(returnedValue)) {
@@ -7669,7 +7860,7 @@ public class Oson {
 			String returnedValue = date2Json(objectDTO);
 			
 			if (returnedValue != null) {
-				if (objectDTO.jsonRawValue != null && objectDTO.jsonRawValue) {
+				if (objectDTO.isJsonRawValue()) {
 					return returnedValue;
 					
 				} else if (StringUtil.isNumeric(returnedValue)) {
@@ -7687,52 +7878,10 @@ public class Oson {
 			return enum2Json(objectDTO);
 
 		} else if (Collection.class.isAssignableFrom(returnType)) {
-			return collection2Json(objectDTO, level, set);
-
+			return collection2Json(objectDTO);
 
 		} else if (returnType.isArray()) {
-			if (value == null) {
-				return null;
-			}
-
-			Class<?> componentType = returnType.getComponentType(); // CollectionArrayTypeGuesser.getBaseType(returnType);
-
-			int size = Array.getLength(value);
-
-			
-			String repeated = getPrettyIndentationln(level);
-			String repeatedItem = getPrettyIndentationln(++level);
-			StringBuilder sbuilder = new StringBuilder();
-			for (int i = 0; i < size; i++) {
-				Object componentValue = Array.get(value, i);
-				
-				FieldData newFieldData = new FieldData(componentValue, componentType);
-				newFieldData.json2Java = objectDTO.json2Java;
-				String str = object2Json(newFieldData, level, set);
-				if (str != null && str.length() > 0) {
-					sbuilder.append(repeatedItem + str + ",");
-				}
-			}
-
-			String str = sbuilder.toString();
-			size = str.length();
-			if (size == 0) {
-				switch (objectDTO.defaultType) {
-				case ALWAYS:
-					return "[]";
-				case NON_NULL:
-					return "[]";
-				case NON_EMPTY:
-					return null;
-				case DEFAULT:
-					return "[]";
-				default:
-					return "[]";
-				}
-
-			} else {
-				return "[" + str.substring(0, size - 1) + repeated + "]";
-			}
+			return array2Json(objectDTO);
 
 		} else if (Map.class.isAssignableFrom(returnType)) {
 			if (value == null) {
@@ -7748,8 +7897,8 @@ public class Oson {
 
 			StringBuilder sbuilder = new StringBuilder();
 
-			String repeated = getPrettyIndentationln(level), pretty = getPrettySpace();
-			String repeatedItem = getPrettyIndentationln(++level);
+			String repeated = getPrettyIndentationln(objectDTO.level), pretty = getPrettySpace();
+			String repeatedItem = getPrettyIndentationln(++objectDTO.level);
 
 			//for (Map.Entry<Object, ?> entry : map.entrySet()) {
 			Set<String> names = map.keySet();
@@ -7764,9 +7913,8 @@ public class Oson {
 					if (name != null) {
 						sbuilder.append(repeatedItem + "\"" + name + "\":" + pretty);
 						
-						FieldData newFieldData = new FieldData(v, v.getClass());
-						newFieldData.json2Java = objectDTO.json2Java;
-						sbuilder.append(object2Json(newFieldData, level, set));
+						FieldData newFieldData = new FieldData(v, v.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
+						sbuilder.append(object2Json(newFieldData));
 						sbuilder.append(",");
 					}
 				}
@@ -7782,12 +7930,12 @@ public class Oson {
 				return "{" + str.substring(0, size - 1) + repeated + "}";
 			}
 
-		} else if (level < getLevel()) {
+		} else if (objectDTO.level < getLevel()) {
 			if (value == null) {
 				return null;
 			}
 
-			return serialize(objectDTO, level, set);
+			return object2Serialize(objectDTO);
 			
 		} else {
 			return "{}";
@@ -8353,7 +8501,7 @@ public class Oson {
 	 * 9. Apply annotations from Oson;
 	 * 10. Apply Java configuration for this particular field.
 	 */
-	private <T> String serialize(FieldData objectDTO , int level, Set set) {
+	private <T> String object2Serialize(FieldData objectDTO) {
 		Object obj = objectDTO.valueToProcess;
 		Class<T> valueType = objectDTO.returnType;
 		
@@ -8362,10 +8510,8 @@ public class Oson {
 		}
 
 		int hash = ObjectUtil.hashCode(obj);
-		if (set.contains(hash)) {
+		if (!objectDTO.goAhead(hash)) {
 			return "{}";
-		} else {
-			set.add(hash);
 		}
 		
 		// first build up the class-level processing rules
@@ -8379,8 +8525,10 @@ public class Oson {
 		
 		FIELD_NAMING format = getFieldNaming();
 
-		String repeated = getPrettyIndentationln(level), pretty = getPrettySpace();
-		String repeatedItem = getPrettyIndentationln(++level);
+		String repeated = getPrettyIndentationln(objectDTO.level), pretty = getPrettySpace();
+		objectDTO.incrLevel();
+		String repeatedItem = getPrettyIndentationln(objectDTO.level);
+		
 
 		boolean annotationSupport = getAnnotationSupport();
 		Annotation[] annotations = null;
@@ -8504,7 +8652,7 @@ public class Oson {
 		
 		// now processing at the class level
 		
-		if (classMapper.ignore != null && classMapper.ignore) {
+		if (classMapper.ignore()) {
 			return "";
 		}
 		
@@ -8512,7 +8660,7 @@ public class Oson {
 		if (function != null) {
 			try {
 				if (function instanceof ClassData2JsonFunction) {
-					ClassData classData = new ClassData(valueType, obj, classMapper, level);
+					ClassData classData = new ClassData(valueType, obj, classMapper, objectDTO.level);
 					
 					return ((ClassData2JsonFunction)function).apply(classData);
 					
@@ -8528,15 +8676,10 @@ public class Oson {
 						} else if (returnType == valueType || valueType.isAssignableFrom(returnType)) {
 							// just continue to do the serializing
 						} else {
-							FieldData fieldData = new FieldData(returnValue, returnType, false);
-							fieldData.level = level;
-							fieldData.set = set;
-							if (level == 0) {
-								fieldData.jsonRawValue = true;
-							}
-							fieldData.doubleQuote = true;
+							objectDTO.valueToProcess = returnValue;
+							objectDTO.returnType = returnType;
 							
-							return object2Json(fieldData);
+							return object2String(objectDTO);
 						}
 					}
 				}
@@ -8943,7 +9086,7 @@ public class Oson {
 
 				if (mapper.jsonValue != null && mapper.jsonValue) {
 					if (value != null) {
-						if (mapper.jsonRawValue != null && mapper.jsonRawValue) {
+						if (mapper.isJsonRawValue()) {
 							return value.toString();
 						} else {
 							return StringUtil.doublequote(value);
@@ -8954,9 +9097,9 @@ public class Oson {
 				String str;
 
 				Class<?> returnType = f.getType(); // value.getClass();
-				FieldData fieldData = new FieldData(obj, f, value, returnType, false, mapper);
+				FieldData fieldData = new FieldData(obj, f, value, returnType, false, mapper, objectDTO.level, objectDTO.set);
 
-				str = object2Json(fieldData, level, set);
+				str = object2Json(fieldData);
 
 				if (StringUtil.isNull(str)) {
 					if (classMapper.defaultType == JSON_INCLUDE.NON_NULL 
@@ -9315,7 +9458,7 @@ public class Oson {
 
 				if (mapper.jsonValue != null && mapper.jsonValue) {
 					if (value != null) {
-						if (mapper.jsonRawValue != null && mapper.jsonRawValue) {
+						if (mapper.isJsonRawValue()) {
 							return value.toString();
 						} else {
 							return StringUtil.doublequote(value);
@@ -9327,10 +9470,10 @@ public class Oson {
 				String str;
 
 				Class<?> returnType = getter.getReturnType(); // value.getClass();
-				FieldData fieldData = new FieldData(obj, null, value, returnType, false, mapper);
+				
+				FieldData fieldData = new FieldData(obj, null, value, returnType, false, mapper, objectDTO.level, objectDTO.set);
 				objectDTO.getter = getter;
-
-				str = object2Json(fieldData, level, set);
+				str = object2Json(fieldData);
 
 				if (StringUtil.isNull(str)) {
 					if (classMapper.defaultType == JSON_INCLUDE.NON_NULL 
@@ -9451,10 +9594,9 @@ public class Oson {
 						for (String name: map.keySet()) {
 							Object value = map.get(name);
 							
-							FieldData newFieldData = new FieldData(value, value.getClass());
-							newFieldData.json2Java = false;
+							FieldData newFieldData = new FieldData(value, value.getClass(), false, objectDTO.level, objectDTO.set);
 							newFieldData.defaultType = classMapper.defaultType;
-							str = object2Json(newFieldData, level, set);
+							str = object2Json(newFieldData);
 	
 							if (StringUtil.isNull(str)) {
 								if (classMapper.defaultType == JSON_INCLUDE.NON_NULL 
@@ -10224,7 +10366,7 @@ public class Oson {
 			
 			// now processing at the class level
 			
-			if (classMapper.ignore != null && classMapper.ignore) {
+			if (classMapper.ignore()) {
 				return null;
 			}
 			
@@ -11239,8 +11381,7 @@ public class Oson {
 			}
 		}
 
-		int level = 0;
-		Set set = new HashSet();
+
 		Class<T> valueType = null;
 
 		if (type != null) {
@@ -11250,8 +11391,9 @@ public class Oson {
 			valueType = (Class<T>) source.getClass();
 		}
 
-		return object2Json(new FieldData(source, valueType, false, type), level, set);
+		return object2Json(new FieldData(source, valueType, false, type));
 	}
+	
 	public <T> String serialize(T source) {
 		if (source == null) {
 			return "";
@@ -11282,11 +11424,9 @@ public class Oson {
 			}
 		}
 
-		int level = 0;
-		Set set = new HashSet();
 		Class<T> valueType = (Class<T>) source.getClass();
 		
-		return object2Json(new FieldData(source, valueType, false), level, set);
+		return object2Json(new FieldData(source, valueType, false));
 	}
 
 	public <T> T deserialize(String source) {
@@ -11351,7 +11491,8 @@ public class Oson {
 			return b;
 		}
 
-		public static <E> Class<E> guessElementType(Collection<E> collection, Class<Collection<E>> valueType, String jsonClassType) {
+		//<Collection<E>>
+		public static <E> Class<E> guessElementType(Collection<E> collection, Class valueType, String jsonClassType) {
 			if (collection == null) {
 				return null;
 			}
@@ -11412,7 +11553,7 @@ public class Oson {
 			return (Class<E>)guess;
 		}
 
-		public static <E> Class<E> guessElementType(E[] array, Class<E[]> valueType) {
+		public static <E> Class<E> guessElementType(E[] array, Class valueType) { // Class<E[]>
 			if (array == null) {
 				return null;
 			}
@@ -11885,6 +12026,13 @@ public class Oson {
 
 
 		public static <E> Class<E> getTypeClass(java.lang.reflect.Type type) {
+			Class cl = type.getClass();
+			
+			if (ComponentType.class.isAssignableFrom(cl)) {
+				ComponentType componentType = (ComponentType)type;
+				return componentType.getClassType();
+			}
+			
 			//java.util.List<ca.oson.json.test.Dataset>
 			String className = type.getTypeName();
 			try {
@@ -11897,8 +12045,6 @@ public class Oson {
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
 			}
-
-			Class cl = type.getClass();
 
 			// Collection<String>, return String.class
 			if (ParameterizedType.class.isAssignableFrom(cl)) {
@@ -11925,6 +12071,13 @@ public class Oson {
 		}
 
 		public static <E> Class getTypeComponentClass(java.lang.reflect.Type type) {
+			Class cl = type.getClass();
+			
+			if (ComponentType.class.isAssignableFrom(cl)) {
+				ComponentType componentType = (ComponentType)type;
+				return componentType.getComponentClassType();
+			}
+			
 			//java.util.List<ca.oson.json.test.Dataset>
 			String className = type.getTypeName();
 			try {
@@ -11937,8 +12090,6 @@ public class Oson {
 			} catch (ClassNotFoundException e) {
 				//e.printStackTrace();
 			}
-
-			Class cl = type.getClass();
 
 			// Collection<String>, return String.class
 			if (ParameterizedType.class.isAssignableFrom(cl)) {
@@ -12311,6 +12462,77 @@ public class Oson {
 	}
 	
 	
+	/*
+	 * Make it as simple as possible
+	 */
+	public static class ComponentType implements Type {
+		private String typeName;
+		private Class type;
+		private Class componentType;
+		
+		private ComponentType() {
+		}
+		
+		public ComponentType(String typeName) {
+			this.typeName = typeName;
+			fixTypeNames();
+		}
+		
+		public ComponentType(Type type) {
+			this.typeName = type.getTypeName();
+			fixTypeNames();
+		}
+		
+		public ComponentType(Class type, Class componentType) {
+			this.type = type;
+			this.componentType = componentType;
+			this.typeName = type.getName();
+			fixTypeNames();
+		}
+		
+		private void fixTypeNames() {
+			if (this.typeName == null) {
+				if (type != null) {
+					this.typeName = type.getName();
+				}
+				if (componentType != null) {
+					this.typeName = this.typeName + "<" + componentType.getName() + ">";
+				}
+				
+			} else {
+				int idx = typeName.indexOf('<');
+
+				if (idx > -1) {
+					String className = typeName.substring(0, idx);
+					String componentTypeName = typeName.substring(idx + 1, typeName.length() - 1);
+					
+					try {
+						this.type = Class.forName(className);
+						this.componentType = Class.forName(componentTypeName);
+					} catch (ClassNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+				
+			}
+		}
+		
+		@Override
+		public String getTypeName() {
+	        return typeName;
+	    }
+		
+		public Class getClassType() {
+			return type;
+		}
+
+		public Class getComponentClassType() {
+			return componentType;
+		}
+	}
+	
+	
 	public static interface OsonFunction extends Function {
 		@Override
 		public default Object apply(Object t) {
@@ -12469,13 +12691,13 @@ public class Oson {
 	}
 	
 	@FunctionalInterface
-	public static interface Array2JsonFunction extends OsonFunction {
-		public String apply(Object[] t);
+	public static interface Array2JsonFunction<E> extends OsonFunction {
+		public String apply(E[] t);
 	}
 	
 	@FunctionalInterface
-	public static interface Json2ArrayFunction extends OsonFunction {
-		public Object[] apply(String t);
+	public static interface Json2ArrayFunction<E> extends OsonFunction {
+		public E[] apply(String t);
 	}
 
 	@FunctionalInterface
@@ -12504,8 +12726,8 @@ public class Oson {
 	}
 	
 	@FunctionalInterface
-	public static interface Json2ClassDataFunction <T> extends OsonFunction {
-		public T apply(ClassData classData);
+	public static interface Json2ClassDataFunction extends OsonFunction {
+		public Collection apply(ClassData classData);
 	}
 	
 	@FunctionalInterface

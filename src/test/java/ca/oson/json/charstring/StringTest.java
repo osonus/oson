@@ -28,6 +28,8 @@ public class StringTest extends TestCaseBase {
 		   String result = oson.setClassMappers(new ClassMapper(String.class)
 		   		.setSerializer((Object p) -> {
 		   			Car car = new Car(p.toString());
+		   			// only once used for this string
+		   			oson.setClassMappers((ClassMapper)null);
 		   			return car;
 		   		})).pretty(true)
 				.serialize(value);
