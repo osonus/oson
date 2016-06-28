@@ -108,4 +108,30 @@ public @interface ClassMapper {
 	 *  in case a enumType, define its type to (de)serialize
 	 */
 	ENUM_TYPE enumType() default ENUM_TYPE.NONE;
+	
+	
+	/*
+	 * Maximum length this string field can have
+	 */
+	int length() default 0;
+	
+	/*
+	 * scale value for this BigDecimal field
+	 */
+	int scale() default 0;
+	
+	/*
+	 * number of digits for this BigDecimal field
+	 */
+	int precision() default 0;
+	
+	/*
+	 * minimum value this field should have
+	 */
+	long min() default 0;
+	
+	/*
+	 * maximum value this field should have
+	 */
+	long max() default 0;
 }

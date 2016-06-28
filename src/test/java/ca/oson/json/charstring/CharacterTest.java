@@ -53,7 +53,7 @@ public class CharacterTest extends TestCaseBase {
 		   String value = "6900000";
 		   Character expected = 'E';
 
-		   Character result = oson.setClassMappers(new ClassMapper(Character.class).setMax(69)).deserialize(value, Character.class);
+		   Character result = oson.setClassMappers(new ClassMapper(Character.class).setMax(69l)).deserialize(value, Character.class);
 
 		   assertEquals(expected, result);
 	   }
@@ -63,7 +63,7 @@ public class CharacterTest extends TestCaseBase {
 		   String value = "1";
 		   Character expected = 'A';
 
-		   Character result = oson.setClassMappers(new ClassMapper(Character.class).setMin(65)).deserialize(value, Character.class);
+		   Character result = oson.setClassMappers(new ClassMapper(Character.class).setMin(65l)).deserialize(value, Character.class);
 
 		   assertEquals(expected, result);
 	   }

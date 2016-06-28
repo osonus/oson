@@ -170,7 +170,7 @@ public class BigIntegerTest extends TestCaseBase {
 	   @Test
 	   public void testSerializeBigIntegerWithMin() {
 		   BigInteger value = BigInteger.valueOf(1);
-		   Integer min = 10;
+		   Long min = 10l;
 		   String expected = min + "";
 		   
 		   oson.setClassMappers(new ClassMapper(BigInteger.class).setMin(min));
@@ -183,7 +183,7 @@ public class BigIntegerTest extends TestCaseBase {
 	   @Test
 	   public void testSerializeBigIntegerWithMax() {
 		   BigInteger value = BigInteger.valueOf(1000000000);
-		   Integer max = 2000;
+		   Long max = 2000l;
 		   String expected = max + "";
 		   
 		   oson.setClassMappers(new ClassMapper(BigInteger.class).setMax(max));
@@ -196,7 +196,7 @@ public class BigIntegerTest extends TestCaseBase {
 	   @Test
 	   public void testDeserializeBigIntegerWithMin() {
 		   String value = "1";
-		   Integer min = 10;
+		   Long min = 10l;
 		   BigInteger expected = BigInteger.valueOf(min);
 		   
 		   oson.setClassMappers(new ClassMapper(BigInteger.class).setMin(min));
@@ -209,7 +209,7 @@ public class BigIntegerTest extends TestCaseBase {
 	   @Test
 	   public void testDeserializeBigIntegerWithMax() {
 		   String value = "19999999";
-		   Integer max = 10000;
+		   Long max = 10000l;
 		   BigInteger expected = BigInteger.valueOf(max);
 		   
 		   oson.setClassMappers(new ClassMapper(BigInteger.class).setMax(max));

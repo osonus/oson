@@ -166,7 +166,7 @@ public class IntegerTest extends TestCaseBase {
 	   @Test
 	   public void testSerializeIntWithMin() {
 		   Integer value = 1;
-		   Integer min = 10;
+		   Long min = 10l;
 		   String expected = min + "";
 		   
 		   oson.setClassMappers(new ClassMapper(Integer.class).setMin(min));
@@ -179,7 +179,7 @@ public class IntegerTest extends TestCaseBase {
 	   @Test
 	   public void testSerializeIntWithMax() {
 		   Integer value = 1000000000;
-		   Integer max = 2000;
+		   Long max = 2000l;
 		   String expected = max + "";
 		   
 		   oson.setClassMappers(new ClassMapper(Integer.class).setMax(max));
@@ -192,8 +192,8 @@ public class IntegerTest extends TestCaseBase {
 	   @Test
 	   public void testDeserializeIntWithMin() {
 		   String value = "1";
-		   Integer min = 10;
-		   Integer expected = min;
+		   Long min = 10l;
+		   Integer expected = min.intValue();
 		   
 		   oson.setClassMappers(new ClassMapper(Integer.class).setMin(min));
 		   
@@ -205,8 +205,8 @@ public class IntegerTest extends TestCaseBase {
 	   @Test
 	   public void testDeserializeIntWithMax() {
 		   String value = "19999999";
-		   Integer max = 10000;
-		   Integer expected = max;
+		   Long max = 10000l;
+		   Integer expected = max.intValue();
 		   
 		   oson.setClassMappers(new ClassMapper(Integer.class).setMax(max));
 		   

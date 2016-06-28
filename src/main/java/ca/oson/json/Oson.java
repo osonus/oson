@@ -682,11 +682,11 @@ public class Oson {
 			this.scale = scale;
 			return this;
 		}
-		public ClassMapper setMin(Integer min) {
+		public ClassMapper setMin(Long min) {
 			this.min = min;
 			return this;
 		}
-		public ClassMapper setMax(Integer max) {
+		public ClassMapper setMax(Long max) {
 			this.max = max;
 			return this;
 		}
@@ -760,8 +760,9 @@ public class Oson {
 		public JSON_INCLUDE defaultType = null; // JSON_INCLUDE.NONE;
 		
 		public Integer scale = null; // Default: 0
-		public Integer min = null; // default (int) 0;
-		public Integer max = null; // default (int) 2147483647;
+		public Long min = null; // default (int) 0;
+		public Long max = null; // default (int) 2147483647;
+		
 		
 		public EnumType enumType = null;
 		public Boolean date2Long = null;
@@ -1009,12 +1010,12 @@ public class Oson {
 			return this;
 		}
 
-		public FieldMapper setMin(Integer min) {
+		public FieldMapper setMin(Long min) {
 			this.min = min;
 			return this;
 		}
 
-		public FieldMapper setMax(Integer max) {
+		public FieldMapper setMax(Long max) {
 			this.max = max;
 			return this;
 		}
@@ -1105,8 +1106,8 @@ public class Oson {
 		public Integer length = null; // Default: 255
 		public Integer scale = null; // Default: 0
 		public Integer precision = null;
-		public Integer min = null; // default (int) 0;
-		public Integer max = null; // default (int) 2147483647;
+		public Long min = null; // default (int) 0;
+		public Long max = null; // default (int) 2147483647;
 		public E defaultValue = null; // default ""
 		public JSON_INCLUDE defaultType = null;
 		// serialize to double quotes, or not
@@ -1158,14 +1159,69 @@ public class Oson {
 		private Boolean useField = null;
 		private Boolean useAttribute = null;
 		private int level = MAX_LEVEL;
-		
+		private RoundingMode roundingMode = RoundingMode.HALF_UP;
 		// class level configuration
 		private Map<Class, ClassMapper> classMappers = null;
+
 		private Set<FieldMapper> fieldMappers = null;
 		
 		private EnumType enumType = null;
 		private Boolean date2Long = null;
+		private Integer length = null; // Default: 255
+		private Integer precision = null;
+		private Integer scale = null; // Default: 0
+		private Long min = null; // default (int) 0;
+		private Long max = null; // default (int) 2147483647;
 		
+		
+		
+		private Integer getLength() {
+			return length;
+		}
+
+		public void setLength(Integer length) {
+			this.length = length;
+		}
+
+		private Integer getPrecision() {
+			return precision;
+		}
+
+		public void setPrecision(Integer precision) {
+			this.precision = precision;
+		}
+
+		private Integer getScale() {
+			return scale;
+		}
+
+		public void setScale(Integer scale) {
+			this.scale = scale;
+		}
+
+		private Long getMin() {
+			return min;
+		}
+
+		public void setMin(Long min) {
+			this.min = min;
+		}
+
+		private Long getMax() {
+			return max;
+		}
+
+		public void setMax(Long max) {
+			this.max = max;
+		}
+		
+		private RoundingMode getRoundingMode() {
+			return roundingMode;
+		}
+
+		public void setRoundingMode(RoundingMode roundingMode) {
+			this.roundingMode = roundingMode;
+		}
 		
 		private Boolean getDate2Long() {
 			return date2Long;
@@ -1910,8 +1966,8 @@ public class Oson {
 		Integer length = null; // Default: 255
 		Integer precision = null;
 		Integer scale = null; // Default: 0
-		Integer min = null; // default (int) 0;
-		Integer max = null; // default (int) 2147483647;
+		Long min = null; // default (int) 0;
+		Long max = null; // default (int) 2147483647;
 
 		public Object defaultValue = null;
 		public Boolean jsonRawValue = null;
@@ -2095,7 +2151,7 @@ public class Oson {
 		}
 		
 
-		public Integer getMin() {
+		public Long getMin() {
 			if (min == null && classMapper != null) {
 				min = classMapper.min;
 			}
@@ -2103,19 +2159,19 @@ public class Oson {
 			if (max != null && returnType != null) {
 				if ((returnType == Character.class || returnType == char.class)) {
 					if (min.intValue() < Character.MIN_CODE_POINT) {
-						min = Character.MIN_CODE_POINT;
+						min = (long) Character.MIN_CODE_POINT;
 					}
 					
 				} else if (Number.class.isAssignableFrom(returnType)
 						|| returnType.isPrimitive()) {
 					if (returnType == Short.class || returnType == short.class) {
 						if (min.intValue() < Short.MIN_VALUE) {
-							min = (int) Short.MIN_VALUE;
+							min = (long) Short.MIN_VALUE;
 						}
 						
 					} else if (returnType == Byte.class || returnType == byte.class) {
 						if (min.intValue() < Byte.MIN_VALUE) {
-							min = (int) Byte.MIN_VALUE;
+							min = (long) Byte.MIN_VALUE;
 						}
 					}
 				}
@@ -2123,7 +2179,7 @@ public class Oson {
 			
 			return min;
 		}
-		public Integer getMax() {
+		public Long getMax() {
 			if (max == null && classMapper != null) {
 				max = classMapper.max;
 			}
@@ -2132,19 +2188,19 @@ public class Oson {
 			if (max != null && returnType != null) {
 				if ((returnType == Character.class || returnType == char.class)) {
 					if (max.intValue() > Character.MAX_CODE_POINT) {
-						max = Character.MAX_CODE_POINT;
+						max = (long) Character.MAX_CODE_POINT;
 					}
 					
 				} else if (Number.class.isAssignableFrom(returnType)
 						|| returnType.isPrimitive()) {
 					if (returnType == Short.class || returnType == short.class) {
 						if (max.intValue() > Short.MAX_VALUE) {
-							max = (int) Short.MAX_VALUE;
+							max = (long) Short.MAX_VALUE;
 						}
 						
 					} else if (returnType == Byte.class || returnType == byte.class) {
 						if (max.intValue() > Byte.MAX_VALUE) {
-							max = (int) Byte.MAX_VALUE;
+							max = (long) Byte.MAX_VALUE;
 						}
 					}
 				}
@@ -2872,15 +2928,35 @@ public class Oson {
 		}
 		
 		if (mapper.defaultType == null) {
-			mapper.defaultType =  getDefaultType();
+			mapper.defaultType = getDefaultType();
 		}
 		
 		if (mapper.enumType == null) {
-			mapper.enumType =  getEnumType();
+			mapper.enumType = getEnumType();
 		}
 		
 		if (mapper.date2Long == null) {
-			mapper.date2Long =  getDate2Long();
+			mapper.date2Long = getDate2Long();
+		}
+		
+		if (mapper.length == null) {
+			mapper.length =  getLength();
+		}
+		
+		if (mapper.precision == null) {
+			mapper.precision = getPrecision();
+		}
+		
+		if (mapper.scale == null) {
+			mapper.scale = getScale();
+		}
+		
+		if (mapper.min == null) {
+			mapper.min = getMin();
+		}
+		
+		if (mapper.max == null) {
+			mapper.max = getMax();
 		}
 		
 		return mapper;
@@ -3081,6 +3157,66 @@ public class Oson {
 	public Oson setDate2Long(Boolean date2Long) {
 		options.setDate2Long(date2Long);
 		
+		return this;
+	}
+	
+	private RoundingMode getRoundingMode() {
+		return options.getRoundingMode();
+	}
+
+	public Oson setRoundingMode(RoundingMode roundingMode) {
+		options.setRoundingMode(roundingMode);
+		
+		return this;
+	}
+	
+	private Integer getLength() {
+		return options.getLength();
+	}
+
+	public Oson setLength(Integer length) {
+		options.setLength(length);
+
+		return this;
+	}
+
+	private Integer getPrecision() {
+		return options.getPrecision();
+	}
+
+	public Oson setPrecision(Integer precision) {
+		options.setPrecision(precision);
+
+		return this;
+	}
+
+	private Integer getScale() {
+		return options.getScale();
+	}
+
+	public Oson setScale(Integer scale) {
+		options.setScale(scale);
+
+		return this;
+	}
+
+	private Long getMin() {
+		return options.getMin();
+	}
+
+	public Oson setMin(Long min) {
+		options.setMin(min);
+
+		return this;
+	}
+
+	private Long getMax() {
+		return options.getMax();
+	}
+
+	public Oson setMax(Long max) {
+		options.setMax(max);
+
 		return this;
 	}
 	
@@ -3911,8 +4047,8 @@ public class Oson {
 				}
 				
 				if (valueToReturn != null) {
-					Integer min = objectDTO.getMin();
-					Integer max = objectDTO.getMax();
+					Long min = objectDTO.getMin();
+					Long max = objectDTO.getMax();
 					
 					if (min != null && min.doubleValue() > valueToReturn) {
 						return min.doubleValue();
@@ -3991,8 +4127,8 @@ public class Oson {
 					}
 
 					if (valueToProcess != null) {
-						Integer min = objectDTO.getMin();
-						Integer max = objectDTO.getMax();
+						Long min = objectDTO.getMin();
+						Long max = objectDTO.getMax();
 						
 						if (min != null && min.doubleValue() > valueToProcess) {
 							valueToProcess = min.doubleValue();
@@ -4002,7 +4138,19 @@ public class Oson {
 							valueToProcess = max.doubleValue();
 						}
 						
-						return valueToProcess.toString();
+						Integer precision = objectDTO.getPrecision();
+						if (precision != null) {
+							valueToProcess = NumberUtil.setPrecision(valueToProcess, precision);
+						}
+						
+						Integer scale = objectDTO.getScale();
+						if (scale != null) {
+							BigDecimal b = new BigDecimal(valueToProcess);
+							b = b.setScale(scale, getRoundingMode());
+							return b.toPlainString();
+						}
+						
+						return NumberUtil.toPlainString(valueToProcess);
 					}
 
 				} catch (Exception ex) {
@@ -4029,8 +4177,8 @@ public class Oson {
 		Class<E> returnType = objectDTO.returnType;
 		boolean required = (objectDTO.required != null && objectDTO.required);
 		
-		Integer min = objectDTO.getMin();
-		Integer max = objectDTO.getMax();
+		Long min = objectDTO.getMin();
+		Long max = objectDTO.getMax();
 		boolean json2Java = objectDTO.json2Java;
 
 		if (returnType == double.class
@@ -4154,8 +4302,8 @@ public class Oson {
 				}
 				
 				if (valueToReturn != null) {
-					Integer min = objectDTO.getMin();
-					Integer max = objectDTO.getMax();
+					Long min = objectDTO.getMin();
+					Long max = objectDTO.getMax();
 					
 					if (min != null && min.floatValue() > valueToReturn) {
 						return min.floatValue();
@@ -4234,8 +4382,8 @@ public class Oson {
 					}
 
 					if (valueToProcess != null) {
-						Integer min = objectDTO.getMin();
-						Integer max = objectDTO.getMax();
+						Long min = objectDTO.getMin();
+						Long max = objectDTO.getMax();
 						
 						if (min != null && min.floatValue() > valueToProcess) {
 							valueToProcess = min.floatValue();
@@ -4245,7 +4393,19 @@ public class Oson {
 							valueToProcess = max.floatValue();
 						}
 						
-						return valueToProcess.toString();
+						Integer precision = objectDTO.getPrecision();
+						if (precision != null) {
+							valueToProcess = (float) NumberUtil.setPrecision(valueToProcess, precision);
+						}
+						
+						Integer scale = objectDTO.getScale();
+						if (scale != null) {
+							BigDecimal b = new BigDecimal(valueToProcess);
+							b.setScale(scale, getRoundingMode());
+							valueToProcess = b.floatValue();
+						}
+						
+						return NumberUtil.toPlainString(valueToProcess);
 					}
 
 				} catch (Exception ex) {
@@ -4272,8 +4432,8 @@ public class Oson {
 		Class<E> returnType = objectDTO.returnType;
 		boolean required = (objectDTO.required != null && objectDTO.required);
 		
-		Integer min = objectDTO.getMin();
-		Integer max = objectDTO.getMax();
+		Long min = objectDTO.getMin();
+		Long max = objectDTO.getMax();
 		boolean json2Java = objectDTO.json2Java;
 
 		if (returnType == float.class
@@ -4432,7 +4592,7 @@ public class Oson {
  						Boolean date2Long = objectDTO.getDate2Long();
  						if (date2Long != null && date2Long) {
  							long longtoprocess = valueToProcess.getTime();
- 							return longtoprocess + "";
+ 							return NumberUtil.toPlainString(longtoprocess);
  						} else {
  							return format.format(valueToProcess);
  						}
@@ -4564,8 +4724,8 @@ public class Oson {
 				}
 				
 				if (valueToReturn != null) {
-					Integer min = objectDTO.getMin();
-					Integer max = objectDTO.getMax();
+					Long min = objectDTO.getMin();
+					Long max = objectDTO.getMax();
 					
 					if (min != null && valueToReturn.compareTo(new BigDecimal(min)) < 0) {
 						return new BigDecimal(min);
@@ -4576,7 +4736,7 @@ public class Oson {
 					}
 					Integer scale = objectDTO.getScale();
 					if (scale != null) {
-						valueToReturn = valueToReturn.setScale(scale, RoundingMode.HALF_UP);
+						valueToReturn = valueToReturn.setScale(scale, getRoundingMode());
 					}
 					
 					Integer precision = objectDTO.getPrecision();
@@ -4654,8 +4814,8 @@ public class Oson {
 					}
 
 					if (valueToProcess != null) {
-						Integer min = objectDTO.getMin();
-						Integer max = objectDTO.getMax();
+						Long min = objectDTO.getMin();
+						Long max = objectDTO.getMax();
 						
 						if (min != null && valueToProcess.compareTo(new BigDecimal(min)) < 0) {
 							valueToProcess = new BigDecimal(min);
@@ -4667,7 +4827,7 @@ public class Oson {
 						
 						Integer scale = objectDTO.getScale();
 						if (scale != null) {
-							valueToProcess = valueToProcess.setScale(scale, RoundingMode.HALF_UP);
+							valueToProcess = valueToProcess.setScale(scale, getRoundingMode());
 						}
 						
 						Integer precision = objectDTO.getPrecision();
@@ -4676,7 +4836,7 @@ public class Oson {
 							valueToProcess = new BigDecimal(v);
 						}
 						
-						return valueToProcess.toString();
+						return NumberUtil.toPlainString(valueToProcess);
 					}
 
 				} catch (Exception ex) {
@@ -4703,8 +4863,8 @@ public class Oson {
 		Class<E> returnType = objectDTO.returnType;
 		boolean required = (objectDTO.required != null && objectDTO.required);
 		
-		Integer min = objectDTO.getMin();
-		Integer max = objectDTO.getMax();
+		Long min = objectDTO.getMin();
+		Long max = objectDTO.getMax();
 		boolean json2Java = objectDTO.json2Java;
 
 		if (getDefaultType() == JSON_INCLUDE.DEFAULT || required) {
@@ -4822,8 +4982,8 @@ public class Oson {
 				}
 				
 				if (valueToReturn != null) {
-					Integer min = objectDTO.getMin();
-					Integer max = objectDTO.getMax();
+					Long min = objectDTO.getMin();
+					Long max = objectDTO.getMax();
 					
 					if (min != null && min > valueToReturn.longValue()) {
 						return BigInteger.valueOf(min.intValue());
@@ -4902,8 +5062,8 @@ public class Oson {
 					}
 
 					if (valueToProcess != null) {
-						Integer min = objectDTO.getMin();
-						Integer max = objectDTO.getMax();
+						Long min = objectDTO.getMin();
+						Long max = objectDTO.getMax();
 						
 						if (min != null && min > valueToProcess.longValue()) {
 							valueToProcess = BigInteger.valueOf(min);
@@ -4913,7 +5073,13 @@ public class Oson {
 							valueToProcess = BigInteger.valueOf(max);
 						}
 						
-						return valueToProcess.toString();
+						Integer precision = objectDTO.getPrecision();
+						if (precision != null) {
+							Double v = NumberUtil.setPrecision(valueToProcess, precision);
+							valueToProcess = BigInteger.valueOf(v.longValue());
+						}
+						
+						return NumberUtil.toPlainString(valueToProcess);
 					}
 
 				} catch (Exception ex) {
@@ -4940,8 +5106,8 @@ public class Oson {
 		Class<E> returnType = objectDTO.returnType;
 		boolean required = (objectDTO.required != null && objectDTO.required);
 		
-		Integer min = objectDTO.getMin();
-		Integer max = objectDTO.getMax();
+		Long min = objectDTO.getMin();
+		Long max = objectDTO.getMax();
 		
 		if (getDefaultType() == JSON_INCLUDE.DEFAULT || required) {
 			BigInteger defaultValue = (BigInteger)objectDTO.getDefaultValue();
@@ -5059,15 +5225,15 @@ public class Oson {
 				}
 				
 				if (valueToReturn != null) {
-					Integer min = objectDTO.getMin();
-					Integer max = objectDTO.getMax();
+					Long min = objectDTO.getMin();
+					Long max = objectDTO.getMax();
 					
-					if (min != null && min > valueToReturn.intValue()) {
-						return new AtomicInteger(min);
+					if (min != null && min > valueToReturn.longValue()) {
+						return new AtomicInteger(min.intValue());
 					}
 		
-					if (max != null && valueToReturn.intValue() > max ) {
-						valueToReturn = new AtomicInteger(max);
+					if (max != null && valueToReturn.longValue() > max ) {
+						valueToReturn = new AtomicInteger(max.intValue());
 					}
 					
 					return valueToReturn;
@@ -5137,18 +5303,24 @@ public class Oson {
 					}
 
 					if (valueToProcess != null) {
-						Integer min = objectDTO.getMin();
-						Integer max = objectDTO.getMax();
+						Long min = objectDTO.getMin();
+						Long max = objectDTO.getMax();
 						
-						if (min != null && min > valueToProcess.intValue()) {
-							valueToProcess = new AtomicInteger(min);
+						if (min != null && min > valueToProcess.longValue()) {
+							valueToProcess = new AtomicInteger(min.intValue());
 						}
 						
-						if (max != null && max < valueToProcess.intValue()) {
-							valueToProcess = new AtomicInteger(max);
+						if (max != null && max < valueToProcess.longValue()) {
+							valueToProcess = new AtomicInteger(max.intValue());
 						}
 						
-						return valueToProcess.toString();
+						Integer precision = objectDTO.getPrecision();
+						if (precision != null) {
+							Double v = NumberUtil.setPrecision(valueToProcess, precision);
+							valueToProcess = new AtomicInteger(v.intValue());
+						}
+						
+						return NumberUtil.toPlainString(valueToProcess);
 					}
 
 				} catch (Exception ex) {
@@ -5175,25 +5347,25 @@ public class Oson {
 		Class<E> returnType = objectDTO.returnType;
 		boolean required = (objectDTO.required != null && objectDTO.required);
 		
-		Integer min = objectDTO.getMin();
-		Integer max = objectDTO.getMax();
+		Long min = objectDTO.getMin();
+		Long max = objectDTO.getMax();
 		
 		if (getDefaultType() == JSON_INCLUDE.DEFAULT || required) {
 			AtomicInteger defaultValue = (AtomicInteger)objectDTO.getDefaultValue();
 			if (defaultValue != null) {
-				if (min != null && min > defaultValue.intValue()) {
-					return new AtomicInteger(min);
+				if (min != null && min > defaultValue.longValue()) {
+					return new AtomicInteger(min.intValue());
 				}
 
-				if (max != null && max < defaultValue.intValue()) {
-					return new AtomicInteger(max);
+				if (max != null && max < defaultValue.longValue()) {
+					return new AtomicInteger(max.intValue());
 				}				
 				
 				return defaultValue;
 			}
 
-			if (min != null && min > DefaultValue.atomicInteger.intValue()) {
-				return new AtomicInteger(min);
+			if (min != null && min > DefaultValue.atomicInteger.longValue()) {
+				return new AtomicInteger(min.intValue());
 			}
 
 			return DefaultValue.atomicInteger;
@@ -5294,8 +5466,8 @@ public class Oson {
 				}
 				
 				if (valueToReturn != null) {
-					Integer min = objectDTO.getMin();
-					Integer max = objectDTO.getMax();
+					Long min = objectDTO.getMin();
+					Long max = objectDTO.getMax();
 					
 					if (min != null && min > valueToReturn.longValue()) {
 						return new AtomicLong(min);
@@ -5372,8 +5544,8 @@ public class Oson {
 					}
 
 					if (valueToProcess != null) {
-						Integer min = objectDTO.getMin();
-						Integer max = objectDTO.getMax();
+						Long min = objectDTO.getMin();
+						Long max = objectDTO.getMax();
 						
 						if (min != null && min > valueToProcess.longValue()) {
 							valueToProcess = new AtomicLong(min);
@@ -5383,7 +5555,13 @@ public class Oson {
 							valueToProcess = new AtomicLong(max);
 						}
 						
-						return valueToProcess.toString();
+						Integer precision = objectDTO.getPrecision();
+						if (precision != null) {
+							Double v = NumberUtil.setPrecision(valueToProcess, precision);
+							valueToProcess = new AtomicLong(v.longValue());
+						}
+						
+						return NumberUtil.toPlainString(valueToProcess);
 					}
 
 				} catch (Exception ex) {
@@ -5410,8 +5588,8 @@ public class Oson {
 		Class<E> returnType = objectDTO.returnType;
 		boolean required = (objectDTO.required != null && objectDTO.required);
 		
-		Integer min = objectDTO.getMin();
-		Integer max = objectDTO.getMax();
+		Long min = objectDTO.getMin();
+		Long max = objectDTO.getMax();
 		
 		if (getDefaultType() == JSON_INCLUDE.DEFAULT || required) {
 			AtomicLong defaultValue = (AtomicLong)objectDTO.getDefaultValue();
@@ -5490,8 +5668,8 @@ public class Oson {
 					}
 
 					if (valueToProcess != null) {
-						Integer min = objectDTO.getMin();
-						Integer max = objectDTO.getMax();
+						Long min = objectDTO.getMin();
+						Long max = objectDTO.getMax();
 						
 						if (min != null && min > valueToProcess.longValue()) {
 							valueToProcess = min.longValue();
@@ -5501,7 +5679,13 @@ public class Oson {
 							valueToProcess = Long.valueOf(max);
 						}
 						
-						return valueToProcess.toString();
+						Integer precision = objectDTO.getPrecision();
+						if (precision != null) {
+							Double v = NumberUtil.setPrecision(valueToProcess, precision);
+							valueToProcess = v.longValue();
+						}
+						
+						return NumberUtil.toPlainString(valueToProcess);
 					}
 
 				} catch (Exception ex) {
@@ -5612,8 +5796,8 @@ public class Oson {
 				}
 				
 				if (valueToReturn != null) {
-					Integer min = objectDTO.getMin();
-					Integer max = objectDTO.getMax();
+					Long min = objectDTO.getMin();
+					Long max = objectDTO.getMax();
 					if (min != null && min > valueToReturn.longValue()) {
 						return min.longValue();
 					}
@@ -5650,8 +5834,8 @@ public class Oson {
 		Class<E> returnType = objectDTO.returnType;
 		boolean required = (objectDTO.required != null && objectDTO.required);
 		
-		Integer min = objectDTO.getMin();
-		Integer max = objectDTO.getMax();
+		Long min = objectDTO.getMin();
+		Long max = objectDTO.getMax();
 		
 		if (returnType == long.class
 				|| getDefaultType() == JSON_INCLUDE.DEFAULT || required) {
@@ -5766,14 +5950,14 @@ public class Oson {
 				}
 				
 				if (valueToReturn != null) {
-					Integer min = objectDTO.getMin();
-					Integer max = objectDTO.getMax();
-					if (min != null && min > valueToReturn.intValue()) {
-						return min;
+					Long min = objectDTO.getMin();
+					Long max = objectDTO.getMax();
+					if (min != null && min > valueToReturn.longValue()) {
+						return min.intValue();
 					}
 					
-					if (max != null && valueToReturn.compareTo(Integer.valueOf(max)) > 0) {
-						valueToReturn = Integer.valueOf(max);
+					if (max != null && valueToReturn.longValue() > max) {
+						valueToReturn = Integer.valueOf(max.intValue());
 					}
 					
 					return valueToReturn;
@@ -5845,18 +6029,18 @@ public class Oson {
 					}
 
 					if (valueToProcess != null) {
-						Integer min = objectDTO.getMin();
-						Integer max = objectDTO.getMax();
+						Long min = objectDTO.getMin();
+						Long max = objectDTO.getMax();
 						
-						if (min != null && min > valueToProcess.intValue()) {
-							valueToProcess = min;
+						if (min != null && min > valueToProcess.longValue()) {
+							valueToProcess = min.intValue();
 						}
 						
-						if (max != null && valueToProcess.compareTo(Integer.valueOf(max)) > 0) {
-							valueToProcess = Integer.valueOf(max);
+						if (max != null && valueToProcess > max.longValue()) {
+							valueToProcess = max.intValue();
 						}
 						
-						return valueToProcess.toString();
+						return NumberUtil.toPlainString(valueToProcess);
 					}
 
 				} catch (Exception ex) {
@@ -5882,24 +6066,22 @@ public class Oson {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
 		boolean required = (objectDTO.required != null && objectDTO.required);
-		
-		Integer min = objectDTO.getMin();
-		Integer max = objectDTO.getMax();
-		boolean json2Java = objectDTO.json2Java;
 
 		if (returnType == int.class
 				|| getDefaultType() == JSON_INCLUDE.DEFAULT || required) {
 			Integer defaultValue = (Integer)objectDTO.getDefaultValue();
+			Long min = objectDTO.getMin();
+			Long max = objectDTO.getMax();
 			if (defaultValue != null) {
-				if (min != null && min > defaultValue.intValue()) {
-					return min;
+				if (min != null && min > defaultValue.longValue()) {
+					return min.intValue();
 				}
 
 				return defaultValue;
 			}
 
 			if (min != null && min > DefaultValue.integer) {
-				return min;
+				return min.intValue();
 			}
 
 			return DefaultValue.integer;
@@ -6008,8 +6190,8 @@ public class Oson {
 				}
 				
 				if (valueToReturn != null) {
-					Integer min = objectDTO.getMin();
-					Integer max = objectDTO.getMax();
+					Long min = objectDTO.getMin();
+					Long max = objectDTO.getMax();
 					
 					if (min != null && min.byteValue() > valueToReturn) {
 						return min.byteValue();
@@ -6018,7 +6200,7 @@ public class Oson {
 					if (max != null && max.byteValue() < valueToReturn) {
 						valueToReturn = max.byteValue();
 					}
-					
+
 					return valueToReturn;
 				}
 	
@@ -6088,8 +6270,8 @@ public class Oson {
 					}
 
 					if (valueToProcess != null) {
-						Integer min = objectDTO.getMin();
-						Integer max = objectDTO.getMax();
+						Long min = objectDTO.getMin();
+						Long max = objectDTO.getMax();
 						
 						if (min != null && min.byteValue() > valueToProcess) {
 							valueToProcess = min.byteValue();
@@ -6099,7 +6281,13 @@ public class Oson {
 							valueToProcess = max.byteValue();
 						}
 						
-						return valueToProcess.toString();
+						Integer precision = objectDTO.getPrecision();
+						if (precision != null) {
+							Double v = NumberUtil.setPrecision(valueToProcess, precision);
+							valueToProcess = v.byteValue();
+						}
+						
+						return NumberUtil.toPlainString(valueToProcess);
 					}
 
 				} catch (Exception ex) {
@@ -6126,8 +6314,8 @@ public class Oson {
 		Class<E> returnType = objectDTO.returnType;
 		boolean required = (objectDTO.required != null && objectDTO.required);
 		
-		Integer min = objectDTO.getMin();
-		Integer max = objectDTO.getMax();
+		Long min = objectDTO.getMin();
+		Long max = objectDTO.getMax();
 		boolean json2Java = objectDTO.json2Java;
 
 		if (returnType == byte.class
@@ -6151,7 +6339,7 @@ public class Oson {
 		return null;
 	}
 	
-	private Character long2Character(long longvalue, Integer min, Integer max) {
+	private Character long2Character(long longvalue, Long min, Long max) {
 		Character valueToReturn;
 		
 		if (min == null && longvalue < Character.MIN_CODE_POINT) {
@@ -6183,8 +6371,8 @@ public class Oson {
 			String valueToProcess = value.toString().trim();
 			Character valueToReturn = null;
 			
-			Integer min = objectDTO.getMin();
-			Integer max = objectDTO.getMax();
+			Long min = objectDTO.getMin();
+			Long max = objectDTO.getMax();
 			
 			try {
 				Function function = objectDTO.getDeserializer();
@@ -6333,8 +6521,8 @@ public class Oson {
 					}
 
 					if (valueToProcess != null) {
-						Integer min = objectDTO.getMin();
-						Integer max = objectDTO.getMax();
+						Long min = objectDTO.getMin();
+						Long max = objectDTO.getMax();
 						
 						if (min != null && min > (int)valueToProcess) {
 							valueToProcess = (char)min.intValue();
@@ -6371,8 +6559,8 @@ public class Oson {
 		Class<E> returnType = objectDTO.returnType;
 		boolean required = (objectDTO.required != null && objectDTO.required);
 		
-		Integer min = objectDTO.getMin();
-		Integer max = objectDTO.getMax();
+		Long min = objectDTO.getMin();
+		Long max = objectDTO.getMax();
 		boolean json2Java = objectDTO.json2Java;
 
 		if (returnType == char.class
@@ -6496,8 +6684,8 @@ public class Oson {
 				}
 				
 				if (valueToReturn != null) {
-					Integer min = objectDTO.getMin();
-					Integer max = objectDTO.getMax();
+					Long min = objectDTO.getMin();
+					Long max = objectDTO.getMax();
 					
 					if (min != null && min.shortValue() > valueToReturn) {
 						return min.shortValue();
@@ -6576,8 +6764,8 @@ public class Oson {
 					}
 
 					if (valueToProcess != null) {
-						Integer min = objectDTO.getMin();
-						Integer max = objectDTO.getMax();
+						Long min = objectDTO.getMin();
+						Long max = objectDTO.getMax();
 						
 						if (min != null && min.shortValue() > valueToProcess) {
 							valueToProcess = min.shortValue();
@@ -6587,7 +6775,13 @@ public class Oson {
 							valueToProcess = max.shortValue();
 						}
 						
-						return valueToProcess.toString();
+						Integer precision = objectDTO.getPrecision();
+						if (precision != null) {
+							Double v = NumberUtil.setPrecision(valueToProcess, precision);
+							valueToProcess = v.shortValue();
+						}
+						
+						return NumberUtil.toPlainString(valueToProcess);
 					}
 
 				} catch (Exception ex) {
@@ -6614,8 +6808,8 @@ public class Oson {
 		Class<E> returnType = objectDTO.returnType;
 		boolean required = (objectDTO.required != null && objectDTO.required);
 		
-		Integer min = objectDTO.getMin();
-		Integer max = objectDTO.getMax();
+		Long min = objectDTO.getMin();
+		Long max = objectDTO.getMax();
 		boolean json2Java = objectDTO.json2Java;
 
 		if (returnType == short.class
@@ -6786,8 +6980,8 @@ public class Oson {
 		Class<E> returnType = objectDTO.returnType;
 		boolean required = (objectDTO.required != null && objectDTO.required);
 		
-		Integer min = objectDTO.getMin();
-		Integer max = objectDTO.getMax();
+		Long min = objectDTO.getMin();
+		Long max = objectDTO.getMax();
 		boolean json2Java = objectDTO.json2Java;
 
 		if (returnType == char.class
@@ -6984,8 +7178,8 @@ public class Oson {
 		Class<E> returnType = objectDTO.returnType;
 		boolean required = (objectDTO.required != null && objectDTO.required);
 		
-		Integer min = objectDTO.getMin();
-		Integer max = objectDTO.getMax();
+		Long min = objectDTO.getMin();
+		Long max = objectDTO.getMax();
 		boolean json2Java = objectDTO.json2Java;
 
 		if (returnType == boolean.class
@@ -7969,7 +8163,7 @@ public class Oson {
 			return returnedValue + "";
 			
 		} else if (Number.class.isAssignableFrom(type)) {
-			return String.valueOf(returnedValue);
+			return NumberUtil.toPlainString((Number)returnedValue);
 			
 		} else if (Enum.class.isAssignableFrom(type)) {
 			return enum2Json(objectDTO);
@@ -7991,7 +8185,7 @@ public class Oson {
 
 			if (date2Long != null && date2Long) {
 				long longtoprocess = valueToProcess.getTime();
-				return valueToProcess + "";
+				return NumberUtil.toPlainString(longtoprocess);
 			} else {
 				String str = objectDTO.getDateFormat().format(valueToProcess);
 				
@@ -8560,6 +8754,27 @@ public class Oson {
 		if (classMapperAnnotation.date2Long() != BOOLEAN.NONE) {
 			classMapper.date2Long = classMapperAnnotation.date2Long().value();
 		}
+		
+		if (classMapperAnnotation.length() > 0) {
+			classMapper.length = classMapperAnnotation.length();
+		}
+		
+		if (classMapperAnnotation.precision() > 0) {
+			classMapper.precision = classMapperAnnotation.precision();
+		}
+		
+		if (classMapperAnnotation.scale() > 0) {
+			classMapper.scale = classMapperAnnotation.scale();
+		}
+		
+		if (classMapperAnnotation.min() > 0) {
+			classMapper.min = classMapperAnnotation.min();
+		}
+		
+		if (classMapperAnnotation.max() > 0) {
+			classMapper.max = classMapperAnnotation.max();
+		}
+		
 
 		return classMapper;
 	}
@@ -9255,10 +9470,10 @@ public class Oson {
 							case "javax.validation.constraints.Size":
 								Size size = (Size) annotation;
 								if (size.min() > 0) {
-									mapper.min = size.min();
+									mapper.min = (long)size.min();
 								}
 								if (size.max() < Integer.MAX_VALUE) {
-									mapper.max = size.max();
+									mapper.max = (long)size.max();
 								}
 								break;
 								
@@ -9665,10 +9880,10 @@ public class Oson {
 							case "javax.validation.constraints.Size":
 								Size size = (Size) annotation;
 								if (size.min() > 0) {
-									mapper.min = size.min();
+									mapper.min = (long)size.min();
 								}
 								if (size.max() < Integer.MAX_VALUE) {
-									mapper.max = size.max();
+									mapper.max = (long)size.max();
 								}
 								break;
 								
@@ -10949,10 +11164,10 @@ public class Oson {
 							case "javax.validation.constraints.Size":
 								Size size = (Size) annotation;
 								if (size.min() > 0) {
-									mapper.min = size.min();
+									mapper.min = (long)size.min();
 								}
 								if (size.max() < Integer.MAX_VALUE) {
-									mapper.max = size.max();
+									mapper.max = (long)size.max();
 								}
 								break;
 								
@@ -11328,10 +11543,10 @@ public class Oson {
 							case "javax.validation.constraints.Size":
 								Size size = (Size) annotation;
 								if (size.min() > 0) {
-									mapper.min = size.min();
+									mapper.min = (long)size.min();
 								}
 								if (size.max() < Integer.MAX_VALUE) {
-									mapper.max = size.max();
+									mapper.max = (long)size.max();
 								}
 								break;
 								
@@ -12211,9 +12426,17 @@ public class Oson {
 	
 	
 	public static class NumberUtil {
+		
+		public static String toPlainString(Number number) {
+			if (number instanceof BigDecimal) {
+				return ((BigDecimal)number).toPlainString();
+			}
+			return new BigDecimal(number.doubleValue()).toPlainString();
+		}
+		
 		// assume valid inputs
 		public static double setPrecision(Number number, int precision) {
-			String str = number.toString();
+			String str = toPlainString(number);
 			int length = str.length();
 			if (length <= precision) {
 				return number.longValue();

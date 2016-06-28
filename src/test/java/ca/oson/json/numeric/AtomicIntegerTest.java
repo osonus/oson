@@ -170,7 +170,7 @@ public class AtomicIntegerTest extends TestCaseBase {
 	   @Test
 	   public void testSerializeAtomicIntegerWithMin() {
 		   AtomicInteger value = new AtomicInteger(1);
-		   Integer min = 10;
+		   Long min = 10l;
 		   String expected = min + "";
 		   
 		   oson.setClassMappers(new ClassMapper(AtomicInteger.class).setMin(min));
@@ -183,7 +183,7 @@ public class AtomicIntegerTest extends TestCaseBase {
 	   @Test
 	   public void testSerializeAtomicIntegerWithMax() {
 		   AtomicInteger value = new AtomicInteger(1000000000);
-		   Integer max = 2000;
+		   Long max = 2000l;
 		   String expected = max + "";
 		   
 		   oson.setClassMappers(new ClassMapper(AtomicInteger.class).setMax(max));
@@ -196,8 +196,8 @@ public class AtomicIntegerTest extends TestCaseBase {
 	   @Test
 	   public void testDeserializeAtomicIntegerWithMin() {
 		   String value = "1";
-		   Integer min = 10;
-		   AtomicInteger expected = new AtomicInteger(min);
+		   Long min = 10l;
+		   AtomicInteger expected = new AtomicInteger(min.intValue());
 		   
 		   oson.setClassMappers(new ClassMapper(AtomicInteger.class).setMin(min));
 		   
@@ -209,8 +209,8 @@ public class AtomicIntegerTest extends TestCaseBase {
 	   @Test
 	   public void testDeserializeAtomicIntegerWithMax() {
 		   String value = "19999999";
-		   Integer max = 10000;
-		   AtomicInteger expected = new AtomicInteger(max);
+		   Long max = 10000l;
+		   AtomicInteger expected = new AtomicInteger(max.intValue());
 		   
 		   oson.setClassMappers(new ClassMapper(AtomicInteger.class).setMax(max));
 		   

@@ -112,7 +112,7 @@ public class ByteTest extends TestCaseBase {
 	   @Test
 	   public void testSerializeByteWithMin() {
 		   Byte value = 1;
-		   Integer min = 10;
+		   Long min = 10l;
 		   String expected = min + "";
 		   
 		   oson.setClassMappers(new ClassMapper(Byte.class).setMin(min));
@@ -125,7 +125,7 @@ public class ByteTest extends TestCaseBase {
 	   @Test
 	   public void testSerializeByteWithMax() {
 		   Byte value = 127;
-		   Integer max = 125;
+		   Long max = 125l;
 		   String expected = max + "";
 		   
 		   oson.setClassMappers(new ClassMapper(Byte.class).setMax(max));
@@ -138,7 +138,7 @@ public class ByteTest extends TestCaseBase {
 	   @Test
 	   public void testDeserializeByteWithMin() {
 		   String value = "1";
-		   Integer min = 10;
+		   Long min = 10l;
 		   Byte expected = min.byteValue();
 		   
 		   oson.setClassMappers(new ClassMapper(Byte.class).setMin(min));
@@ -151,7 +151,7 @@ public class ByteTest extends TestCaseBase {
 	   @Test
 	   public void testDeserializeByteWithMax() {
 		   String value = "1999";
-		   Integer max = 99;
+		   Long max = 99l;
 		   Byte expected = max.byteValue();
 		   
 		   oson.setClassMappers(new ClassMapper(Byte.class).setMax(max));

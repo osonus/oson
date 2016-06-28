@@ -1,5 +1,6 @@
 package ca.oson.json.numeric;
 
+import java.math.BigDecimal;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -13,7 +14,7 @@ public class DoubleTest extends TestCaseBase {
 	   @Test
 	   public void testSerializeDouble() {
 		   Double value = 7899990d;
-		   String expected = "" + value;
+		   String expected = "7899990";
 		   
 		   String result = oson.serialize(value);
 		   
@@ -84,9 +85,8 @@ public class DoubleTest extends TestCaseBase {
 
 	   @Test
 	   public void testSerializeDoubleWithFunctionAtomicInteger() {
-		   // a minimum value of -128 and a maximum value of 127 (inclusive)
 		   double value = 12789d;
-		   String expected = "12789.0";
+		   String expected = "12789";
 		   
 		   oson.setClassMappers(new ClassMapper(Double.class)
 		   	.setSerializer((Object p) -> new AtomicInteger(Integer.parseInt(p.toString()))));
@@ -112,8 +112,8 @@ public class DoubleTest extends TestCaseBase {
 	   @Test
 	   public void testSerializeDoubleWithMin() {
 		   Double value = 1d;
-		   Integer min = 10009;
-		   String expected = "10009.0";
+		   Long min = 10009l;
+		   String expected = "10009";
 		   
 		   oson.setClassMappers(new ClassMapper(Double.class).setMin(min));
 		   
@@ -125,8 +125,8 @@ public class DoubleTest extends TestCaseBase {
 	   @Test
 	   public void testSerializeDoubleWithMax() {
 		   Double value = 1009999d;
-		   Integer max = 300;
-		   String expected = "300.0";
+		   Long max = 300l;
+		   String expected = "300";
 		   
 		   oson.setClassMappers(new ClassMapper(Double.class).setMax(max));
 		   
@@ -138,7 +138,7 @@ public class DoubleTest extends TestCaseBase {
 	   @Test
 	   public void testDeserializeDoubleWithMin() {
 		   String value = "1";
-		   Integer min = 10;
+		   Long min = 10l;
 		   Double expected = min.doubleValue();
 		   
 		   oson.setClassMappers(new ClassMapper(Double.class).setMin(min));
@@ -151,12 +151,53 @@ public class DoubleTest extends TestCaseBase {
 	   @Test
 	   public void testDeserializeDoubleWithMax() {
 		   String value = "1999";
-		   Integer max = 99;
+		   Long max = 99l;
 		   Double expected = max.doubleValue();
 		   
 		   oson.setClassMappers(new ClassMapper(Double.class).setMax(max));
 		   
 		   Double result = oson.deserialize(value, Double.class);
+
+		   assertEquals(expected, result);
+	   }
+	   
+	   @Test
+	   public void testSerializeDoubleWithPrecision() {
+		   Double value = 1234567891.98765;
+		   Integer precision = 4;
+		   String expected = "1234000000";
+		   
+		   oson.setPrecision(precision);
+		   
+		   String result = oson.serialize(value);
+
+		   assertEquals(expected, result);
+	   }
+	   
+	   @Test
+	   public void testSerializeDoubleWithScale() {
+		   Double value = 1234567891.98765;
+		   Integer scale = 3;
+		   String expected = "1234567891.988";
+		   
+		   oson.setClassMappers(new ClassMapper(Double.class).setScale(scale));
+		   
+		   String result = oson.serialize(value);
+
+		   assertEquals(expected, result);
+	   }
+	   
+	   
+	   @Test
+	   public void testSerializeDoubleWithPrecisionScale() {
+		   Double value = 1234567891.98765;
+		   Integer scale = 3;
+		   Integer precision = 3;
+		   String expected = "1230000000.000";
+		   
+		   oson.setClassMappers(new ClassMapper(Double.class).setPrecision(precision).setScale(scale));
+		   
+		   String result = oson.serialize(value);
 
 		   assertEquals(expected, result);
 	   }

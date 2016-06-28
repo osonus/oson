@@ -109,7 +109,7 @@ public class ShortTest extends TestCaseBase {
 	   @Test
 	   public void testSerializeShortWithMin() {
 		   Short value = 1;
-		   Integer min = 10;
+		   Long min = 10l;
 		   String expected = min + "";
 		   
 		   oson.setClassMappers(new ClassMapper(Short.class).setMin(min));
@@ -122,7 +122,7 @@ public class ShortTest extends TestCaseBase {
 	   @Test
 	   public void testSerializeShortWithMax() {
 		   Short value = 10000;
-		   Integer max = 2000;
+		   Long max = 2000l;
 		   String expected = max + "";
 		   
 		   oson.setClassMappers(new ClassMapper(Short.class).setMax(max));
@@ -135,7 +135,7 @@ public class ShortTest extends TestCaseBase {
 	   @Test
 	   public void testDeserializeShortWithMin() {
 		   String value = "1";
-		   Integer min = 10;
+		   Long min = 10l;
 		   Short expected = min.shortValue();
 		   
 		   oson.setClassMappers(new ClassMapper(Short.class).setMin(min));
@@ -148,7 +148,7 @@ public class ShortTest extends TestCaseBase {
 	   @Test
 	   public void testDeserializeShortWithMax() {
 		   String value = "1999";
-		   Integer max = 200;
+		   Long max = 200l;
 		   Short expected = max.shortValue();
 		   
 		   oson.setClassMappers(new ClassMapper(Short.class).setMax(max));

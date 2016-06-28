@@ -170,7 +170,7 @@ public class BigDecimalTest extends TestCaseBase {
 	   @Test
 	   public void testSerializeBigDecimalWithMin() {
 		   BigDecimal value = new BigDecimal(1);
-		   Integer min = 10;
+		   Long min = 10l;
 		   String expected = min + "";
 		   
 		   oson.setClassMappers(new ClassMapper(BigDecimal.class).setMin(min));
@@ -183,7 +183,7 @@ public class BigDecimalTest extends TestCaseBase {
 	   @Test
 	   public void testSerializeBigDecimalWithMax() {
 		   BigDecimal value = new BigDecimal(1000000000);
-		   Integer max = 2000;
+		   Long max = 2000l;
 		   String expected = max + "";
 		   
 		   oson.setClassMappers(new ClassMapper(BigDecimal.class).setMax(max));
@@ -196,7 +196,7 @@ public class BigDecimalTest extends TestCaseBase {
 	   @Test
 	   public void testDeserializeBigDecimalWithMin() {
 		   String value = "1";
-		   Integer min = 10;
+		   Long min = 10l;
 		   BigDecimal expected = new BigDecimal(min);
 		   
 		   oson.setClassMappers(new ClassMapper(BigDecimal.class).setMin(min));
@@ -209,7 +209,7 @@ public class BigDecimalTest extends TestCaseBase {
 	   @Test
 	   public void testDeserializeBigDecimalWithMax() {
 		   String value = "19999999";
-		   Integer max = 10000;
+		   Long max = 10000l;
 		   BigDecimal expected = new BigDecimal(max);
 		   
 		   oson.setClassMappers(new ClassMapper(BigDecimal.class).setMax(max));

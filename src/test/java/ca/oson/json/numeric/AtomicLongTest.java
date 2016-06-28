@@ -170,7 +170,7 @@ public class AtomicLongTest extends TestCaseBase {
 	   @Test
 	   public void testSerializeAtomicLongWithMin() {
 		   AtomicLong value = new AtomicLong(1);
-		   Integer min = 10;
+		   Long min = 10l;
 		   String expected = min + "";
 		   
 		   oson.setClassMappers(new ClassMapper(AtomicLong.class).setMin(min));
@@ -183,7 +183,7 @@ public class AtomicLongTest extends TestCaseBase {
 	   @Test
 	   public void testSerializeAtomicLongWithMax() {
 		   AtomicLong value = new AtomicLong(1000000000);
-		   Integer max = 2000;
+		   Long max = 2000l;
 		   String expected = max + "";
 		   
 		   oson.setClassMappers(new ClassMapper(AtomicLong.class).setMax(max));
@@ -196,7 +196,7 @@ public class AtomicLongTest extends TestCaseBase {
 	   @Test
 	   public void testDeserializeAtomicLongWithMin() {
 		   String value = "1";
-		   Integer min = 10;
+		   Long min = 10l;
 		   AtomicLong expected = new AtomicLong(min);
 		   
 		   oson.setClassMappers(new ClassMapper(AtomicLong.class).setMin(min));
@@ -209,7 +209,7 @@ public class AtomicLongTest extends TestCaseBase {
 	   @Test
 	   public void testDeserializeAtomicLongWithMax() {
 		   String value = "19999999";
-		   Integer max = 10000;
+		   Long max = 10000l;
 		   AtomicLong expected = new AtomicLong(max);
 		   
 		   oson.setClassMappers(new ClassMapper(AtomicLong.class).setMax(max));

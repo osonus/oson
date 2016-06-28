@@ -75,12 +75,12 @@ public @interface FieldMapper {
 	/*
 	 * minimum value this field should have
 	 */
-	int min() default 0;
+	long min() default 0;
 	
 	/*
 	 * maximum value this field should have
 	 */
-	int max() default 0;
+	long max() default 0;
 	
 	/*
 	 * Specify the default value handling principal, such as to allow null value 

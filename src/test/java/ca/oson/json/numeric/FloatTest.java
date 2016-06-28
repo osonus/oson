@@ -13,7 +13,7 @@ public class FloatTest extends TestCaseBase {
 	   @Test
 	   public void testSerializeFloat() {
 		   Float value = 7899990f;
-		   String expected = "" + value;
+		   String expected = "7899990";
 		   
 		   String result = oson.serialize(value);
 		   
@@ -86,7 +86,7 @@ public class FloatTest extends TestCaseBase {
 	   public void testSerializeFloatWithFunctionAtomicInteger() {
 		   // a minimum value of -128 and a maximum value of 127 (inclusive)
 		   float value = 12789f;
-		   String expected = "12789.0";
+		   String expected = "12789";
 		   
 		   oson.setClassMappers(new ClassMapper(Float.class)
 		   	.setSerializer((Object p) -> new AtomicInteger(Integer.parseInt(p.toString()))));
@@ -112,8 +112,8 @@ public class FloatTest extends TestCaseBase {
 	   @Test
 	   public void testSerializeFloatWithMin() {
 		   Float value = 1f;
-		   Integer min = 10009;
-		   String expected = "10009.0";
+		   Long min = 10009l;
+		   String expected = "10009";
 		   
 		   oson.setClassMappers(new ClassMapper(Float.class).setMin(min));
 		   
@@ -125,8 +125,8 @@ public class FloatTest extends TestCaseBase {
 	   @Test
 	   public void testSerializeFloatWithMax() {
 		   Float value = 1009999f;
-		   Integer max = 300;
-		   String expected = "300.0";
+		   Long max = 300l;
+		   String expected = "300";
 		   
 		   oson.setClassMappers(new ClassMapper(Float.class).setMax(max));
 		   
@@ -138,7 +138,7 @@ public class FloatTest extends TestCaseBase {
 	   @Test
 	   public void testDeserializeFloatWithMin() {
 		   String value = "1";
-		   Integer min = 10;
+		   Long min = 10l;
 		   Float expected = min.floatValue();
 		   
 		   oson.setClassMappers(new ClassMapper(Float.class).setMin(min));
@@ -151,7 +151,7 @@ public class FloatTest extends TestCaseBase {
 	   @Test
 	   public void testDeserializeFloatWithMax() {
 		   String value = "1999";
-		   Integer max = 99;
+		   Long max = 99l;
 		   Float expected = max.floatValue();
 		   
 		   oson.setClassMappers(new ClassMapper(Float.class).setMax(max));
