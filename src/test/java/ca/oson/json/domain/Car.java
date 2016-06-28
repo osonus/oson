@@ -2,6 +2,9 @@ package ca.oson.json.domain;
 
 import java.util.Objects;
 
+import ca.oson.json.FieldMapper;
+import ca.oson.json.Oson.BOOLEAN;
+
 public class Car {
 
     public String brand = "Chevron";
@@ -22,6 +25,7 @@ public class Car {
     }
     
     @Override
+    @FieldMapper(ignore = BOOLEAN.TRUE)
     public int hashCode() {
     	return Objects.hashCode(brand) * 7 + Objects.hashCode(doors) * 3 + Objects.hashCode(year);
     }

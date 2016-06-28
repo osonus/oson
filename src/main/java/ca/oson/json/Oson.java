@@ -7282,84 +7282,224 @@ public class Oson {
 
 		return null;
 	}
+	
+	
+	private Class getComponentType(Class componentType, Class itemType) {
+		if (itemType.isEnum() || itemType.isPrimitive() || itemType.isArray()) {
+			return itemType;
+			
+		} else if (Number.class.isAssignableFrom(itemType)) {
+			return itemType;
+		} else if (itemType == Character.class) {
+			return itemType;
+		} else if (itemType == Boolean.class) {
+			return itemType;
+		} else if (Date.class.isAssignableFrom(itemType)) {
+			return itemType;
+		} else {
+			return componentType;
+		}
+	}
 
 
-	private <E> Object getMap(FieldData objectDTO) {
+	private <E> Map json2Map(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Map returnObj = (Map)objectDTO.returnObj;
 		Class<Map> returnType = objectDTO.returnType;
-		boolean required = (objectDTO.required != null && objectDTO.required);
 		Map defaultValue = (Map)objectDTO.defaultValue;
-		boolean json2Java = objectDTO.json2Java;
+		
+		if (value != null && value.toString().length() > 0) {	
+			Map<String, Object> values = (Map<String, Object>)value;
+	
+			if (values.size() > 0) {
+				Function function = objectDTO.getDeserializer();
 
-		if (value == null) {
-			if (required) {
-				if (returnObj != null) {
+				if (function != null) {
+					try {
+						// suppose to return String, but in case not, try to process
+						if (function instanceof Json2MapFunction) {
+							values = ((Json2MapFunction)function).apply(values);
+
+						} else {
+							
+							Object returnedValue = function.apply(values);
+						
+							if (returnedValue == null) {
+								return json2MapDefault(objectDTO);
+								
+							} else if (Map.class.isAssignableFrom(returnedValue.getClass())) {
+								values = (Map)returnedValue;
+
+							} else {
+								// do not know what to do
+							}
+						}
+					} catch (Exception e) {}
+				}
+
+				if (values.size() > 0) {
+					if (returnObj == null) {
+						if (defaultValue != null) {
+							returnObj = defaultValue;
+						}
+			
+						if (returnObj == null) {
+							returnObj = newInstance(new HashMap(), returnType);
+						}
+			
+						if (returnObj == null) {
+							returnObj = DefaultValue.map();
+						}
+						
+						if (returnObj == null) {
+							returnObj = new HashMap();
+						}
+					}
+					
+					Class<E> componentType = null;
+					if (objectDTO.erasedType != null) {
+						componentType = ObjectUtil.getTypeComponentClass(objectDTO.erasedType);
+					}
+			
+					if (componentType == null) {
+						if (returnType == null && returnObj != null) {
+							returnType = (Class<Map>) returnObj.getClass();
+						}
+			
+						componentType = CollectionArrayTypeGuesser.guessElementType(values, returnType,  getJsonClassType());
+					}
+					
+					for (Entry<String, Object> entry: values.entrySet()) {
+						Object obj = entry.getValue(); // obj.getClass()
+						Class type = getComponentType(componentType, obj.getClass());
+						FieldData newFieldData = new FieldData(obj, type, objectDTO.json2Java, objectDTO.level, objectDTO.set);
+						returnObj.put(entry.getKey(), json2Object(newFieldData));
+					}
+					
 					return returnObj;
 				}
-
-				if (defaultValue != null) {
-					return defaultValue;
-				}
-
-				returnObj = newInstance((Map<String, Object>)value, returnType);
-
-				if (returnObj != null) {
-					return returnObj;
-				}
-
-				return DefaultValue.map();
 			}
+		}
+		
+		return json2MapDefault(objectDTO);
+	}
 
+	private <E> String map2Json(FieldData objectDTO) {
+		Object value = objectDTO.valueToProcess;
+		Class<?> returnType = objectDTO.returnType;
+
+		if (value != null && ((Map) value).size() > 0) {
+			Map<String, Object> map = (Map) value;
+			Function function = objectDTO.getSerializer();
+			String valueToReturn = null;
+			
+			if (function != null) {
+				try {
+
+					// suppose to return String, but in case not, try to process
+					if (function instanceof Map2JsonFunction) {
+						return ((Map2JsonFunction)function).apply(map);
+							
+					} else {
+						
+						Object returnedValue = function.apply(map);
+	
+						if (returnedValue instanceof Optional) {
+							Optional opt = (Optional)returnedValue;
+							returnedValue = opt.orElse(null);
+						}
+						
+						if (returnedValue == null) {
+							return map2JsonDefault(objectDTO);
+							
+						} else if (Map.class.isAssignableFrom(returnedValue.getClass())) {
+							// keep on processing
+							map = (Map) returnedValue;
+							
+						} else {
+							objectDTO.valueToProcess = returnedValue;
+							return object2String(objectDTO);
+						}
+					}
+					
+				} catch (Exception ex) {}
+			}
+	
+			String repeated = getPrettyIndentationln(objectDTO.level), pretty = getPrettySpace();
+			objectDTO.incrLevel();
+			String repeatedItem = getPrettyIndentationln(objectDTO.level);
+			StringBuilder sbuilder = new StringBuilder();
+			
+			Set<String> names = map.keySet();
+			try {
+				if (getOrderByKeyAndProperties()) {//LinkedHashSet
+					names = new TreeSet(names);
+				}
+
+				for (String name : names) {
+					Object v = map.get(name);
+
+					if (name != null) {
+						sbuilder.append(repeatedItem + "\"" + name + "\":" + pretty);
+						
+						FieldData newFieldData = new FieldData(v, v.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
+						sbuilder.append(object2Json(newFieldData));
+						sbuilder.append(",");
+					}
+				}
+			} catch (Exception e) {
+				//e.printStackTrace();
+			}
+		
+			String str = sbuilder.toString();
+			int size = str.length();
+			if (size == 0) {
+				return "{}";
+			} else {
+				return "{" + str.substring(0, size - 1) + repeated + "}";
+			}
+		}
+		
+		return map2JsonDefault(objectDTO);
+	}
+	
+	
+	private String map2JsonDefault(FieldData objectDTO) {
+		Map valueToReturn = json2MapDefault(objectDTO);
+		
+		if (valueToReturn == null) {
 			return null;
 		}
 
-		if (returnObj == null) {
+		switch (objectDTO.defaultType) {
+		case ALWAYS:
+			return "{}";
+		case NON_NULL:
+			return "{}";
+		case NON_EMPTY:
+			return null;
+		case NON_DEFAULT:
+			return null;
+		case DEFAULT:
+			return "{}";
+		default:
+			return "{}";
+		}
+	}
+	
+	private <E> Map json2MapDefault(FieldData objectDTO) {
+		boolean required = (objectDTO.required != null && objectDTO.required);
+
+		if (getDefaultType() == JSON_INCLUDE.DEFAULT || required) {
+			Map defaultValue = (Map)objectDTO.getDefaultValue();
 			if (defaultValue != null) {
-				returnObj = defaultValue;
+				return defaultValue;
 			}
 
-			if (returnObj == null) {
-				returnObj = newInstance((Map<String, Object>)value, returnType);
-			}
-
-			if (returnObj == null) {
-				returnObj = DefaultValue.map();
-			}
+			return DefaultValue.map();
 		}
 
-		Map<String, Object> values = (Map<String, Object>)value;
-
-		if (values.size() == 0) {
-			return returnObj;
-		}
-		
-		Function function = null;
-		if (json2Java) {
-			function = getDeserializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
-			if (function != null) {
-				try {
-					return function.apply(values);
-				} catch (Exception e) {}
-			}
-			
-		} else {
-			function = getSerializer(objectDTO.getDefaultName(), returnType, objectDTO.getEnclosingType());
-			if (function != null) {
-				try {
-					return function.apply(values);
-				} catch (Exception e) {}
-			}
-		}
-
-		for (Entry<String, Object> entry: values.entrySet()) {
-			Object obj = entry.getValue();
-			FieldData newFieldData = new FieldData(obj, obj.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
-			newFieldData.json2Java = objectDTO.json2Java;
-			returnObj.put(entry.getKey(), json2Object(newFieldData));
-		}
-		
-		return returnObj;
+		return null;
 	}
 
 
@@ -7947,7 +8087,7 @@ public class Oson {
 			}
 
 		} else if (Map.class.isAssignableFrom(returnType)) {
-			return (E) getMap(objectDTO);
+			return (E) json2Map(objectDTO);
 
 		} else {
 			E obj = (E)objectDTO.returnObj;
@@ -8429,51 +8569,7 @@ public class Oson {
 			return array2Json(objectDTO);
 
 		} else if (Map.class.isAssignableFrom(returnType)) {
-			if (value == null) {
-				return null;
-			}
-			
-			Class valueType = value.getClass();
-			if (!Map.class.isAssignableFrom(valueType)) {
-				return null;
-			}
-
-			Map<String, Object> map = (Map) value;
-
-			StringBuilder sbuilder = new StringBuilder();
-
-			String repeated = getPrettyIndentationln(objectDTO.level), pretty = getPrettySpace();
-			String repeatedItem = getPrettyIndentationln(++objectDTO.level);
-
-			//for (Map.Entry<Object, ?> entry : map.entrySet()) {
-			Set<String> names = map.keySet();
-			try {
-				if (getOrderByKeyAndProperties()) {//LinkedHashSet
-					names = new TreeSet(names);
-				}
-
-				for (String name : names) {
-					Object v = map.get(name);
-
-					if (name != null) {
-						sbuilder.append(repeatedItem + "\"" + name + "\":" + pretty);
-						
-						FieldData newFieldData = new FieldData(v, v.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
-						sbuilder.append(object2Json(newFieldData));
-						sbuilder.append(",");
-					}
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-
-			String str = sbuilder.toString();
-			int size = str.length();
-			if (size == 0) {
-				return "{}";
-			} else {
-				return "{" + str.substring(0, size - 1) + repeated + "}";
-			}
+			return map2Json(objectDTO);
 
 		} else if (objectDTO.level < getLevel()) {
 			if (value == null) {
@@ -12064,6 +12160,60 @@ public class Oson {
 			}
 			return b;
 		}
+		
+		public static <E> Class<E> guessElementType(Map<String, Object> map, Class valueType, String jsonClassType) {
+			if (map == null) {
+				return null;
+			}
+
+			Class componentType = null;
+			
+			if (valueType != null) {
+				componentType = valueType.getComponentType();
+				
+				if (componentType != null) {
+					return componentType;
+				}
+			}
+			
+			valueType = map.getClass();
+
+			componentType = valueType.getComponentType();
+			if (componentType != null) {
+				return componentType;
+			}
+
+			componentType = ObjectUtil.getTypeComponentClass(valueType.getGenericSuperclass());
+			if (componentType != null) {
+				return componentType;
+			}
+			
+			Class<?> guess = null;
+			for (String key: map.keySet()) {
+				Object o = map.get(key);
+				if (o != null) {
+					if (guess == null) {
+						guess = o.getClass();
+					} else if (guess != o.getClass()) {
+						guess = lowestCommonSuper(guess, o.getClass());
+					}
+					
+					if (Map.class.isAssignableFrom(guess)) {
+						Map m = (Map)o;
+						if (m.containsKey(jsonClassType)) {
+							String className = (String) m.get(jsonClassType);
+							try {
+								return (Class<E>) Class.forName(className);
+							} catch (ClassNotFoundException e) {
+								// e.printStackTrace();
+							}
+						}
+
+					}
+				}
+			}
+			return (Class<E>)guess;
+		}
 
 		//<Collection<E>>
 		public static <E> Class<E> guessElementType(Collection<E> collection, Class valueType, String jsonClassType) {
@@ -13298,7 +13448,7 @@ public class Oson {
 	
 	@FunctionalInterface
 	public static interface Json2MapFunction extends OsonFunction {
-		public Map apply(String t);
+		public Map apply(Map t);
 	}
 	
 	@FunctionalInterface
