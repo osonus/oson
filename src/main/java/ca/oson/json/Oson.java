@@ -7101,6 +7101,31 @@ public class Oson {
 		return json2CollectionDefault(objectDTO);
 	}
 
+	
+	private Class getObjectType(Class type) {
+		if (type.isPrimitive()) {
+			if (type == int.class) {
+				return Integer.class;
+			} else if (type == char.class) {
+				return Character.class;
+			} else if (type == byte.class) {
+				return Byte.class;
+			} else if (type == float.class) {
+				return Float.class;
+			} else if (type == double.class) {
+				return Double.class;
+			} else if (type == long.class) {
+				return Long.class;
+			} else if (type == short.class) {
+				return Short.class;
+			} else if (type == boolean.class) {
+				return Boolean.class;
+			}
+		}
+	
+		return type;
+	}
+	
 
 	private <E> E[] json2Array(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
@@ -7197,6 +7222,10 @@ public class Oson {
 				}
 				
 				if (componentType == null) componentType = (Class<E>) Object.class;
+				
+				if (componentType.isPrimitive()) {
+					componentType = getObjectType(componentType);
+				}
 				
 				E[] arr = (E[]) Array.newInstance(componentType, values.size());
 				
