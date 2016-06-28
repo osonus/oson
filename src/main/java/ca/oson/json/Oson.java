@@ -30,6 +30,7 @@ import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -705,6 +706,22 @@ public class Oson {
 			return false;
 		}
 		
+		public ClassMapper setLength(Integer length) {
+			this.length = length;
+			return this;
+		}
+		
+		/*
+		 * the number of digits of decimal
+		 */
+		public ClassMapper setPrecision(Integer precision) {
+			this.precision = precision;
+			return this;
+		}
+		
+		public Integer length = null; // Default: 255
+		public Integer precision = null;
+		
 		public Class<T> type;
 
 		// class level
@@ -1030,8 +1047,9 @@ public class Oson {
 		/*
 		 * the number of digits of decimal
 		 */
-		public void setPrecision(Integer precision) {
+		public FieldMapper setPrecision(Integer precision) {
 			this.precision = precision;
+			return this;
 		}
 		
 		public boolean isJsonRawValue() {
@@ -1903,6 +1921,14 @@ public class Oson {
 		// for internal use
 		public boolean doubleQuote = false;
 		
+		public Integer getLength() {
+			if (length == null && classMapper != null) {
+				length = classMapper.length;
+			}
+			
+			return length;
+		}
+		
 		public void incrLevel() {
 			this.level++;
 		}
@@ -2051,6 +2077,23 @@ public class Oson {
 			
 			return null;
 		}
+		
+		public Integer getScale() {
+			if (scale == null && classMapper != null) {
+				scale = classMapper.scale;
+			}
+			
+			return scale;
+		}
+		
+		public Integer getPrecision() {
+			if (precision == null && classMapper != null) {
+				precision = classMapper.precision;
+			}
+			
+			return precision;
+		}
+		
 
 		public Integer getMin() {
 			if (min == null && classMapper != null) {
@@ -4531,9 +4574,15 @@ public class Oson {
 					if (max != null && valueToReturn.compareTo(new BigDecimal(max)) > 0) {
 						valueToReturn = new BigDecimal(max);
 					}
+					Integer scale = objectDTO.getScale();
+					if (scale != null) {
+						valueToReturn = valueToReturn.setScale(scale, RoundingMode.HALF_UP);
+					}
 					
-					if (objectDTO.scale != null) {
-						valueToReturn = valueToReturn.setScale(objectDTO.scale);
+					Integer precision = objectDTO.getPrecision();
+					if (precision != null && precision < valueToReturn.precision()) {
+						double v = NumberUtil.setPrecision(valueToReturn, precision);
+						valueToReturn = new BigDecimal(v);
 					}
 					
 					return valueToReturn;
@@ -4616,15 +4665,22 @@ public class Oson {
 							valueToProcess = new BigDecimal(max);
 						}
 						
-						if (objectDTO.scale != null) {
-							valueToProcess = valueToProcess.setScale(objectDTO.scale);
+						Integer scale = objectDTO.getScale();
+						if (scale != null) {
+							valueToProcess = valueToProcess.setScale(scale, RoundingMode.HALF_UP);
+						}
+						
+						Integer precision = objectDTO.getPrecision();
+						if (precision != null && precision < valueToProcess.precision()) {
+							double v = NumberUtil.setPrecision(valueToProcess, precision);
+							valueToProcess = new BigDecimal(v);
 						}
 						
 						return valueToProcess.toString();
 					}
 
 				} catch (Exception ex) {
-					//ex.printStackTrace();
+					ex.printStackTrace();
 				}
 			}
 		}
@@ -6632,7 +6688,7 @@ public class Oson {
 				}
 				
 				if (valueToProcess != null) {
-					Integer length = objectDTO.length;
+					Integer length = objectDTO.getLength();
 
 					if (length != null && length < valueToProcess.length()) {
 						valueToProcess = valueToProcess.substring(0, length);
@@ -6697,7 +6753,7 @@ public class Oson {
 							return valueToProcess;
 						}
 						
-						Integer length = objectDTO.length;
+						Integer length = objectDTO.getLength();
 
 						if (length != null && length < valueToProcess.length()) {
 							valueToProcess = valueToProcess.substring(0, length);
@@ -7711,7 +7767,7 @@ public class Oson {
 				return (E) deserialize(mvalue, returnType);
 				
 			} else {
-				return (E) deserialize(mvalue, returnType, obj);
+				return (E) deserialize2Object(mvalue, returnType, obj);
 			}
 		}
 	}
@@ -8595,6 +8651,14 @@ public class Oson {
 		
 		if (javaClassMapper.simpleDateFormat != null) {
 			classMapper.simpleDateFormat = javaClassMapper.simpleDateFormat;
+		}
+		
+		if (javaClassMapper.length != null) {
+			classMapper.length = javaClassMapper.length;
+		}
+		
+		if (javaClassMapper.precision != null) {
+			classMapper.precision = javaClassMapper.precision;
 		}
 		
 		return classMapper;
@@ -10106,7 +10170,7 @@ public class Oson {
 					if (object == null) {
 						return deserialize(map, valueType);
 					} else {
-						return deserialize(map, valueType, object);
+						return deserialize2Object(map, valueType, object);
 					}
 				}
 
@@ -10156,7 +10220,7 @@ public class Oson {
 
 		T obj = newInstance(map, valueType);
 
-		return deserialize(map, valueType, obj);
+		return deserialize2Object(map, valueType, obj);
 	}
 
 	/*
@@ -10518,7 +10582,7 @@ public class Oson {
 	 * 9. Apply annotations from Oson;
 	 * 10. Apply Java configuration for this particular field.
 	 */
-	<T> T deserialize(Map<String, Object> map, Class<T> valueType, T obj) {
+	<T> T deserialize2Object(Map<String, Object> map, Class<T> valueType, T obj) {
 
 		Set<String> nameKeys = new HashSet(map.keySet());
 		
@@ -12142,6 +12206,35 @@ public class Oson {
 				return str.matches("-?\\d+(\\.\\d+)?");
 			}
 			return true;
+		}
+	}
+	
+	
+	public static class NumberUtil {
+		// assume valid inputs
+		public static double setPrecision(Number number, int precision) {
+			String str = number.toString();
+			int length = str.length();
+			if (length <= precision) {
+				return number.longValue();
+			}
+			
+			String first = str.substring(0, precision);
+			String last = str.substring(precision);
+			StringBuffer sb = new StringBuffer();
+			length = last.length();
+			for (int i = 0; i < length; i++) {
+				char c = last.charAt(i);
+				if (c == '0' || c == '.' || c == '-') {
+					sb.append(c);
+				} else {
+					sb.append('0');
+				}
+			}
+			
+			str = first + sb.toString();
+
+			return Double.parseDouble(str);
 		}
 	}
 

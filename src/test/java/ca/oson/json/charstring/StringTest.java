@@ -38,4 +38,16 @@ public class StringTest extends TestCaseBase {
 
 		   assertTrue(result.contains(value));
 	   }
+	   
+	   
+	   @Test
+	   public void testSerializeTextWithLength() {
+		   String value = "This is my new car. Do not drive without my permission!";
+
+		   int length = 18;
+		   String result = oson.setClassMappers(new ClassMapper(String.class).setLength(length))
+				   .serialize(value);
+
+		   assertTrue((result.length() == length));
+	   }
 }

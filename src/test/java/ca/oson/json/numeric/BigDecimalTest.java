@@ -219,4 +219,30 @@ public class BigDecimalTest extends TestCaseBase {
 		   assertEquals(expected, result);
 	   }
 	   
+	   
+	   @Test
+	   public void testSerializeBigDecimalWithPrecision() {
+		   BigDecimal value = new BigDecimal(1234567891);
+		   Integer precision = 3;
+		   String expected = "1230000000";
+		   
+		   oson.setClassMappers(new ClassMapper(BigDecimal.class).setPrecision(precision));
+		   
+		   String result = oson.serialize(value);
+
+		   assertEquals(expected, result);
+	   }
+	   
+	   @Test
+	   public void testSerializeBigDecimalWithScale() {
+		   BigDecimal value = new BigDecimal(1234.56789189);
+		   Integer scale = 3;
+		   String expected = "1234.568";
+		   
+		   oson.setClassMappers(new ClassMapper(BigDecimal.class).setScale(scale));
+		   
+		   String result = oson.serialize(value);
+
+		   assertEquals(expected, result);
+	   }
 }
