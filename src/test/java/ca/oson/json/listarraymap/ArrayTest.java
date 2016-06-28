@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import ca.oson.json.domain.Car;
 import ca.oson.json.support.TestCaseBase;
 
 public class ArrayTest extends TestCaseBase {
@@ -54,4 +55,21 @@ public class ArrayTest extends TestCaseBase {
 		   }
 	   }
 	   
+	   
+	   @Test
+	   public void testDeserializeObjectWithArrayInt() {
+		   Car expected = new Car("Toyota", 6);
+		   expected.year = 2000;
+		   expected.years = new Integer[]{1989,1998,2016};
+		   
+		   String value = "{\"brand\":\"Toyota\",\"doors\":6,\"years\":[1989,1998,2016],\"year\":2000}";
+
+		   Car result = oson.deserialize(value, Car.class);
+
+		   assertEquals(expected.year, result.year);
+		   assertEquals(expected.doors, result.doors);
+		   assertEquals(expected.brand, result.brand);
+		   assertEquals(expected.years.length, result.years.length);
+		   
+	   }
 }

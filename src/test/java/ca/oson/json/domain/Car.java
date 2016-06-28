@@ -10,6 +10,7 @@ public class Car {
 
     public int year = 2016;
 	
+    public Integer[] years;
 
     public Car() {}
     public Car(String brand) {
