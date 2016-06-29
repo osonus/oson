@@ -7,7 +7,7 @@ This library implements its own Java to/from Json processor, and also provides a
   * Convert arbitray Java Object to Json data and back
   * Provide a user friendly common interface to Gson and ObjectMapper
   * Support major set of Json annotations: including com.fasterxml.jackson, com.google.gson, org.codehaus.jackson, javax.persistence, javax.validation (JPA), in addition to its own ca.oson.json annotation
-  * Allow 3 level configurations of name and value conversions: global, class-level, and field level
+  * Allow 3 level control of name and value conversions: global, class-level, and field level
   * Allow these conversions to be either annotation-oriented, or Java oriented, or both
   * Allow well-formatted JSON output: any indentation, any depth, as far as object linkage goes, without redundancy
   * Function of lambda expressions is added to the serialization and deserializatin processes, allowing limitless value transformation, with an ease of mind
