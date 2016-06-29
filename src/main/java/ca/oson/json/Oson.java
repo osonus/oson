@@ -7286,25 +7286,51 @@ public class Oson {
 	}
 	
 	
-	private Class getComponentType(Class componentType, Class itemType) {
-		if (itemType.isEnum() || itemType.isPrimitive()) {
-			return itemType;
-		} else if (Number.class.isAssignableFrom(itemType)) {
-			return itemType;
-		} else if (itemType == Character.class) {
-			return itemType;
-		} else if (itemType == Boolean.class) {
-			return itemType;
-		} else if (Date.class.isAssignableFrom(itemType)) {
-			return itemType;
-		} else if (Enum.class.isAssignableFrom(itemType)) {
-			return itemType;
-		} else if (itemType.isArray()) {
-				return itemType;
-		} else if (Collection.class.isAssignableFrom(itemType)) {
+	private Class getComponentType(Class componentType, Class itemType, Object obj, boolean json2Java) {
+
+		if (!json2Java) {
 			return itemType;
 		} else {
-			return componentType;
+			if (Map.class.isAssignableFrom(itemType)) {
+				String className = ((Map<String, String>)obj).get(getJsonClassType());
+				if (className != null && className.length() > 0) {
+					try {
+						return Class.forName(className);
+					} catch (ClassNotFoundException e) {
+						// e.printStackTrace();
+					}
+				}
+				
+			} else if (StringUtil.isNumeric(obj.toString())) {
+				if (obj.toString().contains(".")) {
+					return Double.class;
+				} else {
+					return Integer.class;
+				}
+			}
+			
+			if (itemType.isPrimitive()) {
+				return itemType;
+			} else if (Number.class.isAssignableFrom(itemType)) {
+				return itemType;
+			} else if (itemType == String.class) {
+				return itemType;
+			} else if (itemType == Character.class) {
+				return itemType;
+			} else if (itemType == Boolean.class) {
+				return itemType;
+			} else if (Date.class.isAssignableFrom(itemType)) {
+				return itemType;
+			} else if (itemType.isEnum() || Enum.class.isAssignableFrom(itemType)) {
+				return itemType;
+				
+			} else {
+				if (componentType != null) {
+					return componentType;
+				} else {
+					return itemType;
+				}
+			}
 		}
 	}
 
@@ -7367,18 +7393,16 @@ public class Oson {
 					if (objectDTO.erasedType != null) {
 						componentType = ObjectUtil.getTypeComponentClass(objectDTO.erasedType);
 					}
-			
 					if (componentType == null) {
 						if (returnType == null && returnObj != null) {
 							returnType = (Class<Map>) returnObj.getClass();
 						}
-			
 						componentType = CollectionArrayTypeGuesser.guessElementType(values, returnType,  getJsonClassType());
 					}
 					
 					for (Entry<String, Object> entry: values.entrySet()) {
 						Object obj = entry.getValue(); // obj.getClass()
-						Class type = getComponentType(componentType, obj.getClass());
+						Class type = getComponentType(componentType, obj.getClass(), obj, objectDTO.json2Java);
 						FieldData newFieldData = new FieldData(obj, type, objectDTO.json2Java, objectDTO.level, objectDTO.set);
 						returnObj.put(entry.getKey(), json2Object(newFieldData));
 					}
@@ -7585,18 +7609,13 @@ public class Oson {
 				if (objectDTO.erasedType != null) {
 					componentType = ObjectUtil.getTypeComponentClass(objectDTO.erasedType);
 				}
-		
-				if (componentType == null) {
-					if (returnType == null && returnObj != null) {
-						returnType = (Class<Collection<E>>) returnObj.getClass();
-					}
-		
-					componentType = CollectionArrayTypeGuesser.guessElementType(collection, returnType,  getJsonClassType());
-				}
-		
+
 				for (E val : collection) {
-					FieldData newFieldData = new FieldData(val, componentType, objectDTO.json2Java, objectDTO.level, objectDTO.set);
-					returnObj.add(json2Object(newFieldData));
+					if (val != null) {
+						Class type = getComponentType(componentType, val.getClass(), val, objectDTO.json2Java);
+						FieldData newFieldData = new FieldData(val, type, objectDTO.json2Java, objectDTO.level, objectDTO.set);
+						returnObj.add(json2Object(newFieldData));
+					}
 				}
 				
 				return returnObj;
@@ -7827,12 +7846,14 @@ public class Oson {
 				}
 				
 				E[] arr = (E[]) Array.newInstance(componentType, values.size());
-				
 				int i = 0;
 				for (Object val: values) {
-					FieldData newFieldData = new FieldData(val, componentType, objectDTO.json2Java, objectDTO.level, objectDTO.set);
-					newFieldData.json2Java = objectDTO.json2Java;
-					arr[i++] = json2Object(newFieldData);
+					if (val != null) {
+						Class type = getComponentType(componentType, val.getClass(), val, objectDTO.json2Java);
+						FieldData newFieldData = new FieldData(val, type, objectDTO.json2Java, objectDTO.level, objectDTO.set);
+						newFieldData.json2Java = objectDTO.json2Java;
+						arr[i++] = json2Object(newFieldData);
+					}
 				}
 				
 				return arr;
@@ -7890,18 +7911,16 @@ public class Oson {
 			}
 			
 			Class<E> componentType = null;
-			
 			if (objectDTO.erasedType != null) {
 				componentType = ObjectUtil.getTypeComponentClass(objectDTO.erasedType);
-			} else {
-				componentType = (Class<E>) returnType.getComponentType();
 			}
-			
-			if (componentType == null) {
-				componentType = CollectionArrayTypeGuesser.guessElementType((E[])value, value.getClass());
-			}
-			
-			if (componentType == null) componentType = (Class<E>) Object.class;
+//			else {
+//				componentType = (Class<E>) returnType.getComponentType();
+//			}
+//			if (componentType == null) {
+//				componentType = CollectionArrayTypeGuesser.guessElementType((E[])value, value.getClass());
+//			}
+//			if (componentType == null) componentType = (Class<E>) Object.class;
 	
 			String repeated = getPrettyIndentationln(objectDTO.level);
 			objectDTO.incrLevel();
@@ -7910,8 +7929,8 @@ public class Oson {
 			
 			for (int i = 0; i < size; i++) {
 				Object componentValue = Array.get(value, i);
-				
-				FieldData newFieldData = new FieldData(componentValue, componentType, objectDTO.json2Java, objectDTO.level, objectDTO.set);
+				Class type = getComponentType(componentType, componentValue.getClass(), componentValue, objectDTO.json2Java);
+				FieldData newFieldData = new FieldData(componentValue, type, objectDTO.json2Java, objectDTO.level, objectDTO.set);
 				String str = object2Json(newFieldData);
 				if (str != null && str.length() > 0) {
 					sbuilder.append(repeatedItem + str + ",");
@@ -8063,7 +8082,6 @@ public class Oson {
 			if (componentType == null) {
 				componentType = CollectionArrayTypeGuesser.guessElementType(values, (Class<Collection<E>>)values.getClass(),  getJsonClassType());
 			}
-			
 			if (componentType == null) componentType = (Class<E>) Object.class;
 			
 			objectDTO.componentType = componentType;
@@ -8218,16 +8236,20 @@ public class Oson {
 				} catch (Exception ex) {}
 			}
 	
-			Class componentType = CollectionArrayTypeGuesser
-					.guessElementType(collection, (Class<Collection<E>>) returnType, getJsonClassType());
-	
+			//Class componentType = CollectionArrayTypeGuesser.guessElementType(collection, (Class<Collection<E>>) returnType, getJsonClassType());
+			Class<E> componentType = null;
+			if (objectDTO.erasedType != null) {
+				componentType = ObjectUtil.getTypeComponentClass(objectDTO.erasedType);
+			}
+			
 			String repeated = getPrettyIndentationln(objectDTO.level);
 			objectDTO.incrLevel();
 			String repeatedItem = getPrettyIndentationln(objectDTO.level);
 			StringBuilder sbuilder = new StringBuilder();
 			try {
 				for (Object s : collection) {
-					FieldData newFieldData = new FieldData(s, componentType, objectDTO.json2Java, objectDTO.level, objectDTO.set);
+					Class type = getComponentType(componentType, s.getClass(), s, objectDTO.json2Java);
+					FieldData newFieldData = new FieldData(s, type, objectDTO.json2Java, objectDTO.level, objectDTO.set);
 					String str = object2Json(newFieldData);
 					if (str != null && str.length() > 0) {
 						sbuilder.append(repeatedItem + str + ",");
@@ -8762,12 +8784,11 @@ public class Oson {
 			return cachedFields.get(valueType);
 		}
 
-		Class<T> valueTypeAll = valueType;
-		Stream<Field> stream = Arrays.stream(valueTypeAll.getDeclaredFields());
+		Stream<Field> stream = Arrays.stream(valueType.getDeclaredFields());
+		Class valueTypeAll = valueType.getSuperclass();
 		while (valueTypeAll != null && valueTypeAll != Object.class) {
-			stream = Stream.concat(stream, Arrays.stream(valueTypeAll
-					.getSuperclass().getDeclaredFields()));
-			valueTypeAll = (Class<T>) valueTypeAll.getSuperclass();
+			stream = Stream.concat(stream, Arrays.stream(valueTypeAll.getDeclaredFields()));
+			valueTypeAll = valueTypeAll.getSuperclass();
 		}
 
 		//(Field[]) stream.distinct().toArray(size -> new Field[size])
@@ -9821,7 +9842,11 @@ public class Oson {
 					continue;
 				}
 				
-				String name = StringUtil.uncapitalize(getter.getName().substring(3));
+				String name = getter.getName();
+				if (name.substring(3).equalsIgnoreCase(lcfieldName)) {
+					name = StringUtil.uncapitalize(name.substring(3));
+				}
+				
 				// just use field name, even it might not be a field
 				String fieldName = name;
 				
@@ -10807,7 +10832,9 @@ public class Oson {
 				for (Method method: methods) {
 					String methodName = method.getName();
 
-					if (methodName.equals("getInstance") || methodName.equals("newInstance")) {
+					if (methodName.equals("getInstance") 
+							|| methodName.equals("newInstance")
+							|| methodName.equals("createInstance")) {
 						Class returnType = method.getReturnType();
 
 						if (valueType.isAssignableFrom(returnType) && Modifier.isStatic(method.getModifiers())) {
@@ -11506,8 +11533,12 @@ public class Oson {
 				Method setter = entry.getValue();
 				
 				setter.setAccessible(true);
+
+				String name = setter.getName();
+				if (name.substring(3).equalsIgnoreCase(lcfieldName)) {
+					name = StringUtil.uncapitalize(name.substring(3));
+				}
 				
-				String name = StringUtil.uncapitalize(setter.getName().substring(3));
 				// just use field name, even it might not be a field
 				String fieldName = name;
 
@@ -12611,7 +12642,8 @@ public class Oson {
 			try {
 				double d = Double.parseDouble(str);
 			} catch (NumberFormatException nfe) {
-				return str.matches("-?\\d+(\\.\\d+)?");
+				//nfe.printStackTrace();
+				return str.matches("-?\\d+(\\.\\d+)?(E-?\\d+)?");
 			}
 			return true;
 		}
