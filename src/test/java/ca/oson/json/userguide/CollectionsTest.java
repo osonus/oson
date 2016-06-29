@@ -163,6 +163,28 @@ public class CollectionsTest extends TestCaseBase {
 		assertEquals(event1.name, event2.name);
 		assertEquals(event1.source, event2.source);
 	}
+	
+	
+	@Test
+	public void testDeserializationCollectionArbitraryObjectComponentType() {
+		List<Object> expected = new ArrayList<>();
+		expected.add("hello");
+		expected.add(6);
+		expected.add(new Event("GREETINGS", "guest"));
+		
+		String json = "[\"hello\",6,{\"name\":\"GREETINGS\",\"source\":\"guest\"}]";
+
+		ComponentType type = new ComponentType(List.class, Event.class);
+		
+		List<Object> result = oson.deserialize(json, type);
+
+		assertEquals(expected.get(0), result.get(0));
+		assertEquals(expected.get(1), result.get(1));
+		Event event1 = (Event) expected.get(2);
+		Event event2 = (Event) result.get(2);
+		assertEquals(event1.name, event2.name);
+		assertEquals(event1.source, event2.source);
+	}
 }
 
 
