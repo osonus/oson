@@ -4,6 +4,7 @@ import org.junit.Test;
 
 import com.google.gson.GsonBuilder;
 
+import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.support.TestCaseBase;
 
 public class ObjectTest extends TestCaseBase {
@@ -47,7 +48,7 @@ public class ObjectTest extends TestCaseBase {
 
 		GsonBuilder gbuilder = new GsonBuilder();
 
-		String gson = oson.setLevel(1).pretty(true).includeClassTypeInJson(true).serialize(gbuilder);
+		String gson = oson.pretty(false).includeClassTypeInJson(true).serialize(gbuilder);
 
 		GsonBuilder gbuilder2 = oson.deserialize(gson);
 		String gson2 = oson.serialize(gbuilder2);
@@ -55,8 +56,11 @@ public class ObjectTest extends TestCaseBase {
 		GsonBuilder gbuilder3 = oson.deserialize(gson2);
 		String gson3 = oson.serialize(gbuilder3);
 		assertEquals(gson2, gson3);
+
+		String gson4 = oson.pretty(true).setDefaultType(JSON_INCLUDE.NON_DEFAULT).serialize(gbuilder3);
 		
-		//System.out.println(gson3);
+		//System.out.println(gson4);
+		assertFalse(gson2.length() == gson4.length());
 	}
 
 }

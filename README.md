@@ -4,9 +4,13 @@ A Java serialization/deserialization library that can convert Java Objects into 
 This library implements its own Java to/from Json processor, and also provides a common interface to Google's Gson and Jackson's ObjectMapper.
 
 ###*Oson Goals*
-  * Convert any arbitray Java Object to Json data and back
+  * Convert arbitray Java Object to Json data and back
   * Provide a user friendly common interface to Gson and ObjectMapper
-  * Support major set of Json annotations: including com.fasterxml.jackson, com.google.gson, org.codehaus.jackson, org.springframework, javax.persistence, javax.validation (JPA), in addition to its own ca.oson.json annotation
+  * Support major set of Json annotations: including com.fasterxml.jackson, com.google.gson, org.codehaus.jackson, javax.persistence, javax.validation (JPA), in addition to its own ca.oson.json annotation
+  * Allow the conversions of names and values of Json documents in 3 levels of configuration: global, class-level, and field level
+  * Allow these conversions to be either annotation-oriented, or Java oriented, or both
+  * Allow the JSON output to be well-formated: any indentation, any depth, as far as the object linkage goes, without redundancy
+  * Function of lambda expressions is added to the serialization and deserializatin processes, allowing limitless value transformation, with an ease of mind
 
 ###*Oson Documentation*
 

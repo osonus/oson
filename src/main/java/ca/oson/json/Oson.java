@@ -114,7 +114,7 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.annotations.Since;
 
-import org.springframework.web.bind.annotation.RequestParam;
+//import org.springframework.web.bind.annotation.RequestParam;
 
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -7276,9 +7276,11 @@ public class Oson {
 		FieldData fieldData = new FieldData(value, Integer.class, true);
 		Integer ordinal = json2Integer(fieldData);
 
-		for (Enum enumValue : enumType.getEnumConstants()) {
-			if (enumValue.ordinal() == ordinal) {
-				return enumValue;
+		if (ordinal != null) {
+			for (Enum enumValue : enumType.getEnumConstants()) {
+				if (enumValue.ordinal() == ordinal) {
+					return enumValue;
+				}
 			}
 		}
 
@@ -12558,14 +12560,16 @@ public class Oson {
 			if (str.startsWith("\"") && str.endsWith("\"")) {
 				return str;
 			}
-			
-			return "\"" + str.replaceAll("\"", "\\\\\"") + "\"";
+			return "\"" + str.replaceAll("\"", "\\\\\"").replaceAll("\n", "").replaceAll("\r", "") + "\"";
 		}
 		public static String doublequote(Object obj) {
 			return doublequote(obj.toString());
 		}
 		
 		public static String unquote(String str) {
+			if (str == null || str.equals("null")) {
+				return null;
+			}
 			StreamTokenizer parser = new StreamTokenizer(new StringReader(str));
 			String result;
 			try {
@@ -12574,13 +12578,15 @@ public class Oson {
 					result = parser.sval;
 				} else {
 					if (str.startsWith("\"") && str.endsWith("\"")) {
-						result = str.substring(1, str.length()-1);
-					} else {
-						result = str.replaceAll("\"", "");
+						str = str.substring(1, str.length()-1);
 					}
+					result = str.replaceAll("\\\\\"", "\"");
 				}
 			} catch (IOException e) {
-				result = e.toString();
+				if (str.startsWith("\"") && str.endsWith("\"")) {
+					str = str.substring(1, str.length()-1);
+				}
+				result = str.replaceAll("\\\\\"", "\"");
 			}
 			return result;
 		}
@@ -13146,13 +13152,13 @@ public class Oson {
 			case "com.google.gson.annotations.SerializedName":
 				return ((SerializedName) annotation).value();
 				
-			case "org.springframework.web.bind.annotation.RequestParam":
-				RequestParam requestParam = (RequestParam) annotation;
-				String name = requestParam.value();
-				if (name == null) {
-					name = requestParam.name();
-				}
-				return name;
+//			case "org.springframework.web.bind.annotation.RequestParam":
+//				RequestParam requestParam = (RequestParam) annotation;
+//				String name = requestParam.value();
+//				if (name == null) {
+//					name = requestParam.name();
+//				}
+//				return name;
 				
 			case "javax.persistence.Column":
 				return ((Column) annotation).name();
