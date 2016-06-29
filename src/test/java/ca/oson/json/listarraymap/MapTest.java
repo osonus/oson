@@ -35,7 +35,7 @@ public class MapTest extends TestCaseBase {
 
 		   String expected = "{\"Alabama\":1529,\"Arizona\":1222,\"Wyoming\":1541}";
 		   
-		   String result = oson.orderByKeyAndProperties(true).serialize(value);
+		   String result = oson.sort().serialize(value);
 
 		   assertEquals(expected, result);
 	   }

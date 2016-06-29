@@ -17,6 +17,8 @@ import java.beans.Expression;
 import java.beans.Statement;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StreamTokenizer;
+import java.io.StringReader;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
@@ -145,7 +147,7 @@ import javassist.bytecode.annotation.StringMemberValue;
 public class Oson {
 	private static final char SPACE = ' ';
 	private static final String mixin = "MixIn";
-	private static final int MAX_LEVEL = 10;
+	private static final int MAX_LEVEL = 8;
 	public static enum JSON_PROCESSOR {
 		JACKSON, // use Jacksopn's implementation
 		GSON, // use google's gson implementation
@@ -241,13 +243,14 @@ public class Oson {
 	 * Defines system-level default values for various Java types.
 	 * These values are mostly the default values of Java language types.
 	 * They can be overwritten for specific processing needs.
+	 * Once they are changed, the default behavior changes.
 	 *
 	 * In case the value is required,
 	 * the processing steps are:
 	 * 1. local value exists, use it;
 	 * 2. otherwise, if default value exists in FieldData, use it;
-	 * 3. othrewise, if can be constructed from newInstance function, use it;
-	 * 4. finally, use this systen default value.
+	 * 3. otherwise, if can be constructed from newInstance function, use it;
+	 * 4. finally, use this system default value.
 	 */
 	public static class DefaultValue {
 		public static Collection collection() {
@@ -280,20 +283,6 @@ public class Oson {
 		public static Date date = Calendar.getInstance().getTime(); // new Date();
 		public static AtomicInteger atomicInteger = new AtomicInteger();
 		public static AtomicLong atomicLong = new AtomicLong();
-
-		/*
-		 * this is the default behavior: use both field and attribute, to try the best
-		 */
-		public static boolean useField = true;
-		
-		/*
-		 * The default behaviour is: 
-		 * serialize, use getter
-		 * deserialsize, use setter
-		 */
-		public static boolean useAttribute = true;
-		
-		
 		
 		public static Object getSystemDefault(Class type) {
 			if (type == String.class) {
@@ -2298,8 +2287,7 @@ public class Oson {
 		}
 	}
 
-	//private static Oson converter = null;
-
+	// holding all states inside these 3 objects
 	private Options options = new Options();
 	private ObjectMapper jackson = null;
 	private Gson gson = null;
@@ -2313,6 +2301,7 @@ public class Oson {
 		}
 	}
 
+	// there are caching mechanism, should be safe to be shared across
 	private static Map<Class, Field[]> cachedFields = new ConcurrentHashMap<>();
 	private static Map<String, Map <String, Method>[]> cachedMethods = new ConcurrentHashMap<>();
 
@@ -2448,6 +2437,9 @@ public class Oson {
 
 	private boolean getPrettyPrinting() {
 		return options.getPrettyPrinting();
+	}
+	public Oson pretty() {
+		return pretty(true);
 	}
 	public Oson pretty(Boolean prettyPrinting) {
 		return prettyPrinting(prettyPrinting);
@@ -2632,6 +2624,10 @@ public class Oson {
 	}
 	
 	private boolean ignoreClass(Class valueType) {
+		if (valueType.isSynthetic()) {
+			return true;
+		}
+		
 		Map<Class, ClassMapper> classMappers = getClassMappers();
 		if (classMappers != null) {
 			ClassMapper mapper = classMappers.get(valueType);
@@ -2801,7 +2797,7 @@ public class Oson {
 		return options.getOrderByKeyAndProperties();
 	}
 
-	public Oson orderByKeyAndProperties(Boolean orderByKeyAndProperties) {
+	private Oson orderByKeyAndProperties(Boolean orderByKeyAndProperties) {
 		if (orderByKeyAndProperties != null) {
 			options.setOrderByKeyAndProperties(orderByKeyAndProperties);
 			reset();
@@ -2809,7 +2805,14 @@ public class Oson {
 
 		return this;
 	}
-
+	
+	public Oson sort(boolean orderByKeyAndProperties) {
+		return orderByKeyAndProperties(true);
+	}
+	public Oson sort() {
+		return sort(true);
+	}
+	
 	private Boolean getIncludeClassTypeInJson() {
 		return options.getIncludeClassTypeInJson();
 	}
@@ -3226,6 +3229,13 @@ public class Oson {
 		gson = null;
 	}
 
+	public void clear() {
+		options = new Options();
+		reset();
+		cachedFields = new ConcurrentHashMap<>();
+		cachedMethods = new ConcurrentHashMap<>();
+	}
+	
 	private ObjectMapper getJackson() {
 		if (jackson == null) {
 			jackson = new ObjectMapper();
@@ -4140,7 +4150,7 @@ public class Oson {
 						
 						Integer precision = objectDTO.getPrecision();
 						if (precision != null) {
-							valueToProcess = NumberUtil.setPrecision(valueToProcess, precision);
+							valueToProcess = (Double)NumberUtil.setPrecision(valueToProcess, precision);
 						}
 						
 						Integer scale = objectDTO.getScale();
@@ -4741,8 +4751,7 @@ public class Oson {
 					
 					Integer precision = objectDTO.getPrecision();
 					if (precision != null && precision < valueToReturn.precision()) {
-						double v = NumberUtil.setPrecision(valueToReturn, precision);
-						valueToReturn = new BigDecimal(v);
+						valueToReturn = (BigDecimal)NumberUtil.setPrecision(valueToReturn, precision);
 					}
 					
 					return valueToReturn;
@@ -4832,8 +4841,7 @@ public class Oson {
 						
 						Integer precision = objectDTO.getPrecision();
 						if (precision != null && precision < valueToProcess.precision()) {
-							double v = NumberUtil.setPrecision(valueToProcess, precision);
-							valueToProcess = new BigDecimal(v);
+							valueToProcess = (BigDecimal)NumberUtil.setPrecision(valueToProcess, precision);
 						}
 						
 						return NumberUtil.toPlainString(valueToProcess);
@@ -5075,8 +5083,7 @@ public class Oson {
 						
 						Integer precision = objectDTO.getPrecision();
 						if (precision != null) {
-							Double v = NumberUtil.setPrecision(valueToProcess, precision);
-							valueToProcess = BigInteger.valueOf(v.longValue());
+							valueToProcess = (BigInteger)NumberUtil.setPrecision(valueToProcess, precision);
 						}
 						
 						return NumberUtil.toPlainString(valueToProcess);
@@ -5316,8 +5323,7 @@ public class Oson {
 						
 						Integer precision = objectDTO.getPrecision();
 						if (precision != null) {
-							Double v = NumberUtil.setPrecision(valueToProcess, precision);
-							valueToProcess = new AtomicInteger(v.intValue());
+							valueToProcess = (AtomicInteger) NumberUtil.setPrecision(valueToProcess, precision);
 						}
 						
 						return NumberUtil.toPlainString(valueToProcess);
@@ -5412,7 +5418,7 @@ public class Oson {
 								if (returnedValue instanceof AtomicLong) {
 									valueToReturn = (AtomicLong) returnedValue;
 								} else if (returnedValue instanceof String) {
-									valueToReturn = new AtomicLong(Integer.parseInt((String) returnedValue));
+									valueToReturn = new AtomicLong(Long.parseLong((String) returnedValue));
 									
 								} else if (returnedValue instanceof Integer) {
 									valueToReturn = new AtomicLong((Integer) returnedValue);
@@ -5557,8 +5563,7 @@ public class Oson {
 						
 						Integer precision = objectDTO.getPrecision();
 						if (precision != null) {
-							Double v = NumberUtil.setPrecision(valueToProcess, precision);
-							valueToProcess = new AtomicLong(v.longValue());
+							valueToProcess = (AtomicLong) NumberUtil.setPrecision(valueToProcess, precision);
 						}
 						
 						return NumberUtil.toPlainString(valueToProcess);
@@ -5681,8 +5686,7 @@ public class Oson {
 						
 						Integer precision = objectDTO.getPrecision();
 						if (precision != null) {
-							Double v = NumberUtil.setPrecision(valueToProcess, precision);
-							valueToProcess = v.longValue();
+							valueToProcess = (Long) NumberUtil.setPrecision(valueToProcess, precision);
 						}
 						
 						return NumberUtil.toPlainString(valueToProcess);
@@ -6283,8 +6287,7 @@ public class Oson {
 						
 						Integer precision = objectDTO.getPrecision();
 						if (precision != null) {
-							Double v = NumberUtil.setPrecision(valueToProcess, precision);
-							valueToProcess = v.byteValue();
+							valueToProcess = (Byte) NumberUtil.setPrecision(valueToProcess, precision);
 						}
 						
 						return NumberUtil.toPlainString(valueToProcess);
@@ -6777,8 +6780,7 @@ public class Oson {
 						
 						Integer precision = objectDTO.getPrecision();
 						if (precision != null) {
-							Double v = NumberUtil.setPrecision(valueToProcess, precision);
-							valueToProcess = v.shortValue();
+							valueToProcess = (Short) NumberUtil.setPrecision(valueToProcess, precision);
 						}
 						
 						return NumberUtil.toPlainString(valueToProcess);
@@ -6888,7 +6890,7 @@ public class Oson {
 						valueToProcess = valueToProcess.substring(0, length);
 					}
 					
-					return valueToProcess;
+					return StringUtil.unquote(valueToProcess);
 				}
 	
 			} catch (Exception ex) {
@@ -7285,9 +7287,8 @@ public class Oson {
 	
 	
 	private Class getComponentType(Class componentType, Class itemType) {
-		if (itemType.isEnum() || itemType.isPrimitive() || itemType.isArray()) {
+		if (itemType.isEnum() || itemType.isPrimitive()) {
 			return itemType;
-			
 		} else if (Number.class.isAssignableFrom(itemType)) {
 			return itemType;
 		} else if (itemType == Character.class) {
@@ -7295,6 +7296,12 @@ public class Oson {
 		} else if (itemType == Boolean.class) {
 			return itemType;
 		} else if (Date.class.isAssignableFrom(itemType)) {
+			return itemType;
+		} else if (Enum.class.isAssignableFrom(itemType)) {
+			return itemType;
+		} else if (itemType.isArray()) {
+				return itemType;
+		} else if (Collection.class.isAssignableFrom(itemType)) {
 			return itemType;
 		} else {
 			return componentType;
@@ -7308,7 +7315,7 @@ public class Oson {
 		Class<Map> returnType = objectDTO.returnType;
 		Map defaultValue = (Map)objectDTO.defaultValue;
 		
-		if (value != null && value.toString().length() > 0) {	
+		if (!StringUtil.isEmpty(value)) {
 			Map<String, Object> values = (Map<String, Object>)value;
 	
 			if (values.size() > 0) {
@@ -7524,7 +7531,7 @@ public class Oson {
 			}
 		}
 		
-		if (value != null && value.toString().length() > 0) {	
+		if (!StringUtil.isEmpty(value)) {
 			Collection<E> collection = (Collection<E>) value;
 	
 			if (collection.size() > 0) {
@@ -10473,6 +10480,17 @@ public class Oson {
 				JSONObject obj = new JSONObject(source);
 
 				Map<String, Object> map = (Map)fromJsonMap(obj);
+				
+				if (valueType == null) {
+					String className = (String) map.get(getJsonClassType());
+					if (className != null && className.length() > 0) {
+						try {
+							valueType = (Class<T>) Class.forName(className);
+						} catch (ClassNotFoundException e) {
+							// e.printStackTrace();
+						}
+					}
+				}
 
 				if (valueType != null && Map.class.isAssignableFrom(valueType)) {
 					return json2Object(new FieldData(map, valueType, true, object));
@@ -10530,8 +10548,12 @@ public class Oson {
 		}
 
 		T obj = newInstance(map, valueType);
-
-		return deserialize2Object(map, valueType, obj);
+		
+		if (obj != null) {
+			return deserialize2Object(map, valueType, obj);
+		} else {
+			return null;
+		}
 	}
 
 	/*
@@ -12388,7 +12410,7 @@ public class Oson {
 			}
 			
 			String str = obj.toString().trim();
-			return (str.length() == 0 || str.equals("\"\"") || str.equals("''"));
+			return (str.length() == 0 || str.equals("\"\"") || str.equals("''") || obj.getClass().getName().equals("org.json.JSONObject$Null"));
 		}
 
 		
@@ -12511,6 +12533,27 @@ public class Oson {
 		public static String doublequote(Object obj) {
 			return doublequote(obj.toString());
 		}
+		
+		public static String unquote(String str) {
+			StreamTokenizer parser = new StreamTokenizer(new StringReader(str));
+			String result;
+			try {
+				parser.nextToken();
+				if (parser.ttype == '"') {
+					result = parser.sval;
+				} else {
+					if (str.startsWith("\"") && str.endsWith("\"")) {
+						result = str.substring(1, str.length()-1);
+					} else {
+						result = str.replaceAll("\"", "");
+					}
+				}
+			} catch (IOException e) {
+				result = e.toString();
+			}
+			return result;
+		}
+		
 
 		public static String formatName(String name, FIELD_NAMING format) {
 			switch(format) {
@@ -12585,12 +12628,14 @@ public class Oson {
 		}
 		
 		// assume valid inputs
-		public static double setPrecision(Number number, int precision) {
+		public static Number setPrecision(Number number, int precision) {
 			String str = toPlainString(number);
 			int length = str.length();
 			if (length <= precision) {
-				return number.longValue();
+				return number;
 			}
+			
+			Class type = number.getClass();
 			
 			String first = str.substring(0, precision);
 			String last = str.substring(precision);
@@ -12606,8 +12651,27 @@ public class Oson {
 			}
 			
 			str = first + sb.toString();
-
-			return Double.parseDouble(str);
+			
+			switch (type.getName()) {
+			case "java.lang.Integer": return Integer.parseInt(str);
+			case "int": return Integer.parseInt(str);
+			case "java.lang.Long": return Long.parseLong(str);
+			case "long": return Long.parseLong(str);
+			case "java.lang.Byte": return Byte.parseByte(str);
+			case "byte": return Byte.parseByte(str);
+			case "java.lang.Double": return Double.parseDouble(str);
+			case "double": return Double.parseDouble(str);
+			case "java.lang.Short": return Short.parseShort(str);
+			case "short": return Short.parseShort(str);
+			case "java.lang.Float": return Float.parseFloat(str);
+			case "float": return Float.parseFloat(str);
+			case "java.math.BigDecimal": return new BigDecimal(str);
+			case "java.math.BigInteger": return new BigInteger(str);
+			case "java.util.concurrent.atomic.AtomicInteger": return new AtomicInteger(Integer.parseInt(str));
+			case "java.util.concurrent.atomic.AtomicLong": return new AtomicInteger(Integer.parseInt(str));
+			case "java.lang.Number": return Double.parseDouble(str);
+			default: return Double.parseDouble(str);
+			}
 		}
 	}
 
