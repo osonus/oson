@@ -7,23 +7,22 @@
 5. [How to convert Java object to Json document](#TOC-How-To-Convert-Java-Object-To-Json-Document)
   * [Java Configuration](#TOC-Serialize-Java-Configuration)
   * [Annotation](#TOC-Serialize-Annotation)
-  * [Lamda Expression](#TOC-Serialize-Lamda-Expression)
+  * [Lambda Expression](#TOC-Serialize-Lambda-Expression)
 6. [How to convert Json document to Java object](#TOC-How-To-Convert-Json-Document-Java-Object)
-  * [Java Configuration](#TOC-Deserialize-Java-Configuration)
-  * [Annotation](#TOC-Deserialize-Annotation)
-  * [Lamda Expression](#TOC-Deserialize-Lamda-Expression)
+  * [How to Create Initial Java Object](#TOC-Deserialize-How-To-Create-Initial-Java-Object)
+  * [Lambda Expression](#TOC-Deserialize-Lambda-Expression)
 7. [How to filter out information](#TOC-How-To-Filter-Out-Information)
   * [Java Configuration](#TOC-Filter-Java-Configuration)
   * [Annotation](#TOC-Filter-Annotation)
-  * [Lamda Expression](#TOC-Filter-Lamda-Expression)
+  * [Lambda Expression](#TOC-Filter-Lambda-Expression)
 8. [How to Change Attribute Name](#TOC-How-To-Change-Attribute-Name)
   * [Java Configuration](#TOC-Name-Java-Configuration)
   * [Annotation](#TOC-Name-Annotation)
-  * [Lamda Expression](#TOC-Name-Lamda-Expression)
+  * [Lambda Expression](#TOC-Name-Lambda-Expression)
 9. [How to Change Attribute Value](#TOC-How-To-Change-Attribute-Value)
   * [Java Configuration](#TOC-Value-Java-Configuration)
   * [Annotation](#TOC-Value-Annotation)
-  * [Lamda Expression](#TOC-Value-Lamda-Expression)
+  * [Lambda Expression](#TOC-Value-Lambda-Expression)
 10. [How to Format Json Document](#TOC-How-To-Format-Json-Document)
   * [Java Configuration](#TOC-Value-Java-Configuration)
 
@@ -451,8 +450,120 @@ Annotations can be used to set how to name an attribute, change a value, etc. An
 When I faced with so many annotations, from different sources, and one processor only chooses to use its own set of annotations, I choose to implement a different Json-Java processor, which will support them all, and also provide its own set of annotations: only two of them: one is class level, and anothe one is field level. Both of these annotations try to deliver the same amount of information as its counterpart class, with the same name, just slightly different class path.
 
 
-### <a name="TOC-Serialize-Lamda-Expression"></a>Lamda Expression
+### <a name="TOC-Serialize-Lambda-Expression"></a>Lambda Expression
 
 Lambda expression is one of the most powerful featuers in Java programming language. Or Java tends to behavior like a functional language, apart from the pure object-oriented language idealism.
 
 Lambda expression as a single functional interface is perfect to act as a serializer and deserializer. It gives the true powerful of transformation into Oson processor. Basically, it allows you to do everything, or almost anything you want, to have full access to contextual data, to return types of Java data you want. This only feature makes Oson as the one you like to use, as a Json-Java processor.
+
+This setting will transform all String data into lowercase, and BigInteger with a value of 1 to 10 translated into its English words in the outputed Json document:
+
+```java
+oson.setClassMappers(new ClassMapper(String.class).setSerializer((String p) -> p.toLowerCase()))
+	.setClassMappers(new ClassMapper(BigInteger.class).setSerializer((BigInteger p) -> {
+			   switch (p.intValue()) {
+			   case 1: return "One";
+			   case 2: return "Two";
+			   case 3: return "Three";
+			   case 4: return "Four";
+			   case 5: return "Five";
+			   case 6: return "Six";
+			   case 7: return "Seven";
+			   case 8: return "Eight";
+			   case 9: return "Nine";
+			   case 10: return "Ten";
+			   default: return p.toString();
+			   }
+		   }))
+```
+
+
+## <a name="TOC-How-To-Convert-Json-Document-Java-Object"></a>How to convert Json document to Java object
+ 
+It is a little bit more complex to convert Json document to Java object. The main reason is that we need figure out which Java object types to map the data inside the Json string to. There are only two ways to handle this hard task:
+
+1. Pass in type information to the Json processor
+2. Embed the type information inside the Json document
+
+Here are the list of four public methods for deserialization:
+
+```java
+public <T> T deserialize(String source)
+
+public <T> T deserialize(String source, Class<T> valueType)
+
+public <T> T deserialize(String source, Type type)
+
+public <T> T deserialize(String source, T obj)
+```
+
+The first method only uses a Json text document as source. This simply means that the Json document embeds its target Java class name(s) inside its content. Unless the data type is a simple one, there is no other way we are able to figure it out.
+
+The second method accepts a class type, in addition to its Json content. This will work for most of the cases where we do not need to figure out the original type of generic data types in Java, which invovles class type erasure, where generic type information gets lost. In order to overcome these, we can use available implementation of java.lang.reflect.Type interface. This interface only defines a symple abstract method: public java.lang.String getTypeName(). The typeName is in the form of "Enclosing_class_name<component_class_name>", which allows us to figure out the component class inside the enclosing class. One complex implementation is Google's com.google.gson.reflect.TypeToken class. See [CollectionsTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/userguide/CollectionsTest.java) for its usage.
+
+Yet there are still more complex cases involving Map, Array, or Collection, that can hold objects of various class types, using Object data type in its generic type: Map<String, Object>, Collection<Object>, or Object[], so it becomes a real challenge in figuring out each unique case. Some hard-coded approaches are recommended in GSON's documentation. Here we can adopt a simple apploach, either embed type information inside a Json document, or provide more type information insdie the implementation of the Type interface.
+
+One of this implementation is ca.oson.json.Oson.ComponentType, which accepts one or multiple component types in one of its constructors:
+
+```java
+		public ComponentType(String typeName)
+		
+		public ComponentType(Type type)
+		
+		public ComponentType(Class type, Class... componentTypes)
+```
+
+The third constructor accepts a variable array of component types, which can be used to guess data types in complex data structures, such as array, collection, and map. Inside the [CollectionsTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/userguide/CollectionsTest.java) test cases, you can find various approaches to solve this issue. Pick one to show here:
+
+```java
+	@Test
+	public void testDeserializationCollectionArbitraryObjectMultipleComponentTypes() {
+		List<Object> expected = new ArrayList<>();
+		expected.add(new Car("Toyota", 4));
+		expected.add("hello");
+		expected.add(6);
+		expected.add(new Event("GREETINGS", "guest"));
+
+		String json = "[{\"doors\":4,\"year\":2016,\"brand\":\"Toyota\",\"years\":null},\"hello\",6,{\"name\":\"GREETINGS\",\"source\":\"guest\"}]";
+
+		ComponentType type = new ComponentType(List.class, Event.class, Car.class);
+		
+		List<Object> result = oson.deserialize(json, type);
+
+		Car car1 = (Car) expected.get(0);
+		Car car2 = (Car) result.get(0);
+		assertEquals(car1.brand, car2.brand);
+		assertEquals(car1.doors, car2.doors);
+		assertEquals(expected.get(1), result.get(1));
+		assertEquals(expected.get(2), result.get(2));
+		Event event1 = (Event) expected.get(3);
+		Event event2 = (Event) result.get(3);
+		assertEquals(event1.name, event2.name);
+		assertEquals(event1.source, event2.source);
+	}
+```
+
+Inside this test case, we create a list of data with four different types: Car, String, Integer, and Event. We only need to pass in the class type of Car and Event, into the variable array of ComponentType class, which implements the Type interface. The Oson library uses this information to figure out the data types of Car and Event correctly.
+
+### <a name="TOC-Deserialize-How-To-Create-Initial-Java-Object"></a>How to Create Initial Java Object
+
+The same as the serialization process, we can provide configuration information to the tool to help it deserialize data into a target Java object correctly. In addition to the challenge to figure out the class types of some complex data structures, we still need to figure out a way to create its initial object from the Type in Java. Only after we have this initial object, we can then copy data from Json document into this initial object. It is not always easy to handle this task.
+
+We are multiple ways you can help:
+
+1. Provide a com.google.gson.InstanceCreator implementation using ClassMapper
+2. Provide a default object directly using ClassMapper configuration
+3. Provide constructor annotations
+
+If all of these are not met, the tool will try tens of other ways to create a new instance, or fails at the end.
+
+
+
+
+
+
+
+
+
+
+  

@@ -48,7 +48,7 @@ public class ObjectTest extends TestCaseBase {
 
 		GsonBuilder gbuilder = new GsonBuilder();
 
-		String gson = oson.pretty(false).includeClassTypeInJson(true).serialize(gbuilder);
+		String gson = oson.pretty(false).includeClassTypeInJson(true).setLevel(8).serialize(gbuilder);
 
 		GsonBuilder gbuilder2 = oson.deserialize(gson);
 		String gson2 = oson.serialize(gbuilder2);
