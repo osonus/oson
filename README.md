@@ -1,16 +1,18 @@
 # oson
-A Java serialization/deserialization library that can convert Java Objects into JSON and back.
+Oson means O(bject) Json, and pronounces as awesome. It is a Java serialization/deserialization library that can convert Java Objects into JSON and back.
 
-This library implements its own Java to/from Json processor, and also provides a common interface to Google's Gson and Jackson's ObjectMapper.
+This library implements its own Java to/from Json processor, and provides a common interface to Google's Gson and Jackson's ObjectMapper.
+
+Just like annotation and lambda expressions make Java look like a functional language, these features make Oson as the most flexible choice of Java-Json processors.
 
 ###*Oson Goals*
   * Convert arbitray Java Object to Json data and back
-  * Provide a user friendly common interface to Gson and ObjectMapper
+  * Provide a common interface to Gson and ObjectMapper
   * Support major set of Json annotations: including com.fasterxml.jackson, com.google.gson, org.codehaus.jackson, javax.persistence, javax.validation (JPA), in addition to its own ca.oson.json annotation
   * Allow 3 level control of name and value conversions: global, class-level, and field level
   * Allow these conversions to be either annotation-oriented, or Java oriented, or both
   * Allow well-formatted JSON output: any indentation, any depth, as far as object linkage goes, without redundancy
-  * Function of lambda expressions is added to the serialization and deserializatin processes, allowing limitless value transformation, with an ease of mind
+  * Function of lambda expressions is added to the serialization and deserialization processes, allowing limitless value transformation, with an ease of mind
 
 ###*Oson Documentation*
 

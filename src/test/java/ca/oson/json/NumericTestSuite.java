@@ -12,6 +12,8 @@ import ca.oson.json.numeric.DoubleTest;
 import ca.oson.json.numeric.FloatTest;
 import ca.oson.json.numeric.IntegerTest;
 import ca.oson.json.numeric.LongTest;
+import ca.oson.json.numeric.PrecisionScaleTest;
+import ca.oson.json.numeric.ScaleTest;
 import ca.oson.json.numeric.ShortTest;
 
 @RunWith(Suite.class)
@@ -25,7 +27,9 @@ import ca.oson.json.numeric.ShortTest;
 	BigDecimalTest.class,
 	ByteTest.class,
 	AtomicIntegerTest.class,
-	AtomicLongTest.class
+	AtomicLongTest.class,
+	ScaleTest.class,
+	PrecisionScaleTest.class
 })
 public class NumericTestSuite {
 

@@ -7,13 +7,15 @@ import ca.oson.json.userguide.ArrayTest;
 import ca.oson.json.userguide.CollectionsTest;
 import ca.oson.json.userguide.ObjectTest;
 import ca.oson.json.userguide.PrimitivesTest;
+import ca.oson.json.userguide.SerializeCarTest;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
 	PrimitivesTest.class,
 	ObjectTest.class,
 	ArrayTest.class,
-	CollectionsTest.class
+	CollectionsTest.class,
+	SerializeCarTest.class
 })
 public class UserGuideTestSuite {
 

@@ -147,7 +147,7 @@ import javassist.bytecode.annotation.StringMemberValue;
 public class Oson {
 	private static final char SPACE = ' ';
 	private static final String mixin = "MixIn";
-	private static final int MAX_LEVEL = 8;
+	private static final int MAX_LEVEL = 100;
 	public static enum JSON_PROCESSOR {
 		JACKSON, // use Jacksopn's implementation
 		GSON, // use google's gson implementation
@@ -234,6 +234,7 @@ public class Oson {
 		Synchronized,
 		Transient,
 		Volatile,
+		Synthetic,
 		All,
 		None
 	}
@@ -1126,42 +1127,169 @@ public class Oson {
 		private boolean processed = false;
 	}
 
-	// make sure options have valid values
+
 	public static class Options {
 		// global level configurations
+		
+		/*
+		 * a flag to determine if a date should be converted to a long number, or a formatted text
+		 */
+		private Boolean date2Long = null;
+		/*
+		 * Date formatter for all Date and its sub classes
+		 */
 		private String simpleDateFormat = DefaultValue.simpleDateFormat;
 		private DateFormat dateFormat = new SimpleDateFormat(simpleDateFormat);
+		
+		/*
+		 * a flag to indicate if the Oson tool should act as an interface to Gson, Jackson, or simply itself
+		 */
 		private JSON_PROCESSOR jsonProcessor = JSON_PROCESSOR.OSON;
+		
+		/*
+		 * If either Gson or Jackson fails and throws exception
+		 * turn this flag on to print out stack trace message
+		 * and continue to use Oson's own implementation
+		 */
+		private Boolean printErrorUseOsonInFailure = false;
+		
+		/*
+		 * Field naming convention, to make a field name: lowercase, uppercase, camelcase, space-delimited,
+		 * dash-delimited, and more
+		 */
 		private FIELD_NAMING fieldNaming = FIELD_NAMING.FIELD;
+		
+		/*
+		 * Attibute value convention, to allow NULL, empty, default values or not
+		 */
 		private JSON_INCLUDE defaultType = JSON_INCLUDE.NONE;
+		
+		/*
+		 * Space indent the Json output, and with newline for each item, or not
+		 */
 		private Boolean prettyPrinting = false;
+		
+		/*
+		 * How many spaces you want for each level of indentation, can be as high as 100 spaces apart for each level,
+		 * or just use the default: 2 spaces. It it is set to 0, then no indentation is used, 
+		 * the same effect like setting prettyPrinting to false
+		 */
 		private int indentation = 2;
+		
+		/*
+		 * Turn annotation support on or off, normally should be on
+		 */
 		private boolean annotationSupport = true;
+		
+		/*
+		 * sort the presentation of attributes in a Map or class by nature order or not
+		 */
 		private Boolean orderByKeyAndProperties = false;
+		
+		/*
+		 * Include class name as metadata in the Json output or not
+		 */
 		private Boolean includeClassTypeInJson = false;
-		private Boolean printErrorUseOsonInFailure = true;
+		
+		/*
+		 * Use this value to act as the attribute for class name metadata, or change to anything you want to use
+		 * simply specify it during deserialization. If not specified, will try to interpret the Json document
+		 * using this default value: @class
+		 */
 		private String jsonClassType = "@class";
+		
+		/*
+		 * As the name goes, ignore any versioned attributes bigger than this double value
+		 */
 		private Double ignoreVersionsAfter = 10000d; // max allowed
+		
+		/*
+		 * Ignore any fields with any of the annotations set here
+		 */
 		private Set<Class> ignoreFieldsWithAnnotations = null;
+		
+		/*
+		 * Ignore any classes with any of the annotations set here
+		 */
 		private Set<Class> ignoreClassWithAnnotations = null;
+		
+		/*
+		 * Include all the fields or attributes with these modifiers
+		 * if not specified, then will use all of them, except:
+		 * Transient and Volatile, Synthetic class is also ignored automatically
+		 * unless specified otherwise
+		 */
 		private Set<MODIFIER> includeFieldsWithModifiers = null;
+		
+		/*
+		 * Determine to use field to retrieve or set value, or not
+		 */
 		private Boolean useField = null;
+		
+		/*
+		 * Determine to use attribute (get or set methods) to retrieve or set value, or not
+		 */
 		private Boolean useAttribute = null;
+		
+		/*
+		 * Maximum level of depth the processing should go, can be up to 100 levels.
+		 * A level means go from a class to its field or atributes. 
+		 * There are cases a Java objects can contain other objects, and keeps on going.
+		 * Endless loop is carefully prevented, using hashcode, but need more testing to prove.
+		 * This setting can also be used for this purpose.
+		 */
 		private int level = MAX_LEVEL;
+		
+		/*
+		 * Combined with precision and scale, to format the output of decimal values.
+		 * Used for float, double, and BigDecimal data types. In the deserialzation process,
+		 * only used for BigDecimal
+		 */
 		private RoundingMode roundingMode = RoundingMode.HALF_UP;
-		// class level configuration
+		
+		/*
+		 * Default enum output type, either int as ordinal, and string as enum name
+		 */
+		private EnumType enumType = null;
+		
+		/*
+		 * Only used for String data type. It specifies the maximun length a string can hold
+		 * or to output. Certain databases requires length limit. Might also used for
+		 * testing purpose
+		 */
+		private Integer length = null;
+		
+		/*
+		 * front-end number of digits in a numeric value
+		 */
+		private Integer precision = null;
+		
+		/*
+		 * digits after decimal point in a numeric value.
+		 * Mostly used for output
+		 */
+		private Integer scale = null;
+		
+		/*
+		 * Minimum value a number can be, if required, or use default setting
+		 */
+		private Long min = null;
+		
+		/*
+		 * Maximum value a number can be, if required, or use default setting
+		 */
+		private Long max = null;
+
+		/*
+		 * class level configurations
+		 */
 		private Map<Class, ClassMapper> classMappers = null;
 
+		/*
+		 * field level configurations
+		 */
 		private Set<FieldMapper> fieldMappers = null;
-		
-		private EnumType enumType = null;
-		private Boolean date2Long = null;
-		private Integer length = null; // Default: 255
-		private Integer precision = null;
-		private Integer scale = null; // Default: 0
-		private Long min = null; // default (int) 0;
-		private Long max = null; // default (int) 2147483647;
-		
+
 		
 		
 		private Integer getLength() {
@@ -1639,7 +1767,7 @@ public class Oson {
 		}
 
 		public void setIndentation(int indentation) {
-			if (indentation >= 0 && indentation < 10) {
+			if (indentation >= 0 && indentation < 100) {
 				this.indentation = indentation;
 			}
 		}
@@ -1989,6 +2117,10 @@ public class Oson {
 			} else {
 				return false;
 			}
+		}
+		
+		public boolean required() {
+			return (this.required != null && this.required);
 		}
 
 		public FieldData(T enclosingObj, Field field, Object valueToProcess,
@@ -2624,7 +2756,8 @@ public class Oson {
 	}
 	
 	private boolean ignoreClass(Class valueType) {
-		if (valueType.isSynthetic()) {
+		Set<MODIFIER> set = getIncludeFieldsWithModifiers();
+		if (valueType.isSynthetic() && (set == null || !set.contains(MODIFIER.Synthetic))) {
 			return true;
 		}
 		
@@ -3084,6 +3217,34 @@ public class Oson {
 		
 		if (fieldMapper.date2Long == null) {
 			fieldMapper.date2Long =  classMapper.date2Long;
+		}
+		
+		if (fieldMapper.precision == null) {
+			fieldMapper.precision =  classMapper.precision;
+		}
+		
+		if (fieldMapper.scale == null) {
+			fieldMapper.scale =  classMapper.scale;
+		}
+		
+		if (fieldMapper.min == null) {
+			fieldMapper.min =  classMapper.min;
+		}
+		
+		if (fieldMapper.max == null) {
+			fieldMapper.max =  classMapper.max;
+		}
+		
+		if (fieldMapper.length == null) {
+			fieldMapper.length =  classMapper.length;
+		}
+		
+		if (fieldMapper.defaultValue == null) {
+			fieldMapper.defaultValue =  classMapper.defaultValue;
+		}
+		
+		if (fieldMapper.ignore == null) {
+			fieldMapper.ignore =  classMapper.ignore;
 		}
 		
 		return fieldMapper;
@@ -4149,15 +4310,25 @@ public class Oson {
 						}
 						
 						Integer precision = objectDTO.getPrecision();
-						if (precision != null) {
-							valueToProcess = (Double)NumberUtil.setPrecision(valueToProcess, precision);
-						}
-						
 						Integer scale = objectDTO.getScale();
-						if (scale != null) {
+						
+						if (precision != null) {
+							if (scale != null) {
+								valueToProcess = (double) NumberUtil.setPrecision(valueToProcess, precision, getRoundingMode());
+								BigDecimal b = new BigDecimal(valueToProcess);
+								
+								b = b.setScale(scale, getRoundingMode());
+								return NumberUtil.toPlainString(b);
+								
+							} else {
+								return NumberUtil.precision2Json(valueToProcess, precision, getRoundingMode());
+							}
+						
+						} else if (scale != null) {
 							BigDecimal b = new BigDecimal(valueToProcess);
+							
 							b = b.setScale(scale, getRoundingMode());
-							return b.toPlainString();
+							return NumberUtil.toPlainString(b);
 						}
 						
 						return NumberUtil.toPlainString(valueToProcess);
@@ -4185,7 +4356,7 @@ public class Oson {
 	private <E> Double json2DoubleDefault(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = (objectDTO.required != null && objectDTO.required);
+		boolean required = objectDTO.required();
 		
 		Long min = objectDTO.getMin();
 		Long max = objectDTO.getMax();
@@ -4322,7 +4493,7 @@ public class Oson {
 					if (max != null && max.floatValue() < valueToReturn) {
 						valueToReturn = max.floatValue();
 					}
-					
+
 					return valueToReturn;
 				}
 	
@@ -4404,15 +4575,25 @@ public class Oson {
 						}
 						
 						Integer precision = objectDTO.getPrecision();
-						if (precision != null) {
-							valueToProcess = (float) NumberUtil.setPrecision(valueToProcess, precision);
-						}
-						
 						Integer scale = objectDTO.getScale();
-						if (scale != null) {
+						
+						if (precision != null) {
+							if (scale != null) {
+								valueToProcess = (float) NumberUtil.setPrecision(valueToProcess, precision, getRoundingMode());
+								BigDecimal b = new BigDecimal(valueToProcess);
+								
+								b = b.setScale(scale, getRoundingMode());
+								return NumberUtil.toPlainString(b);
+								
+							} else {
+								return NumberUtil.precision2Json(valueToProcess, precision, getRoundingMode());
+							}
+						
+						} else if (scale != null) {
 							BigDecimal b = new BigDecimal(valueToProcess);
-							b.setScale(scale, getRoundingMode());
-							valueToProcess = b.floatValue();
+							
+							b = b.setScale(scale, getRoundingMode());
+							return NumberUtil.toPlainString(b);
 						}
 						
 						return NumberUtil.toPlainString(valueToProcess);
@@ -4440,7 +4621,7 @@ public class Oson {
 	private <E> Float json2FloatDefault(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = (objectDTO.required != null && objectDTO.required);
+		boolean required = objectDTO.required();
 		
 		Long min = objectDTO.getMin();
 		Long max = objectDTO.getMax();
@@ -4629,7 +4810,7 @@ public class Oson {
  	}
  		
  	private <E> Date json2DateDefault(FieldData objectDTO) {
-		if (getDefaultType() == JSON_INCLUDE.DEFAULT || objectDTO.required) {
+		if (getDefaultType() == JSON_INCLUDE.DEFAULT || objectDTO.required()) {
 			Date defaultValue = (Date)objectDTO.getDefaultValue();
 			if (defaultValue != null) {
 				return defaultValue;
@@ -4744,16 +4925,17 @@ public class Oson {
 					if (max != null && valueToReturn.compareTo(new BigDecimal(max)) > 0) {
 						valueToReturn = new BigDecimal(max);
 					}
+					
+					Integer precision = objectDTO.getPrecision();
+					if (precision != null && precision < valueToReturn.precision()) {
+						valueToReturn = (BigDecimal)NumberUtil.setPrecision(valueToReturn, precision, getRoundingMode());
+					}
+					
 					Integer scale = objectDTO.getScale();
 					if (scale != null) {
 						valueToReturn = valueToReturn.setScale(scale, getRoundingMode());
 					}
-					
-					Integer precision = objectDTO.getPrecision();
-					if (precision != null && precision < valueToReturn.precision()) {
-						valueToReturn = (BigDecimal)NumberUtil.setPrecision(valueToReturn, precision);
-					}
-					
+
 					return valueToReturn;
 				}
 	
@@ -4834,16 +5016,20 @@ public class Oson {
 							valueToProcess = new BigDecimal(max);
 						}
 						
+						Integer precision = objectDTO.getPrecision();
 						Integer scale = objectDTO.getScale();
-						if (scale != null) {
+						
+						if (precision != null && precision < valueToProcess.precision()) {
+							valueToProcess = (BigDecimal)NumberUtil.setPrecision(valueToProcess, precision, getRoundingMode());
+							
+							if (scale != null) {
+								valueToProcess = valueToProcess.setScale(scale, getRoundingMode());
+							}
+							
+						} else if (scale != null) {
 							valueToProcess = valueToProcess.setScale(scale, getRoundingMode());
 						}
-						
-						Integer precision = objectDTO.getPrecision();
-						if (precision != null && precision < valueToProcess.precision()) {
-							valueToProcess = (BigDecimal)NumberUtil.setPrecision(valueToProcess, precision);
-						}
-						
+
 						return NumberUtil.toPlainString(valueToProcess);
 					}
 
@@ -4869,7 +5055,7 @@ public class Oson {
 	private <E> BigDecimal json2BigDecimalDefault(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = (objectDTO.required != null && objectDTO.required);
+		boolean required = objectDTO.required();
 		
 		Long min = objectDTO.getMin();
 		Long max = objectDTO.getMax();
@@ -5083,7 +5269,7 @@ public class Oson {
 						
 						Integer precision = objectDTO.getPrecision();
 						if (precision != null) {
-							valueToProcess = (BigInteger)NumberUtil.setPrecision(valueToProcess, precision);
+							valueToProcess = (BigInteger)NumberUtil.setPrecision(valueToProcess, precision, getRoundingMode());
 						}
 						
 						return NumberUtil.toPlainString(valueToProcess);
@@ -5111,7 +5297,7 @@ public class Oson {
 	private <E> BigInteger json2BigIntegerDefault(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = (objectDTO.required != null && objectDTO.required);
+		boolean required = objectDTO.required();
 		
 		Long min = objectDTO.getMin();
 		Long max = objectDTO.getMax();
@@ -5323,7 +5509,7 @@ public class Oson {
 						
 						Integer precision = objectDTO.getPrecision();
 						if (precision != null) {
-							valueToProcess = (AtomicInteger) NumberUtil.setPrecision(valueToProcess, precision);
+							valueToProcess = (AtomicInteger) NumberUtil.setPrecision(valueToProcess, precision, getRoundingMode());
 						}
 						
 						return NumberUtil.toPlainString(valueToProcess);
@@ -5351,7 +5537,7 @@ public class Oson {
 	private <E> AtomicInteger json2AtomicIntegerDefault(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = (objectDTO.required != null && objectDTO.required);
+		boolean required = objectDTO.required();
 		
 		Long min = objectDTO.getMin();
 		Long max = objectDTO.getMax();
@@ -5563,7 +5749,7 @@ public class Oson {
 						
 						Integer precision = objectDTO.getPrecision();
 						if (precision != null) {
-							valueToProcess = (AtomicLong) NumberUtil.setPrecision(valueToProcess, precision);
+							valueToProcess = (AtomicLong) NumberUtil.setPrecision(valueToProcess, precision, getRoundingMode());
 						}
 						
 						return NumberUtil.toPlainString(valueToProcess);
@@ -5591,7 +5777,7 @@ public class Oson {
 	private <E> AtomicLong json2AtomicLongDefault(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = (objectDTO.required != null && objectDTO.required);
+		boolean required = objectDTO.required();
 		
 		Long min = objectDTO.getMin();
 		Long max = objectDTO.getMax();
@@ -5686,7 +5872,7 @@ public class Oson {
 						
 						Integer precision = objectDTO.getPrecision();
 						if (precision != null) {
-							valueToProcess = (Long) NumberUtil.setPrecision(valueToProcess, precision);
+							valueToProcess = (Long) NumberUtil.setPrecision(valueToProcess, precision, getRoundingMode());
 						}
 						
 						return NumberUtil.toPlainString(valueToProcess);
@@ -5836,7 +6022,7 @@ public class Oson {
 	private <E> Long json2LongDefault(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = (objectDTO.required != null && objectDTO.required);
+		boolean required = objectDTO.required();
 		
 		Long min = objectDTO.getMin();
 		Long max = objectDTO.getMax();
@@ -5963,7 +6149,7 @@ public class Oson {
 					if (max != null && valueToReturn.longValue() > max) {
 						valueToReturn = Integer.valueOf(max.intValue());
 					}
-					
+
 					return valueToReturn;
 				}
 	
@@ -6069,7 +6255,7 @@ public class Oson {
 	private <E> Integer json2IntegerDefault(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = (objectDTO.required != null && objectDTO.required);
+		boolean required = objectDTO.required();
 
 		if (returnType == int.class
 				|| getDefaultType() == JSON_INCLUDE.DEFAULT || required) {
@@ -6287,7 +6473,7 @@ public class Oson {
 						
 						Integer precision = objectDTO.getPrecision();
 						if (precision != null) {
-							valueToProcess = (Byte) NumberUtil.setPrecision(valueToProcess, precision);
+							valueToProcess = (Byte) NumberUtil.setPrecision(valueToProcess, precision, getRoundingMode());
 						}
 						
 						return NumberUtil.toPlainString(valueToProcess);
@@ -6315,7 +6501,7 @@ public class Oson {
 	private <E> Byte json2ByteDefault(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = (objectDTO.required != null && objectDTO.required);
+		boolean required = objectDTO.required();
 		
 		Long min = objectDTO.getMin();
 		Long max = objectDTO.getMax();
@@ -6560,7 +6746,7 @@ public class Oson {
 	private <E> Character json2CharacterDefault(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = (objectDTO.required != null && objectDTO.required);
+		boolean required = objectDTO.required();
 		
 		Long min = objectDTO.getMin();
 		Long max = objectDTO.getMax();
@@ -6780,7 +6966,7 @@ public class Oson {
 						
 						Integer precision = objectDTO.getPrecision();
 						if (precision != null) {
-							valueToProcess = (Short) NumberUtil.setPrecision(valueToProcess, precision);
+							valueToProcess = (Short) NumberUtil.setPrecision(valueToProcess, precision, getRoundingMode());
 						}
 						
 						return NumberUtil.toPlainString(valueToProcess);
@@ -6808,7 +6994,7 @@ public class Oson {
 	private <E> Short json2ShortDefault(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = (objectDTO.required != null && objectDTO.required);
+		boolean required = objectDTO.required();
 		
 		Long min = objectDTO.getMin();
 		Long max = objectDTO.getMax();
@@ -6980,7 +7166,7 @@ public class Oson {
 	private <E> String json2StringDefault(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = (objectDTO.required != null && objectDTO.required);
+		boolean required = objectDTO.required();
 		
 		Long min = objectDTO.getMin();
 		Long max = objectDTO.getMax();
@@ -7178,7 +7364,7 @@ public class Oson {
 	private <E> Boolean json2BooleanDefault(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = (objectDTO.required != null && objectDTO.required);
+		boolean required = objectDTO.required();
 		
 		Long min = objectDTO.getMin();
 		Long max = objectDTO.getMax();
@@ -7204,7 +7390,7 @@ public class Oson {
 	private <E> Enum<?> json2Enum(FieldData objectDTO) {
 		Object valueToProcess = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = (objectDTO.required != null && objectDTO.required);
+		boolean required = objectDTO.required();
 		Enum defaultValue = (Enum)objectDTO.defaultValue;
 		boolean json2Java = objectDTO.json2Java;
 
@@ -7521,7 +7707,7 @@ public class Oson {
 	}
 	
 	private <E> Map json2MapDefault(FieldData objectDTO) {
-		boolean required = (objectDTO.required != null && objectDTO.required);
+		boolean required = objectDTO.required();
 
 		if (getDefaultType() == JSON_INCLUDE.DEFAULT || required) {
 			Map defaultValue = (Map)objectDTO.getDefaultValue();
@@ -7977,7 +8163,7 @@ public class Oson {
 	private <E> E[] json2ArrayDefault(FieldData objectDTO) {
 		//Object value = objectDTO.valueToProcess;
 		//Class<E> returnType = objectDTO.returnType;
-		boolean required = (objectDTO.required != null && objectDTO.required);
+		boolean required = objectDTO.required();
 
 		if (getDefaultType() == JSON_INCLUDE.DEFAULT || required) {
 			E[] defaultValue = (E[])objectDTO.getDefaultValue();
@@ -8296,7 +8482,7 @@ public class Oson {
 	private <E> Collection json2CollectionDefault(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
-		boolean required = (objectDTO.required != null && objectDTO.required);
+		boolean required = objectDTO.required();
 
 		if (getDefaultType() == JSON_INCLUDE.DEFAULT || required) {
 			Collection defaultValue = (Collection)objectDTO.getDefaultValue();
@@ -12665,8 +12851,53 @@ public class Oson {
 			return new BigDecimal(number.doubleValue()).toPlainString();
 		}
 		
+		
+		public static String precision2Json(Number number, int precision, RoundingMode roundingMode) {
+			String str = toPlainString(number);
+			int length = str.length();
+			if (length <= precision) {
+				return str;
+			}
+			
+			Class type = number.getClass();
+			
+			String first = str.substring(0, precision);
+			int idx = first.indexOf(".");
+			if (idx > -1) {
+				//precision++;
+				// return str.substring(0, precision);
+				
+				int digits = precision - idx;
+				BigDecimal b = new BigDecimal(str).setScale(digits, roundingMode);
+						
+				return b.toPlainString();
+			}
+			if (first.contains("-")) {
+				precision++;
+				first = str.substring(0, precision);
+			}
+			
+			String last = str.substring(precision);
+			StringBuffer sb = new StringBuffer();
+			length = last.length();
+			
+			for (int i = 0; i < length; i++) {
+				char c = last.charAt(i);
+				if (c == '0' || c == '-') {
+					sb.append(c);
+				} else if (c == '.') {
+						break;
+				} else {
+					sb.append('0');
+				}
+			}
+			
+			return first + sb.toString();
+		}
+		
+		
 		// assume valid inputs
-		public static Number setPrecision(Number number, int precision) {
+		public static Number setPrecision(Number number, int precision, RoundingMode roundingMode) {
 			String str = toPlainString(number);
 			int length = str.length();
 			if (length <= precision) {
@@ -12675,20 +12906,7 @@ public class Oson {
 			
 			Class type = number.getClass();
 			
-			String first = str.substring(0, precision);
-			String last = str.substring(precision);
-			StringBuffer sb = new StringBuffer();
-			length = last.length();
-			for (int i = 0; i < length; i++) {
-				char c = last.charAt(i);
-				if (c == '0' || c == '.' || c == '-') {
-					sb.append(c);
-				} else {
-					sb.append('0');
-				}
-			}
-			
-			str = first + sb.toString();
+			str = precision2Json(number, precision, roundingMode);
 			
 			switch (type.getName()) {
 			case "java.lang.Integer": return Integer.parseInt(str);
