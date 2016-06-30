@@ -148,26 +148,27 @@ It also means that a class-level setting will override the global settings, and 
 The second two general rules specify how to put these previous rules into practice by using either a Java code based configuration, or annotation based configuration, or both, at global, class and field levels.
 
 In order to achieve these features, two Java classes and two Annotation classes are used, with similar names and patterns:
-2 Java classes:
-ca.oson.json.Oson.ClassMapper
-ca.oson.json.Oson.FieldMapper
-2 Annotation classes:
-ca.oson.json.ClassMapper
-ca.oson.json.FieldMapper
 
-The Java classes have slight more features than their corresponding annotation classes, owing to the fact that annotation can only support primitive types and Enum, not even null value. These classes contain more features than all configuration abilities from external sources, including com.fasterxml.jackson, com.google.gson, org.codehaus.jackson, javax.persistence, and javax.validation. To simulate the null default concept in annotation, NONE enum entry is introduced to various enums, including the BOOOLEAN enum, which has 3 values: BOOOLEAN.TRUE, BOOOLEAN.FALSE, BOOOLEAN.NONE, corresponding to true, false, and null in Boolean Java type. This way, the value false can be used to over
-ride previous true value. For example, if a field in ignored in external Java classes, and we cannot change its source code, but we can easily set ignore to be false using FieldMapper class.
+2 Java classes:
+  * ca.oson.json.Oson.ClassMapper
+  * ca.oson.json.Oson.FieldMapper
+2 Annotation classes:
+  * ca.oson.json.ClassMapper
+  * ca.oson.json.FieldMapper
+
+The Java classes have slightly more features than their corresponding annotation classes, owing to the fact that annotation can only support primitive types and Enum, not even null value. These classes contain more features than all configuration abilities from external sources, including com.fasterxml.jackson, com.google.gson, org.codehaus.jackson, javax.persistence, and javax.validation. To simulate the null default concept in annotation, NONE enum entry is introduced to various enums, including the BOOOLEAN enum, which has 3 values: BOOOLEAN.TRUE, BOOOLEAN.FALSE, BOOOLEAN.NONE, corresponding to true, false, and null in Boolean Java type. This way, the value false can be used to override previous true value. For example, if a field in ignored in external Java classes, and we cannot change its source code, yet we can easily set ignore to be false using FieldMapper class.
 
 The detail overriding rules are:
-1. Global Java configuration at the top;
-2. Apply annotations from other sources at the second level;
-3. Override these previous settings with annotation from Oson, which is ca.oson.json.ClassMapper;
-4. Override last 3 settings using Java code configuration. This configuration class is ca.oson.json.Oson.ClassMapper. At this step, we have class level configuration for the current Java class. The following steps of each field in this class will use this setting as the basis for each of its own configuration;
-5. Using the ClassMapper created at step 4, a new FieldMapper object is created;
-6. Apply configuration information from other sources to this FieldMapper;
-7. Apply configuration information from Oson field annotations class to this FieldMapper. Oson has a single Field annotation class, which is ca.oson.json.FieldMapper;
-8. Apply configuration information using Java code, with the help of Oson Java configuration class: ca.oson.json.Oson.FieldMapper;
-9. Make use of this final configuration data to configure how a field in a Java class is mapped, for both of its name and value.
+
+1. Global Java configuration at the top
+2. Apply annotations from other sources at the second level
+3. Override these previous settings with annotation from Oson, which is ca.oson.json.ClassMapper
+4. Override last 3 settings using Java code configuration. This configuration class is ca.oson.json.Oson.ClassMapper. At this step, we have class level configuration for the current Java class. The following steps of each field in this class will use this setting as the basis for each of its own configuration
+5. Using the ClassMapper created at step 4, a new FieldMapper object is created
+6. Apply configuration information from other sources to this FieldMapper
+7. Apply configuration information from Oson field annotations class to this FieldMapper. Oson has a single Field annotation class, which is ca.oson.json.FieldMapper
+8. Apply configuration information using Java code, with the help of Oson Java configuration class: ca.oson.json.Oson.FieldMapper
+9. Make use of this final configuration data to configure how a field in a Java class is mapped, for both of its name and value
 
 Once you understand these overriding rules, you will be able to configure any Java class at ease.
 
@@ -209,12 +210,13 @@ For example, Oson has a precision or/and scale setting. A precision is the numbe
 	}
 ```
 
-This global level configuration forms a basis for further action. The tow test classes are created to demonstrate how each configuration steps can be applied and each of them is used to modify the behavior of Oson processor. Please check out them for detailed usage:
+This global level configuration forms a basis for further action. Two test classes are created to demonstrate how each configuration steps can be applied and each of them is used to modify the behavior of Oson processor. Please check out them for detailed usage:
 
 [ScaleTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/numeric/ScaleTest.java)
 [PrecisionScaleTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/numeric/PrecisionScaleTest.java)
 
 Json becomes popular, for 3 main reasons:
+
 1. Javascript is the Web page language, and all its objects are in Json format: name-value pairs;
 2. Easy to use, at least easier than XML;
 3. Some major NoSQL databases use Json as their document types.
@@ -241,9 +243,10 @@ which prints out as
 Further details can be found at [SerializeCarTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/userguide/SerializeCarTest.java)
 
 A few notes:
+
 1. Can use these methods for the same purpose: serialize, toJson, writeValueAsString
 2. oson or oson.asOson() is the default behavior, but it is easy to use Gson and Jackson's version: oson.asGson(), oson.asJackson(), will automatically connection with these two popular Json-Java processors
-3. Jackson's mapper does not take attributes as its default inputs, you need either to provide a get method, or use annotation to that purpose: useField to make use of field value, in case there are no get accessor.
+3. Jackson's mapper does not take attributes as its default inputs, you need either to provide a get method, or use annotation to that purpose: useField to make use of field value, in case there are no get accessor
 
 
 ### <a name="TOC-Serialize-Java-Configuration"></a>Java Configuration
@@ -423,13 +426,13 @@ It can be in JSONObject json, Object[] array, Map<String, Object> map, Options o
 You can specify only the ones you want to, and use the rest of default values. And you can specify any time, either before or during the serializing or deserializing process. You can use any of the Builder method to set the configuration value you desire, in a train, and later ones will overwrite the earlier settings, or combined with you, depending on the circonstances. For most of the collection (Set) attributes, it behavior like add, unless you use a null value to set, which act like reset or clear, all previous values of this particular attribut is gone.
 
 Some examples:
-oson.pretty(): indentation is requested for output, the same as oson.pretty(true), or prettyPrinting(true)
-oson.setLevel(5): maximum 5 levels of output and processing
-oson.includeClassTypeInJson(true): include class name in Json output
-oson.sort() === oson.sort(true) === oson.orderByKeyAndProperties(true): order output by key of a map or properties of a Java object
-oson.setDefaultType(JSON_INCLUDE.NON_NULL): do not output null, use any of these values: ALWAYS, NON_NULL, NON_EMPTY, NON_DEFAULT, DEFAULT, NONE, to manage null or empty or default values
-oson.setClassMappers(...): parameter can be one or multiple ClassMapper objects, useful to set class-level behavior
-oson.setFieldMappers(...): parameter can be one or multiple FieldMapper objects, useful to set field-level behavior
+  * oson.pretty(): indentation is requested for output, the same as oson.pretty(true), or prettyPrinting(true)
+  * oson.setLevel(5): maximum 5 levels of output and processing
+  * oson.includeClassTypeInJson(true): include class name in Json output
+  * oson.sort() === oson.sort(true) === oson.orderByKeyAndProperties(true): order output by key of a map or properties of a Java object
+  * oson.setDefaultType(JSON_INCLUDE.NON_NULL): do not output null, use any of these values: ALWAYS, NON_NULL, NON_EMPTY, NON_DEFAULT, DEFAULT, NONE, to manage null or empty or default values
+  * oson.setClassMappers(...): parameter can be one or multiple ClassMapper objects, useful to set class-level behavior
+  * oson.setFieldMappers(...): parameter can be one or multiple FieldMapper objects, useful to set field-level behavior
 
 Or you can train them all up, like this:
 String json = oson.pretty().setLevel(5).includeClassTypeInJson(true).sort().setDefaultType(JSON_INCLUDE.NON_NULL)...serialize(myObject);
