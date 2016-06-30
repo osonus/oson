@@ -139,6 +139,7 @@ public class PrimitivesTest extends TestCaseBase {
 ## <a name="TOC-General-Conversion-Rules"></a>General Conversion Rules
 
 The first two general rules specify how to apply the 3 level configurations in Oson: global, class-level, and field or attribute level.
+
   * Lower level configurations inherit from higher level ones, if missing
   * Lower level configurations override higher level ones, if exist
 
@@ -150,9 +151,12 @@ The second two general rules specify how to put these previous rules into practi
 In order to achieve these features, two Java classes and two Annotation classes are used, with similar names and patterns:
 
 2 Java classes:
+
   * ca.oson.json.Oson.ClassMapper
   * ca.oson.json.Oson.FieldMapper
+
 2 Annotation classes:
+
   * ca.oson.json.ClassMapper
   * ca.oson.json.FieldMapper
 
