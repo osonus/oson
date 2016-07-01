@@ -1,18 +1,21 @@
 package ca.oson.json.userguide;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.InstanceCreator;
 
-import ca.oson.json.FieldMapper;
-import ca.oson.json.Oson.BOOLEAN;
 import ca.oson.json.Oson.JSON_INCLUDE;
+import ca.oson.json.Oson.ClassMapper;
 import ca.oson.json.domain.Address;
+import ca.oson.json.domain.AnyBean;
+import ca.oson.json.domain.AnyPoint;
 import ca.oson.json.domain.Customer;
 import ca.oson.json.domain.Person;
+import ca.oson.json.domain.Point;
 import ca.oson.json.support.TestCaseBase;
 
 public class NewInstanceTest extends TestCaseBase {
@@ -41,6 +44,29 @@ public class NewInstanceTest extends TestCaseBase {
 		String json = "{\"name\":\"Any Name\",\"type\":\"Java\",\"age\":35}";
 		
 		AnyBean result = oson.deserialize(json, AnyBean.class);
+
+		assertEquals(expected.toString(), result.toString());
+	}
+	
+	
+	@Test
+	public void testDeserializeAnyBeanWithCreateInstance() {
+		AnyBean expected = new AnyBean("Any Name", 35);
+		expected.setType("Java");
+		
+		String json = oson.serialize(expected);
+		String jsonExpected = "{\"name\":\"Any Name\",\"type\":\"Java\",\"age\":35}";
+		
+		assertEquals(jsonExpected, json);
+		
+		AnyBean result = oson.setClassMappers(AnyBean.class, new ClassMapper()
+		.setConstructor(new InstanceCreator(){
+			@Override
+			public Object createInstance(Type type) {
+				return new AnyBean(null, 0);
+			}
+			
+		})).deserialize(json, AnyBean.class);
 
 		assertEquals(expected.toString(), result.toString());
 	}
@@ -136,52 +162,4 @@ public class NewInstanceTest extends TestCaseBase {
         assertEquals(expected.toString(), result.toString());
 	}
 	
-}
-
-
-class AnyBean {
-    private final String name;
-    private final int age;
-    private String type;
-
-    //public AnyBean(@JsonProperty("name") String name, @JsonProperty("age") int age)
-    public AnyBean(String name, int age)
-    {
-      this.name = name;
-      this.age = age;
-    }
-
-    public void setType(String type) {
-      this.type = type;
-    }
-    
-    @FieldMapper(ignore = BOOLEAN.TRUE)
-    public String toString() {
-    	return "{\"name\":\"" + name + "\",\"type\":\"" + type + "\",\"age\":" + age + "}";
-    }
-  }
-
-
-class AnyPoint {
-    private final Point point;
-
-    public AnyPoint(Point point)
-    {
-      this.point = point;
-    }
-
-    @FieldMapper(ignore = BOOLEAN.TRUE)
-    public String toString() {
-    	return "{\"x\":" + point.x + ",\"y\":" + point.y + "}";
-    }
-}
-
-class Point {
-	double x;
-	double y;
-
-	public Point(double x, double y) {
-		this.x = x;
-		this.y = y;
-	}
 }

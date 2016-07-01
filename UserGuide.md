@@ -10,6 +10,7 @@
   * [Lambda Expression](#TOC-Serialize-Lambda-Expression)
 6. [How to convert Json document to Java object](#TOC-How-To-Convert-Json-Document-Java-Object)
   * [How to Create Initial Java Object](#TOC-Deserialize-How-To-Create-Initial-Java-Object)
+    * [Implement InstanceCreator](#TOC-Implement-InstanceCreator)
   * [Lambda Expression](#TOC-Deserialize-Lambda-Expression)
 7. [How to filter out information](#TOC-How-To-Filter-Out-Information)
   * [Java Configuration](#TOC-Filter-Java-Configuration)
@@ -411,6 +412,13 @@ Here are the list of atributes you can set in order to make it the way you want 
 		private Long max = null;
 
 		/*
+		 * When process methods of a class, only use methods starting with "get"
+		 * or "set", other wise, any no-arg method returning values are considered as get,
+		 * any method that accepts values are considered set, excluding constructors
+		 */
+		private boolean setGetOnly = false;
+
+		/*
 		 * class level configurations
 		 */
 		private Map<Class, ClassMapper> classMappers = null;
@@ -650,7 +658,7 @@ The third constructor accepts a variable array of component types, which can be 
 	}
 ```
 
-Inside this test case, we create a list of data, with 9 different types: Customer, Event, Car, int[][][], Boolean[], HashMap, ArrayList, and Integer, String. We only need to pass in the class types of self-defineed classes, and complex data structure, into the variable array of ComponentType class, which implements the Type interface. The Oson library uses this information to figure out the data types of Car and Event correctly. The main reason to pass in such data types as List, Array, or Map is to confirm that we do use them inside the Json document, and it is not a mistake, as normally people would not do such a crazy thing, unless inside a actual class, which would have no problem to process. After Oson has serialized and deserialized this data structure successfully, I myself fully convinced that it can handle very complex data structures.
+Inside this test case, we create a list of data, with 9 different types: Customer, Event, Car, int[][][], Boolean[], HashMap, ArrayList, and Integer, String. We only need to pass in the class types of self-defined classes, and complex data structure, into the variable array of ComponentType class, which implements the Type interface. The Oson library uses this information to figure out these data types correctly. The main reason to pass in such data types as List, Array, or Map is to confirm that we do use them inside the Json document, and it is not a mistake, as normally people would not do such a crazy thing, unless inside a actual class, which would have no problem to process. After Oson has serialized and deserialized this data structure successfully, I myself fully convinced that it can handle very complex data structures.
 
 ### <a name="TOC-Deserialize-How-To-Create-Initial-Java-Object"></a>How to Create Initial Java Object
 
@@ -665,4 +673,34 @@ We are multiple ways you can help:
 If all of these are not met, the tool will try tens of other ways to create a new instance, or fails in the end.
 
 I tried to create a case where Oson cannot initiate a class by itself, but in these cases it can do it without particular help, one main reason is that the compiler I used must have included type information inside bytecode, so it causes no issue to get parameter names from it. In case parameter names inside constructors get erased, we do need to provide name support by annotations.
+
+#### <a name="TOC-Implement-InstanceCreator"></a>**Implement InstanceCreator**
+
+InstanceCreator is a simple interface that gives you a way to provide an initial object: public T createInstance(Type type). You can specify one with 
+public ClassMapper setConstructor(InstanceCreator<T> constructor) inside ClassMapper class. Here is one test case at [CollectionsTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/userguide/NewInstanceTest.java):
+
+```java
+	@Test
+	public void testDeserializeAnyBeanWithCreateInstance() {
+		AnyBean expected = new AnyBean("Any Name", 35);
+		expected.setType("Java");
+		
+		String json = oson.serialize(expected);
+		String jsonExpected = "{\"name\":\"Any Name\",\"type\":\"Java\",\"age\":35}";
+		
+		assertEquals(jsonExpected, json);
+		
+		AnyBean result = oson.setClassMappers(AnyBean.class, new ClassMapper()
+		.setConstructor(new InstanceCreator(){
+			@Override
+			public Object createInstance(Type type) {
+				return new AnyBean(null, 0);
+			}
+			
+		})).deserialize(json, AnyBean.class);
+
+		assertEquals(expected.toString(), result.toString());
+	}
+```
+
 

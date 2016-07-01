@@ -277,7 +277,7 @@ public class PrecisionScaleTest extends TestCaseBase {
 		String expected10 = "10";
 		String expected51 = "12.3";
 		String expected55 = "12.34600";
-		String expected10null = "10.00000";
+		String expected10null = "10";
 		
 		oson.setPrecision(1).setScale(null);
 		oson.setClassMappers(new ca.oson.json.Oson.ClassMapper(Float.class).setPrecision(5).setScale(1));

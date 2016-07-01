@@ -1280,6 +1280,13 @@ public class Oson {
 		 * Maximum value a number can be, if required, or use default setting
 		 */
 		private Long max = null;
+		
+		/*
+		 * When process methods of a class, only use methods starting with "get"
+		 * or "set", other wise, any no-arg method returning values are considered as get,
+		 * any method that accepts values are considered set, excluding constructors
+		 */
+		private boolean setGetOnly = false;
 
 		/*
 		 * class level configurations
@@ -1291,6 +1298,14 @@ public class Oson {
 		 */
 		private Set<FieldMapper> fieldMappers = null;
 
+		
+		public boolean getSetGetOnly() {
+			return setGetOnly;
+		}
+
+		public void setSetGetOnly(boolean setGetOnly) {
+			this.setGetOnly = setGetOnly;
+		}
 		
 		
 		private Integer getLength() {
@@ -1900,42 +1915,153 @@ public class Oson {
 			if (this.classMappers == null || classMappers == null) {
 				this.classMappers = classMappers;
 			} else {
-				this.classMappers.putAll(classMappers);
+				for (Entry<Class, ClassMapper> entry: classMappers.entrySet()) {
+					setClassMappers(entry.getKey(), entry.getValue());
+				}
 			}
 		}
 		
 		
 		public void setClassMappers(ClassMapper[] classMappers) {
-			if (this.classMappers == null) {
-				this.classMappers = new HashMap<Class, ClassMapper>();
+			if (classMappers == null) {
+				this.classMappers = null;
+				return;
 			}
 			
 			for (ClassMapper classMapper: classMappers) {
 				if (classMapper.type != null) {
-					this.classMappers.put(classMapper.type, classMapper);
+					setClassMappers(classMapper.type, classMapper);
 				}
 			}
 		}
 		public void setClassMappers(List<ClassMapper> classMappers) {
-			if (this.classMappers == null) {
-				this.classMappers = new HashMap<Class, ClassMapper>();
+			if (classMappers == null) {
+				this.classMappers = null;
+				return;
 			}
 			
 			for (ClassMapper classMapper: classMappers) {
 				if (classMapper.type != null) {
-					this.classMappers.put(classMapper.type, classMapper);
+					setClassMappers(classMapper.type, classMapper);
 				}
 			}
 		}
 		public void setClassMappers(ClassMapper classMapper) {
+			if (classMapper == null) {
+				this.classMappers = null;
+				return;
+			}
+			
 			if (classMapper.type == null) {
 				return;
 			}
+			setClassMappers(classMapper.type, classMapper);
+		}
+		
+		public void setClassMappers(Class type, ClassMapper classMapper) {
+			if (type == null) {
+				type = classMapper.type;
+			}
+			if (type == null) {
+				return;
+			} else {
+				classMapper.type = type;
+			}
+
 			if (this.classMappers == null) {
 				this.classMappers = new HashMap<Class, ClassMapper>();
 			}
 			
-			this.classMappers.put(classMapper.type, classMapper);
+			ClassMapper oldClassMapper = this.classMappers.get(type);
+			
+			if (oldClassMapper == null) {
+				this.classMappers.put(type, classMapper);
+			} else {
+				// merge this two, new overwrites the old
+				
+				if (classMapper.ignore != null) {
+					oldClassMapper.ignore = classMapper.ignore;
+				}
+				if (classMapper.date2Long != null) {
+					oldClassMapper.date2Long = classMapper.date2Long;
+				}
+				if (classMapper.includeClassTypeInJson != null) {
+					oldClassMapper.includeClassTypeInJson = classMapper.includeClassTypeInJson;
+				}
+				if (classMapper.orderByKeyAndProperties != null) {
+					oldClassMapper.orderByKeyAndProperties = classMapper.orderByKeyAndProperties;
+				}
+				if (classMapper.useAttribute != null) {
+					oldClassMapper.useAttribute = classMapper.useAttribute;
+				}
+				if (classMapper.useField != null) {
+					oldClassMapper.useField = classMapper.useField;
+				}
+				if (classMapper.constructor != null) {
+					oldClassMapper.constructor = classMapper.constructor;
+				}
+				if (classMapper.defaultType != null) {
+					oldClassMapper.defaultType = classMapper.defaultType;
+				}
+				if (classMapper.defaultValue != null) {
+					oldClassMapper.defaultValue = classMapper.defaultValue;
+				}
+				if (classMapper.deserializer != null) {
+					oldClassMapper.deserializer = classMapper.deserializer;
+				}
+				if (classMapper.enumType != null) {
+					oldClassMapper.enumType = classMapper.enumType;
+				}
+				if (classMapper.ignoreFieldsWithAnnotations != null) {
+					if (oldClassMapper.ignoreFieldsWithAnnotations == null) {
+						oldClassMapper.ignoreFieldsWithAnnotations = classMapper.ignoreFieldsWithAnnotations;
+					} else {
+						oldClassMapper.ignoreFieldsWithAnnotations.addAll(classMapper.ignoreFieldsWithAnnotations);
+					}
+				}
+				if (classMapper.ignoreVersionsAfter != null) {
+					oldClassMapper.ignoreVersionsAfter = classMapper.ignoreVersionsAfter;
+				}
+				if (classMapper.includeFieldsWithModifiers != null) {
+					if (oldClassMapper.includeFieldsWithModifiers == null) {
+						oldClassMapper.includeFieldsWithModifiers = classMapper.includeFieldsWithModifiers;
+					} else {
+						oldClassMapper.includeFieldsWithModifiers.addAll(classMapper.includeFieldsWithModifiers);
+					}
+				}
+				if (classMapper.jsonIgnoreProperties != null) {
+					if (oldClassMapper.jsonIgnoreProperties == null) {
+						oldClassMapper.jsonIgnoreProperties = classMapper.jsonIgnoreProperties;
+					} else {
+						oldClassMapper.jsonIgnoreProperties.addAll(classMapper.jsonIgnoreProperties);
+					}
+				}
+				if (classMapper.length != null) {
+					oldClassMapper.length = classMapper.length;
+				}
+				if (classMapper.max != null) {
+					oldClassMapper.max = classMapper.max;
+				}
+				if (classMapper.min != null) {
+					oldClassMapper.min = classMapper.min;
+				}
+				if (classMapper.precision != null) {
+					oldClassMapper.precision = classMapper.precision;
+				}
+				if (classMapper.scale != null) {
+					oldClassMapper.scale = classMapper.scale;
+				}
+				if (classMapper.propertyOrders != null) {
+					oldClassMapper.propertyOrders = classMapper.propertyOrders;
+				}
+				if (classMapper.serializer != null) {
+					oldClassMapper.serializer = classMapper.serializer;
+				}
+				if (classMapper.simpleDateFormat != null) {
+					oldClassMapper.simpleDateFormat = classMapper.simpleDateFormat;
+				}
+			}
+			
 		}
 		
 		private Set<FieldMapper> getFieldMappers() {
@@ -3136,6 +3262,12 @@ public class Oson {
 
 		return this;
 	}
+	public Oson setClassMappers(Class type, ClassMapper classMapper) {
+		options.setClassMappers(type, classMapper);
+		reset();
+
+		return this;
+	}
 	
 	private Set<FieldMapper> getFieldMappers() {
 		return options.getFieldMappers();
@@ -3383,6 +3515,19 @@ public class Oson {
 		options.setMax(max);
 
 		return this;
+	}
+	
+	private boolean getSetGetOnly() {
+		return options.getSetGetOnly();
+	}
+
+	public Oson setGetOnly(boolean setGetOnly) {
+		options.setSetGetOnly(setGetOnly);
+
+		return this;
+	}
+	public Oson setGetOnly() {
+		return setGetOnly(true);
 	}
 	
 	
@@ -7570,7 +7715,7 @@ public class Oson {
 										}
 										return ctype;
 										
-									} else if (itemType.isAssignableFrom(ctype)) {
+									} else if (itemType.isAssignableFrom(ctype) || ctype.isAssignableFrom(itemType)) {
 										possible = ctype;
 									}
 								}
@@ -9021,7 +9166,7 @@ public class Oson {
 		return new HashMap(cachedMethods.get(fullName)[METHOD.OTHER.value]);
 	}
 	
-	private static <T> void processMethods(Class<T> valueType, String fullName) {
+	private <T> void processMethods(Class<T> valueType, String fullName) {
 		Stream<Method> stream = Arrays.stream(valueType.getDeclaredMethods());
 //		while (valueType != null && valueType != Object.class) {
 //			stream = Stream.concat(stream, Arrays.stream(valueType
@@ -9051,7 +9196,7 @@ public class Oson {
 					others.put(name.toLowerCase(), method);
 				}
 				
-			} else if (method.getParameterCount() == 0) {
+			} else if (method.getParameterCount() == 0 && getSetGetOnly()) {
 				getters.put(name.toLowerCase(), method);
 			} else {
 				others.put(name.toLowerCase(), method);
