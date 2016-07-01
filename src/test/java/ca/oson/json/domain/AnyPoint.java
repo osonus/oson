@@ -6,7 +6,8 @@ import ca.oson.json.Oson.BOOLEAN;
 public class AnyPoint {
     private final Point point;
 
-    public AnyPoint(Point point)
+    @FieldMapper(jsonCreator = BOOLEAN.TRUE)
+    public AnyPoint(@FieldMapper(name = "point") Point point)
     {
       this.point = point;
     }

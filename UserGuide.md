@@ -11,6 +11,8 @@
 6. [How to convert Json document to Java object](#TOC-How-To-Convert-Json-Document-Java-Object)
   * [How to Create Initial Java Object](#TOC-Deserialize-How-To-Create-Initial-Java-Object)
     * [Implement InstanceCreator](#TOC-Implement-InstanceCreator)
+    * [Use Default Object](#TOC-Use-Default-Object)
+    * [Use Constructor Annotation](#TOC-Use-Constructor-Annotation)
   * [Lambda Expression](#TOC-Deserialize-Lambda-Expression)
 7. [How to filter out information](#TOC-How-To-Filter-Out-Information)
   * [Java Configuration](#TOC-Filter-Java-Configuration)
@@ -702,5 +704,64 @@ public ClassMapper setConstructor(InstanceCreator<T> constructor) inside ClassMa
 		assertEquals(expected.toString(), result.toString());
 	}
 ```
+
+#### <a name="TOC-Use-Default-Object"></a>**Use Default Object**
+
+You can also provide a default object directly using ClassMapper configuration, instead of trying to fix the constructor issue. Here is the method:
+
+```java
+	@Test
+	public void testDeserializeAnyBeanUseDefaultObject() {
+		AnyBean expected = new AnyBean("Any Name", 35);
+		expected.setType("Java");
+		
+		String json = oson.serialize(expected);
+		String jsonExpected = "{\"name\":\"Any Name\",\"type\":\"Java\",\"age\":35}";
+		
+		assertEquals(jsonExpected, json);
+		
+		AnyBean result = oson
+				.setDefaultValue(AnyBean.class, new AnyBean(null, 0))
+				.deserialize(json, AnyBean.class);
+
+		assertEquals(expected.toString(), result.toString());
+	}
+```
+
+Simply set it as you wish, with one line of code: setDefaultValue(Class type, Object obj). Looks much simpler than the InstanceCreator approach?
+
+#### <a name="TOC-Use-Constructor-Annotation"></a>**Use Constructor Annotation**
+
+As most of Java configurations have an annotation approach, this one is for helping you build a new object. Give the constructor a flag, than give a name for each of its parameter. For example, this is the way Jackson does things:
+
+```java
+    @JsonCreator
+    public Person(@JsonProperty("name") String name,
+                  @JsonProperty("lastName") String lastName,
+                  @JsonProperty("age") int age,
+                  @JsonProperty("addressList") List<Address> addressList) {
+        this.name = name;
+        this.lastName = lastName;
+        this.age = age;
+        this.addressList = addressList;
+    }
+```
+
+Here is Oson's version, as usual, do one level of annotations in one annotation class:
+
+```java
+    @FieldMapper(jsonCreator = BOOLEAN.TRUE)
+    public AnyPoint(@FieldMapper(name = "point") Point point)
+    {
+      this.point = point;
+    }
+```
+
+If curious, you can see how it works by using any IDE in debug mode.
+
+
+
+
+
 
 

@@ -71,6 +71,23 @@ public class NewInstanceTest extends TestCaseBase {
 		assertEquals(expected.toString(), result.toString());
 	}
 	
+	@Test
+	public void testDeserializeAnyBeanUseDefaultObject() {
+		AnyBean expected = new AnyBean("Any Name", 35);
+		expected.setType("Java");
+		
+		String json = oson.serialize(expected);
+		String jsonExpected = "{\"name\":\"Any Name\",\"type\":\"Java\",\"age\":35}";
+		
+		assertEquals(jsonExpected, json);
+		
+		AnyBean result = oson
+				.setDefaultValue(AnyBean.class, new AnyBean(null, 0))
+				.deserialize(json, AnyBean.class);
+
+		assertEquals(expected.toString(), result.toString());
+	}
+	
 	
 	@Test
 	public void testSerializeAnyPoint() {
@@ -91,9 +108,7 @@ public class NewInstanceTest extends TestCaseBase {
 	
 	@Test
 	public void testDeserializeAnyPoint() {
-		//oson.asGson();
 		Point point = new Point(12.5d, 35.5d);
-		
 		AnyPoint expected = new AnyPoint(point);
 
 		String json = "{\"point\":{\"x\":12.5,\"y\":35.5}}";

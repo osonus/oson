@@ -8,7 +8,6 @@ public class AnyBean {
     private final int age;
     private String type;
 
-    //public AnyBean(@JsonProperty("name") String name, @JsonProperty("age") int age)
     public AnyBean(String name, int age)
     {
       this.name = name;

@@ -441,7 +441,7 @@ public class Oson {
 			this.type = type;
 			return this;
 		}
-		public ClassMapper setConstructor(InstanceCreator<T> constructor) {
+ 		public ClassMapper setConstructor(InstanceCreator<T> constructor) {
 			this.constructor = constructor;
 			return this;
 		}
@@ -1911,6 +1911,22 @@ public class Oson {
 			return classMappers;
 		}
 
+		private ClassMapper getClassMappers(Class type) {
+			if (this.classMappers == null) {
+				this.classMappers = new HashMap<Class, ClassMapper>();
+			}
+			
+			if (this.classMappers.containsKey(type)) {
+				return this.classMappers.get(type);
+			}
+			
+			ClassMapper classMapper = new ClassMapper(type);
+			
+			this.classMappers.put(type, classMapper);
+			
+			return classMapper;
+		}
+		
 		public void setClassMappers(Map<Class, ClassMapper> classMappers) {
 			if (this.classMappers == null || classMappers == null) {
 				this.classMappers = classMappers;
@@ -3529,6 +3545,357 @@ public class Oson {
 	public Oson setGetOnly() {
 		return setGetOnly(true);
 	}
+	
+	
+	
+	/////////////////////////////////////////////////////////////////////////////////
+	// start to set up class mapper
+	
+	private <T> ClassMapper cMap(Class<T> type) {
+		return this.options.getClassMappers(type);
+	}
+	
+	public <T> Oson setConstructor(Class<T> type, InstanceCreator<T> constructor) {
+		cMap(type).setConstructor(constructor);
+
+		return this;
+	}
+	
+	public <T> Oson setDefaultValue(Class<T> type, T defaultValue) {
+		cMap(type).setDefaultValue(defaultValue);
+
+		return this;
+	}
+	
+	public <T> Oson setIgnore(Class<T> type, boolean ignore) {
+		cMap(type).setIgnore(ignore);
+
+		return this;
+	}
+	
+	public <T> Oson setSerializer(Class<T> type, Function serializer) {
+		cMap(type).setSerializer(serializer);
+
+		return this;
+	}
+	
+	public <T> Oson setDeserializer(Class<T> type, Function deserializer) {
+		cMap(type).setDeserializer(deserializer);
+
+		return this;
+	}
+	
+	public <T> Oson setSerializer(Class<T> type, Integer2JsonFunction serializer) {
+		cMap(type).setSerializer(serializer);
+
+		return this;
+	}
+	public <T> Oson setDeserializer(Class<T> type, Json2IntegerFunction deserializer) {
+		cMap(type).setDeserializer(deserializer);
+
+		return this;
+	}
+
+	public <T> Oson setSerializer(Class<T> type, Long2JsonFunction serializer) {
+		cMap(type).setSerializer(serializer);
+
+		return this;
+	}
+	public <T> Oson setDeserializer(Class<T> type, Json2LongFunction deserializer) {
+		cMap(type).setDeserializer(deserializer);
+
+		return this;
+	}
+	
+	public <T> Oson setSerializer(Class<T> type, Double2JsonFunction serializer) {
+		cMap(type).setSerializer(serializer);
+
+		return this;
+	}
+	public <T> Oson setDeserializer(Class<T> type, Json2DoubleFunction deserializer) {
+		cMap(type).setDeserializer(deserializer);
+
+		return this;
+	}
+	
+	public <T> Oson setSerializer(Class<T> type, Short2JsonFunction serializer) {
+		cMap(type).setSerializer(serializer);
+
+		return this;
+	}
+	public <T> Oson setDeserializer(Class<T> type, Json2ShortFunction deserializer) {
+		cMap(type).setDeserializer(deserializer);
+
+		return this;
+	}
+	
+	public <T> Oson setSerializer(Class<T> type, Float2JsonFunction serializer) {
+		cMap(type).setSerializer(serializer);
+
+		return this;
+	}
+	public <T> Oson setDeserializer(Class<T> type, Json2FloatFunction deserializer) {
+		cMap(type).setDeserializer(deserializer);
+
+		return this;
+	}
+
+	public <T> Oson setSerializer(Class<T> type, BigDecimal2JsonFunction serializer) {
+		cMap(type).setSerializer(serializer);
+
+		return this;
+	}
+	public <T> Oson setDeserializer(Class<T> type, Json2BigDecimalFunction deserializer) {
+		cMap(type).setDeserializer(deserializer);
+
+		return this;
+	}
+	
+	public <T> Oson setSerializer(Class<T> type, BigInteger2JsonFunction serializer) {
+		cMap(type).setSerializer(serializer);
+
+		return this;
+	}
+	public <T> Oson setDeserializer(Class<T> type, Json2BigIntegerFunction deserializer) {
+		cMap(type).setDeserializer(deserializer);
+
+		return this;
+	}
+	
+	public <T> Oson setSerializer(Class<T> type, Character2JsonFunction serializer) {
+		cMap(type).setSerializer(serializer);
+
+		return this;
+	}
+	public <T> Oson setDeserializer(Class<T> type, Json2CharacterFunction deserializer) {
+		cMap(type).setDeserializer(deserializer);
+
+		return this;
+	}
+	
+	public <T> Oson setSerializer(Class<T> type, Byte2JsonFunction serializer) {
+		cMap(type).setSerializer(serializer);
+
+		return this;
+	}
+	public <T> Oson setDeserializer(Class<T> type, Json2ByteFunction deserializer) {
+		cMap(type).setDeserializer(deserializer);
+
+		return this;
+	}
+	
+	public <T> Oson setSerializer(Class<T> type, Boolean2JsonFunction serializer) {
+		cMap(type).setSerializer(serializer);
+
+		return this;
+	}
+	public <T> Oson setDeserializer(Class<T> type, Json2BooleanFunction deserializer) {
+		cMap(type).setDeserializer(deserializer);
+
+		return this;
+	}
+	
+	public <T> Oson setSerializer(Class<T> type, Date2JsonFunction serializer) {
+		cMap(type).setSerializer(serializer);
+
+		return this;
+	}
+	public <T> Oson setDeserializer(Class<T> type, Json2DateFunction deserializer) {
+		cMap(type).setDeserializer(deserializer);
+
+		return this;
+	}
+	
+	public <T> Oson setSerializer(Class<T> type, Date2LongFunction serializer) {
+		cMap(type).setSerializer(serializer);
+
+		return this;
+	}
+	public <T> Oson setDeserializer(Class<T> type, Long2DateFunction deserializer) {
+		cMap(type).setDeserializer(deserializer);
+
+		return this;
+	}
+	
+	public <T> Oson setSerializer(Class<T> type, Enum2JsonFunction serializer) {
+		cMap(type).setSerializer(serializer);
+
+		return this;
+	}
+	public <T> Oson setDeserializer(Class<T> type, Json2EnumFunction deserializer) {
+		cMap(type).setDeserializer(deserializer);
+
+		return this;
+	}
+
+	public <T> Oson setSerializer(Class<T> type, Collection2JsonFunction serializer) {
+		cMap(type).setSerializer(serializer);
+
+		return this;
+	}
+	public <T> Oson setDeserializer(Class<T> type, Json2CollectionFunction deserializer) {
+		cMap(type).setDeserializer(deserializer);
+
+		return this;
+	}
+	
+	public <T> Oson setSerializer(Class<T> type, Map2JsonFunction serializer) {
+		cMap(type).setSerializer(serializer);
+
+		return this;
+	}
+	public <T> Oson setDeserializer(Class<T> type, Json2MapFunction deserializer) {
+		cMap(type).setDeserializer(deserializer);
+
+		return this;
+	}
+	
+	public <T> Oson setSerializer(Class<T> type, Array2JsonFunction serializer) {
+		cMap(type).setSerializer(serializer);
+
+		return this;
+	}
+	public <T> Oson setDeserializer(Class<T> type, Json2ArrayFunction deserializer) {
+		cMap(type).setDeserializer(deserializer);
+
+		return this;
+	}
+	
+	public <T> Oson setSerializer(Class<T> type, AtomicInteger2JsonFunction serializer) {
+		cMap(type).setSerializer(serializer);
+
+		return this;
+	}
+	public <T> Oson setDeserializer(Class<T> type, Json2AtomicIntegerFunction deserializer) {
+		cMap(type).setDeserializer(deserializer);
+
+		return this;
+	}
+	
+	public <T> Oson setSerializer(Class<T> type, AtomicLong2JsonFunction serializer) {
+		cMap(type).setSerializer(serializer);
+
+		return this;
+	}
+	public <T> Oson setDeserializer(Class<T> type, Json2AtomicLongFunction deserializer) {
+		cMap(type).setDeserializer(deserializer);
+
+		return this;
+	}
+	
+	public <T> Oson setSerializer(Class<T> type, ClassData2JsonFunction serializer) {
+		cMap(type).setSerializer(serializer);
+
+		return this;
+	}
+	public <T> Oson setDeserializer(Class<T> type, Json2ClassDataFunction deserializer) {
+		cMap(type).setDeserializer(deserializer);
+
+		return this;
+	}
+
+	public <T> Oson setSerializer(Class<T> type, String2JsonFunction serializer) {
+		cMap(type).setSerializer(serializer);
+
+		return this;
+	}
+	public <T> Oson setDeserializer(Class<T> type, Json2StringFunction deserializer) {
+		cMap(type).setDeserializer(deserializer);
+
+		return this;
+	}
+
+	public <T> Oson setUseField(Class<T> type, Boolean useField) {
+		cMap(type).setUseField(useField);
+
+		return this;
+	}
+	public <T> Oson setUseAttribute(Class<T> type, Boolean useAttribute) {
+		cMap(type).setUseAttribute(useAttribute);
+
+		return this;
+	}
+	public <T> Oson setIncludeFieldsWithModifiers(Class<T> type, Set<MODIFIER> includeFieldsWithModifiers) {
+		cMap(type).setIncludeFieldsWithModifiers(includeFieldsWithModifiers);
+
+		return this;
+	}
+	
+	public <T> Oson setSimpleDateFormat(Class<T> type, String simpleDateFormat) {
+		cMap(type).setSimpleDateFormat(simpleDateFormat);
+
+		return this;
+	}
+
+	public <T> Oson setOrderByKeyAndProperties(Class<T> type, Boolean orderByKeyAndProperties) {
+		cMap(type).setOrderByKeyAndProperties(orderByKeyAndProperties);
+
+		return this;
+	}
+
+	public <T> Oson setPropertyOrders(Class<T> type, String[] propertyOrders) {
+		cMap(type).setPropertyOrders(propertyOrders);
+
+		return this;
+	}
+	public <T> Oson setIncludeClassTypeInJson(Class<T> type, Boolean includeClassTypeInJson) {
+		cMap(type).setIncludeClassTypeInJson(includeClassTypeInJson);
+
+		return this;
+	}
+	public <T> Oson setIgnoreVersionsAfter(Class<T> type, Double ignoreVersionsAfter) {
+		cMap(type).setIgnoreVersionsAfter(ignoreVersionsAfter);
+
+		return this;
+	}
+	public <T> Oson setIgnoreFieldsWithAnnotations(Class<T> type, Set<Class> ignoreFieldsWithAnnotations) {
+		cMap(type).setIgnoreFieldsWithAnnotations(ignoreFieldsWithAnnotations);
+
+		return this;
+	}
+	public <T> Oson setJsonIgnoreProperties(Class<T> type, Set<String> jsonIgnoreProperties) {
+		cMap(type).setJsonIgnoreProperties(jsonIgnoreProperties);
+
+		return this;
+	}
+	public <T> Oson setDefaultType(Class<T> type, JSON_INCLUDE defaultType) {
+		cMap(type).setDefaultType(defaultType);
+
+		return this;
+	}
+	public <T> Oson setMin(Class<T> type, Long min) {
+		cMap(type).setMin(min);
+
+		return this;
+	}
+	public <T> Oson setMax(Class<T> type, Long max) {
+		cMap(type).setMax(max);
+
+		return this;
+	}
+	public <T> Oson setEnumType(Class<T> type, EnumType enumType) {
+		cMap(type).setEnumType(enumType);
+
+		return this;
+	}	
+	public <T> Oson setDate2Long(Class<T> type, Boolean date2Long) {
+		cMap(type).setDate2Long(date2Long);
+
+		return this;
+	}
+	public <T> Oson setLength(Class<T> type, Integer length) {
+		cMap(type).setLength(length);
+
+		return this;
+	}
+	public <T> Oson setPrecision(Class<T> type, Integer precision) {
+		cMap(type).setPrecision(precision);
+
+		return this;
+	}
+	
+	// end of setting up class mapper
+	
 	
 	
 	private void reset() {
@@ -13811,8 +14178,12 @@ public class Oson {
 
 				String parameterName = null;
 				for (Annotation annotation: parameter.getAnnotations()) { //getDeclaredAnnotations
-					if (parameterName == null) {
-						parameterName = getName(annotation);
+					String name = getName(annotation);
+					if (name != null) {
+						parameterName = name;
+						if (annotation instanceof ca.oson.json.FieldMapper) {
+							break;
+						}
 					}
 				}
 
