@@ -29,4 +29,31 @@ public class Car {
     public int hashCode() {
     	return Objects.hashCode(brand) * 7 + Objects.hashCode(doors) * 3 + Objects.hashCode(year);
     }
+    
+    @Override
+    @FieldMapper(ignore = BOOLEAN.TRUE)
+    public String toString(){
+        StringBuilder stringBuilder = new StringBuilder();
+
+        stringBuilder.append("{\"brand\":\"" + brand + "\",");
+        stringBuilder.append("\"doors\":" + doors + ",");
+        stringBuilder.append("\"year\":" + year + ",");
+        
+        if (years != null) {
+        	stringBuilder.append("[");
+        	boolean isfirst = true;
+	        for (int y: this.years) {
+	        	if (!isfirst) {
+	        		stringBuilder.append(",");
+	        	} else {
+	        		isfirst = false;
+	        	}
+	        	stringBuilder.append(y);
+	        }
+	        stringBuilder.append("]");
+        }
+        stringBuilder.append("}");
+
+        return stringBuilder.toString();
+    }
 }

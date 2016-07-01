@@ -13,6 +13,8 @@ import com.google.gson.reflect.TypeToken;
 import ca.oson.json.Oson.ComponentType;
 import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.domain.Car;
+import ca.oson.json.domain.Customer;
+import ca.oson.json.domain.Event;
 import ca.oson.json.support.TestCaseBase;
 
 public class CollectionsTest extends TestCaseBase {
@@ -141,7 +143,7 @@ public class CollectionsTest extends TestCaseBase {
 		
 		// System.err.println(json);
 
-		String expected = "[\"hello\",6,{\"@class\":\"ca.oson.json.userguide.Event\",\"name\":\"GREETINGS\",\"source\":\"guest\"}]";
+		String expected = "[\"hello\",6,{\"@class\":\"ca.oson.json.domain.Event\",\"name\":\"GREETINGS\",\"source\":\"guest\"}]";
 		
 		assertEquals(expected, json);
 	}
@@ -153,7 +155,7 @@ public class CollectionsTest extends TestCaseBase {
 		expected.add(6);
 		expected.add(new Event("GREETINGS", "guest"));
 		
-		String json = "[\"hello\",6,{\"@class\":\"ca.oson.json.userguide.Event\",\"name\":\"GREETINGS\",\"source\":\"guest\"}]";
+		String json = "[\"hello\",6,{\"@class\":\"ca.oson.json.domain.Event\",\"name\":\"GREETINGS\",\"source\":\"guest\"}]";
 
 		List<Object> result = oson.deserialize(json, List.class);
 
@@ -213,17 +215,83 @@ public class CollectionsTest extends TestCaseBase {
 		assertEquals(event1.name, event2.name);
 		assertEquals(event1.source, event2.source);
 	}
+
+	
+	@Test
+	public void testDeserializeListOfCustomers() {
+		Customer customer = new Customer();
+		List<Customer> expected = new ArrayList<>();
+		expected.add(customer);
+		
+		String json = null; // oson.setDefaultType(JSON_INCLUDE.NON_NULL).serialize(list);
+
+        json = "[{\"vehicles\":[{\"doors\":4,\"year\":2016,\"brand\":\"Audi\"},{\"doors\":4,\"year\":2016,\"brand\":\"Mercedes\"}],\"carList\":[{\"doors\":4,\"year\":2016,\"brand\":\"BMW\"},{\"doors\":4,\"year\":2016,\"brand\":\"Chevy\"}]}]";
+        
+        ComponentType type = new ComponentType(List.class, Customer.class);
+        
+        List<Customer> result = oson.deserialize(json, type);
+
+        for (int i = 0; i < result.size(); i++) {
+        	assertEquals(expected.get(i).toString(), result.get(i).toString());
+        }
+	}
 	
 	
-}
+	@Test
+	public void testDeserializeListOfMultipleObjects() {
+		Customer customer = new Customer();
+		List<Object> expected = new ArrayList<>();
+		expected.add(customer);
+		Event event = new Event("GREETINGS", "guest");
+		expected.add(event);
+		int[][][] ints = {{{1, 2}, {3, 24}}, {{5, 6}, {7, 8}}, {{9, 10}, {11, 12}}};
+		expected.add(ints);
+		expected.add(999876);
+		expected.add("This is a testing.");
+		Car car = new Car("Ford", 4);
+		expected.add(car);
+		
+		String json = oson.setDefaultType(JSON_INCLUDE.NON_NULL).serialize(expected);
+		
+		//System.err.println(json);
 
+        json = "[{\"vehicles\":[{\"doors\":4,\"year\":2016,\"brand\":\"Audi\"},{\"doors\":4,\"year\":2016,\"brand\":\"Mercedes\"}],\"carList\":[{\"doors\":4,\"year\":2016,\"brand\":\"BMW\"},{\"doors\":4,\"year\":2016,\"brand\":\"Chevy\"}]},{\"name\":\"GREETINGS\",\"source\":\"guest\"},[[[1,2],[3,24]],[[5,6],[7,8]],[[9,10],[11,12]]],999876,\"This is a testing.\",{\"doors\":4,\"year\":2016,\"brand\":\"Ford\"}]";
+        
+        ComponentType type = new ComponentType(List.class, Customer.class, Event.class, Car.class, int[][][].class);
+        
+        List<Object> result = oson.deserialize(json, type);
 
-class Event {
-	public String name;
-	public String source;
-
-	public Event(String name, String source) {
-		this.name = name;
-		this.source = source;
+        for (int i = 0; i < result.size(); i++) {
+        	Object obj = result.get(i);
+        	
+        	if (obj instanceof Customer) {
+        		Customer cobj = (Customer)obj;
+        		assertEquals(cobj.toString(), customer.toString());
+        		
+        	} else if (obj instanceof Event) {
+        		Event cEvent = (Event)obj;
+            	assertEquals(cEvent.toString(), event.toString());
+        		
+        	} else if (obj instanceof Car) {
+        		Car cCar = (Car)obj;
+            	assertEquals(cCar.toString(), car.toString());
+            	
+        	} else if (i == 2) {
+        		int[][][] ints3 = (int[][][])result.get(i);
+        		int[][][] intsexpected = (int[][][])expected.get(i);
+        		
+        		for (int p = 0; p < ints3.length; p++) {
+        			for (int j = 0; j < ints3[0].length; j++) {
+        				for (int k = 0; k < ints3[0][0].length; k++) {
+        					assertEquals(intsexpected[p][j][k], ints3[p][j][k]);
+        				}
+        			}
+        		}
+        		
+        	} else {
+        		assertEquals(expected.get(i).toString(), result.get(i).toString());
+        	}
+        }
 	}
 }
+

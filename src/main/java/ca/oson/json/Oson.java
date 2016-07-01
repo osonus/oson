@@ -116,6 +116,7 @@ import com.google.gson.annotations.Since;
 
 //import org.springframework.web.bind.annotation.RequestParam;
 
+
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtField;
@@ -7474,8 +7475,12 @@ public class Oson {
 	}
 	
 	
-	private Class getComponentType(Class componentType, Class itemType, Object obj, boolean json2Java, Type erasedType) {
-
+	private Class getComponentType(Class componentType, FieldData newFieldData) {
+		Class itemType = newFieldData.returnType;
+		Object obj = newFieldData.valueToProcess;
+		boolean json2Java = newFieldData.json2Java;
+		Type erasedType = newFieldData.erasedType;
+		
 		if (!json2Java) {
 			return itemType;
 		} else {
@@ -7489,6 +7494,7 @@ public class Oson {
 					}
 				}
 				
+				
 				if (erasedType != null && ComponentType.class.isAssignableFrom(erasedType.getClass())) {
 					ComponentType type = (ComponentType)erasedType;
 					Class[] ctypes = type.getComponentClassType();
@@ -7497,6 +7503,8 @@ public class Oson {
 							return ctypes[0];
 						}
 						int length = ctypes.length;
+						
+						
 						Map<String, Object> map = (Map)obj;
 						
 						Set<String> names = map.keySet();
@@ -7523,10 +7531,47 @@ public class Oson {
 						}
 						
 						// maybe case sensitive issue
+						// can do more by comparing type at the same time
 					}
 					
 				}
 				
+			} else if (Collection.class.isAssignableFrom(itemType) || itemType.isArray()) {
+				//  && ComponentType.class.isAssignableFrom(erasedType.getClass())
+				if (erasedType != null) {
+					ComponentType type = (ComponentType)erasedType;
+					Class[] ctypes = type.getComponentClassType();
+					if (ctypes != null && ctypes.length > 0) {
+						if (ctypes.length == 1) {
+							ComponentType newtype = new ComponentType(ctypes[0], ctypes[0].getComponentType());
+							newFieldData.erasedType = newtype;
+							return ctypes[0];
+						}
+						int length = ctypes.length;
+						int depth = CollectionArrayTypeGuesser.getDepth(obj);
+						Class baseType = CollectionArrayTypeGuesser.getBaseType(obj);
+						
+						for (int i = 0; i < length; i++) {
+							Class ctype = ctypes[i];
+							
+							if (ctype.isArray() || Collection.class.isAssignableFrom(ctype)) {
+								//Class compType = CollectionArrayTypeGuesser.guessElementType(collection, ctype, getJsonClassType());								
+								int typedepth = CollectionArrayTypeGuesser.getDepth(ctype);
+								Class cbaseType = CollectionArrayTypeGuesser.getBaseType(ctype);
+								if (depth == typedepth && ObjectUtil.isSameType(baseType, cbaseType)) {
+									
+									ComponentType newtype = new ComponentType(ctype, ctype.getComponentType());
+									newFieldData.erasedType = newtype;
+									return ctype;
+								}
+							}
+
+						}
+
+					}
+					
+				}
+
 				
 			} else if (StringUtil.isNumeric(obj.toString())) {
 				if (obj.toString().contains(".")) {
@@ -7629,8 +7674,10 @@ public class Oson {
 					
 					for (Entry<String, Object> entry: values.entrySet()) {
 						Object obj = entry.getValue(); // obj.getClass()
-						Class type = getComponentType(componentType, obj.getClass(), obj, objectDTO.json2Java, objectDTO.erasedType);
-						FieldData newFieldData = new FieldData(obj, type, objectDTO.json2Java, objectDTO.level, objectDTO.set);
+						FieldData newFieldData = new FieldData(obj, obj.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
+						newFieldData.erasedType = objectDTO.erasedType;
+						newFieldData.returnType = getComponentType(componentType, newFieldData);
+
 						returnObj.put(entry.getKey(), json2Object(newFieldData));
 					}
 					
@@ -7839,8 +7886,9 @@ public class Oson {
 
 				for (E val : collection) {
 					if (val != null) {
-						Class type = getComponentType(componentType, val.getClass(), val, objectDTO.json2Java, objectDTO.erasedType);
-						FieldData newFieldData = new FieldData(val, type, objectDTO.json2Java, objectDTO.level, objectDTO.set);
+						FieldData newFieldData = new FieldData(val, val.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
+						newFieldData.erasedType = objectDTO.erasedType;
+						newFieldData.returnType = getComponentType(componentType, newFieldData);
 						returnObj.add(json2Object(newFieldData));
 					}
 				}
@@ -8076,10 +8124,11 @@ public class Oson {
 				int i = 0;
 				for (Object val: values) {
 					if (val != null) {
-						Class type = getComponentType(componentType, val.getClass(), val, objectDTO.json2Java, objectDTO.erasedType);
-						FieldData newFieldData = new FieldData(val, type, objectDTO.json2Java, objectDTO.level, objectDTO.set);
-						newFieldData.json2Java = objectDTO.json2Java;
-						arr[i++] = json2Object(newFieldData);
+						FieldData newFieldData = new FieldData(val, val.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
+						newFieldData.erasedType = objectDTO.erasedType;
+						newFieldData.returnType = getComponentType(componentType, newFieldData);
+						E object = json2Object(newFieldData);
+						arr[i++] = object;
 					}
 				}
 				
@@ -8156,8 +8205,9 @@ public class Oson {
 			
 			for (int i = 0; i < size; i++) {
 				Object componentValue = Array.get(value, i);
-				Class type = getComponentType(componentType, componentValue.getClass(), componentValue, objectDTO.json2Java, objectDTO.erasedType);
-				FieldData newFieldData = new FieldData(componentValue, type, objectDTO.json2Java, objectDTO.level, objectDTO.set);
+				FieldData newFieldData = new FieldData(componentValue, componentValue.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
+				newFieldData.erasedType = objectDTO.erasedType;
+				newFieldData.returnType = getComponentType(componentType, newFieldData);
 				String str = object2Json(newFieldData);
 				if (str != null && str.length() > 0) {
 					sbuilder.append(repeatedItem + str + ",");
@@ -8294,14 +8344,6 @@ public class Oson {
 
 		} else if (returnType.isArray()) {
 			
-			Class<E> componentType = null;
-			
-			if (objectDTO.erasedType != null) {
-				componentType = ObjectUtil.getTypeComponentClass(objectDTO.erasedType);
-			} else {
-				componentType = (Class<E>) returnType.getComponentType();
-			}
-			
 			Collection<E> values = null;
 			Class<?> valueType = value.getClass();
 			if (Collection.class.isAssignableFrom(valueType)) {
@@ -8315,13 +8357,16 @@ public class Oson {
 			}
 			objectDTO.valueToProcess = values;
 			
+			Class<E> componentType = (Class<E>) returnType.getComponentType();
+			if (componentType == null && objectDTO.erasedType != null) {
+				componentType = ObjectUtil.getTypeComponentClass(objectDTO.erasedType);
+			}
 			if (componentType == null) {
-				componentType = CollectionArrayTypeGuesser.guessElementType(values, (Class<Collection<E>>)values.getClass(),  getJsonClassType());
+				componentType = CollectionArrayTypeGuesser.guessElementType(values, returnType,  getJsonClassType());
 			}
 			if (componentType == null) componentType = (Class<E>) Object.class;
-			
 			objectDTO.componentType = componentType;
-			
+
 			if (componentType.isPrimitive()) {
 				if (componentType == int.class) {
 					return (E)json2ArrayInt((Collection<Integer>) values);
@@ -8484,8 +8529,9 @@ public class Oson {
 			StringBuilder sbuilder = new StringBuilder();
 			try {
 				for (Object s : collection) {
-					Class type = getComponentType(componentType, s.getClass(), s, objectDTO.json2Java, objectDTO.erasedType);
-					FieldData newFieldData = new FieldData(s, type, objectDTO.json2Java, objectDTO.level, objectDTO.set);
+					FieldData newFieldData = new FieldData(s, s.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
+					newFieldData.erasedType = objectDTO.erasedType;
+					newFieldData.returnType = getComponentType(componentType, newFieldData);
 					String str = object2Json(newFieldData);
 					if (str != null && str.length() > 0) {
 						sbuilder.append(repeatedItem + str + ",");
@@ -10816,6 +10862,63 @@ public class Oson {
 			return null;
 		}
 	}
+	
+	
+	private <T> Object getParameterValue(Map<String, Object> map, Class<T> valueType, String parameterName, Class parameterType) {
+		Object parameterValue = getMapValue(map, parameterName);
+
+		Class fieldType = null;
+		if (Map.class.isAssignableFrom(parameterType)) {
+			// just give the whole map data to it
+			// it can use as much of it as it likes
+			parameterValue = map;
+			
+		} else {
+
+			if (parameterType.isPrimitive()
+					|| Number.class.isAssignableFrom(parameterType)
+					|| parameterType == String.class
+					|| parameterType == Character.class
+					|| parameterType == Boolean.class
+					|| Date.class.isAssignableFrom(parameterType)
+					|| parameterType.isEnum() || Enum.class.isAssignableFrom(parameterType)) {
+				// do nothing
+				
+			} else {
+				String componentTypeName = null;
+				String toGenericString = parameterType.toGenericString();
+				fieldType = ObjectUtil.getComponentType(toGenericString);
+				
+				if (fieldType == null) {
+					Field[] fields = getFields(valueType);
+					for (Field field: fields) {
+						if (field.getName().equalsIgnoreCase(parameterName)) {
+							// private java.util.List<ca.oson.json.domain.Address> ca.oson.json.domain.Person.addressList
+							toGenericString = field.toGenericString();
+	
+							// fieldType = field.getType(); // getClass();
+							fieldType = ObjectUtil.getComponentType(toGenericString);
+							break;
+						}
+					}
+				}
+			}
+			
+			FieldData objectDTO = null;
+			if (fieldType != null) {
+				// FieldData(Object valueToProcess, Type type, boolean json2Java)
+				ComponentType componentType = new ComponentType(parameterType, fieldType);
+				objectDTO = new FieldData(parameterValue, componentType, true);
+			} else {
+				objectDTO = new FieldData(parameterValue, parameterType, true);
+			}
+			objectDTO.required = true;
+			parameterValue = json2Object(objectDTO);
+		}
+		
+		
+		return parameterValue;
+	}
 
 	/*
 	 * create an initial object of valueType type to copy data into
@@ -10923,19 +11026,13 @@ public class Oson {
 					if (isJsonCreator) {
 						Parameter[] parameters = constructor.getParameters();
 						String[] parameterNames = ObjectUtil.getParameterNames(parameters);
+
 						//parameterCount = parameters.length;
 						Object[] parameterValues = new Object[parameterCount];
 						int i = 0;
 						for (String parameterName: parameterNames) {
-							Object parameterValue = getMapValue(map, parameterName);
-
-							if (parameterValue == null) {
-								FieldData objectDTO = new FieldData(null, parameters[i].getType());
-								objectDTO.required = true;
-								parameterValue = json2Object(objectDTO);
-							}
-
-							parameterValues[i++] = parameterValue;
+							parameterValues[i] = getParameterValue(map, valueType, parameterName, parameters[i].getType());
+							i++;
 						}
 
 						try {
@@ -10992,15 +11089,7 @@ public class Oson {
 							Object[] parameterValues = new Object[length];
 							Object parameterValue;
 							for (int i = 0; i < length; i++) {
-								parameterValue = getMapValue(map, parameterNames.get(i));
-
-								if (parameterValue == null) {
-									FieldData objectDTO = new FieldData(null, parameterTypes[i]);
-									objectDTO.required = true;
-									parameterValue = json2Object(objectDTO);
-								}
-
-								parameterValues[i] = parameterValue;
+								parameterValues[i] = getParameterValue(map, valueType, parameterNames.get(i), parameterTypes[i]);
 							}
 
 							try {
@@ -11033,17 +11122,17 @@ public class Oson {
 				constructor.setAccessible(true);
 
 				Class[] parameterTypes = constructor.getParameterTypes();
-
-				int length = parameterTypes.length;
-
-				Object[] parameterValues = new Object[length];
-				for (int i = 0; i < length; i++) {
-					FieldData objectDTO = new FieldData(null, parameterTypes[i]);
-					objectDTO.required = true;
-					parameterValues[i] = json2Object(objectDTO);
-				}
-
+				List<String> parameterNames;
 				try {
+					parameterNames = ObjectUtil.getParameterNames(constructor);
+
+					int length = parameterTypes.length;
+	
+					Object[] parameterValues = new Object[length];
+					for (int i = 0; i < length; i++) {
+						parameterValues[i] = getParameterValue(map, valueType, parameterNames.get(i), parameterTypes[i]);
+					}
+
 					obj = (T) constructor.newInstance(parameterValues);
 					if (obj != null) {
 						return obj;
@@ -11052,13 +11141,14 @@ public class Oson {
 				} catch (InstantiationException
 						| IllegalAccessException
 						| IllegalArgumentException
-						| InvocationTargetException e) {
+						| InvocationTargetException
+						| IOException e) {
 					//e.printStackTrace();
 				}
 			}
 		}
 
-		// try last time
+		// try more
 		try {
 			Method[] methods = valueType.getMethods(); // .getMethod("getInstance", null);
 
@@ -11070,7 +11160,8 @@ public class Oson {
 
 					if (methodName.equals("getInstance") 
 							|| methodName.equals("newInstance")
-							|| methodName.equals("createInstance")) {
+							|| methodName.equals("createInstance")
+							|| methodName.equals("factory")) {
 						Class returnType = method.getReturnType();
 
 						if (valueType.isAssignableFrom(returnType) && Modifier.isStatic(method.getModifiers())) {
@@ -11109,15 +11200,8 @@ public class Oson {
 						String[] parameterNames = ObjectUtil.getParameterNames(method);
 						if (parameterNames != null && parameterNames.length == parameterCount) {
 							for (String parameterName: ObjectUtil.getParameterNames(method)) {
-								parameterValue = getMapValue(map, parameterName);
-
-								if (parameterValue == null) {
-									FieldData objectDTO = new FieldData(null, parameterTypes[i]);
-									objectDTO.required = true;
-									parameterValue = json2Object(objectDTO);
-								}
-
-								parameterValues[i] = parameterValue;
+								parameterValues[i] = getParameterValue(map, valueType, parameterName, parameterTypes[i]);
+								i++;
 							}
 
 						} else {
@@ -11128,15 +11212,8 @@ public class Oson {
 							parameterValues = new Object[parameterCount];
 							i = 0;
 							for (String parameterName: parameterNames) {
-								parameterValue = getMapValue(map, parameterName);
-
-								if (parameterValue == null) {
-									FieldData objectDTO = new FieldData(null, parameters[i].getType());
-									objectDTO.required = true;
-									parameterValue = json2Object(objectDTO);
-								}
-
-								parameterValues[i++] = parameterValue;
+								parameterValues[i] = getParameterValue(map, valueType, parameterName, parameterTypes[i]);
+								i++;
 							}
 						}
 
@@ -11157,6 +11234,61 @@ public class Oson {
 
 		} catch (SecurityException e) {
 			// e.printStackTrace();
+		}
+		
+		// try all static methods, if the return type is correct, get it as the final object
+		Method[] methods = valueType.getDeclaredMethods();
+		for (Method method: methods) {
+			if (Modifier.isStatic(method.getModifiers())) {
+				Class returnType = method.getReturnType();
+				
+				if (valueType.isAssignableFrom(returnType)) {
+					try {
+						Object[] parameterValues = null;
+						
+						int parameterCount = method.getParameterCount();
+						if (parameterCount > 0) {
+							parameterValues = new Object[parameterCount];
+							Object parameterValue;
+							int i = 0;
+							Class[] parameterTypes = method.getParameterTypes();
+	
+							String[] parameterNames = ObjectUtil.getParameterNames(method);
+							if (parameterNames != null && parameterNames.length == parameterCount) {
+								for (String parameterName: ObjectUtil.getParameterNames(method)) {
+									parameterValues[i] = getParameterValue(map, valueType, parameterName, parameterTypes[i]);
+									i++;
+								}
+	
+							} else {
+								// try annotation
+								Parameter[] parameters = method.getParameters();
+								parameterNames = ObjectUtil.getParameterNames(parameters);
+								parameterCount = parameters.length;
+								parameterValues = new Object[parameterCount];
+								i = 0;
+								for (String parameterName: parameterNames) {
+									parameterValues[i] = getParameterValue(map, valueType, parameterName, parameterTypes[i]);
+									i++;
+								}
+							}
+						}
+
+						obj = (T)method.invoke(null, parameterValues);
+						if (obj != null) {
+							return obj;
+						}
+
+					} catch (IOException
+							| IllegalAccessException
+							| IllegalArgumentException
+							| InvocationTargetException e) {
+						//e.printStackTrace();
+					}
+					
+				}
+			}
+			
 		}
 
 		return null;
@@ -11712,6 +11844,12 @@ public class Oson {
 				
 				if (value != null) {
 					FieldData objectDTO = new FieldData(obj, f, value, returnType, true, mapper);
+					
+					String toGenericString = f.toGenericString();
+					Class fieldType = ObjectUtil.getComponentType(toGenericString);
+					if (fieldType != null) {
+						objectDTO.erasedType = new ComponentType(returnType, fieldType);
+					}
 					objectDTO.setter = setter;
 					value = json2Object(objectDTO);
 
@@ -12520,17 +12658,24 @@ public class Oson {
 				}
 			}
 			
-			valueType = (Class<Collection<E>>) collection.getClass();
+			Class valType = (Class<Collection<E>>) collection.getClass();
 
-			componentType = valueType.getComponentType();
+			componentType = valType.getComponentType();
 			if (componentType != null) {
 				return componentType;
 			}
 
+			componentType = ObjectUtil.getTypeComponentClass(valType.getGenericSuperclass());
+			if (componentType != null) {
+				return componentType;
+			}
+			
+			
 			componentType = ObjectUtil.getTypeComponentClass(valueType.getGenericSuperclass());
 			if (componentType != null) {
 				return componentType;
 			}
+			
 
 //			TypeVariable<?>[] typeParameters = valueType.getTypeParameters();
 //			for (TypeVariable type: valueType.getTypeParameters()) {
@@ -12615,10 +12760,75 @@ public class Oson {
 		
 		public static final Class<?> getBaseType(Object obj) {
 			Class<?> type = obj.getClass();
-			while (type.isArray()) {
-				type = type.getComponentType();
+			
+			while (Collection.class.isAssignableFrom(type) || type.isArray()) {
+				try {
+					if (obj.getClass().isArray()) {
+						obj = Array.get(obj, 0);
+					} else {
+						Collection collection = (Collection)obj;
+						if (collection != null && collection.size() > 0) {
+							obj = collection.iterator().next();
+						}
+					}
+					
+					if (obj != null) {
+						Class nexttype = obj.getClass();
+						if (nexttype != null) {
+							type = nexttype;
+						} else {
+							break;
+						}
+					} else {
+						break;
+					}
+				} catch (Exception e) {}
 			}
+			
 			return type;
+		}
+		
+		public static final Class<?> getBaseType(Class type) {
+			while (type.isArray() || Collection.class.isAssignableFrom(type)) {
+				Class nexttype = type.getComponentType();
+				if (nexttype == null) {
+					break;
+				} else {
+					type = nexttype;
+				}
+			}
+			
+			return type;
+		}
+		
+		public static final int getDepth(Object obj) {
+			int depth = 0;
+			while (obj != null && (Collection.class.isAssignableFrom(obj.getClass()) || obj.getClass().isArray())) {
+				depth++; // getDepth(obj.getClass());
+				
+				try {
+					if (obj.getClass().isArray()) {
+						obj = Array.get(obj, 0);
+					} else {
+						Collection collection = (Collection)obj;
+						if (collection != null && collection.size() > 0) {
+							obj = collection.iterator().next();
+						}
+					}
+				} catch (Exception e) {}
+			}
+
+			return depth;
+		}
+		
+		public static final int getDepth(Class type) {
+			int depth = 0;
+			while (type != null && (type.isArray() || Collection.class.isAssignableFrom(type))) {
+				type = type.getComponentType();
+				depth++;
+			}
+			
+			return depth;
 		}
 	}
 
@@ -12980,6 +13190,49 @@ public class Oson {
 	}
 
 	public static class ObjectUtil {
+		public static boolean isSameType(Class aType, Class bType) {
+			if (aType == null || bType == null) {
+				return false;
+			}
+			
+			if (aType.isPrimitive() || bType.isPrimitive()) {
+				if (aType.isPrimitive()) {
+					if (bType.isPrimitive()) {
+						return (aType == bType);
+					}
+					
+				} else {
+					Class c = bType;
+					bType = aType;
+					aType = c;
+				}
+				
+				if (aType == int.class && bType == Integer.class) {
+					return true;
+				} else if (aType == long.class && bType == Long.class) {
+					return true;
+				} else if (aType == byte.class && bType == Byte.class) {
+					return true;
+				} else if (aType == double.class && bType == Double.class) {
+					return true;
+				} else if (aType == short.class && bType == Short.class) {
+					return true;
+				} else if (aType == float.class && bType == Float.class) {
+					return true;
+				} else if (aType == char.class && bType == Character.class) {
+					return true;
+				} else if (aType == boolean.class && bType == Boolean.class) {
+					return true;
+				}
+				
+				
+			} else if (aType.isAssignableFrom(bType) || bType.isAssignableFrom(aType)) {
+				return true;
+			}
+			
+			return false;
+		}
+		
 		public static boolean isPackage(int modifiers) {
 			if (modifiers == 0) {
 				return true;
@@ -13153,6 +13406,27 @@ public class Oson {
 				Class dynamiqueBeanClass = cc.toClass(); 
 	    }
 
+	    public static Class getComponentType(String toGenericString) {
+	    	Class componentType = null;
+			String className = null;
+			int idx = toGenericString.indexOf("<");
+			if (idx > -1) {
+				int idex2 = toGenericString.indexOf(">");
+				if (idex2 > idx) {
+					className = toGenericString.substring(idx + 1, idex2);
+				}
+			}
+			
+			if (!StringUtil.isEmpty(className)) {
+				try {
+					componentType = Class.forName(className);
+				} catch (ClassNotFoundException e) {
+					//e.printStackTrace();
+				}
+			}
+		
+			return componentType;
+	    }
 
 		public static <E> Class<E> getTypeClass(java.lang.reflect.Type type) {
 			Class cl = type.getClass();
@@ -13209,15 +13483,10 @@ public class Oson {
 			
 			//java.util.List<ca.oson.json.test.Dataset>
 			String className = type.getTypeName();
-			try {
-				int idx = className.indexOf('<');
-				if (idx > 0) {
-					className = className.substring(idx + 1, className.length()-1);
-				}
-
-				return (Class<E>) Class.forName(className);
-			} catch (ClassNotFoundException e) {
-				//e.printStackTrace();
+			Class ctype = getComponentType(className);
+			
+			if (ctype != null) {
+				return ctype;
 			}
 
 			// Collection<String>, return String.class

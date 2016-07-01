@@ -555,7 +555,7 @@ We are multiple ways you can help:
 2. Provide a default object directly using ClassMapper configuration
 3. Provide constructor annotations
 
-If all of these are not met, the tool will try tens of other ways to create a new instance, or fails at the end.
+If all of these are not met, the tool will try tens of other ways to create a new instance, or fails in the end.
 
 
 

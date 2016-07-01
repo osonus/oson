@@ -1,9 +1,18 @@
 package ca.oson.json.userguide;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.Test;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ca.oson.json.FieldMapper;
 import ca.oson.json.Oson.BOOLEAN;
+import ca.oson.json.Oson.JSON_INCLUDE;
+import ca.oson.json.domain.Address;
+import ca.oson.json.domain.Customer;
+import ca.oson.json.domain.Person;
 import ca.oson.json.support.TestCaseBase;
 
 public class NewInstanceTest extends TestCaseBase {
@@ -46,11 +55,11 @@ public class NewInstanceTest extends TestCaseBase {
 
 		String json = oson.serialize(anyPoint);
 		
-		System.err.println(json);
+		// System.err.println(json);
 
-		String expected = "{\"name\":\"Any Name\",\"type\":\"Java\",\"age\":35}";
+		String expected = "{\"point\":{\"x\":12.5,\"y\":35.5}}";
 
-		//assertEquals(expected, json);
+		assertEquals(expected, json);
 	}
 	
 	
@@ -67,6 +76,66 @@ public class NewInstanceTest extends TestCaseBase {
 
 		assertEquals(expected.toString(), result.toString());
 	}
+	
+	@Test
+	public void testSerializePerson() {
+        Address homeAddress = new Address(12345, "Stenhammer Drive");
+        Address workAddress = new Address(7986, "Market Street");
+        List<Address> addressList = new ArrayList<>();
+        addressList.add(homeAddress);
+        addressList.add(workAddress);
+        Person person = new Person("Sawyer", "Bootstrapper", 23, addressList);
+        
+        String expected = "{\"addressList\":[{\"zipcode\":12345,\"street\":\"Stenhammer Drive\"},{\"zipcode\":7986,\"street\":\"Market Street\"}],\"name\":\"Sawyer\",\"age\":23,\"lastName\":\"Bootstrapper\"}";
+
+        String result = oson.pretty(false).writeValueAsString(person);
+
+        assertEquals(expected, result);
+	}
+	
+	@Test
+	public void testDeserializePerson() {
+        Address homeAddress = new Address(12345, "Stenhammer Drive");
+        Address workAddress = new Address(7986, "Market Street");
+        List<Address> addressList = new ArrayList<>();
+        addressList.add(homeAddress);
+        addressList.add(workAddress);
+        Person expected = new Person("Sawyer", "Bootstrapper", 23, addressList);
+        
+		String jsonValue = "{\"name\":\"Sawyer\",\"lastName\":\"Bootstrapper\",\"age\":23,\"addressList\":[{\"zipcode\":12345,\"street\":" +
+	            "\"Stenhammer Drive\"},{\"zipcode\":7986,\"street\":\"Market Street\"}]}";
+
+		Person result = oson.readValue(jsonValue, Person.class);
+
+		assertEquals(expected.toString(), result.toString());
+	}
+	
+	
+	@Test
+	public void testSerializeCustomer() {
+		Customer customer = new Customer();
+        
+        String expected = "{\"vehicles\":[{\"doors\":4,\"year\":2016,\"brand\":\"Audi\"},{\"doors\":4,\"year\":2016,\"brand\":\"Mercedes\"}],\"carList\":[{\"doors\":4,\"year\":2016,\"brand\":\"BMW\"},{\"doors\":4,\"year\":2016,\"brand\":\"Chevy\"}]}";
+        
+        String result = oson.pretty(false).setDefaultType(JSON_INCLUDE.NON_NULL).writeValueAsString(customer);
+        
+        // System.out.println(result);
+
+        assertEquals(expected, result);
+	}
+	
+	
+	@Test
+	public void testDeserializeCustomer() {
+		Customer expected = new Customer();
+        
+        String json = "{\"vehicles\":[{\"doors\":4,\"year\":2016,\"brand\":\"Audi\"},{\"doors\":4,\"year\":2016,\"brand\":\"Mercedes\"}],\"carList\":[{\"doors\":4,\"year\":2016,\"brand\":\"BMW\"},{\"doors\":4,\"year\":2016,\"brand\":\"Chevy\"}]}";
+        
+        Customer result = oson.deserialize(json, Customer.class);
+
+        assertEquals(expected.toString(), result.toString());
+	}
+	
 }
 
 
@@ -75,6 +144,7 @@ class AnyBean {
     private final int age;
     private String type;
 
+    //public AnyBean(@JsonProperty("name") String name, @JsonProperty("age") int age)
     public AnyBean(String name, int age)
     {
       this.name = name;

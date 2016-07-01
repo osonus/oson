@@ -5,6 +5,7 @@ import org.junit.runners.Suite;
 
 import ca.oson.json.userguide.ArrayTest;
 import ca.oson.json.userguide.CollectionsTest;
+import ca.oson.json.userguide.NewInstanceTest;
 import ca.oson.json.userguide.ObjectTest;
 import ca.oson.json.userguide.PrimitivesTest;
 import ca.oson.json.userguide.SerializeCarTest;
@@ -15,7 +16,8 @@ import ca.oson.json.userguide.SerializeCarTest;
 	ObjectTest.class,
 	ArrayTest.class,
 	CollectionsTest.class,
-	SerializeCarTest.class
+	SerializeCarTest.class,
+	NewInstanceTest.class
 })
 public class UserGuideTestSuite {
 
