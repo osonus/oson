@@ -7523,6 +7523,8 @@ public class Oson {
 							if (count > maxCount) {
 								maxCount = count;
 								maxIdx = i;
+							} else if (maxIdx == -1 && ctype.isAssignableFrom(itemType)) {
+								maxIdx = i;
 							}
 						}
 						
@@ -7543,14 +7545,16 @@ public class Oson {
 					Class[] ctypes = type.getComponentClassType();
 					if (ctypes != null && ctypes.length > 0) {
 						if (ctypes.length == 1) {
-							ComponentType newtype = new ComponentType(ctypes[0], ctypes[0].getComponentType());
-							newFieldData.erasedType = newtype;
+							Class cmptype = ctypes[0].getComponentType();
+							if (cmptype.isArray() || Collection.class.isAssignableFrom(cmptype)) {
+								type.add(cmptype);
+							}
 							return ctypes[0];
 						}
 						int length = ctypes.length;
 						int depth = CollectionArrayTypeGuesser.getDepth(obj);
 						Class baseType = CollectionArrayTypeGuesser.getBaseType(obj);
-						
+						Class possible = null;
 						for (int i = 0; i < length; i++) {
 							Class ctype = ctypes[i];
 							
@@ -7558,14 +7562,24 @@ public class Oson {
 								//Class compType = CollectionArrayTypeGuesser.guessElementType(collection, ctype, getJsonClassType());								
 								int typedepth = CollectionArrayTypeGuesser.getDepth(ctype);
 								Class cbaseType = CollectionArrayTypeGuesser.getBaseType(ctype);
-								if (depth == typedepth && ObjectUtil.isSameType(baseType, cbaseType)) {
-									
-									ComponentType newtype = new ComponentType(ctype, ctype.getComponentType());
-									newFieldData.erasedType = newtype;
-									return ctype;
+								if (depth == typedepth) {
+									if (ObjectUtil.isSameType(baseType, cbaseType)) {
+										Class cmptype = ctype.getComponentType();
+										if (cmptype.isArray() || Collection.class.isAssignableFrom(cmptype)) {
+											type.add(cmptype);
+										}
+										return ctype;
+										
+									} else if (itemType.isAssignableFrom(ctype)) {
+										possible = ctype;
+									}
 								}
 							}
 
+						}
+						
+						if (possible != null) {
+							return possible;
 						}
 
 					}
@@ -8358,6 +8372,9 @@ public class Oson {
 			objectDTO.valueToProcess = values;
 			
 			Class<E> componentType = (Class<E>) returnType.getComponentType();
+			if (componentType == null) {
+				componentType = getComponentType(objectDTO.componentType, objectDTO);
+			}
 			if (componentType == null && objectDTO.erasedType != null) {
 				componentType = ObjectUtil.getTypeComponentClass(objectDTO.erasedType);
 			}
@@ -13888,6 +13905,16 @@ public class Oson {
 			fixTypeNames();
 		}
 		
+		public ComponentType add(Class componentClass) {
+			if (!(new HashSet(Arrays.asList(this.componentTypes)).contains(componentClass))) {
+				int length = this.componentTypes.length;
+				this.componentTypes = Arrays.copyOf(this.componentTypes, length + 1);
+				this.componentTypes[length] = componentClass;
+			}
+			
+			return this;
+		}
+		
 		private void fixTypeNames() {
 			if (this.typeName == null) {
 				if (type != null) {
@@ -13910,11 +13937,7 @@ public class Oson {
 						if (this.componentTypes == null || this.componentTypes.length == 0) {
 							this.componentTypes = new Class[] {componentClass};
 						} else {
-							if (!(new HashSet(Arrays.asList(this.componentTypes)).contains(componentClass))) {
-								int length = this.componentTypes.length;
-								this.componentTypes = Arrays.copyOf(this.componentTypes, length + 1);
-								this.componentTypes[length] = componentClass;
-							}
+							add(componentClass);
 						}
 					} catch (ClassNotFoundException e) {
 						// TODO Auto-generated catch block

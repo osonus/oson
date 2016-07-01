@@ -4,12 +4,15 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Test;
 
 import com.google.gson.reflect.TypeToken;
 
+import ca.oson.json.Oson;
 import ca.oson.json.Oson.ComponentType;
 import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.domain.Car;
@@ -293,5 +296,139 @@ public class CollectionsTest extends TestCaseBase {
         	}
         }
 	}
-}
+	
+	
+	
+	@Test
+	public void testDeserializeListOfMapListMap() {
+		List<Object> expected = new ArrayList<>();
 
+		Map<String, Object> map = new HashMap<>();
+		Event event = new Event("GREETINGS", "guest");
+		map.put("event", event);
+		Customer customer = new Customer();
+		map.put("customer", customer);
+		Boolean[] bools = new Boolean[] { true, false, true };
+		map.put("integer", 12345);
+		map.put("string", "I am a string.");
+		map.put("bools", bools);
+		expected.add(map);
+
+		int[][][] ints = { { { 1, 2 }, { 3, 24 } }, { { 5, 6 }, { 7, 8 } },
+				{ { 9, 10 }, { 11, 12 } } };
+		expected.add(ints);
+		expected.add(999876);
+		expected.add("This is a testing.");
+
+		List<Object> list2 = new ArrayList<>();
+		Car car = new Car("Ford", 4);
+		list2.add(car);
+		list2.add(1);
+		Map<String, Object> map2 = new HashMap<>();
+		Car car2 = new Car("Toyota", 2);
+		map2.put("toyota", car2);
+		Event event2 = new Event("HELLO", "hostess");
+		map2.put("new_event", event2);
+		list2.add(map2);
+		expected.add(list2);
+
+		Oson oson = new Oson();
+
+		String json = oson.setDefaultType(JSON_INCLUDE.NON_NULL).serialize(
+				expected);
+
+		String myjson = "[{\"bools\":[true,false,true],\"string\":\"I am a string.\",\"integer\":12345,\"event\":{\"name\":\"GREETINGS\",\"source\":\"guest\"},\"customer\":{\"vehicles\":[{\"doors\":4,\"year\":2016,\"brand\":\"Audi\"},{\"doors\":4,\"year\":2016,\"brand\":\"Mercedes\"}],\"carList\":[{\"doors\":4,\"year\":2016,\"brand\":\"BMW\"},{\"doors\":4,\"year\":2016,\"brand\":\"Chevy\"}]}},[[[1,2],[3,24]],[[5,6],[7,8]],[[9,10],[11,12]]],999876,\"This is a testing.\",[{\"doors\":4,\"year\":2016,\"brand\":\"Ford\"},1,{\"toyota\":{\"doors\":2,\"year\":2016,\"brand\":\"Toyota\"},\"new_event\":{\"name\":\"HELLO\",\"source\":\"hostess\"}}]]";
+
+		assertEquals(json, myjson);
+
+		ComponentType type = new ComponentType(List.class, Customer.class,
+				Event.class, Car.class, int[][][].class, Boolean[].class,
+				HashMap.class, ArrayList.class);
+
+		List<Object> result = oson.deserialize(myjson, type);
+
+		for (int i = 0; i < result.size(); i++) {
+			Object obj = result.get(i);
+			if (i == 0) {
+				Map<String, Object> mymap = (Map) obj;
+				for (Map.Entry<String, Object> entry : mymap.entrySet()) {
+					String key = entry.getKey();
+					Object value = entry.getValue();
+
+					if (value instanceof Event) {
+						Event myevent = (Event) value;
+						assertEquals(key, "event");
+						assertEquals(event.toString(), myevent.toString());
+
+					} else if (value instanceof Customer) {
+						Customer mycustomer = (Customer) value;
+						assertEquals(key, "customer");
+						assertEquals(mycustomer.toString(), customer.toString());
+
+					} else if (value instanceof Boolean[]) {
+						Boolean[] mybools = (Boolean[]) value;
+						assertEquals(key, "bools");
+						String myboolstr = oson.serialize(mybools);
+						String boolstr = oson.serialize(bools);
+						assertEquals(myboolstr, boolstr);
+
+					} else {
+						assertEquals(value.toString(), map.get(key).toString());
+					}
+				}
+
+			} else if (obj instanceof int[][][]) {
+				int[][][] ints3 = (int[][][]) result.get(i);
+				int[][][] intsexpected = (int[][][]) expected.get(i);
+
+				for (int p = 0; p < ints3.length; p++) {
+					for (int j = 0; j < ints3[0].length; j++) {
+						for (int k = 0; k < ints3[0][0].length; k++) {
+							assertEquals(intsexpected[p][j][k], ints3[p][j][k]);
+						}
+					}
+				}
+
+			} else if (i == 4) {
+				List<Object> mylist2 = (List) obj;
+
+				int j = 0;
+				for (Object object : mylist2) {
+					if (object instanceof Car) {
+						Car cCar = (Car) object;
+						assertEquals(cCar.toString(), car.toString());
+
+					} else if (Map.class.isAssignableFrom(object.getClass())) {
+						Map<String, Object> mymap2 = (Map) object;
+
+						for (String key : mymap2.keySet()) {
+							Object val = mymap2.get(key);
+
+							if (obj instanceof Car) {
+								Car mycar2 = (Car) val;
+								assertEquals(key, "toyota");
+								assertEquals(mycar2.toString(), car2.toString());
+
+							} else if (obj instanceof Event) {
+								Event myevent2 = (Event) obj;
+								assertEquals(key, "new_event");
+								assertEquals(myevent2.toString(),
+										event2.toString());
+
+							}
+						}
+
+					} else {
+						assertEquals(object.toString(), list2.get(j).toString());
+					}
+
+					j++;
+				}
+
+			} else {
+				assertEquals(expected.get(i).toString(), result.get(i)
+						.toString());
+			}
+		}
+	}
+}

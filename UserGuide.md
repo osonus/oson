@@ -513,37 +513,144 @@ One of this implementation is ca.oson.json.Oson.ComponentType, which accepts one
 		public ComponentType(Class type, Class... componentTypes)
 ```
 
-The third constructor accepts a variable array of component types, which can be used to guess data types in complex data structures, such as array, collection, and map. Inside the [CollectionsTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/userguide/CollectionsTest.java) test cases, you can find various approaches to solve this issue. Pick one to show here:
+The third constructor accepts a variable array of component types, which can be used to guess data types in complex data structures, such as array, collection, and map, including array, collection and map themselves. Inside the [CollectionsTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/userguide/CollectionsTest.java) test cases, you can find various approaches to solve this issue. Pick one to show here:
 
 ```java
 	@Test
-	public void testDeserializationCollectionArbitraryObjectMultipleComponentTypes() {
+	public void testDeserializeListOfMapListMap() {
 		List<Object> expected = new ArrayList<>();
-		expected.add(new Car("Toyota", 4));
-		expected.add("hello");
-		expected.add(6);
-		expected.add(new Event("GREETINGS", "guest"));
 
-		String json = "[{\"doors\":4,\"year\":2016,\"brand\":\"Toyota\",\"years\":null},\"hello\",6,{\"name\":\"GREETINGS\",\"source\":\"guest\"}]";
+		Map<String, Object> map = new HashMap<>();
+		Event event = new Event("GREETINGS", "guest");
+		map.put("event", event);
+		Customer customer = new Customer();
+		map.put("customer", customer);
+		Boolean[] bools = new Boolean[] { true, false, true };
+		map.put("integer", 12345);
+		map.put("string", "I am a string.");
+		map.put("bools", bools);
+		expected.add(map);
 
-		ComponentType type = new ComponentType(List.class, Event.class, Car.class);
-		
-		List<Object> result = oson.deserialize(json, type);
+		int[][][] ints = { { { 1, 2 }, { 3, 24 } }, { { 5, 6 }, { 7, 8 } },
+				{ { 9, 10 }, { 11, 12 } } };
+		expected.add(ints);
+		expected.add(999876);
+		expected.add("This is a testing.");
 
-		Car car1 = (Car) expected.get(0);
-		Car car2 = (Car) result.get(0);
-		assertEquals(car1.brand, car2.brand);
-		assertEquals(car1.doors, car2.doors);
-		assertEquals(expected.get(1), result.get(1));
-		assertEquals(expected.get(2), result.get(2));
-		Event event1 = (Event) expected.get(3);
-		Event event2 = (Event) result.get(3);
-		assertEquals(event1.name, event2.name);
-		assertEquals(event1.source, event2.source);
+		List<Object> list2 = new ArrayList<>();
+		Car car = new Car("Ford", 4);
+		list2.add(car);
+		list2.add(1);
+		Map<String, Object> map2 = new HashMap<>();
+		Car car2 = new Car("Toyota", 2);
+		map2.put("toyota", car2);
+		Event event2 = new Event("HELLO", "hostess");
+		map2.put("new_event", event2);
+		list2.add(map2);
+		expected.add(list2);
+
+		Oson oson = new Oson();
+
+		String json = oson.setDefaultType(JSON_INCLUDE.NON_NULL).serialize(
+				expected);
+
+		String myjson = "[{\"bools\":[true,false,true],\"string\":\"I am a string.\",\"integer\":12345,\"event\":{\"name\":\"GREETINGS\",\"source\":\"guest\"},\"customer\":{\"vehicles\":[{\"doors\":4,\"year\":2016,\"brand\":\"Audi\"},{\"doors\":4,\"year\":2016,\"brand\":\"Mercedes\"}],\"carList\":[{\"doors\":4,\"year\":2016,\"brand\":\"BMW\"},{\"doors\":4,\"year\":2016,\"brand\":\"Chevy\"}]}},[[[1,2],[3,24]],[[5,6],[7,8]],[[9,10],[11,12]]],999876,\"This is a testing.\",[{\"doors\":4,\"year\":2016,\"brand\":\"Ford\"},1,{\"toyota\":{\"doors\":2,\"year\":2016,\"brand\":\"Toyota\"},\"new_event\":{\"name\":\"HELLO\",\"source\":\"hostess\"}}]]";
+
+		assertEquals(json, myjson);
+
+		ComponentType type = new ComponentType(List.class, Customer.class,
+				Event.class, Car.class, int[][][].class, Boolean[].class,
+				HashMap.class, ArrayList.class);
+
+		List<Object> result = oson.deserialize(myjson, type);
+
+		for (int i = 0; i < result.size(); i++) {
+			Object obj = result.get(i);
+			if (i == 0) {
+				Map<String, Object> mymap = (Map) obj;
+				for (Map.Entry<String, Object> entry : mymap.entrySet()) {
+					String key = entry.getKey();
+					Object value = entry.getValue();
+
+					if (value instanceof Event) {
+						Event myevent = (Event) value;
+						assertEquals(key, "event");
+						assertEquals(event.toString(), myevent.toString());
+
+					} else if (value instanceof Customer) {
+						Customer mycustomer = (Customer) value;
+						assertEquals(key, "customer");
+						assertEquals(mycustomer.toString(), customer.toString());
+
+					} else if (value instanceof Boolean[]) {
+						Boolean[] mybools = (Boolean[]) value;
+						assertEquals(key, "bools");
+						String myboolstr = oson.serialize(mybools);
+						String boolstr = oson.serialize(bools);
+						assertEquals(myboolstr, boolstr);
+
+					} else {
+						assertEquals(value.toString(), map.get(key).toString());
+					}
+				}
+
+			} else if (obj instanceof int[][][]) {
+				int[][][] ints3 = (int[][][]) result.get(i);
+				int[][][] intsexpected = (int[][][]) expected.get(i);
+
+				for (int p = 0; p < ints3.length; p++) {
+					for (int j = 0; j < ints3[0].length; j++) {
+						for (int k = 0; k < ints3[0][0].length; k++) {
+							assertEquals(intsexpected[p][j][k], ints3[p][j][k]);
+						}
+					}
+				}
+
+			} else if (i == 4) {
+				List<Object> mylist2 = (List) obj;
+
+				int j = 0;
+				for (Object object : mylist2) {
+					if (object instanceof Car) {
+						Car cCar = (Car) object;
+						assertEquals(cCar.toString(), car.toString());
+
+					} else if (Map.class.isAssignableFrom(object.getClass())) {
+						Map<String, Object> mymap2 = (Map) object;
+
+						for (String key : mymap2.keySet()) {
+							Object val = mymap2.get(key);
+
+							if (obj instanceof Car) {
+								Car mycar2 = (Car) val;
+								assertEquals(key, "toyota");
+								assertEquals(mycar2.toString(), car2.toString());
+
+							} else if (obj instanceof Event) {
+								Event myevent2 = (Event) obj;
+								assertEquals(key, "new_event");
+								assertEquals(myevent2.toString(),
+										event2.toString());
+
+							}
+						}
+
+					} else {
+						assertEquals(object.toString(), list2.get(j).toString());
+					}
+
+					j++;
+				}
+
+			} else {
+				assertEquals(expected.get(i).toString(), result.get(i)
+						.toString());
+			}
+		}
 	}
 ```
 
-Inside this test case, we create a list of data with four different types: Car, String, Integer, and Event. We only need to pass in the class type of Car and Event, into the variable array of ComponentType class, which implements the Type interface. The Oson library uses this information to figure out the data types of Car and Event correctly.
+Inside this test case, we create a list of data, with 9 different types: Customer, Event, Car, int[][][], Boolean[], HashMap, ArrayList, and Integer, String. We only need to pass in the class types of self-defineed classes, and complex data structure, into the variable array of ComponentType class, which implements the Type interface. The Oson library uses this information to figure out the data types of Car and Event correctly. The main reason to pass in such data types as List, Array, or Map is to confirm that we do use them inside the Json document, and it is not a mistake, as normally people would not do such a crazy thing, unless inside a actual class, which would have no problem to process. After Oson has serialized and deserialized this data structure successfully, I myself fully convinced that it can handle very complex data structures.
 
 ### <a name="TOC-Deserialize-How-To-Create-Initial-Java-Object"></a>How to Create Initial Java Object
 
@@ -557,13 +664,5 @@ We are multiple ways you can help:
 
 If all of these are not met, the tool will try tens of other ways to create a new instance, or fails in the end.
 
+I tried to create a case where Oson cannot initiate a class by itself, but in these cases it can do it without particular help, one main reason is that the compiler I used must have included type information inside bytecode, so it causes no issue to get parameter names from it. In case parameter names inside constructors get erased, we do need to provide name support by annotations.
 
-
-
-
-
-
-
-
-
-  
