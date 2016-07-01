@@ -1283,8 +1283,8 @@ public class Oson {
 		
 		/*
 		 * When process methods of a class, only use methods starting with "get"
-		 * or "set", other wise, any no-arg method returning values are considered as get,
-		 * any method that accepts values are considered set, excluding constructors
+		 * or "set", otherwise, any no-arg method returning values are considered as get,
+		 * any method that accepts 1 value are considered set, excluding constructors
 		 */
 		private boolean setGetOnly = false;
 
@@ -9179,6 +9179,7 @@ public class Oson {
 		Map <String, Method> others = new HashMap<>();
 		
 		String name;
+		boolean notSetGetOnly = !getSetGetOnly();
 		for (Method method: stream.collect(Collectors.toList())) {
 			name = method.getName();
 			
@@ -9190,14 +9191,18 @@ public class Oson {
 				}
 				
 			} else if (name.startsWith("get")) {
-				if (name.length() > 3 && method.getParameterCount() == 0) {
+				if (name.length() > 3 && method.getParameterCount() == 0 && !void.class.equals(method.getReturnType())) {
 					getters.put(name.substring(3).toLowerCase(), method);
 				} else {
 					others.put(name.toLowerCase(), method);
 				}
 				
-			} else if (method.getParameterCount() == 0 && getSetGetOnly()) {
+			} else if (notSetGetOnly && method.getParameterCount() == 0 && !void.class.equals(method.getReturnType())) {
 				getters.put(name.toLowerCase(), method);
+				
+			} else if (notSetGetOnly && method.getParameterCount() == 1) {
+				setters.put(name.toLowerCase(), method);
+				
 			} else {
 				others.put(name.toLowerCase(), method);
 			}

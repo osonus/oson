@@ -413,8 +413,8 @@ Here are the list of atributes you can set in order to make it the way you want 
 
 		/*
 		 * When process methods of a class, only use methods starting with "get"
-		 * or "set", other wise, any no-arg method returning values are considered as get,
-		 * any method that accepts values are considered set, excluding constructors
+		 * or "set", otherwise, any no-arg method returning values are considered as get,
+		 * any method that accepts 1 value are considered set, excluding constructors
 		 */
 		private boolean setGetOnly = false;
 
