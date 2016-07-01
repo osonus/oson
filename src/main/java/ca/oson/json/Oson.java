@@ -8363,30 +8363,31 @@ public class Oson {
 
 				if (function != null) {
 					try {
+						Object returnedValue = null;
 						// suppose to return String, but in case not, try to process
 						if (function instanceof Json2ClassDataFunction) {
 							ClassData classData = new ClassData(returnType, collection, objectDTO.classMapper);
-							return ((Json2ClassDataFunction)function).apply(classData);
+							returnedValue = ((Json2ClassDataFunction)function).apply(classData);
 							
 						} else if (function instanceof Json2CollectionFunction) {
 							return ((Json2CollectionFunction)function).apply(collection);
 								
 						} else {
-							
-							Object returnedValue = function.apply(collection);
-						
-							if (returnedValue == null) {
-								return json2CollectionDefault(objectDTO);
-								
-							} else if (Collection.class.isAssignableFrom(returnedValue.getClass())) {
-								return (Collection)returnedValue;
-								
-							} else if (returnedValue.getClass().isArray()) {
-								return Arrays.asList((Object[])returnedValue);
-							} else {
-								// do not know what to do
-							}
+							returnedValue = function.apply(collection);
 						}
+						
+						if (returnedValue == null) {
+							return json2CollectionDefault(objectDTO);
+							
+						} else if (Collection.class.isAssignableFrom(returnedValue.getClass())) {
+							return (Collection)returnedValue;
+							
+						} else if (returnedValue.getClass().isArray()) {
+							return Arrays.asList((Object[])returnedValue);
+						} else {
+							// do not know what to do
+						}
+
 					} catch (Exception e) {}
 				}
 
@@ -8581,33 +8582,33 @@ public class Oson {
 
 				if (function != null) {
 					try {
+						Object returnedValue = null;
 						// suppose to return String, but in case not, try to process
 						if (function instanceof Json2ClassDataFunction) {
 							ClassData classData = new ClassData(returnType, values, objectDTO.classMapper);
-							Collection collection = ((Json2ClassDataFunction)function).apply(classData);
-							return (E[]) collection.toArray();
-							
+							returnedValue = ((Json2ClassDataFunction)function).apply(classData);
+
 						} else if (function instanceof Json2ArrayFunction) {
 							return (E[]) ((Json2ArrayFunction)function).apply(values);
 								
 						} else {
-							
-							Object returnedValue = function.apply(values);
-						
-							if (returnedValue == null) {
-								return json2ArrayDefault(objectDTO);
-								
-							} else if (returnedValue.getClass().isArray()) {
-								return (E[]) returnedValue;
-								
-							} else if (Collection.class.isAssignableFrom(returnedValue.getClass())) {
-								Collection collection = (Collection)returnedValue;
-								return (E[]) collection.toArray();
-
-							} else {
-								// do not know what to do
-							}
+							returnedValue = function.apply(values);
 						}
+
+						if (returnedValue == null) {
+							return json2ArrayDefault(objectDTO);
+							
+						} else if (returnedValue.getClass().isArray()) {
+							return (E[]) returnedValue;
+							
+						} else if (Collection.class.isAssignableFrom(returnedValue.getClass())) {
+							Collection collection = (Collection)returnedValue;
+							return (E[]) collection.toArray();
+
+						} else {
+							// do not know what to do
+						}
+
 					} catch (Exception e) {}
 				}
 
@@ -14678,7 +14679,7 @@ public class Oson {
 	
 	@FunctionalInterface
 	public static interface Json2ClassDataFunction extends OsonFunction {
-		public Collection apply(ClassData classData);
+		public Object apply(ClassData classData);
 	}
 	
 	@FunctionalInterface

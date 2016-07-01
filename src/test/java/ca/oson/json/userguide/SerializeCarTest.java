@@ -5,6 +5,7 @@ import java.util.Date;
 import org.junit.Test;
 
 import ca.oson.json.Oson;
+import ca.oson.json.domain.Car;
 import ca.oson.json.support.TestCaseBase;
 
 public class SerializeCarTest extends TestCaseBase {
@@ -69,22 +70,4 @@ public class SerializeCarTest extends TestCaseBase {
 
 		assertEquals(expected, expected);
 	}
-}
-
-
-class Car {
-    String brand;
-    public String getBrand() {
-		return brand;
-	}
-
-	int doors = 4;
-    Date date;
-
-    public Car() {}
-    
-    public Car(String brand, int doors) {
-        this.brand = brand;
-        this.doors = doors;
-    }
 }

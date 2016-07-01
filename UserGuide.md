@@ -759,8 +759,67 @@ Here is Oson's version, as usual, do one level of annotations in one annotation 
 
 If curious, you can see how it works by using any IDE in debug mode.
 
+### <a name="TOC-Deserialize-Lambda-Expression"></a>How to Use Lambda Expression to Deserialize Java Object
 
+To deserialize a class object, you can provide a deserializer using lambda expression. Here is interface you use:
+oson.setDeserializer(Class<T> type, Function deserializer), or oson.setDeserializer(Class<T> type, Json2ClassDataFunction deserializer). The two versions are overloading each other. All Oson deserializer interfaces are @FunctionalInterface, and they still support overloading, the reason behind this is that Java provides an nice feature: default method in an interface. In this case, it looks like this:
 
+```java
+	public static interface OsonFunction extends Function {
+		@Override
+		public default Object apply(Object t) {
+			return t;
+		}
+	}
+	
+	@FunctionalInterface
+	public static interface Integer2JsonFunction extends OsonFunction {
+		public String apply(Integer t);
+	}
+	
+	@FunctionalInterface
+	public static interface Json2ClassDataFunction extends OsonFunction {
+		public <T> T apply(ClassData classData);
+	}
+```
+
+If you provide a specific parameter, it will use it, which is Json2ClassDataFunction. Otherwise, it will use the generic one, which is java.util.function.Function. Here is the rule for handling a deserializer: if it returns an object of expected (which is Class<T> type), it will use this object as the deserialized product and return it. If the deserializer returns a null, then Oson uses this as your intention to ignore this class and returns null. Any other cases, Oson will continue its normal routine, whichi is to continue the deserialization process.
+
+Here is an example of lambda expression as a deserializer:
+
+```java
+	   @Test
+	   public void testDeserializeListWithClassData() {
+		   Car car = new Car("Chevron", 2);
+		   
+		   String json = oson.serialize(car);
+
+		   Json2ClassDataFunction function = (ClassData p) -> {
+			   Map<String, Object> data = p.getMap();
+			   Car newcar = (Car) p.getObj();
+			   
+			   int doors = Integer.parseInt(data.get("doors").toString());
+			   String brand = data.get("brand").toString();
+			   
+			   int level = p.getLevel();
+			   
+			   newcar.brand = brand + " is turned into a BMW at level " + level;
+			   newcar.doors = doors * 2;
+
+			   return newcar;
+		   };
+		   
+		   Car newcar = oson.setDeserializer(Car.class, function).deserialize(json, Car.class);
+
+		   assertNotEquals(car.toString(), newcar.toString());
+		   
+		   assertEquals(4, newcar.doors);
+		   
+		   assertEquals("Chevron is turned into a BMW at level 0", newcar.brand);
+	   }
+```
+
+The parameter to function Json2ClassDataFunction provides lots of detailed information to help you build your own version of deserializer.
 
 
 

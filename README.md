@@ -26,7 +26,7 @@ Just like annotation and lambda expressions make Java look like a functional lan
 		System.out.println(gson);
 		GsonBuilder gbuilder = oson.deserialize(gson);
 		
-		String gson2 = oson.prettyPrinting(true).toJson(gbuilder);
+		String gson2 = oson.pretty().toJson(gbuilder);
 		System.err.println(gson2);
 		GsonBuilder gbuilder2 = oson.fromJson(gson2);
 		
