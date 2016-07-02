@@ -783,7 +783,7 @@ oson.setDeserializer(Class<T> type, Function deserializer), or oson.setDeseriali
 	}
 ```
 
-If you provide a specific parameter, it will use it, which is Json2ClassDataFunction. Otherwise, it will use the generic one, which is java.util.function.Function. Here is the rule for handling a deserializer: if it returns an object of expected (which is Class<T> type), it will use this object as the deserialized product and return it. If the deserializer returns a null, then Oson uses this as your intention to ignore this class and returns null. Any other cases, Oson will continue its normal routine, whichi is to continue the deserialization process.
+If you provide a specific parameter, it will use it, which is Json2ClassDataFunction. Otherwise, it will use the generic one, which is java.util.function.Function. Here is the rule for handling a deserializer: if it returns an object of expected (which is Class<T> type), it will use this object as the deserialized product and return it. If the deserializer returns a null, then Oson uses this as your intention to ignore this class and returns null. Any other cases, Oson will continue its normal routine, which is to continue the deserialization process.
 
 Here is an example of lambda expression as a deserializer:
 
@@ -819,7 +819,7 @@ Here is an example of lambda expression as a deserializer:
 	   }
 ```
 
-The parameter to function Json2ClassDataFunction provides lots of detailed information to help you build your own version of deserializer.
+The ClassData parameter to function Json2ClassDataFunction provides lots of detailed information to help you build your own version of deserializer.
 
 
 

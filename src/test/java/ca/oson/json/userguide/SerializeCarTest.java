@@ -17,7 +17,7 @@ public class SerializeCarTest extends TestCaseBase {
 		String json = oson.serialize(car);
 		//System.out.println(json);
 
-		String expected = "{\"doors\":6,\"date\":null,\"brand\":\"Chevron\"}";
+		String expected = "{\"doors\":6,\"year\":2016,\"brand\":\"Chevron\",\"years\":null}";
 
 		assertEquals(expected, json);
 	}
@@ -35,7 +35,7 @@ public class SerializeCarTest extends TestCaseBase {
 	public void testSerializationAsGson() {
 		String json = oson.asGson().serialize(new Car("Chevron", 6));
 
-		String expected = "{\"brand\":\"Chevron\",\"doors\":6,\"date\":null}";
+		String expected = "{\"brand\":\"Chevron\",\"doors\":6,\"year\":2016,\"years\":null}";
 
 		//System.out.println(json);
 		
@@ -46,9 +46,9 @@ public class SerializeCarTest extends TestCaseBase {
 	public void testSerializationAsJackson() {
 		String json = oson.asJackson().serialize(new Car("Chevron", 6));
 
-		String expected = "{\"brand\":\"Chevron\"}";
+		String expected = "{\"brand\":\"Chevron\",\"doors\":6,\"year\":2016}";
 		
-		System.out.println(json);
+		//System.out.println(json);
 
 		assertEquals(expected, json);
 	}
