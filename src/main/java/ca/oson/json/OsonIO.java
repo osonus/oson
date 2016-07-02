@@ -15,6 +15,7 @@ import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.lang.reflect.Type;
 import java.util.function.Consumer;
 
 /**
@@ -120,7 +121,6 @@ public class OsonIO extends Oson {
 		
 		return null;
 	}
-	
 	public <T> T readValue(InputStream is, Class<T> valueType) {
 	    try {
 			InputStreamReader rdr = new InputStreamReader(is, DEFAULT_ENCODING);
@@ -147,7 +147,44 @@ public class OsonIO extends Oson {
 	    
 		return null;
 	}
-	
+	public <T> T readValue(InputStream is, Type type) {
+	    try {
+			InputStreamReader rdr = new InputStreamReader(is, DEFAULT_ENCODING);
+
+	        StringBuilder contents = new StringBuilder();
+	        char[] buffer = new char[4096];
+
+	        int bytesRead = -1;
+			while ((bytesRead = rdr.read(buffer)) != -1) {
+				contents.append(new String(buffer, 0, bytesRead));
+			}
+	        
+	        return readValue(contents.toString(), type);
+	        
+	    } catch (IOException e) {
+	    	e.printStackTrace();
+	    } finally {
+	        try {
+	            is.close();
+	        } catch (Exception e) {
+	            // log error in closing the file
+	        }
+	    }
+	    
+		return null;
+	}
+	public <T> T readValue(File file, Type type) {
+		try {
+			InputStream is = new BufferedInputStream(new FileInputStream(file));
+			
+			return readValue(is, type);
+			
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
 	public <T> T readValue(File file, Class<T> valueType) {
 		try {
 			InputStream is = new BufferedInputStream(new FileInputStream(file));
@@ -160,8 +197,17 @@ public class OsonIO extends Oson {
 		
 		return null;
 	}
-	
+
 	public <T> T readValue(String file) {
 		return readValue(new File(file), null);
 	}
+	
+	public <T> T readValue(Class<T> valueType, String file) {
+		return readValue(new File(file), valueType);
+	}
+	
+	public <T> T readValue(Type type, String file) {
+		return readValue(new File(file), type);
+	}
+	
 }

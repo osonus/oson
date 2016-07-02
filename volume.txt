@@ -1,0 +1,46 @@
+{
+ "volumes": [
+  {
+   "status": "available", 
+   "managed": true, 
+   "name": "va_85621143-1133-412f-83b4-57a01a552638_", 
+   "support": {
+    "status": "supported"
+   }, 
+   "storage_pool": "pfm9253_pfm9254_new", 
+   "id": "afb8e294-6188-4907-9f6f-963c7623cecb", 
+   "size": 9
+  }, 
+  {
+   "status": "in-use", 
+   "managed": false, 
+   "name": "bt_newd20", 
+   "support": {
+    "status": "not_supported", 
+    "reasons": [
+     "This volume is not a candidate for management because it is already attached to a virtual machine.  To manage this volume with PowerVC, select the virtual machine to which the volume is attached for management. The attached volume will be automatically included for management."
+    ]
+   }, 
+   "storage_pool": "KVM", 
+   "mapped_wwpns": [
+    "2101001B32BD4280", 
+    "2100001B329D4280", 
+    "2101001B32BD637E", 
+    "2100001B329D637E"
+   ], 
+   "id": "c7838c79-17ca-3cbc-98e5-3567fde902d8", 
+   "size": 0
+  }, 
+  {
+   "status": "available", 
+   "managed": true, 
+   "name": "vdisk138", 
+   "support": {
+    "status": "supported"
+   }, 
+   "storage_pool": "Chassis2_IBMi", 
+   "id": "b6d00783-9f8c-40b8-ad78-956b0299478c", 
+   "size": 100
+  }
+ ]
+}

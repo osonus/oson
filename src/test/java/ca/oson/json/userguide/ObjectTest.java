@@ -1,10 +1,16 @@
 package ca.oson.json.userguide;
 
+import java.io.File;
+
 import org.junit.Test;
 
 import com.google.gson.GsonBuilder;
 
 import ca.oson.json.Oson.JSON_INCLUDE;
+import ca.oson.json.OsonIO;
+import ca.oson.json.domain.Support;
+import ca.oson.json.domain.Volume;
+import ca.oson.json.domain.VolumeContainer;
 import ca.oson.json.support.TestCaseBase;
 
 public class ObjectTest extends TestCaseBase {
@@ -61,6 +67,22 @@ public class ObjectTest extends TestCaseBase {
 		
 		//System.out.println(gson4);
 		assertFalse(gson2.length() == gson4.length());
+	}
+	
+	
+	@Test
+	public void testDeserializeVolume() {
+		OsonIO oson = new OsonIO();
+		
+		VolumeContainer vc = oson.readValue(VolumeContainer.class, "volume.txt");
+		
+		assertEquals(((Volume)(vc.volumes.get(0))).support.status, "supported");
+
+		String json = oson.serialize(vc);
+
+		assertTrue(json.contains("\"This volume is not a candidate for management because it is already attached to a virtual machine.  To manage this volume with PowerVC, select the virtual machine to which the volume is attached for management. The attached volume will be automatically included for management.\""));
+
+		// System.out.println(json);
 	}
 
 }

@@ -1297,6 +1297,12 @@ public class Oson {
 		 * any method that accepts 1 value are considered set, excluding constructors
 		 */
 		private boolean setGetOnly = false;
+		
+		/*
+		 * Determine if a field object should inherit its field mapper configuration
+		 * during the processing of its own data: its class mapper and its fields' field mappers
+		 */
+		private boolean inheritParentConfig = true;
 
 		/*
 		 * class level configurations
@@ -1308,6 +1314,14 @@ public class Oson {
 		 */
 		private Set<FieldMapper> fieldMappers = null;
 
+
+		private boolean isInheritParentConfig() {
+			return inheritParentConfig;
+		}
+
+		public void setInheritParentConfig(boolean inheritParentConfig) {
+			this.inheritParentConfig = inheritParentConfig;
+		}
 		
 		public boolean getSetGetOnly() {
 			return setGetOnly;
@@ -2691,7 +2705,7 @@ public class Oson {
 	}
 
 	public Oson configure(Map<String, Object> map) {
-		Options options = this.deserialize2Object(map, Options.class, null);
+		Options options = this.deserialize2Object(map, Options.class, null, null);
 
 		return configure(options);
 	}
@@ -3612,6 +3626,15 @@ public class Oson {
 		return setGetOnly(true);
 	}
 	
+	private boolean isInheritParentConfig() {
+		return options.isInheritParentConfig();
+	}
+
+	public Oson setInheritParentConfig(boolean inheritParentConfig) {
+		options.setInheritParentConfig(inheritParentConfig);
+
+		return this;
+	}
 	
 	
 	/////////////////////////////////////////////////////////////////////////////////
@@ -8257,7 +8280,7 @@ public class Oson {
 						FieldData newFieldData = new FieldData(obj, obj.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
 						newFieldData.componentType = objectDTO.componentType;
 						newFieldData.returnType = getComponentType(componentType, newFieldData);
-
+						newFieldData.fieldMapper = objectDTO.fieldMapper;
 						returnObj.put(entry.getKey(), json2Object(newFieldData));
 					}
 					
@@ -8328,6 +8351,7 @@ public class Oson {
 						sbuilder.append(repeatedItem + "\"" + name + "\":" + pretty);
 						
 						FieldData newFieldData = new FieldData(v, v.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
+						newFieldData.fieldMapper = objectDTO.fieldMapper;
 						sbuilder.append(object2Json(newFieldData));
 						sbuilder.append(",");
 					}
@@ -8471,6 +8495,7 @@ public class Oson {
 						FieldData newFieldData = new FieldData(val, val.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
 						newFieldData.componentType = objectDTO.componentType;
 						newFieldData.returnType = getComponentType(componentType, newFieldData);
+						newFieldData.fieldMapper = objectDTO.fieldMapper;
 						returnObj.add(json2Object(newFieldData));
 					}
 				}
@@ -8668,6 +8693,7 @@ public class Oson {
 						FieldData newFieldData = new FieldData(val, val.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
 						newFieldData.componentType = objectDTO.componentType;
 						newFieldData.returnType = getComponentType(componentType, newFieldData);
+						newFieldData.fieldMapper = objectDTO.fieldMapper;
 						E object = json2Object(newFieldData);
 						arr[i++] = object;
 					}
@@ -8749,6 +8775,7 @@ public class Oson {
 				FieldData newFieldData = new FieldData(componentValue, componentValue.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
 				newFieldData.componentType = objectDTO.componentType;
 				newFieldData.returnType = getComponentType(componentType, newFieldData);
+				newFieldData.fieldMapper = objectDTO.fieldMapper;
 				String str = object2Json(newFieldData);
 				if (str != null && str.length() > 0) {
 					sbuilder.append(repeatedItem + str + ",");
@@ -8826,9 +8853,9 @@ public class Oson {
 		}
 		
 		// first, get the class mapper
-		if (objectDTO.fieldMapper == null && objectDTO.classMapper == null) {
+		//if (objectDTO.fieldMapper == null && objectDTO.classMapper == null) {
 			objectDTO.classMapper = getGlobalizedClassMapper(returnType);
-		}
+		//}
 
 		if (returnType == String.class) {
 			return (E) json2String(objectDTO);
@@ -8944,10 +8971,12 @@ public class Oson {
 			
 
 			if (obj == null) {
-				return (E) deserialize2Object(mvalue, returnType, objectDTO.componentType);
+				return (E) deserialize2Object(mvalue, returnType, objectDTO.componentType, objectDTO.fieldMapper);
 				
 			} else {
-				return (E) deserialize2Object(new FieldData(mvalue, returnType, obj, true));
+				objectDTO.valueToProcess = mvalue;
+				objectDTO.returnType = returnType;
+				return (E) deserialize2Object(objectDTO);
 			}
 		}
 	}
@@ -9072,6 +9101,7 @@ public class Oson {
 					FieldData newFieldData = new FieldData(s, s.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
 					newFieldData.componentType = objectDTO.componentType;
 					newFieldData.returnType = getComponentType(componentType, newFieldData);
+					newFieldData.fieldMapper = objectDTO.fieldMapper;
 					String str = object2Json(newFieldData);
 					if (str != null && str.length() > 0) {
 						sbuilder.append(repeatedItem + str + ",");
@@ -9217,6 +9247,7 @@ public class Oson {
 				json = array2Json(objectDTO);
 				
 			} else {
+				objectDTO.classMapper = getGlobalizedClassMapper(type);
 				json = object2Serialize(objectDTO);
 			}
 			
@@ -9830,6 +9861,65 @@ public class Oson {
 		return classMapper;
 	}
 	
+
+	private ClassMapper overwriteBy(ClassMapper classMapper, FieldMapper fieldMapper) {
+		// fieldify ?
+		if (fieldMapper.useAttribute != null) {
+			classMapper.useAttribute = fieldMapper.useAttribute;
+		}
+		
+		if (fieldMapper.useField != null) {
+			classMapper.useField = fieldMapper.useField;
+		}
+		
+		if (fieldMapper.simpleDateFormat != null) {
+			classMapper.simpleDateFormat = fieldMapper.simpleDateFormat;
+		}
+		
+		if (fieldMapper.defaultType != null) {
+			classMapper.defaultType = fieldMapper.defaultType;
+		}
+		
+		if (fieldMapper.enumType != null) {
+			classMapper.enumType = fieldMapper.enumType;
+		}
+		
+		if (fieldMapper.date2Long != null) {
+			classMapper.date2Long =  fieldMapper.date2Long;
+		}
+		
+		if (fieldMapper.precision != null) {
+			classMapper.precision =  fieldMapper.precision;
+		}
+		
+		if (fieldMapper.scale != null) {
+			classMapper.scale =  fieldMapper.scale;
+		}
+		
+		if (fieldMapper.min != null) {
+			classMapper.min =  fieldMapper.min;
+		}
+		
+		if (fieldMapper.max != null) {
+			classMapper.max =  fieldMapper.max;
+		}
+		
+		if (fieldMapper.length != null) {
+			classMapper.length =  fieldMapper.length;
+		}
+		
+		if (fieldMapper.defaultValue != null) {
+			classMapper.defaultValue =  fieldMapper.defaultValue;
+		}
+		
+		if (fieldMapper.ignore != null) {
+			classMapper.ignore =  fieldMapper.ignore;
+		}
+		
+		return classMapper;
+	}
+	
+	
 	
 	private FieldMapper overwriteBy (FieldMapper fieldMapper, ca.oson.json.FieldMapper fieldMapperAnnotation, ClassMapper classMapper) {
 		if (fieldMapperAnnotation.length() > 0) {
@@ -10039,13 +10129,19 @@ public class Oson {
 			return "{}";
 		}
 		
+		ClassMapper classMapper = objectDTO.classMapper;
 		// first build up the class-level processing rules
+		if (classMapper == null) {
+			// 1. Create a blank class mapper instance
+			classMapper = new ClassMapper(valueType);
+			
+			// 2. Globalize it
+			classMapper = globalize(classMapper);
+		}
 		
-		// 1. Create a blank class mapper instance
-		ClassMapper classMapper = new ClassMapper(valueType);
-		
-		// 2. Globalize it
-		classMapper = globalize(classMapper);
+		if (objectDTO.fieldMapper != null && isInheritParentConfig()) {
+			classMapper = overwriteBy (classMapper, objectDTO.fieldMapper);
+		}
 		
 		
 		FIELD_NAMING format = getFieldNaming();
@@ -11304,7 +11400,7 @@ public class Oson {
 
 					return json2Object(fieldData);
 				} else {
-					return (T) deserialize2Object(map, valueType, componentType);
+					return (T) deserialize2Object(map, valueType, componentType, null);
 				}
 
 			} else {
@@ -11358,7 +11454,7 @@ public class Oson {
 
 				} else {
 					if (object == null) {
-						return deserialize2Object(map, valueType, null);
+						return deserialize2Object(map, valueType, null, null);
 					} else {
 						return deserialize2Object(new FieldData(map, valueType, object, true));
 					}
@@ -11403,7 +11499,7 @@ public class Oson {
     	return null;
     }
 
-	<T> T deserialize2Object(Map<String, Object> map, Class<T> valueType, ComponentType componentType) {
+	<T> T deserialize2Object(Map<String, Object> map, Class<T> valueType, ComponentType componentType, FieldMapper fieldMapper) {
 		if (map == null) {
 			return null;
 		}
@@ -11413,6 +11509,7 @@ public class Oson {
 		if (obj != null) {
 			FieldData fieldData = new FieldData(map, valueType, obj, true);
 			fieldData.componentType = componentType;
+			fieldData.fieldMapper = fieldMapper;
 			return deserialize2Object(fieldData);
 		} else {
 			return null;
@@ -11878,12 +11975,19 @@ public class Oson {
 
 		// first build up the class-level processing rules
 		
-		// 1. Create a blank class mapper instance
-		ClassMapper classMapper = new ClassMapper(valueType);
 		
-		// 2. Globalize it
-		classMapper = globalize(classMapper);
+		ClassMapper classMapper = objectDTO.classMapper;
+		if (classMapper == null) {
+			// 1. Create a blank class mapper instance
+			classMapper = new ClassMapper(valueType);
+		
+			// 2. Globalize it
+			classMapper = globalize(classMapper);
+		}
 
+		if (objectDTO.fieldMapper != null && isInheritParentConfig()) {
+			classMapper = overwriteBy (classMapper, objectDTO.fieldMapper);
+		}
 
 		try {
 			boolean annotationSupport = getAnnotationSupport();

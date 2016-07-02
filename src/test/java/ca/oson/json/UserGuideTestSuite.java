@@ -5,6 +5,7 @@ import org.junit.runners.Suite;
 
 import ca.oson.json.userguide.ArrayTest;
 import ca.oson.json.userguide.CollectionsTest;
+import ca.oson.json.userguide.ConfigInheritanceTest;
 import ca.oson.json.userguide.DeserializeFunctionTest;
 import ca.oson.json.userguide.NewInstanceTest;
 import ca.oson.json.userguide.ObjectTest;
@@ -19,7 +20,8 @@ import ca.oson.json.userguide.SerializeCarTest;
 	CollectionsTest.class,
 	SerializeCarTest.class,
 	NewInstanceTest.class,
-	DeserializeFunctionTest.class
+	DeserializeFunctionTest.class,
+	ConfigInheritanceTest.class
 })
 public class UserGuideTestSuite {
 
