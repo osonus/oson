@@ -30,4 +30,22 @@ public class ConfigInheritanceTest extends TestCaseBase {
 		assertEquals(expected, json);
 	}
 	
+	
+	@Test
+	public void testSerializationObjectNonInherit() {
+		VolumeContainer container = new VolumeContainer();
+		Volume volume = new Volume();
+		volume.size = 200;
+		
+		container.volumes = new ArrayList<Volume>();
+		container.volumes.add(volume);
+		
+		String expected = "{\"volumes\":[{\"size\":200}]}";
+		
+		String json = oson.setInheritMapping(false).setDefaultType(JSON_INCLUDE.NON_NULL).serialize(container);
+		
+		//System.err.println(json);
+
+		assertEquals(expected, json);
+	}
 }

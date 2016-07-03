@@ -977,14 +977,6 @@ public class Oson {
 			this.deserializer = deserializer;
 			return this;
 		}
-		public FieldMapper setSerializer(FieldData2JsonFunction serializer) {
-			this.serializer = serializer;
-			return this;
-		}
-		public FieldMapper setDeserializer(Json2FieldDataFunction deserializer) {
-			this.deserializer = deserializer;
-			return this;
-		}
 		
 		public FieldMapper setSimpleDateFormat(String simpleDateFormat) {
 			this.simpleDateFormat = simpleDateFormat;
@@ -1302,7 +1294,7 @@ public class Oson {
 		 * Determine if a field object should inherit its field mapper configuration
 		 * during the processing of its own data: its class mapper and its fields' field mappers
 		 */
-		private boolean inheritParentConfig = true;
+		private boolean inheritMapping = true;
 
 		/*
 		 * class level configurations
@@ -1315,12 +1307,12 @@ public class Oson {
 		private Set<FieldMapper> fieldMappers = null;
 
 
-		private boolean isInheritParentConfig() {
-			return inheritParentConfig;
+		private boolean isInheritMapping() {
+			return inheritMapping;
 		}
 
-		public void setInheritParentConfig(boolean inheritParentConfig) {
-			this.inheritParentConfig = inheritParentConfig;
+		public void setInheritMapping(boolean inheritMapping) {
+			this.inheritMapping = inheritMapping;
 		}
 		
 		public boolean getSetGetOnly() {
@@ -2018,90 +2010,8 @@ public class Oson {
 				this.classMappers.put(type, classMapper);
 			} else {
 				// merge this two, new overwrites the old
-				
-				if (classMapper.ignore != null) {
-					oldClassMapper.ignore = classMapper.ignore;
-				}
-				if (classMapper.date2Long != null) {
-					oldClassMapper.date2Long = classMapper.date2Long;
-				}
-				if (classMapper.includeClassTypeInJson != null) {
-					oldClassMapper.includeClassTypeInJson = classMapper.includeClassTypeInJson;
-				}
-				if (classMapper.orderByKeyAndProperties != null) {
-					oldClassMapper.orderByKeyAndProperties = classMapper.orderByKeyAndProperties;
-				}
-				if (classMapper.useAttribute != null) {
-					oldClassMapper.useAttribute = classMapper.useAttribute;
-				}
-				if (classMapper.useField != null) {
-					oldClassMapper.useField = classMapper.useField;
-				}
-				if (classMapper.constructor != null) {
-					oldClassMapper.constructor = classMapper.constructor;
-				}
-				if (classMapper.defaultType != null) {
-					oldClassMapper.defaultType = classMapper.defaultType;
-				}
-				if (classMapper.defaultValue != null) {
-					oldClassMapper.defaultValue = classMapper.defaultValue;
-				}
-				if (classMapper.deserializer != null) {
-					oldClassMapper.deserializer = classMapper.deserializer;
-				}
-				if (classMapper.enumType != null) {
-					oldClassMapper.enumType = classMapper.enumType;
-				}
-				if (classMapper.ignoreFieldsWithAnnotations != null) {
-					if (oldClassMapper.ignoreFieldsWithAnnotations == null) {
-						oldClassMapper.ignoreFieldsWithAnnotations = classMapper.ignoreFieldsWithAnnotations;
-					} else {
-						oldClassMapper.ignoreFieldsWithAnnotations.addAll(classMapper.ignoreFieldsWithAnnotations);
-					}
-				}
-				if (classMapper.ignoreVersionsAfter != null) {
-					oldClassMapper.ignoreVersionsAfter = classMapper.ignoreVersionsAfter;
-				}
-				if (classMapper.includeFieldsWithModifiers != null) {
-					if (oldClassMapper.includeFieldsWithModifiers == null) {
-						oldClassMapper.includeFieldsWithModifiers = classMapper.includeFieldsWithModifiers;
-					} else {
-						oldClassMapper.includeFieldsWithModifiers.addAll(classMapper.includeFieldsWithModifiers);
-					}
-				}
-				if (classMapper.jsonIgnoreProperties != null) {
-					if (oldClassMapper.jsonIgnoreProperties == null) {
-						oldClassMapper.jsonIgnoreProperties = classMapper.jsonIgnoreProperties;
-					} else {
-						oldClassMapper.jsonIgnoreProperties.addAll(classMapper.jsonIgnoreProperties);
-					}
-				}
-				if (classMapper.length != null) {
-					oldClassMapper.length = classMapper.length;
-				}
-				if (classMapper.max != null) {
-					oldClassMapper.max = classMapper.max;
-				}
-				if (classMapper.min != null) {
-					oldClassMapper.min = classMapper.min;
-				}
-				if (classMapper.precision != null) {
-					oldClassMapper.precision = classMapper.precision;
-				}
-				if (classMapper.scale != null) {
-					oldClassMapper.scale = classMapper.scale;
-				}
-				if (classMapper.propertyOrders != null) {
-					oldClassMapper.propertyOrders = classMapper.propertyOrders;
-				}
-				if (classMapper.serializer != null) {
-					oldClassMapper.serializer = classMapper.serializer;
-				}
-				if (classMapper.simpleDateFormat != null) {
-					oldClassMapper.simpleDateFormat = classMapper.simpleDateFormat;
-				}
+				this.classMappers.put(type, overwriteBy(classMapper, oldClassMapper));
 			}
-			
 		}
 		
 		private Set<FieldMapper> getFieldMappers() {
@@ -2112,7 +2022,23 @@ public class Oson {
 			if (this.fieldMappers == null || fieldMappers == null) {
 				this.fieldMappers = fieldMappers;
 			} else {
-				this.fieldMappers.addAll(fieldMappers);
+				for (FieldMapper fieldMapper: fieldMappers) {
+					if (fieldMapper.isValid() && !this.fieldMappers.contains(fieldMapper)) {
+						setFieldMappers(fieldMapper);
+					}
+				}
+			}
+		}
+		
+		public void setFieldMappers(Collection<FieldMapper> fieldMappers) {
+			if (fieldMappers == null) {
+				this.fieldMappers = null;
+			} else {
+				for (FieldMapper fieldMapper: fieldMappers) {
+					if (fieldMapper.isValid() && !this.fieldMappers.contains(fieldMapper)) {
+						setFieldMappers(fieldMapper);
+					}
+				}
 			}
 		}
 		
@@ -2120,16 +2046,34 @@ public class Oson {
 			if (fieldMappers == null) {
 				this.fieldMappers = null;
 			} else {
-				if (this.fieldMappers == null) {
-					this.fieldMappers = new HashSet<>();
-				}
-				
 				for (FieldMapper fieldMapper: fieldMappers) {
 					if (fieldMapper.isValid() && !this.fieldMappers.contains(fieldMapper)) {
-						this.fieldMappers.add(fieldMapper);
+						setFieldMappers(fieldMapper);
 					}
 				}
 			}
+		}
+		
+		private FieldMapper getFieldMapper(String java, String json, Class type) {
+			// 4 cases:
+			// 1. have java, class
+			// 2. json, class
+			// 3. have java only
+			// 4. have json only
+			if (type != null) {
+				if (!StringUtil.isEmpty(java)) {
+					return getFieldMapper(java, type);
+				} else if (!StringUtil.isEmpty(json)) {
+					return getFieldMapper(type, json);
+				}
+				
+			} else if (!StringUtil.isEmpty(java)) {
+				return getFieldMapperForJava(java);
+			} else if (!StringUtil.isEmpty(json)) {
+				return getFieldMapperForJson(json);
+			}
+			
+			return null;
 		}
 		
 		public void setFieldMappers(FieldMapper fieldMapper) {
@@ -2140,8 +2084,87 @@ public class Oson {
 			if (this.fieldMappers == null) {
 				this.fieldMappers = new HashSet<>();
 			}
+
+			FieldMapper map = getFieldMapper(fieldMapper.java, fieldMapper.json, fieldMapper.type);
 			
-			this.fieldMappers.add(fieldMapper);
+			if (map == null) {
+				this.fieldMappers.add(fieldMapper);
+			} else {
+				Oson.overwriteBy (map, fieldMapper);
+			}
+		}
+		
+		private FieldMapper getFieldMapperForJava(String javaName) {
+			if (fieldMappers != null && !StringUtil.isEmpty(javaName)) {
+				javaName = javaName.trim();
+				String lname = javaName.toLowerCase();
+
+				for (FieldMapper mapper: fieldMappers) {
+					String java = mapper.java;
+
+					if (mapper.type == null && java != null && lname.equals(java.toLowerCase())) {
+						return mapper;
+					}
+				}
+			}
+			
+			return null;
+		}
+		private FieldMapper getFieldMapperForJson(String jsonName) {
+			if (fieldMappers != null && !StringUtil.isEmpty(jsonName)) {
+				jsonName = jsonName.trim();
+				String lname = jsonName.toLowerCase();
+
+				for (FieldMapper mapper: fieldMappers) {
+					String json = mapper.json;
+		
+					if (mapper.type == null && json != null && lname.equals(json.toLowerCase())) {
+						return mapper;
+					}
+				}
+			}
+			
+			return null;
+		}
+		
+		private FieldMapper getFieldMapper(String javaName, Class classtype) {
+			if (fieldMappers != null && !StringUtil.isEmpty(javaName)) {
+				javaName = javaName.trim();
+				String lname = javaName.toLowerCase();
+
+				for (FieldMapper mapper: fieldMappers) {
+					String java = mapper.java;
+		
+					if (java != null && lname.equals(java.toLowerCase())) {
+						if (mapper.type == classtype) {
+							return mapper;
+						}
+						
+					}
+				}
+			}
+			
+			return null;
+		}
+		
+		private FieldMapper getFieldMapper(Class classtype, String jsonName) {
+			if (fieldMappers != null && !StringUtil.isEmpty(jsonName)) {
+				jsonName = jsonName.trim();
+				String lname = jsonName.toLowerCase();
+
+				for (FieldMapper mapper: fieldMappers) {
+					String json = mapper.json;
+		
+					if (json != null && lname.equals(json.toLowerCase())) {
+						if (mapper.type == classtype) {
+							return mapper;
+						}
+						
+					}
+				}
+			}
+			
+			return null;
 		}
 
 		private Boolean isUseField() {
@@ -2615,17 +2638,15 @@ public class Oson {
 			if (componentType == null) {
 				if (this.componentType != null) {
 					componentType = this.componentType.getMainComponentType();
-				} else {
-					componentType = (Class<E>) returnType.getComponentType();
 				}
 				
-				if (componentType == null && Collection.class.isAssignableFrom(valueToProcess.getClass())) {
+				if (componentType == null && valueToProcess != null && Collection.class.isAssignableFrom(valueToProcess.getClass())) {
 					Collection<E> values = (Collection<E>) valueToProcess;
 					
 					componentType = CollectionArrayTypeGuesser.guessElementType(values, (Class<Collection<E>>)values.getClass(), jsonClassType);
 				}
 				
-				if (componentType == null && Map.class.isAssignableFrom(valueToProcess.getClass())) {
+				if (componentType == null && valueToProcess != null && Map.class.isAssignableFrom(valueToProcess.getClass())) {
 					Map<String, Object> values = (Map)valueToProcess;
 					componentType = CollectionArrayTypeGuesser.guessElementType(values, returnType, jsonClassType);
 				}
@@ -3368,60 +3389,7 @@ public class Oson {
 	private Set<FieldMapper> getFieldMappers() {
 		return options.getFieldMappers();
 	}
-	
 
-	private FieldMapper getFieldMapper(String name, Class classtype) {
-		Set<FieldMapper> fieldMappers = getFieldMappers();
-		FieldMapper fieldMapper = null;
-		
-		if (fieldMappers != null && name != null && name.trim().length() > 0) {
-			name = name.trim();
-			String lname = name.toLowerCase();
-			
-			Set<FieldMapper> mapps = new HashSet<>();
-
-			for (FieldMapper mapper: fieldMappers) {
-				String java = mapper.java;
-				String json = mapper.json;
-	
-				if (java != null && lname.equals(java.toLowerCase())) {
-					if (mapper.type == null) {
-						mapps.add(mapper);
-						
-					} else if (mapper.type == classtype) {
-						fieldMapper = mapper;
-						break;
-					}
-					
-				} else if (json != null && lname.equals(json.toLowerCase())) {
-					if (mapper.type == null) {
-						mapps.add(mapper);
-						
-					} else if (mapper.type == classtype) {
-						fieldMapper = mapper;
-						break;
-					}
-					
-				}
-			}
-	
-			if (fieldMapper == null && mapps.size() > 0) {
-				for (FieldMapper mapper: mapps) {
-					fieldMapper = mapper;
-					break;
-				}
-			}
-		}
-		
-		if (fieldMapper != null) {
-			fieldMapper.type = classtype;
-		}
-
-		return fieldMapper;
-	}
-	
-	
-		
 	private FieldMapper classifyFieldMapper(FieldMapper fieldMapper, ClassMapper classMapper) {
 		// classify it now
 		if (fieldMapper.useAttribute == null) {
@@ -3487,6 +3455,13 @@ public class Oson {
 		return this;
 	}
 	
+	public Oson setFieldMappers(Collection<FieldMapper> fieldMappers) {
+		options.setFieldMappers(fieldMappers);
+		reset();
+
+		return this;
+	}
+	
 	public Oson setFieldMappers(FieldMapper[] fieldMappers) {
 		options.setFieldMappers(fieldMappers);
 		reset();
@@ -3499,6 +3474,15 @@ public class Oson {
 		reset();
 
 		return this;
+	}
+	
+	private FieldMapper getFieldMapper(String java, String json, Class type) {
+		FieldMapper fieldMapper = options.getFieldMapper(java, json, type);
+		if (fieldMapper == null) {
+			fieldMapper = options.getFieldMapper(java, json, null);
+		}
+		
+		return fieldMapper;
 	}
 	
 	private Boolean isUseField() {
@@ -3626,12 +3610,12 @@ public class Oson {
 		return setGetOnly(true);
 	}
 	
-	private boolean isInheritParentConfig() {
-		return options.isInheritParentConfig();
+	private boolean isInheritMapping() {
+		return options.isInheritMapping();
 	}
 
-	public Oson setInheritParentConfig(boolean inheritParentConfig) {
-		options.setInheritParentConfig(inheritParentConfig);
+	public Oson setInheritMapping(boolean inheritMapping) {
+		options.setInheritMapping(inheritMapping);
 
 		return this;
 	}
@@ -3992,11 +3976,12 @@ public class Oson {
 		gson = null;
 	}
 
-	public void clear() {
+	public Oson clear() {
 		options = new Options();
 		reset();
 		cachedFields = new ConcurrentHashMap<>();
 		cachedMethods = new ConcurrentHashMap<>();
+		return this;
 	}
 	
 	private ObjectMapper getJackson() {
@@ -10007,7 +9992,7 @@ public class Oson {
 	
 	
 	
-	private FieldMapper overwriteBy (FieldMapper fieldMapper, FieldMapper javaFieldMapper) {
+	private static FieldMapper overwriteBy (FieldMapper fieldMapper, FieldMapper javaFieldMapper) {
 		if (fieldMapper == null || javaFieldMapper == null) {
 			return fieldMapper;
 		}
@@ -10105,8 +10090,8 @@ public class Oson {
 	 * Object to string, serialize.
 	 * 
 	 * It involves 10 steps to apply processing rules:
-	 * 1. Create a blank class mapper instance;
-	 * 2. Globalize it;
+	 * 1. Create a blank class mapper instance and Globalize it;
+	 * 2. if it is a field in previous execution, and set to inherit from previous mapping, combine with previous mapping;
 	 * 3. Apply annotations from other sources;
 	 * 4. Apply annotations from Oson;
 	 * 5. Apply Java configuration for this particular class;
@@ -10139,7 +10124,7 @@ public class Oson {
 			classMapper = globalize(classMapper);
 		}
 		
-		if (objectDTO.fieldMapper != null && isInheritParentConfig()) {
+		if (objectDTO.fieldMapper != null && isInheritMapping()) {
 			classMapper = overwriteBy (classMapper, objectDTO.fieldMapper);
 		}
 		
@@ -10347,7 +10332,7 @@ public class Oson {
 				// 7. Classify this field mapper
 				fieldMapper = classifyFieldMapper(fieldMapper, classMapper);
 
-				FieldMapper javaFieldMapper = getFieldMapper(name, valueType);
+				FieldMapper javaFieldMapper = getFieldMapper(name, null, valueType);
 				
 				// getter and setter methods
 				Method getter = getters.get(lcfieldName);
@@ -10792,7 +10777,7 @@ public class Oson {
 				// 7. Classify this field mapper
 				fieldMapper = classifyFieldMapper(fieldMapper, classMapper);
 
-				FieldMapper javaFieldMapper = getFieldMapper(name, valueType);
+				FieldMapper javaFieldMapper = getFieldMapper(name, null, valueType);
 				
 				boolean ignored = false;
 				Set<String> names = new HashSet<>();
@@ -11951,8 +11936,8 @@ public class Oson {
 	 * string to object, deserialize, set method should be used
 	 * 
 	 * It involves 10 steps to apply processing rules:
-	 * 1. Create a blank class mapper instance;
-	 * 2. Globalize it;
+	 * 1. Create a blank class mapper instance and Globalize it;
+	 * 2. if it is a field in previous execution, and set to inherit from previous mapping, combine with previous mapping;
 	 * 3. Apply annotations from other sources;
 	 * 4. Apply annotations from Oson;
 	 * 5. Apply Java configuration for this particular class;
@@ -11985,7 +11970,7 @@ public class Oson {
 			classMapper = globalize(classMapper);
 		}
 
-		if (objectDTO.fieldMapper != null && isInheritParentConfig()) {
+		if (objectDTO.fieldMapper != null && isInheritMapping()) {
 			classMapper = overwriteBy (classMapper, objectDTO.fieldMapper);
 		}
 
@@ -12196,7 +12181,7 @@ public class Oson {
 				// 7. Classify this field mapper
 				fieldMapper = classifyFieldMapper(fieldMapper, classMapper);
 
-				FieldMapper javaFieldMapper = getFieldMapper(name, valueType);
+				FieldMapper javaFieldMapper = getFieldMapper(name, null, valueType);
 
 				Class<?> returnType = f.getType(); // value.getClass();
 
@@ -12595,7 +12580,7 @@ public class Oson {
 				// 7. Classify this field mapper
 				fieldMapper = classifyFieldMapper(fieldMapper, classMapper);
 
-				FieldMapper javaFieldMapper = getFieldMapper(name, valueType);
+				FieldMapper javaFieldMapper = getFieldMapper(name, null, valueType);
 
 
 				boolean ignored = false;
@@ -14874,16 +14859,6 @@ public class Oson {
 	@FunctionalInterface
 	public static interface Json2StringFunction extends OsonFunction {
 		public String apply(String t);
-	}
-	
-	@FunctionalInterface
-	public static interface FieldData2JsonFunction extends OsonFunction {
-		public String apply(FieldData fieldData);
-	}
-	
-	@FunctionalInterface
-	public static interface Json2FieldDataFunction extends OsonFunction {
-		public Object apply(FieldData classData);
 	}
 	
 }
