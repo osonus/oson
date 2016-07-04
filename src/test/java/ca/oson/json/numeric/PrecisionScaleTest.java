@@ -252,10 +252,8 @@ public class PrecisionScaleTest extends TestCaseBase {
 		
 		String expected51 = "12.3";
 		String expected42 = "{\"valueDouble\":12.35,\"valueBigDecimal\":12.35,\"value\":12.35}";
-		
-		oson = new Oson();
 
-		oson.setPrecision(5).setScale(1);
+		oson.clear().setPrecision(5).setScale(1);
 		String json = oson.serialize(value);
 		assertEquals(expected51, json);
 		json = oson.serialize(valueDouble);
@@ -324,10 +322,8 @@ public class PrecisionScaleTest extends TestCaseBase {
 		String expected51 = "12.3";
 		String expected30 = "12";
 		String expectedDecimal = "{\"valueDouble\":12.35,\"valueBigDecimal\":12.35,\"value\":12.35}";
-		
-		oson = new Oson();
 
-		oson.setPrecision(5).setScale(1);
+		oson.clear().setPrecision(5).setScale(1);
 		oson.setClassMappers(new ca.oson.json.Oson.ClassMapper[] {
 		new ca.oson.json.Oson.ClassMapper(Float.class).setPrecision(3).setScale(0),
 		new ca.oson.json.Oson.ClassMapper(Decimal.class).setPrecision(8).setScale(5)
@@ -359,10 +355,8 @@ public class PrecisionScaleTest extends TestCaseBase {
 		String expected51 = "12.3";
 		String expected30 = "12";
 		String expectedDecimal = "{\"valueDouble\":12.35,\"valueBigDecimal\":12.35,\"value\":12.3}";
-		
-		oson = new Oson();
 
-		oson.setPrecision(5).setScale(1);
+		oson.clear().setPrecision(5).setScale(1);
 		oson.setClassMappers(new ca.oson.json.Oson.ClassMapper[] {
 		new ca.oson.json.Oson.ClassMapper(Float.class).setPrecision(3).setScale(0),
 		new ca.oson.json.Oson.ClassMapper(Decimal2.class).setPrecision(8).setScale(5)
@@ -392,10 +386,9 @@ public class PrecisionScaleTest extends TestCaseBase {
 		
 		String expected51 = "12.3";
 		String expected30 = "12";
-		String expectedDecimal = "{\"valueDouble\":12.35,\"valueBigDecimal\":12.35,\"value\":12.345700}";
-		oson = new Oson();
+		String expectedDecimal = "{\"valueDouble\":12.35,\"valueBigDecimal\":12.35,\"newFloatFieldName\":12.345700}";
 
-		oson.setPrecision(5).setScale(1);
+		oson.clear().setPrecision(5).setScale(1);
 		oson.setClassMappers(new ca.oson.json.Oson.ClassMapper[] {
 		new ca.oson.json.Oson.ClassMapper(Float.class).setPrecision(3).setScale(0),
 		new ca.oson.json.Oson.ClassMapper(Decimal2.class).setPrecision(8).setScale(5)

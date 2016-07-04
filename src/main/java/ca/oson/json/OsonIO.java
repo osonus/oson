@@ -90,16 +90,18 @@ public class OsonIO extends Oson {
 		writeValue(writer, value);
 	}
 	
-	private void print(Consumer c, Object value) {
-		c.accept(this.toJson(value));
+	private <T> String print(Consumer c, T value) {
+		String str = this.toJson(value);
+		c.accept(str);
+		return str;
 	}
 	
-	public void print(Object value) {
-		print(System.out::println, value);
+	public <T> String print(T value) {
+		return print(System.out::println, value);
 	}
 	
-	public void printerr(Object value) {
-		print(System.err::println, value);
+	public <T> String printerr(T value) {
+		return print(System.err::println, value);
 	}
 	
 	

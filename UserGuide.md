@@ -412,13 +412,19 @@ Here are the list of atributes you can set in order to make it the way you want 
 		 * Maximum value a number can be, if required, or use default setting
 		 */
 		private Long max = null;
-
+		
 		/*
 		 * When process methods of a class, only use methods starting with "get"
 		 * or "set", otherwise, any no-arg method returning values are considered as get,
 		 * any method that accepts 1 value are considered set, excluding constructors
 		 */
 		private boolean setGetOnly = false;
+		
+		/*
+		 * Determine if a field object should inherit its field mapper configuration
+		 * during the processing of its own data: its class mapper and its fields' field mappers
+		 */
+		private boolean inheritMapping = true;
 
 		/*
 		 * class level configurations
@@ -762,7 +768,7 @@ If curious, you can see how it works by using any IDE in debug mode.
 ### <a name="TOC-Deserialize-Lambda-Expression"></a>How to Use Lambda Expression to Deserialize Java Object
 
 To deserialize a class object, you can provide a deserializer using lambda expression. Here is interface you use:
-oson.setDeserializer(Class<T> type, Function deserializer), or oson.setDeserializer(Class<T> type, Json2ClassDataFunction deserializer). The two versions are overloading each other. All Oson deserializer interfaces are @FunctionalInterface, and they still support overloading, the reason behind this is that Java provides an nice feature: default method in an interface. In this case, it looks like this:
+oson.setDeserializer(Class<T> type, Function deserializer), or oson.setDeserializer(Class<T> type, Json2DataMapperFunction deserializer). The two versions are overloading each other. All Oson deserializer interfaces are @FunctionalInterface, and they still support overloading, the reason behind this is that Java provides an nice feature: default method in an interface. In this case, it looks like this:
 
 ```java
 	public static interface OsonFunction extends Function {
@@ -778,23 +784,23 @@ oson.setDeserializer(Class<T> type, Function deserializer), or oson.setDeseriali
 	}
 	
 	@FunctionalInterface
-	public static interface Json2ClassDataFunction extends OsonFunction {
-		public <T> T apply(ClassData classData);
+	public static interface Json2DataMapperFunction extends OsonFunction {
+		public <T> T apply(DataMapper classData);
 	}
 ```
 
-If you provide a specific parameter, it will use it, which is Json2ClassDataFunction. Otherwise, it will use the generic one, which is java.util.function.Function. Here is the rule for handling a deserializer: if it returns an object of expected (which is Class<T> type), it will use this object as the deserialized product and return it. If the deserializer returns a null, then Oson uses this as your intention to ignore this class and returns null. Any other cases, Oson will continue its normal routine, which is to continue the deserialization process.
+If you provide a specific parameter, it will use it, which is Json2DataMapperFunction. Otherwise, it will use the generic one, which is java.util.function.Function. Here is the rule for handling a deserializer: if it returns an object of expected (which is Class<T> type), it will use this object as the deserialized product and return it. If the deserializer returns a null, then Oson uses this as your intention to ignore this class and returns null. Any other cases, Oson will continue its normal routine, which is to continue the deserialization process.
 
 Here is an example of lambda expression as a deserializer:
 
 ```java
 	   @Test
-	   public void testDeserializeListWithClassData() {
+	   public void testDeserializeListWithDataMapper() {
 		   Car car = new Car("Chevron", 2);
 		   
 		   String json = oson.serialize(car);
 
-		   Json2ClassDataFunction function = (ClassData p) -> {
+		   Json2DataMapperFunction function = (DataMapper p) -> {
 			   Map<String, Object> data = p.getMap();
 			   Car newcar = (Car) p.getObj();
 			   
@@ -819,7 +825,7 @@ Here is an example of lambda expression as a deserializer:
 	   }
 ```
 
-The ClassData parameter to function Json2ClassDataFunction provides lots of detailed information to help you build your own version of deserializer.
+The DataMapper parameter to function Json2DataMapperFunction provides lots of detailed information to help you build your own version of deserializer.
 
 
 

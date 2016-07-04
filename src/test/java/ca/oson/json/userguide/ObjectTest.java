@@ -1,17 +1,15 @@
 package ca.oson.json.userguide;
 
-import java.io.File;
-
 import org.junit.Test;
 
 import com.google.gson.GsonBuilder;
 
 import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.OsonIO;
-import ca.oson.json.domain.Support;
 import ca.oson.json.domain.Volume;
 import ca.oson.json.domain.VolumeContainer;
 import ca.oson.json.support.TestCaseBase;
+
 
 public class ObjectTest extends TestCaseBase {
 

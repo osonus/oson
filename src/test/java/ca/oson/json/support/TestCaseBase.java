@@ -2,17 +2,18 @@ package ca.oson.json.support;
 
 import org.junit.Before;
 
-import ca.oson.json.Oson;
 import ca.oson.json.Oson.JSON_PROCESSOR;
+import ca.oson.json.OsonIO;
 import junit.framework.TestCase;
 
 public abstract class TestCaseBase extends TestCase {
-	protected Oson oson;
+	protected OsonIO oson;
 	public static JSON_PROCESSOR processor = JSON_PROCESSOR.OSON;
 	
    @Before 
    public void setUp() {
-	   oson = new Oson().setJsonProcessor(processor);
+	   oson = new OsonIO();
+	   oson.setJsonProcessor(processor);
    }
    
    

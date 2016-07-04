@@ -42,7 +42,7 @@ public class ListTest extends TestCaseBase {
 	   String value = "[\"Chevrolet Malibu\",\"Ford Mondeo\",\"Toyota Camry\"]";
 	   List<String> expected = Arrays.asList("Chevrolet Malibu", "Ford Mondeo", "Toyota Camry");
 
-	   Json2ClassDataFunction function = (ClassData p) -> expected;
+	   Json2DataMapperFunction function = (DataMapper p) -> expected;
 	   List<String> result = oson.setClassMappers(new ClassMapper(List.class).setDeserializer(
 			   function
 			   ))
@@ -58,7 +58,7 @@ public class ListTest extends TestCaseBase {
 
 	   // Json2ClassDataFunction fucntion = (ClassData p) -> (Collection)(((Collection)p.getObj()).stream().map(item -> item.toString().toUpperCase()).collect(Collectors.toList()));
 	   List<String> result = oson.setClassMappers(new ClassMapper(List.class).setDeserializer(
-			   (ClassData p) -> (Collection)(((Collection)p.getObj()).stream().map(item -> item.toString().toUpperCase()).collect(Collectors.toList()))
+			   (DataMapper p) -> (Collection)(((Collection)p.getObj()).stream().map(item -> item.toString().toUpperCase()).collect(Collectors.toList()))
 			   ))
 			   .deserialize(value, List.class);
 

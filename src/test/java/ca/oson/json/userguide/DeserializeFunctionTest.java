@@ -7,8 +7,8 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import ca.oson.json.Oson.ClassData;
-import ca.oson.json.Oson.Json2ClassDataFunction;
+import ca.oson.json.Oson.DataMapper;
+import ca.oson.json.Oson.Json2DataMapperFunction;
 import ca.oson.json.domain.Car;
 import ca.oson.json.support.TestCaseBase;
 import static org.junit.Assert.assertNotEquals;
@@ -21,7 +21,7 @@ public class DeserializeFunctionTest extends TestCaseBase {
 		   
 		   String json = oson.serialize(car);
 
-		   Json2ClassDataFunction function = (ClassData p) -> {
+		   Json2DataMapperFunction function = (DataMapper p) -> {
 			   Map<String, Object> data = p.getMap();
 			   Car newcar = (Car) p.getObj();
 			   
