@@ -9,6 +9,7 @@ import ca.oson.json.userguide.ConfigInheritanceTest;
 import ca.oson.json.userguide.DeserializeFunctionTest;
 import ca.oson.json.userguide.NewInstanceTest;
 import ca.oson.json.userguide.ObjectTest;
+import ca.oson.json.userguide.OptionalTest;
 import ca.oson.json.userguide.PrimitivesTest;
 import ca.oson.json.userguide.SerializeCarTest;
 
@@ -21,7 +22,8 @@ import ca.oson.json.userguide.SerializeCarTest;
 	SerializeCarTest.class,
 	NewInstanceTest.class,
 	DeserializeFunctionTest.class,
-	ConfigInheritanceTest.class
+	ConfigInheritanceTest.class,
+	OptionalTest.class
 })
 public class UserGuideTestSuite {
 

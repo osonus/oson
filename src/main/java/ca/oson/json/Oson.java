@@ -8169,7 +8169,7 @@ public class Oson {
 	}
 	
 	
-	private <E, R> Class getComponentType(FieldData newFieldData) {
+	private <E, R> Class guessComponentType(FieldData newFieldData) {
 		boolean json2Java = newFieldData.json2Java;
 		
 		if (!json2Java) {
@@ -8177,44 +8177,84 @@ public class Oson {
 		} else {
 			E obj = (E) newFieldData.valueToProcess;
 			
+			ComponentType type = newFieldData.componentType;
+			
 			Class returnType = newFieldData.returnType;
 			Class itemType = obj.getClass();
+			String returnTypeName = null;
+			if (returnType != null) {
+				returnTypeName = returnType.getName();
+			}
+			String itemTypeName = itemType.getName();
 			
+			int returnTypeCount = 0;
+			int itemTypeCount = 0;
 			String toGenericString = null;
 			Class fieldType = null;
 			if (newFieldData.field != null) {
 				toGenericString = newFieldData.field.toGenericString();
 				fieldType = ObjectUtil.getComponentType(toGenericString);
+				if (returnTypeName != null && toGenericString.indexOf(returnTypeName) > -1) {
+					returnTypeCount++;
+				}
+				if (itemTypeName != null && toGenericString.indexOf(itemTypeName) > -1) {
+					itemTypeCount++;
+				}
 			}
 			if (fieldType == null && returnType != null) {
 				toGenericString = returnType.toGenericString();
 				fieldType = ObjectUtil.getComponentType(toGenericString);
+				if (returnTypeName != null && toGenericString.indexOf(returnTypeName) > -1) {
+					returnTypeCount++;
+				}
+				if (itemTypeName != null && toGenericString.indexOf(itemTypeName) > -1) {
+					itemTypeCount++;
+				}
 			}
 			if (fieldType == null && newFieldData.setter != null) {
 				toGenericString = newFieldData.setter.toGenericString();
 				fieldType = ObjectUtil.getComponentType(toGenericString);
+				if (returnTypeName != null && toGenericString.indexOf(returnTypeName) > -1) {
+					returnTypeCount++;
+				}
+				if (itemTypeName != null && toGenericString.indexOf(itemTypeName) > -1) {
+					itemTypeCount++;
+				}
 				
 				if (fieldType == null) {
 					Class[] types = newFieldData.setter.getParameterTypes();
 					if (types != null && types.length > 0) {
 						toGenericString = types[0].toGenericString();
 						fieldType = ObjectUtil.getComponentType(toGenericString);
+						if (returnTypeName != null && toGenericString.indexOf(returnTypeName) > -1) {
+							returnTypeCount++;
+						}
+						if (itemTypeName != null && toGenericString.indexOf(itemTypeName) > -1) {
+							itemTypeCount++;
+						}
 					}
 				}
 			}
 
 			if (fieldType != null) {
-				if (newFieldData.returnType == Optional.class) {
-					newFieldData.returnType = fieldType;
+				if (returnTypeCount < itemTypeCount) {
+					newFieldData.returnType = itemType;
+				}
+
+				if (type == null) {
+					type = new ComponentType(newFieldData.returnType, fieldType);
 				} else {
-					newFieldData.componentType = new ComponentType(newFieldData.returnType, fieldType);
+					type.add(fieldType);
+				}
+				newFieldData.componentType = type;
+				
+				if (newFieldData.returnType == Object.class) {
+					newFieldData.returnType = fieldType;
 				}
 				
 				return fieldType;
 			}
-			
-			
-			
+
 			if (returnType != null) {
 				Class comptype = returnType.getComponentType();
 				if (comptype != null) {
@@ -8222,29 +8262,48 @@ public class Oson {
 				}
 			}
 			
-			
-			ComponentType type = newFieldData.componentType;
-			
+
 			if ( (returnType != null && Map.class.isAssignableFrom(returnType)) || Map.class.isAssignableFrom(itemType)) {
 				String className = ((Map<String, String>)obj).get(getJsonClassType());
 				if (className != null && className.length() > 0) {
 					try {
 						// figure out obj's class
-						newFieldData.returnType = Class.forName(className);
+						fieldType = Class.forName(className);
 						
-						return newFieldData.returnType;
+						if (type == null) {
+							if (newFieldData.returnType != fieldType) {
+								type = new ComponentType(newFieldData.returnType, fieldType);
+								newFieldData.componentType = type;
+							}
+							
+						} else {
+							type.add(fieldType);
+							newFieldData.componentType = type;
+						}
+						newFieldData.returnType = fieldType;
+
+						return fieldType;
 						
 					} catch (ClassNotFoundException e) {
 						// e.printStackTrace();
 					}
 				}
+				
+				if (returnTypeCount > 0 && !Map.class.isAssignableFrom(returnType)
+						&& !Collection.class.isAssignableFrom(returnType) && returnType != Optional.class && returnType != Object.class) {
+					if (type != null) {
+						type.add(returnType);
+					}
+
+					return returnType;
+				}
 
 				if (type != null) {
 					Class[] ctypes = type.getComponentClassType();
 					if (ctypes != null && ctypes.length > 0) {
-						if (ctypes.length == 1) {
-							return ctypes[0];
-						}
+//						if (ctypes.length == 1) {
+//							return ctypes[0];
+//						}
 						int length = ctypes.length;
 						
 						
@@ -8272,6 +8331,8 @@ public class Oson {
 						}
 						
 						if (maxIdx > -1) {
+							newFieldData.returnType = ctypes[maxIdx];
+							
 							return ctypes[maxIdx];
 						}
 						
@@ -8286,13 +8347,13 @@ public class Oson {
 				if (type != null) {
 					Class[] ctypes = type.getComponentClassType();
 					if (ctypes != null && ctypes.length > 0) {
-						if (ctypes.length == 1) {
-							Class cmptype = ctypes[0].getComponentType();
-							if (cmptype != null && (cmptype.isArray() || Collection.class.isAssignableFrom(cmptype))) {
-								type.add(cmptype);
-							}
-							return ctypes[0];
-						}
+//						if (ctypes.length == 1) {
+//							Class cmptype = ctypes[0].getComponentType();
+//							if (cmptype != null && (cmptype.isArray() || Collection.class.isAssignableFrom(cmptype))) {
+//								type.add(cmptype);
+//							}
+//							return ctypes[0];
+//						}
 						
 						int length = ctypes.length;
 						int depth = CollectionArrayTypeGuesser.getDepth(obj);
@@ -8411,7 +8472,7 @@ public class Oson {
 						Object obj = entry.getValue(); // obj.getClass()
 						FieldData newFieldData = new FieldData(obj, obj.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
 						newFieldData.componentType = objectDTO.componentType;
-						newFieldData.returnType = getComponentType(newFieldData);
+						newFieldData.returnType = guessComponentType(newFieldData);
 						newFieldData.fieldMapper = objectDTO.fieldMapper;
 						returnObj.put(entry.getKey(), json2Object(newFieldData));
 					}
@@ -8629,7 +8690,7 @@ public class Oson {
 					if (val != null) {
 						FieldData newFieldData = new FieldData(val, objectDTO.returnType, objectDTO.json2Java, objectDTO.level, objectDTO.set);
 						newFieldData.componentType = objectDTO.componentType;
-						newFieldData.returnType = getComponentType(newFieldData);
+						newFieldData.returnType = guessComponentType(newFieldData);
 						newFieldData.fieldMapper = objectDTO.fieldMapper;
 						returnObj.add(json2Object(newFieldData));
 					}
@@ -8827,7 +8888,7 @@ public class Oson {
 					if (val != null) {
 						FieldData newFieldData = new FieldData(val, objectDTO.returnType, objectDTO.json2Java, objectDTO.level, objectDTO.set);
 						newFieldData.componentType = objectDTO.componentType;
-						newFieldData.returnType = getComponentType(newFieldData);
+						newFieldData.returnType = guessComponentType(newFieldData);
 						newFieldData.fieldMapper = objectDTO.fieldMapper;
 						E object = json2Object(newFieldData);
 						arr[i++] = object;
@@ -8896,7 +8957,7 @@ public class Oson {
 				Object componentValue = Array.get(value, i);
 				FieldData newFieldData = new FieldData(componentValue, componentValue.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
 				newFieldData.componentType = objectDTO.componentType;
-				newFieldData.returnType = getComponentType(newFieldData);
+				newFieldData.returnType = guessComponentType(newFieldData);
 				newFieldData.fieldMapper = objectDTO.fieldMapper;
 				String str = object2Json(newFieldData);
 				if (str != null && str.length() > 0) {
@@ -9052,7 +9113,7 @@ public class Oson {
 			
 			Class<E> componentType = (Class<E>) returnType.getComponentType();
 			if (componentType == null) {
-				componentType = getComponentType(objectDTO);
+				componentType = guessComponentType(objectDTO);
 			}
 			if (componentType == null) {
 				componentType = CollectionArrayTypeGuesser.guessElementType(values, returnType,  getJsonClassType());
@@ -9224,7 +9285,7 @@ public class Oson {
 				for (Object s : collection) {
 					FieldData newFieldData = new FieldData(s, s.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
 					newFieldData.componentType = objectDTO.componentType;
-					newFieldData.returnType = getComponentType(newFieldData);
+					newFieldData.returnType = guessComponentType(newFieldData);
 					newFieldData.fieldMapper = objectDTO.fieldMapper;
 					String str = object2Json(newFieldData);
 					if (str != null && str.length() > 0) {
@@ -9784,6 +9845,9 @@ public class Oson {
 	}
 
 	private static <T> Field[] getFields(Class<T> valueType) {
+		if (valueType == null) {
+			return null;
+		}
 		if (cachedFields.containsKey(valueType)) {
 			return cachedFields.get(valueType);
 		}
@@ -12548,7 +12612,7 @@ public class Oson {
 					FieldData fieldData = new FieldData(obj, f, value, returnType, true, fieldMapper);
 					fieldData.componentType = objectDTO.componentType;
 					fieldData.setter = setter;
-					Class fieldType = getComponentType(fieldData);
+					Class fieldType = guessComponentType(fieldData);
 					value = json2Object(fieldData);
 
 					if (StringUtil.isNull(value)) {
@@ -12874,7 +12938,7 @@ public class Oson {
 					FieldData fieldData = new FieldData(obj, null, value, returnType, true, fieldMapper);
 					fieldData.setter = setter;
 					fieldData.componentType = objectDTO.componentType;
-					Class fieldType = getComponentType(fieldData);
+					Class fieldType = guessComponentType(fieldData);
 
 					value = json2Object(fieldData);
 
@@ -14595,7 +14659,10 @@ public class Oson {
 		}
 		
 		public ComponentType add(Class componentClass) {
-			if (!(new HashSet(Arrays.asList(this.componentTypes)).contains(componentClass))) {
+			if (componentClass == null) {
+				return this;
+			}
+			if (!(new HashSet(Arrays.asList(this.componentTypes)).contains(componentClass)) && componentClass != type) {
 				int length = this.componentTypes.length;
 				this.componentTypes = Arrays.copyOf(this.componentTypes, length + 1);
 				this.componentTypes[length] = componentClass;

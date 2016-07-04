@@ -1,7 +1,11 @@
 package ca.oson.json.listarraymap;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.Test;
 
@@ -154,6 +158,63 @@ public class ArrayTest extends TestCaseBase {
 		   for (int i = 0; i < result.length; i++) {
 			   assertEquals(expected[i], result[i]);
 		   }
+	   }
+	   
+	   
+	   @Test
+	   public void testDeserializeArrayBigInteger() {
+		   BigInteger[] expected = new BigInteger[]{BigInteger.valueOf(12),BigInteger.valueOf(205),BigInteger.valueOf(407)};
+		   String value = "[12,205,407]";
+		   
+		   BigInteger[] result = oson.deserialize(value, expected.getClass());
+
+		   for (int i = 0; i < result.length; i++) {
+			   assertEquals(expected[i], result[i]);
+		   }
+	   }
+	   
+	   @Test
+	   public void testDeserializeArrayBigDecimal() {
+		   String expected = "[12.234,205.12345,407.897]";
+		   
+		   BigDecimal[] data = oson.deserialize(expected, BigDecimal[].class);
+		   
+		   String json = oson.serialize(data);
+
+		   assertEquals(expected, json);
+	   }
+	   
+	   @Test
+	   public void testDeserializeArrayAtomicInteger() {
+		   String expected = "[12234,20512345,407897]";
+		   
+		   AtomicInteger[] data = oson.deserialize(expected, AtomicInteger[].class);
+		   
+		   String json = oson.serialize(data);
+
+		   assertEquals(expected, json);
+	   }
+	   
+	   @Test
+	   public void testDeserializeArrayAtomicLong() {
+		   String expected = "[12234,20512345,407897]";
+		   
+		   AtomicLong[] data = oson.deserialize(expected, AtomicLong[].class);
+		   
+		   String json = oson.serialize(data);
+
+		   assertEquals(expected, json);
+	   }
+	   
+	   @Test
+	   public void testDeserializeArrayAtomicLong2() {
+		   String expected = "[[12234,56438],[20512345,97654],[407897,129385]]";
+		   
+		   AtomicLong[][] data = oson.deserialize(expected, AtomicLong[][].class);
+		   
+		   String json = oson.serialize(data);
+
+		   assertEquals(expected, json);
 	   }
 	   
 }
