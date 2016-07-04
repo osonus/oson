@@ -125,6 +125,7 @@ import com.google.gson.annotations.Since;
 
 
 
+
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtField;
@@ -2271,7 +2272,7 @@ public class Oson {
 		//public Map<String, Object> mapToProcess;
 
 		// keeps type information
-		public ComponentType componentType = null;
+		//public ComponentType componentType = null;
 		public boolean json2Java = true;
 
 		// extra field information
@@ -2327,6 +2328,14 @@ public class Oson {
 		public boolean required() {
 			return (this.required != null && this.required);
 		}
+		
+		private Class getEnclosingtype() {
+			if (enclosingtype == null && enclosingObj != null) {
+				enclosingtype = (Class<T>) enclosingObj.getClass();
+			}
+			
+			return enclosingtype;
+		}
 
 		public FieldData(T enclosingObj, Field field, E valueToProcess,
 				Class<R> returnType, boolean json2Java, FieldMapper fieldMapper) {
@@ -2373,27 +2382,17 @@ public class Oson {
 			this.set = Collections.synchronizedSet(new HashSet());
 		}
 		
-		public FieldData(E valueToProcess, Class<R> returnType, ComponentType componentType, boolean json2Java) {
+		public FieldData(E valueToProcess, Class<R> returnType, boolean json2Java) {
 			this.valueToProcess = valueToProcess;
 			this.returnType = returnType;
 			this.json2Java = json2Java;
 			this.returnObj = returnObj;
-			this.componentType = componentType;
 			this.level = 0;
 			this.set = Collections.synchronizedSet(new HashSet());
 		}
 		
-		public FieldData(E valueToProcess, ComponentType componentType, boolean json2Java) {
+		public FieldData(E valueToProcess, boolean json2Java) {
 			this.valueToProcess = valueToProcess; // value to interpret
-			this.componentType = componentType; // generic type information
-			this.json2Java = json2Java;
-			this.level = 0;
-			this.set = Collections.synchronizedSet(new HashSet());
-		}
-		
-		public FieldData(E valueToProcess, Class<R> returnType, boolean json2Java) {
-			this.valueToProcess = valueToProcess; // value to interpret
-			this.returnType = returnType; // generic type information
 			this.json2Java = json2Java;
 			this.level = 0;
 			this.set = Collections.synchronizedSet(new HashSet());
@@ -2415,9 +2414,6 @@ public class Oson {
 			
 			if (enclosingObj != null) {
 				enclosingtype = (Class<T>) enclosingObj.getClass();
-			}
-			if (enclosingtype == null && componentType != null) {
-				enclosingtype = (Class<T>) componentType.getClass();
 			}
 			if (enclosingtype == null && classMapper != null) {
 				enclosingtype = classMapper.type;
@@ -2639,10 +2635,6 @@ public class Oson {
 		public Class getComponentType(String jsonClassType) {
 			Class<E> componentType = (Class<E>) returnType.getComponentType();
 			if (componentType == null) {
-				if (this.componentType != null) {
-					componentType = this.componentType.getMainComponentType();
-				}
-				
 				if (componentType == null && valueToProcess != null && Collection.class.isAssignableFrom(valueToProcess.getClass())) {
 					Collection<E> values = (Collection<E>) valueToProcess;
 					
@@ -2683,6 +2675,8 @@ public class Oson {
 	// there are caching mechanism, should be safe to be shared across
 	private static Map<Class, Field[]> cachedFields = new ConcurrentHashMap<>();
 	private static Map<String, Map <String, Method>[]> cachedMethods = new ConcurrentHashMap<>();
+	private static Map<Class, ComponentType> cachedComponentTypes = new ConcurrentHashMap<>();
+	private Class masterClass = null;
 
 	////////////////////////////////////////////////////////////////////////////////
 	// END OF variables and class definition
@@ -2729,7 +2723,7 @@ public class Oson {
 	}
 
 	public Oson configure(Map<String, Object> map) {
-		Options options = this.deserialize2Object(map, Options.class, null, null);
+		Options options = this.deserialize2Object(map, Options.class, null);
 
 		return configure(options);
 	}
@@ -3984,6 +3978,7 @@ public class Oson {
 		reset();
 		cachedFields = new ConcurrentHashMap<>();
 		cachedMethods = new ConcurrentHashMap<>();
+		cachedComponentTypes = new ConcurrentHashMap<>();
 		return this;
 	}
 	
@@ -8169,6 +8164,57 @@ public class Oson {
 	}
 	
 	
+	
+	private ComponentType cachedComponentTypes(ComponentType componentType) {
+		Class ClassType = componentType.getClassType();
+		Class[] componentClassTypes = componentType.getComponentClassType();
+		
+		if (this.masterClass == null) {
+			this.masterClass = ClassType;
+		}
+		
+		ComponentType oldComponentType = cachedComponentTypes.get(masterClass);
+		
+		if (oldComponentType == null) {
+			cachedComponentTypes.put(this.masterClass, componentType);
+			
+		} else if (componentClassTypes != null) {
+			for (Class componentClassType: componentClassTypes) {
+				oldComponentType.add(componentClassType);
+			}
+		}
+		
+		return oldComponentType;
+	}
+	
+	
+	private ComponentType cachedComponentTypes(Class classType) {
+		if (classType == null) {
+			return null;
+		}
+		
+		if (this.masterClass == null) {
+			this.masterClass = classType;
+		}
+		
+		ComponentType oldComponentType = cachedComponentTypes.get(masterClass);
+		
+		if (oldComponentType == null) {
+			oldComponentType = new ComponentType(classType);
+			cachedComponentTypes.put(this.masterClass, oldComponentType);
+		}
+		
+		return oldComponentType;
+	}
+	
+	private ComponentType getComponentType() {
+		if (this.masterClass == null) {
+			return null;
+		}
+		
+		return cachedComponentTypes.get(masterClass);
+	}
+	
 	private <E, R> Class guessComponentType(FieldData newFieldData) {
 		boolean json2Java = newFieldData.json2Java;
 		
@@ -8177,7 +8223,14 @@ public class Oson {
 		} else {
 			E obj = (E) newFieldData.valueToProcess;
 			
-			ComponentType type = newFieldData.componentType;
+			ComponentType type = getComponentType();
+			if (type == null) {
+				Class enclosingtype = newFieldData.getEnclosingtype();
+				if (enclosingtype != null) {
+					type = cachedComponentTypes(enclosingtype);
+				}
+			}
+			
 			
 			Class returnType = newFieldData.returnType;
 			Class itemType = obj.getClass();
@@ -8243,11 +8296,12 @@ public class Oson {
 
 				if (type == null) {
 					type = new ComponentType(newFieldData.returnType, fieldType);
+					type = cachedComponentTypes(type);
+					
 				} else {
 					type.add(fieldType);
 				}
-				newFieldData.componentType = type;
-				
+
 				if (newFieldData.returnType == Object.class) {
 					newFieldData.returnType = fieldType;
 				}
@@ -8273,12 +8327,11 @@ public class Oson {
 						if (type == null) {
 							if (newFieldData.returnType != fieldType) {
 								type = new ComponentType(newFieldData.returnType, fieldType);
-								newFieldData.componentType = type;
+								type = cachedComponentTypes(type);
 							}
 							
 						} else {
 							type.add(fieldType);
-							newFieldData.componentType = type;
 						}
 						newFieldData.returnType = fieldType;
 
@@ -8300,6 +8353,7 @@ public class Oson {
 
 				if (type != null) {
 					Class[] ctypes = type.getComponentClassType();
+					float MIN_MAX_COUNT = 20.0f;
 					if (ctypes != null && ctypes.length > 0) {
 //						if (ctypes.length == 1) {
 //							return ctypes[0];
@@ -8308,41 +8362,106 @@ public class Oson {
 						
 						
 						Map<String, R> map = (Map)obj;
-						
-						Set<String> names = map.keySet();
+
+						Map<String, Class> lnames = new HashMap<>(); //names.stream().map(name -> name.toLowerCase()).collect(Collectors.toSet());
+						for (String name: map.keySet()) {
+							lnames.put(name.toLowerCase(), map.get(name).getClass());
+						}
 						int maxIdx = -1;
-						int maxCount = 0;
+						float maxCount = 0.0f;
 						for (int i = 0; i < length; i++) {
 							Class ctype = ctypes[i];
-							int count = 0;
+							
 							Field[] fields = getFields(ctype);
-							for (Field field: fields) {
-								String name = field.getName().toLowerCase();
-								if (names.contains(name)) {
-									count++;
+							if (fields != null && fields.length > 0) {
+								int count = 0;
+								
+								for (Field field: fields) {
+									String name = field.getName().toLowerCase();
+									if (lnames.containsKey(name)) {
+										count++;
+										
+										Class ftype = field.getType();
+										Class mtype = lnames.get(name);
+										if (ObjectUtil.isSameType(ftype, mtype)) {
+											count++;
+										}
+									}
 								}
-							}
-							if (count > maxCount) {
-								maxCount = count;
-								maxIdx = i;
-							} else if (maxIdx == -1 && ctype.isAssignableFrom(itemType)) {
-								maxIdx = i;
+								float currentCount = count * 100.0f / fields.length;
+								if (currentCount > maxCount) {
+									maxCount = currentCount;
+									maxIdx = i;
+								} else if (maxIdx == -1 && ctype.isAssignableFrom(itemType)) {
+									maxIdx = i;
+								}
 							}
 						}
 						
 						if (maxIdx > -1) {
 							newFieldData.returnType = ctypes[maxIdx];
-							
+
 							return ctypes[maxIdx];
 						}
 						
-						// maybe case sensitive issue
-						// can do more by comparing type at the same time
+						// now try to locate it in all cachedComponentTypes
+						for (Entry<Class, ComponentType> entry: cachedComponentTypes.entrySet()) {
+							Class myMasterClass = entry.getKey();
+							
+							if (myMasterClass != this.masterClass && entry.getValue() != null) {
+								ctypes = entry.getValue().getComponentClassType();
+								if (ctypes != null) {
+									length = ctypes.length;
+									
+									maxCount = 0.0f;
+									for (int i = 0; i < length; i++) {
+										Class ctype = ctypes[i];
+										
+										Field[] fields = getFields(ctype);
+										if (fields != null && fields.length > 0) {
+											int count = 0;
+											
+											for (Field field: fields) {
+												String name = field.getName();
+												if (name != null) {
+													name = name.toLowerCase();
+													if (lnames.containsKey(name)) {
+														count++;
+														
+														Class ftype = field.getType();
+														Class mtype = lnames.get(name);
+														if (ObjectUtil.isSameType(ftype, mtype)) {
+															count++;
+														}
+													}
+												}
+											}
+											float currentCount = count * 100.0f / fields.length;
+											if (currentCount > maxCount) {
+												maxCount = currentCount;
+												maxIdx = i;
+											}
+//											else if (maxIdx == -1 && ctype.isAssignableFrom(itemType)) {
+//												maxIdx = i;
+//											}
+										}
+									}
+									
+									if (maxIdx > -1 && maxCount > MIN_MAX_COUNT) {
+										newFieldData.returnType = ctypes[maxIdx];
+										
+										type.add(ctypes[maxIdx]);
+										
+										return ctypes[maxIdx];
+									}
+								}
+							}
+						}
 					}
 					
 				}
 				
-			} else if (Collection.class.isAssignableFrom(itemType) || itemType.isArray()) {
+			} else if (itemType != null && (Collection.class.isAssignableFrom(itemType) || itemType.isArray())) {
 				//  && ComponentType.class.isAssignableFrom(erasedType.getClass())
 				if (type != null) {
 					Class[] ctypes = type.getComponentClassType();
@@ -8471,7 +8590,6 @@ public class Oson {
 					for (Entry<String, Object> entry: values.entrySet()) {
 						Object obj = entry.getValue(); // obj.getClass()
 						FieldData newFieldData = new FieldData(obj, obj.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
-						newFieldData.componentType = objectDTO.componentType;
 						newFieldData.returnType = guessComponentType(newFieldData);
 						newFieldData.fieldMapper = objectDTO.fieldMapper;
 						returnObj.put(entry.getKey(), json2Object(newFieldData));
@@ -8615,10 +8733,6 @@ public class Oson {
 		Collection<E> defaultValue = (Collection<E>)objectDTO.defaultValue;
 
 		if (returnType == null) {
-			if (objectDTO.componentType != null) {
-				returnType = objectDTO.componentType.getClassType();
-			}
-
 			if (returnType == null && returnObj != null) {
 				returnType = (Class<Collection<E>>) returnObj.getClass();
 			}
@@ -8689,7 +8803,6 @@ public class Oson {
 				for (E val : collection) {
 					if (val != null) {
 						FieldData newFieldData = new FieldData(val, objectDTO.returnType, objectDTO.json2Java, objectDTO.level, objectDTO.set);
-						newFieldData.componentType = objectDTO.componentType;
 						newFieldData.returnType = guessComponentType(newFieldData);
 						newFieldData.fieldMapper = objectDTO.fieldMapper;
 						returnObj.add(json2Object(newFieldData));
@@ -8808,10 +8921,6 @@ public class Oson {
 		E[] defaultValue = (E[])objectDTO.defaultValue;
 
 		if (returnType == null) {
-			if (objectDTO.componentType != null) {
-				returnType = objectDTO.componentType.getMainComponentType();
-			}
-
 			if (returnType == null && returnObj != null) {
 				returnType = (Class<E[]>) returnObj.getClass();
 			}
@@ -8887,7 +8996,6 @@ public class Oson {
 				for (Object val: values) {
 					if (val != null) {
 						FieldData newFieldData = new FieldData(val, objectDTO.returnType, objectDTO.json2Java, objectDTO.level, objectDTO.set);
-						newFieldData.componentType = objectDTO.componentType;
 						newFieldData.returnType = guessComponentType(newFieldData);
 						newFieldData.fieldMapper = objectDTO.fieldMapper;
 						E object = json2Object(newFieldData);
@@ -8956,7 +9064,6 @@ public class Oson {
 			for (int i = 0; i < size; i++) {
 				Object componentValue = Array.get(value, i);
 				FieldData newFieldData = new FieldData(componentValue, componentValue.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
-				newFieldData.componentType = objectDTO.componentType;
 				newFieldData.returnType = guessComponentType(newFieldData);
 				newFieldData.fieldMapper = objectDTO.fieldMapper;
 				String str = object2Json(newFieldData);
@@ -9160,7 +9267,7 @@ public class Oson {
 			
 
 			if (obj == null) {
-				return (E) deserialize2Object(mvalue, returnType, objectDTO.componentType, objectDTO.fieldMapper);
+				return (E) deserialize2Object(mvalue, returnType, objectDTO.fieldMapper);
 				
 			} else {
 				objectDTO.valueToProcess = mvalue;
@@ -9284,7 +9391,6 @@ public class Oson {
 			try {
 				for (Object s : collection) {
 					FieldData newFieldData = new FieldData(s, s.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
-					newFieldData.componentType = objectDTO.componentType;
 					newFieldData.returnType = guessComponentType(newFieldData);
 					newFieldData.fieldMapper = objectDTO.fieldMapper;
 					String str = object2Json(newFieldData);
@@ -11524,7 +11630,7 @@ public class Oson {
 			return obj;
 		}
 	}
-
+	
 
 	<T> T fromJsonMap(String source, Type type) {
 		try {
@@ -11537,15 +11643,17 @@ public class Oson {
 					componentType = new ComponentType(type);
 				}
 				valueType = componentType.getClassType();
+				
+				cachedComponentTypes(componentType);
 			}
-			
+
 			source = source.trim();
 			if (source.startsWith("[")) {
 				JSONArray obj = new JSONArray(source);
 
 				List list = (List)fromJsonMap(obj);
 
-				FieldData fieldData = new FieldData(list, componentType, true);
+				FieldData fieldData = new FieldData(list, true);
 				return json2Object(fieldData);
 
 			} else if (source.startsWith("{")) {
@@ -11554,12 +11662,12 @@ public class Oson {
 				Map<String, Object> map = (Map)fromJsonMap(obj);
 
 				if (Iterable.class.isAssignableFrom(valueType) || Map.class.isAssignableFrom(valueType)) {
-					FieldData fieldData = new FieldData(map, componentType, true);
+					FieldData fieldData = new FieldData(map, true);
 					fieldData.returnType = valueType;
 
 					return json2Object(fieldData);
 				} else {
-					return (T) deserialize2Object(map, valueType, componentType, null);
+					return (T) deserialize2Object(map, valueType, null);
 				}
 
 			} else {
@@ -11589,6 +11697,8 @@ public class Oson {
 				JSONArray obj = new JSONArray(source);
 
 				List list = (List)fromJsonMap(obj);
+				
+				cachedComponentTypes(valueType);
 
 				return json2Object(new FieldData(list, valueType, object, true));
 
@@ -11607,19 +11717,23 @@ public class Oson {
 						}
 					}
 				}
+				
+				cachedComponentTypes(valueType);
 
 				if (valueType != null && Map.class.isAssignableFrom(valueType)) {
 					return json2Object(new FieldData(map, valueType, object, true));
 
 				} else {
 					if (object == null) {
-						return deserialize2Object(map, valueType, null, null);
+						return deserialize2Object(map, valueType, null);
 					} else {
 						return deserialize2Object(new FieldData(map, valueType, object, true));
 					}
 				}
 
 			} else {
+				cachedComponentTypes(valueType);
+				
 				return json2Object(new FieldData(source, valueType, true));
 			}
 
@@ -11658,7 +11772,7 @@ public class Oson {
     	return null;
     }
 
-	<T> T deserialize2Object(Map<String, Object> map, Class<T> valueType, ComponentType componentType, FieldMapper fieldMapper) {
+	<T> T deserialize2Object(Map<String, Object> map, Class<T> valueType, FieldMapper fieldMapper) {
 		if (map == null) {
 			return null;
 		}
@@ -11667,7 +11781,6 @@ public class Oson {
 		
 		if (obj != null) {
 			FieldData fieldData = new FieldData(map, valueType, obj, true);
-			fieldData.componentType = componentType;
 			fieldData.fieldMapper = fieldMapper;
 			return deserialize2Object(fieldData);
 		} else {
@@ -11719,7 +11832,7 @@ public class Oson {
 			if (fieldType != null) {
 				// FieldData(Object valueToProcess, Type type, boolean json2Java)
 				ComponentType componentType = new ComponentType(parameterType, fieldType);
-				objectDTO = new FieldData(parameterValue, componentType, true);
+				objectDTO = new FieldData(parameterValue, true);
 			} else {
 				objectDTO = new FieldData(parameterValue, parameterType, true);
 			}
@@ -12610,7 +12723,6 @@ public class Oson {
 				
 				if (value != null) {
 					FieldData fieldData = new FieldData(obj, f, value, returnType, true, fieldMapper);
-					fieldData.componentType = objectDTO.componentType;
 					fieldData.setter = setter;
 					Class fieldType = guessComponentType(fieldData);
 					value = json2Object(fieldData);
@@ -12937,7 +13049,6 @@ public class Oson {
 					
 					FieldData fieldData = new FieldData(obj, null, value, returnType, true, fieldMapper);
 					fieldData.setter = setter;
-					fieldData.componentType = objectDTO.componentType;
 					Class fieldType = guessComponentType(fieldData);
 
 					value = json2Object(fieldData);
@@ -14658,11 +14769,20 @@ public class Oson {
 			fixTypeNames();
 		}
 		
+		public ComponentType(Class type) {
+			this.type = type;
+			fixTypeNames();
+		}
+		
 		public ComponentType add(Class componentClass) {
-			if (componentClass == null) {
+			if (componentClass == null || componentClass == type) {
 				return this;
 			}
-			if (!(new HashSet(Arrays.asList(this.componentTypes)).contains(componentClass)) && componentClass != type) {
+			if (componentTypes == null || componentTypes.length == 0) {
+				componentTypes = new Class[]{componentClass};
+			}
+			
+			if (!(new HashSet(Arrays.asList(this.componentTypes)).contains(componentClass))) {
 				int length = this.componentTypes.length;
 				this.componentTypes = Arrays.copyOf(this.componentTypes, length + 1);
 				this.componentTypes[length] = componentClass;
