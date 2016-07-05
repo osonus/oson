@@ -7,8 +7,8 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import ca.oson.json.Oson.DataMapper;
-import ca.oson.json.Oson.Json2DataMapperFunction;
+import ca.oson.json.DataMapper;
+import ca.oson.json.function.Json2DataMapperFunction;
 import ca.oson.json.domain.Car;
 import ca.oson.json.support.TestCaseBase;
 import static org.junit.Assert.assertNotEquals;

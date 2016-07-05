@@ -1,4 +1,4 @@
-package ca.oson.json;
+package ca.oson.json.annotation;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 

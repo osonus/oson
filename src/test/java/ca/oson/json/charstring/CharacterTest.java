@@ -2,8 +2,8 @@ package ca.oson.json.charstring;
 
 import org.junit.Test;
 
-import ca.oson.json.Oson.Character2JsonFunction;
-import ca.oson.json.Oson.ClassMapper;
+import ca.oson.json.function.Character2JsonFunction;
+import ca.oson.json.ClassMapper;
 import ca.oson.json.support.TestCaseBase;
 
 public class CharacterTest extends TestCaseBase {

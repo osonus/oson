@@ -2,6 +2,7 @@ package ca.oson.json.numeric;
 
 import org.junit.Test;
 
+import ca.oson.json.ClassMapper;
 import ca.oson.json.Oson.*;
 import ca.oson.json.support.TestCaseBase;
 

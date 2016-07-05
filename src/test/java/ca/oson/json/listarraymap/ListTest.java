@@ -7,6 +7,10 @@ import java.util.stream.Collectors;
 
 import org.junit.Test;
 
+import ca.oson.json.ClassMapper;
+import ca.oson.json.DataMapper;
+import ca.oson.json.function.Json2CollectionFunction;
+import ca.oson.json.function.Json2DataMapperFunction;
 import ca.oson.json.support.TestCaseBase;
 import ca.oson.json.Oson.*;
 

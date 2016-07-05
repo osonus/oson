@@ -4,7 +4,9 @@ import javax.persistence.EnumType;
 
 import org.junit.Test;
 
+import ca.oson.json.ClassMapper;
 import ca.oson.json.Oson.*;
+import ca.oson.json.function.Enum2JsonFunction;
 import ca.oson.json.support.TestCaseBase;
 
 public class EnumTest extends TestCaseBase {

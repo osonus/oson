@@ -4,11 +4,13 @@ import java.math.BigDecimal;
 
 import org.junit.Test;
 
+import ca.oson.json.ClassMapper;
+import ca.oson.json.FieldMapper;
 import ca.oson.json.Oson;
 import ca.oson.json.support.TestCaseBase;
 import static org.junit.Assert.assertNotEquals;
 
-//import ca.oson.json.Oson.ClassMapper;
+//import ca.oson.json.ClassMapper;
 
 public class PrecisionScaleTest extends TestCaseBase {
 
@@ -251,7 +253,7 @@ public class PrecisionScaleTest extends TestCaseBase {
 		Decimal decimal = new Decimal(value);
 		
 		String expected51 = "12.3";
-		String expected42 = "{\"valueDouble\":12.35,\"valueBigDecimal\":12.35,\"value\":12.35}";
+		String expected42 = "{\"valueDouble\":12.3,\"valueBigDecimal\":12.3,\"value\":12.3}";
 
 		oson.clear().setPrecision(5).setScale(1);
 		String json = oson.serialize(value);
@@ -262,6 +264,8 @@ public class PrecisionScaleTest extends TestCaseBase {
 		assertEquals(expected51, json);
 
 		json = oson.serialize(decimal);
+		
+		//System.err.println(json);
 		assertEquals(expected42, json);
 	}
 	
@@ -278,7 +282,7 @@ public class PrecisionScaleTest extends TestCaseBase {
 		String expected10null = "10";
 		
 		oson.clear().setPrecision(1).setScale(null);
-		oson.setClassMappers(new ca.oson.json.Oson.ClassMapper(Float.class).setPrecision(5).setScale(1));
+		oson.setClassMappers(new ca.oson.json.ClassMapper(Float.class).setPrecision(5).setScale(1));
 		String json = oson.serialize(value);
 		assertEquals(expected51, json);
 		json = oson.serialize(valueDouble);
@@ -287,7 +291,7 @@ public class PrecisionScaleTest extends TestCaseBase {
 		assertEquals(expected10, json);
 
 		oson.clear().setPrecision(5).setScale(1);
-		oson.setClassMappers(new ca.oson.json.Oson.ClassMapper(Float.class).setPrecision(5).setScale(5));
+		oson.setClassMappers(new ca.oson.json.ClassMapper(Float.class).setPrecision(5).setScale(5));
 		json = oson.serialize(value);
 		assertEquals(expected55, json);
 		json = oson.serialize(valueDouble);
@@ -296,7 +300,7 @@ public class PrecisionScaleTest extends TestCaseBase {
 		assertEquals(expected51, json);
 
 		oson.clear().setPrecision(5).setScale(5);
-		oson.setClassMappers(new ca.oson.json.Oson.ClassMapper(Float.class).setPrecision(1).setScale(0));
+		oson.setClassMappers(new ClassMapper(Float.class).setPrecision(1).setScale(0));
 		json = oson.serialize(value);
 		assertEquals(expected10, json);
 		json = oson.serialize(valueDouble);
@@ -304,7 +308,7 @@ public class PrecisionScaleTest extends TestCaseBase {
 		json = oson.serialize(valueBigDecimal);
 		assertEquals(expected55, json);
 		
-		oson.clear().setClassMappers(new ca.oson.json.Oson.ClassMapper(Float.class).setPrecision(1).setScale(null));
+		oson.clear().setClassMappers(new ClassMapper(Float.class).setPrecision(1).setScale(null));
 		json = oson.serialize(value);
 		assertEquals(expected10null, json);
 
@@ -321,12 +325,12 @@ public class PrecisionScaleTest extends TestCaseBase {
 		
 		String expected51 = "12.3";
 		String expected30 = "12";
-		String expectedDecimal = "{\"valueDouble\":12.35,\"valueBigDecimal\":12.35,\"value\":12}";
+		String expectedDecimal = "{\"valueDouble\":12.34568,\"valueBigDecimal\":12.34568,\"value\":12}";
 
 		oson.clear().setPrecision(5).setScale(1);
-		oson.setClassMappers(new ca.oson.json.Oson.ClassMapper[] {
-		new ca.oson.json.Oson.ClassMapper(Float.class).setPrecision(3).setScale(0),
-		new ca.oson.json.Oson.ClassMapper(Decimal.class).setPrecision(8).setScale(5)
+		oson.setClassMappers(new ClassMapper[] {
+		new ClassMapper(Float.class).setPrecision(3).setScale(0),
+		new ClassMapper(Decimal.class).setPrecision(8).setScale(5)
 		});
 		
 		String json = oson.serialize(value);
@@ -354,12 +358,12 @@ public class PrecisionScaleTest extends TestCaseBase {
 		
 		String expected51 = "12.3";
 		String expected30 = "12";
-		String expectedDecimal = "{\"valueDouble\":12.35,\"valueBigDecimal\":12.35,\"value\":12.3}";
+		String expectedDecimal = "{\"valueDouble\":12.34568,\"valueBigDecimal\":12.34568,\"value\":12.3}";
 
 		oson.clear().setPrecision(5).setScale(1);
-		oson.setClassMappers(new ca.oson.json.Oson.ClassMapper[] {
-		new ca.oson.json.Oson.ClassMapper(Float.class).setPrecision(3).setScale(0),
-		new ca.oson.json.Oson.ClassMapper(Decimal2.class).setPrecision(8).setScale(5)
+		oson.setClassMappers(new ClassMapper[] {
+		new ClassMapper(Float.class).setPrecision(3).setScale(0),
+		new ClassMapper(Decimal2.class).setPrecision(8).setScale(5)
 		});
 		
 		String json = oson.serialize(value);
@@ -386,13 +390,13 @@ public class PrecisionScaleTest extends TestCaseBase {
 		
 		String expected51 = "12.3";
 		String expected30 = "12";
-		String expectedDecimal = "{\"valueDouble\":12.35,\"valueBigDecimal\":12.35,\"newFloatFieldName\":12.345700}";
+		String expectedDecimal = "{\"valueDouble\":12.34568,\"valueBigDecimal\":12.34568,\"newFloatFieldName\":12.345700}";
 
 		oson.clear().setPrecision(5).setScale(1);
-		oson.setClassMappers(new ca.oson.json.Oson.ClassMapper[] {
-		new ca.oson.json.Oson.ClassMapper(Float.class).setPrecision(3).setScale(0),
-		new ca.oson.json.Oson.ClassMapper(Decimal2.class).setPrecision(8).setScale(5)
-		}).setFieldMappers(new ca.oson.json.Oson.FieldMapper("value", "newFloatFieldName", Decimal2.class).setPrecision(6).setScale(6));
+		oson.setClassMappers(new ClassMapper[] {
+		new ClassMapper(Float.class).setPrecision(3).setScale(0),
+		new ClassMapper(Decimal2.class).setPrecision(8).setScale(5)
+		}).setFieldMappers(new FieldMapper("value", "newFloatFieldName", Decimal2.class).setPrecision(6).setScale(6));
 		
 		String json = oson.serialize(value);
 		assertEquals(expected30, json);
@@ -410,7 +414,7 @@ public class PrecisionScaleTest extends TestCaseBase {
 }
 
 
-@ca.oson.json.ClassMapper (precision = 4, scale = 2)
+@ca.oson.json.annotation.ClassMapper (precision = 4, scale = 2)
 class Decimal {
 	float value;
 	Double valueDouble;
@@ -424,9 +428,9 @@ class Decimal {
 }
 
 
-@ca.oson.json.ClassMapper (precision = 4, scale = 2)
+@ca.oson.json.annotation.ClassMapper (precision = 4, scale = 2)
 class Decimal2 {
-	@ca.oson.json.FieldMapper (precision = 3, scale = 1)
+	@ca.oson.json.annotation.FieldMapper (precision = 3, scale = 1)
 	Float value;
 	
 	Double valueDouble;

@@ -6,8 +6,8 @@ import java.util.Date;
 
 import org.junit.Test;
 
-import ca.oson.json.Oson.ClassMapper;
-import ca.oson.json.Oson.Date2LongFunction;
+import ca.oson.json.ClassMapper;
+import ca.oson.json.function.Date2LongFunction;
 import ca.oson.json.support.TestCaseBase;
 
 public class DateTest extends TestCaseBase {

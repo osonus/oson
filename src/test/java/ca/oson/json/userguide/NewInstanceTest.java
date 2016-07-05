@@ -9,7 +9,7 @@ import org.junit.Test;
 import com.google.gson.InstanceCreator;
 
 import ca.oson.json.Oson.JSON_INCLUDE;
-import ca.oson.json.Oson.ClassMapper;
+import ca.oson.json.ClassMapper;
 import ca.oson.json.domain.Address;
 import ca.oson.json.domain.AnyBean;
 import ca.oson.json.domain.AnyPoint;

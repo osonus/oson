@@ -19,7 +19,7 @@ import ca.oson.json.domain.Car;
 import ca.oson.json.domain.Customer;
 import ca.oson.json.domain.Event;
 import ca.oson.json.support.TestCaseBase;
-import ca.oson.json.Oson.ObjectUtil;
+
 
 public class CollectionsTest extends TestCaseBase {
 

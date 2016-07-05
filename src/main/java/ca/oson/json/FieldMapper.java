@@ -1,138 +1,464 @@
 package ca.oson.json;
 
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Repeatable;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
+import java.util.function.Function;
 
 import javax.persistence.EnumType;
 
-import ca.oson.json.Oson.BOOLEAN;
-import ca.oson.json.Oson.ENUM_TYPE;
+import ca.oson.json.function.*;
 import ca.oson.json.Oson.JSON_INCLUDE;
+import ca.oson.json.util.ObjectUtil;
 
-@Repeatable(FieldMappers.class)
-@Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.CONSTRUCTOR})
-@Retention(RUNTIME)
-public @interface FieldMapper {
+/*
+ * configuration options for a specific field
+ */
+public class FieldMapper<T, E> {
+	// how to match field name, and its enclosing class
+	// how to ignore its value, in case either java or json value is null
 	
 	/*
-	 * Determine if the field mapper is applied to serialization, deserialization, or both, or none of them
+	 * Java property name
 	 */
-	BOOLEAN serialize() default BOOLEAN.BOTH;
-
-	/*
-	 * field or attribute name in a Java class.
-	 * During serialization, the name in Java object will be changed to this name in the outputed Json document;
-	 * During deserialization, this name in Input Json document will be mapped to this field.
-	 */
-	String name() default "";
-
-	/*
-	 * Defautl value for a certain type, for now only String is allowed
-	 */
-	String defaultValue() default "";
+	public String java;
 	
 	/*
-	 * Use field first to get/set a field value
+	 * Corresponding json name
 	 */
-	BOOLEAN useField() default BOOLEAN.NONE;
-	/*
-	 * Use getter or setter method to get/set a field value
-	 */
-	BOOLEAN useAttribute() default BOOLEAN.NONE;
+	public String json;
 	
 	/*
-	 * Datetime format, for this Date field
+	 * If present, it means the type of the enclosing class.
+	 * otherwise, this mapper can be used by all properties with the same field name
 	 */
-	String simpleDateFormat() default "";
+	private Class<T> type;
+	
+	/*
+	 * Not really used here, just for reference.
+	 * Actual data are kept in another class called FieldData
+	 */
+	private Class<E> returnType;
+
 
 	/*
-	 *  in case a enumType, define its type to (de)serialize
+	 * This field/attribute will be ignored if true
 	 */
-	ENUM_TYPE enumType() default ENUM_TYPE.NONE;
-	
-	/*
-	 * convert a datetime to a long or not
-	 */
-	BOOLEAN date2Long() default BOOLEAN.NONE;
-	
-	/*
-	 * Require this field must have some value, instead of being null
-	 */
-	BOOLEAN required() default BOOLEAN.NONE;
-	
-	/*
-	 * Maximum length this string field can have
-	 */
-	int length() default 0;
-	
-	/*
-	 * scale value for this BigDecimal field
-	 */
-	int scale() default 0;
-	
-	/*
-	 * number of digits for this BigDecimal field
-	 */
-	int precision() default 0;
-	
-	/*
-	 * minimum value this field should have
-	 */
-	long min() default 0;
-	
-	/*
-	 * maximum value this field should have
-	 */
-	long max() default 0;
-	
-	/*
-	 * Specify the default value handling principal, such as to allow null value 
-	 * or not in its output
-	 */
-	JSON_INCLUDE defaultType() default JSON_INCLUDE.NONE;
+	public Boolean ignore = null;
 
 	/*
-	 * Specify this field should not use double quotes in serialization, if true
+	 * use field to get or set value of a Java object during serializing or deserializing
 	 */
-	BOOLEAN jsonRawValue() default BOOLEAN.NONE;
+	public Boolean useField = null;
 	
 	/*
-	 * in a class, only one method returning a String value is allowed to set this value to true
+	 * Use attribute or getter and setter method of a Java object
 	 */
-	BOOLEAN jsonValue() default BOOLEAN.NONE;
+	public Boolean useAttribute = null;
+
+	/*
+	 * Lambda expression style single method interface
+	 * used to provide custom serializing mechanism
+	 */
+	public Function serializer;
 	
 	/*
-	 * Ignore this field if true
+	 * function for user to deserialize a Json data into Java property
 	 */
-	BOOLEAN ignore() default BOOLEAN.NONE;
+	public Function deserializer;
+	
+	/*
+	 * In case the field is an enumType, define its type to serialize
+	 * Can be either int, or String format
+	 */
+	public EnumType enumType = null;
+	
+	/*
+	 * Is this property is required, or not nullable
+	 */
+	public Boolean required = null;
+	
+	/*
+	 * length of a string property
+	 */
+	public Integer length = null;
+	
+	/*
+	 * the number of digits after decimal point in a float, double, or big decimal field
+	 */
+	public Integer scale = null;
+	
+	/*
+	 * Non-zero leading digits
+	 */
+	public Integer precision = null;
+	
+	/*
+	 * Minimum value of a property
+	 */
+	public Long min = null;
+	
+	/*
+	 * Maximu value of a property
+	 */
+	public Long max = null;
+	
+	/*
+	 * Default value of this property, in case it is required
+	 * or defaultType is configured to be JSON_INCLUDE.DEFAULT
+	 */
+	public E defaultValue = null;
+	
+	/*
+	 * How null or default values are handled in its serializing and deserializing process
+	 */
+	public JSON_INCLUDE defaultType = null;
+	
+	/*
+	 *  serialize to double quotes, or not
+	 */
+	public Boolean jsonRawValue = null;
 	
 	
 	/*
-	 * This is the version to ignore
+	 * If this value is true, the getter method of this property will return the Json data for the whole class.
+	 * In a class, only one method returning a String value is allowed to set this value to true
 	 */
-	double ignoreVersionsAfter() default 0;
+	public Boolean jsonValue = null;
 	
 	/*
 	 * method with this value set to true will get all properties not specified earlier.
-	 * It will normally return a Map<String , Object>
+	 * It will normally return a Map<String, Object>
 	 */
-	BOOLEAN jsonAnyGetter() default BOOLEAN.NONE;
-	
+	public Boolean jsonAnyGetter = null;
+
 	/*
 	 * method with this value set to true will set all properties not consumed earlier.
-	 * It will normally store all the other data into a Map<String , Object>
+	 * It will normally store all the other data into a Map<String, Object>
 	 */
-	BOOLEAN jsonAnySetter() default BOOLEAN.NONE;
+	public Boolean jsonAnySetter = null;
 	
 	/*
-	 * Mark a constructor as a Json constructor, no effect on any other types.
-	 * Combined with name() to specify the parameter names for the constructor.
+	 * determine a date to be converted to long, instead of using date format to converted into a string
+	 * This flag takes precedence over simpleDateFormat
 	 */
-	BOOLEAN jsonCreator() default BOOLEAN.NONE;
+	public Boolean date2Long = null;
+
+	/*
+	 * property specific date formatter, in case it is Date type
+	 */
+	public String simpleDateFormat = null;
 	
 	
+	/*
+	 * a private flag used to jackson
+	 */
+	private boolean processed = false;
+	
+	
+	boolean isValid() {
+		if (java == null && json == null) {
+			return false;
+		}
+		
+		return true;
+	}
+	
+	public boolean isProcessed() {
+		return processed;
+	}
+
+	public void setProcessed(boolean processed) {
+		this.processed = processed;
+	}
+	
+	
+	public FieldMapper(String java, String json, Class<T> type, Function serializer, Function deserializer) {
+		this(java,json,type);
+		this.serializer = serializer;
+		this.deserializer = deserializer;
+	}
+	
+	public FieldMapper(String java, String json, Class<T> type) {
+		this(java,json);
+		this.setType(type);
+	}
+
+	public FieldMapper(String java, String json) {
+		super();
+		this.java = java;
+		this.json = json;
+	}
+
+	public FieldMapper() {
+		super();
+	}
+
+	public FieldMapper setJava(String java) {
+		this.java = java;
+		return this;
+	}
+
+	public Class<T> getType() {
+		return type;
+	}
+	
+	public FieldMapper setJson(String json) {
+		this.json = json;
+		return this;
+	}
+
+	public FieldMapper setType(Class<T> type) {
+		this.type = ObjectUtil.getObjectType(type);
+		return this;
+	}
+
+	public FieldMapper setIgnore(boolean ignore) {
+		this.ignore = ignore;
+		return this;
+	}
+
+	public FieldMapper setUseField(boolean useField) {
+		this.useField = useField;
+		return this;
+	}
+
+	public FieldMapper setUseAttribute(boolean useAttribute) {
+		this.useAttribute = useAttribute;
+		return this;
+	}
+
+	public FieldMapper setSerializer(Function serializer) {
+		this.serializer = serializer;
+		return this;
+	}
+	public FieldMapper setDeserializer(Function deserializer) {
+		this.deserializer = deserializer;
+		return this;
+	}
+	public FieldMapper setSerializer(Integer2JsonFunction serializer) {
+		this.serializer = serializer;
+		return this;
+	}
+	public FieldMapper setDeserializer(Json2IntegerFunction deserializer) {
+		this.deserializer = deserializer;
+		return this;
+	}
+	public FieldMapper setSerializer(Long2JsonFunction serializer) {
+		this.serializer = serializer;
+		return this;
+	}
+	public FieldMapper setDeserializer(Json2LongFunction deserializer) {
+		this.deserializer = deserializer;
+		return this;
+	}
+	public FieldMapper setSerializer(Double2JsonFunction serializer) {
+		this.serializer = serializer;
+		return this;
+	}
+	public FieldMapper setDeserializer(Json2DoubleFunction deserializer) {
+		this.deserializer = deserializer;
+		return this;
+	}
+	public FieldMapper setSerializer(Short2JsonFunction serializer) {
+		this.serializer = serializer;
+		return this;
+	}
+	public FieldMapper setDeserializer(Json2ShortFunction deserializer) {
+		this.deserializer = deserializer;
+		return this;
+	}
+	public FieldMapper setSerializer(Float2JsonFunction serializer) {
+		this.serializer = serializer;
+		return this;
+	}
+	public FieldMapper setDeserializer(Json2FloatFunction deserializer) {
+		this.deserializer = deserializer;
+		return this;
+	}
+	public FieldMapper setSerializer(BigDecimal2JsonFunction serializer) {
+		this.serializer = serializer;
+		return this;
+	}
+	public FieldMapper setDeserializer(Json2BigDecimalFunction deserializer) {
+		this.deserializer = deserializer;
+		return this;
+	}
+	public FieldMapper setSerializer(BigInteger2JsonFunction serializer) {
+		this.serializer = serializer;
+		return this;
+	}
+	public FieldMapper setDeserializer(Json2BigIntegerFunction deserializer) {
+		this.deserializer = deserializer;
+		return this;
+	}
+	public FieldMapper setSerializer(Character2JsonFunction serializer) {
+		this.serializer = serializer;
+		return this;
+	}
+	public FieldMapper setDeserializer(Json2CharacterFunction deserializer) {
+		this.deserializer = deserializer;
+		return this;
+	}
+	public FieldMapper setSerializer(Byte2JsonFunction serializer) {
+		this.serializer = serializer;
+		return this;
+	}
+	public FieldMapper setDeserializer(Json2ByteFunction deserializer) {
+		this.deserializer = deserializer;
+		return this;
+	}
+	public FieldMapper setSerializer(Boolean2JsonFunction serializer) {
+		this.serializer = serializer;
+		return this;
+	}
+	public FieldMapper setDeserializer(Json2BooleanFunction deserializer) {
+		this.deserializer = deserializer;
+		return this;
+	}
+	public FieldMapper setSerializer(Date2JsonFunction serializer) {
+		this.serializer = serializer;
+		return this;
+	}
+	public FieldMapper setDeserializer(Json2DateFunction deserializer) {
+		this.deserializer = deserializer;
+		return this;
+	}
+	public FieldMapper setSerializer(Date2LongFunction serializer) {
+		this.serializer = serializer;
+		return this;
+	}
+	public FieldMapper setDeserializer(Long2DateFunction deserializer) {
+		this.deserializer = deserializer;
+		return this;
+	}
+	public FieldMapper setSerializer(Enum2JsonFunction serializer) {
+		this.serializer = serializer;
+		return this;
+	}
+	public FieldMapper setDeserializer(Json2EnumFunction deserializer) {
+		this.deserializer = deserializer;
+		return this;
+	}
+	public FieldMapper setSerializer(Collection2JsonFunction serializer) {
+		this.serializer = serializer;
+		return this;
+	}
+	public FieldMapper setDeserializer(Json2CollectionFunction deserializer) {
+		this.deserializer = deserializer;
+		return this;
+	}
+	public FieldMapper setSerializer(Map2JsonFunction serializer) {
+		this.serializer = serializer;
+		return this;
+	}
+	public FieldMapper setDeserializer(Json2MapFunction deserializer) {
+		this.deserializer = deserializer;
+		return this;
+	}
+	public FieldMapper setSerializer(Array2JsonFunction serializer) {
+		this.serializer = serializer;
+		return this;
+	}
+	public FieldMapper setDeserializer(Json2ArrayFunction deserializer) {
+		this.deserializer = deserializer;
+		return this;
+	}
+	public FieldMapper setSerializer(AtomicInteger2JsonFunction serializer) {
+		this.serializer = serializer;
+		return this;
+	}
+	public FieldMapper setDeserializer(Json2AtomicIntegerFunction deserializer) {
+		this.deserializer = deserializer;
+		return this;
+	}
+	public FieldMapper setSerializer(AtomicLong2JsonFunction serializer) {
+		this.serializer = serializer;
+		return this;
+	}
+	public FieldMapper setDeserializer(Json2AtomicLongFunction deserializer) {
+		this.deserializer = deserializer;
+		return this;
+	}
+	public FieldMapper setSerializer(String2JsonFunction serializer) {
+		this.serializer = serializer;
+		return this;
+	}
+	public FieldMapper setDeserializer(Json2StringFunction deserializer) {
+		this.deserializer = deserializer;
+		return this;
+	}
+	
+	public FieldMapper setSimpleDateFormat(String simpleDateFormat) {
+		this.simpleDateFormat = simpleDateFormat;
+		return this;
+	}
+
+	public FieldMapper setEnumType(EnumType enumType) {
+		this.enumType = enumType;
+		return this;
+	}
+
+	public FieldMapper setRequired(boolean required) {
+		this.required = required;
+		return this;
+	}
+
+	public FieldMapper setLength(Integer length) {
+		this.length = length;
+		return this;
+	}
+
+	public FieldMapper setScale(Integer scale) {
+		this.scale = scale;
+		return this;
+	}
+
+	public FieldMapper setMin(Long min) {
+		this.min = min;
+		return this;
+	}
+
+	public FieldMapper setMax(Long max) {
+		this.max = max;
+		return this;
+	}
+
+	public FieldMapper setDefaultValue(E defaultValue) {
+		this.defaultValue = defaultValue;
+		return this;
+	}
+
+	public FieldMapper setDefaultType(JSON_INCLUDE defaultType) {
+		this.defaultType = defaultType;
+		return this;
+	}
+
+	public FieldMapper setJsonRawValue(boolean jsonRawValue) {
+		this.jsonRawValue = jsonRawValue;
+		return this;
+	}
+
+	public FieldMapper setJsonValue(boolean jsonValue) {
+		jsonValue = jsonValue;
+		return this;
+	}
+
+	public FieldMapper setDate2Long(Boolean date2Long) {
+		this.date2Long = date2Long;
+		return this;
+	}
+	
+	/*
+	 * the number of digits of decimal
+	 */
+	public FieldMapper setPrecision(Integer precision) {
+		this.precision = precision;
+		return this;
+	}
+	
+	public boolean isJsonRawValue() {
+		if (jsonRawValue != null && jsonRawValue) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 }

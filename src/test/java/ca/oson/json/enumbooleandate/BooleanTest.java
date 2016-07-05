@@ -2,7 +2,7 @@ package ca.oson.json.enumbooleandate;
 
 import org.junit.Test;
 
-import ca.oson.json.Oson.ClassMapper;
+import ca.oson.json.ClassMapper;
 import ca.oson.json.support.TestCaseBase;
 
 public class BooleanTest extends TestCaseBase {

@@ -2,8 +2,8 @@ package ca.oson.json.domain;
 
 import java.util.Objects;
 
-import ca.oson.json.FieldMapper;
 import ca.oson.json.Oson.BOOLEAN;
+import ca.oson.json.annotation.FieldMapper;
 
 public class Car {
 

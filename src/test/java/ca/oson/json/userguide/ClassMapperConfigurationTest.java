@@ -7,7 +7,7 @@ import java.util.Date;
 import org.junit.Test;
 
 import ca.oson.json.support.TestCaseBase;
-import ca.oson.json.Oson.ClassMapper;
+import ca.oson.json.ClassMapper;
 
 public class ClassMapperConfigurationTest extends TestCaseBase {
 

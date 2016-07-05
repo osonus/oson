@@ -1,7 +1,7 @@
 package ca.oson.json.domain;
 
-import ca.oson.json.FieldMapper;
 import ca.oson.json.Oson.BOOLEAN;
+import ca.oson.json.annotation.FieldMapper;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

@@ -3,7 +3,7 @@ package ca.oson.json.numeric;
 import java.math.BigInteger;
 import org.junit.Test;
 
-import ca.oson.json.Oson.ClassMapper;
+import ca.oson.json.ClassMapper;
 import ca.oson.json.support.TestCaseNumeric;
 
 public class ShortTest extends TestCaseNumeric {

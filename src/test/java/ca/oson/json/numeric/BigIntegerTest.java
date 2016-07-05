@@ -5,9 +5,12 @@ import java.util.function.Function;
 
 import org.junit.Test;
 
+import ca.oson.json.ClassMapper;
+import ca.oson.json.DataMapper;
 import ca.oson.json.Oson.*;
 import ca.oson.json.support.TestCaseBase;
 import ca.oson.json.domain.Car;
+import ca.oson.json.function.DataMapper2JsonFunction;
 
 public class BigIntegerTest extends TestCaseBase {
 	   

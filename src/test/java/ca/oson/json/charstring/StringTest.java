@@ -3,7 +3,7 @@ package ca.oson.json.charstring;
 import org.junit.Test;
 
 import ca.oson.json.support.TestCaseBase;
-import ca.oson.json.Oson.ClassMapper;
+import ca.oson.json.ClassMapper;
 import ca.oson.json.domain.Car;
 
 public class StringTest extends TestCaseBase {

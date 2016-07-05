@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 
 import org.junit.Test;
 
+import ca.oson.json.ClassMapper;
 import ca.oson.json.Oson.*;
 import ca.oson.json.support.TestCaseBase;
 
