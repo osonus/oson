@@ -21,7 +21,7 @@ public class ConfigInheritanceTest extends TestCaseBase {
 		container.volumes = new ArrayList<Volume>();
 		container.volumes.add(volume);
 		
-		String expected = "{\"volumes\":[{\"size\":200}]}";
+		String expected = "{\"volumes\":[{\"size\":12}]}";
 		
 		String json = oson.setDefaultType(JSON_INCLUDE.NON_NULL).serialize(container);
 		
