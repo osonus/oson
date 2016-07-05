@@ -431,24 +431,156 @@ public class Oson {
 	 * configuration options for a specific class type
 	 */
 	public static class ClassMapper<T> {
+		/*
+		 * the class type of this mapper
+		 * primitive type is processed as Object counterpart in the aspect of configuration
+		 */
+		private Class<T> type;
+
+		/*
+		 * user implemented creator of this type
+		 */
+		public InstanceCreator<T> constructor;
+		/*
+		 * a default or dummy object of this type
+		 */
+		public T defaultValue;
+		
+		/*
+		 * Fields or variables of this class type will be ignored or not
+		 */
+		public Boolean ignore = null;
+		
+		/*
+		 * user defines function to convert specific type
+		 * it can be user declared classes, or basic Java type, such as how an Integer value
+		 * can be converted into string, using single function interface, such as a Lambda expression
+		 */
+		public Function serializer;
+		
+		/*
+		 * a custom deserializer from user, using single function interface, such as a Lambda expression
+		 */
+		public Function deserializer;
+		
+		/*
+		 *  class level specification on how to get values from an object
+		 *  use field to get or set a value
+		 */
+		public Boolean useField = null;
+		
+		/*
+		 * use attribute to get or set a value
+		 * here attribute means a method, either a getter or a setter
+		 */
+		public Boolean useAttribute = null;
+		
+		/*
+		 *  fields inside this class, mostly for user declared fields
+		 *  include field or attribute with this java MODIFIER, such as public, private
+		 */
+		public Set<MODIFIER> includeFieldsWithModifiers = null;
+		
+		/*
+		 *  class specific date formatting, such as "MM/dd/yyyy"
+		 */
+		public String simpleDateFormat = null;
+		
+		/*
+		 * Sort a Json output based on the natural order of key for a Java map,
+		 * or properties for a Java class object
+		 */
+		public Boolean orderByKeyAndProperties = null;
+		
+		/*
+		 * Set a Json output using hard-coded list of properties in the specified order
+		 */
+		public String[] propertyOrders = null;
+
+		/*
+		 * Embed class name meta data in a Json output
+		 */
+		public Boolean includeClassTypeInJson = null;
+		
+		/*
+		 * Ignore any field or attribute with a version greater than the specified value
+		 */
+		public Double ignoreVersionsAfter;
+		
+		/*
+		 * Ignore any class, field, or attribute in this set of annotations
+		 */
+		public Set<Class> ignoreFieldsWithAnnotations = null;
+		
+		/*
+		 * Ignore these specified properties
+		 */
+		public Set<String> jsonIgnoreProperties;
+		
+		/*
+		 * Control certain values to be output to a Json document or not, such as NON_NULL
+		 */
+		public JSON_INCLUDE defaultType = null;
+		
+		/*
+		 * maximum length of a string
+		 */
+		public Integer length = null;
+		
+		/*
+		 * leading digits before 0 in a number
+		 */
+		public Integer precision = null;
+		
+		/*
+		 * Number of digits after decimal point
+		 * Only used for float, double, and big decimal
+		 */
+		public Integer scale = null;
+		
+		/*
+		 * The minimum value a number can have
+		 */
+		public Long min = null;
+		
+		/*
+		 * The maximum value a number is allowed
+		 */
+		public Long max = null;
+		
+		/*
+		 * Output an enum to integer or a string format
+		 */
+		public EnumType enumType = null;
+		
+		/*
+		 * convert a date to a long number or a string format
+		 */
+		public Boolean date2Long = null;
+		
+		
 		public ClassMapper() {
 			super();
 		}
 		public ClassMapper(Class<T> type) {
 			super();
-			this.type = type;
+			this.setType(type);
 		}
 		public ClassMapper(String className) {
 			super();
 			try {
-				this.type = (Class<T>) Class.forName(className);
+				this.setType((Class<T>) Class.forName(className));
 			} catch (ClassNotFoundException e) {
 				// e.printStackTrace();
 			}
 		}
 		public ClassMapper setType(Class<T> type) {
-			this.type = type;
+			this.type = ObjectUtil.getObjectType(type);
 			return this;
+		}
+		
+		public Class<T> getType() {
+			return type;
 		}
  		public ClassMapper setConstructor(InstanceCreator<T> constructor) {
 			this.constructor = constructor;
@@ -718,61 +850,170 @@ public class Oson {
 			this.precision = precision;
 			return this;
 		}
-		
-		public Integer length = null; // Default: 255
-		public Integer precision = null;
-		
-		public Class<T> type;
-
-		// class level
-		// user provided constructor or actual dummy object
-		public InstanceCreator<T> constructor;
-		public T defaultValue;
-		
-		/*
-		 * Fields or variables of this class type will be ignored
-		 */
-		public Boolean ignore = null;
-		
-		// user defines function to convert specific type
-		// it can be user declared classes, or basic Java type, such as how an Integer value
-		// can be converted into string, using single function interface, such as a Lamda expression
-		public Function serializer;
-		public Function deserializer;
-		
-		// class level specification on how to get values from an object
-		public Boolean useField = null;
-		public Boolean useAttribute = null;
-		
-		// fields inside this class, mostly for user declared fields
-		public Set<MODIFIER> includeFieldsWithModifiers = null;
-		// class specific date formatter
-		public String simpleDateFormat = null;
-		
-		public Boolean orderByKeyAndProperties = null;
-		public String[] propertyOrders = null;
-
-		public Boolean includeClassTypeInJson = null;
-		public Double ignoreVersionsAfter;
-		public Set<Class> ignoreFieldsWithAnnotations = null;
-		public Set<String> jsonIgnoreProperties;
-		
-		public JSON_INCLUDE defaultType = null; // JSON_INCLUDE.NONE;
-		
-		public Integer scale = null; // Default: 0
-		public Long min = null; // default (int) 0;
-		public Long max = null; // default (int) 2147483647;
-		
-		
-		public EnumType enumType = null;
-		public Boolean date2Long = null;
-
 	}
 	
 	/*
 	 * configuration options for a specific field
 	 */
 	public static class FieldMapper<T, E> {
+		// how to match field name, and its enclosing class
+		// how to ignore its value, in case either java or json value is null
+		
+		/*
+		 * Java property name
+		 */
+		public String java;
+		
+		/*
+		 * Corresponding json name
+		 */
+		public String json;
+		
+		/*
+		 * If present, it means the type of the enclosing class.
+		 * otherwise, this mapper can be used by all properties with the same field name
+		 */
+		private Class<T> type;
+		
+		/*
+		 * Not really used here, just for reference.
+		 * Actual data are kept in another class called FieldData
+		 */
+		private Class<E> returnType;
+
+
+		/*
+		 * This field/attribute will be ignored if true
+		 */
+		public Boolean ignore = null;
+
+		/*
+		 * use field to get or set value of a Java object during serializing or deserializing
+		 */
+		public Boolean useField = null;
+		
+		/*
+		 * Use attribute or getter and setter method of a Java object
+		 */
+		public Boolean useAttribute = null;
+
+		/*
+		 * Lambda expression style single method interface
+		 * used to provide custom serializing mechanism
+		 */
+		public Function serializer;
+		
+		/*
+		 * function for user to deserialize a Json data into Java property
+		 */
+		public Function deserializer;
+		
+		/*
+		 * In case the field is an enumType, define its type to serialize
+		 * Can be either int, or String format
+		 */
+		public EnumType enumType = null;
+		
+		/*
+		 * Is this property is required, or not nullable
+		 */
+		public Boolean required = null;
+		
+		/*
+		 * length of a string property
+		 */
+		public Integer length = null;
+		
+		/*
+		 * the number of digits after decimal point in a float, double, or big decimal field
+		 */
+		public Integer scale = null;
+		
+		/*
+		 * Non-zero leading digits
+		 */
+		public Integer precision = null;
+		
+		/*
+		 * Minimum value of a property
+		 */
+		public Long min = null;
+		
+		/*
+		 * Maximu value of a property
+		 */
+		public Long max = null;
+		
+		/*
+		 * Default value of this property, in case it is required
+		 * or defaultType is configured to be JSON_INCLUDE.DEFAULT
+		 */
+		public E defaultValue = null;
+		
+		/*
+		 * How null or default values are handled in its serializing and deserializing process
+		 */
+		public JSON_INCLUDE defaultType = null;
+		
+		/*
+		 *  serialize to double quotes, or not
+		 */
+		public Boolean jsonRawValue = null;
+		
+		
+		/*
+		 * If this value is true, the getter method of this property will return the Json data for the whole class.
+		 * In a class, only one method returning a String value is allowed to set this value to true
+		 */
+		public Boolean jsonValue = null;
+		
+		/*
+		 * method with this value set to true will get all properties not specified earlier.
+		 * It will normally return a Map<String, Object>
+		 */
+		public Boolean jsonAnyGetter = null;
+
+		/*
+		 * method with this value set to true will set all properties not consumed earlier.
+		 * It will normally store all the other data into a Map<String, Object>
+		 */
+		public Boolean jsonAnySetter = null;
+		
+		/*
+		 * determine a date to be converted to long, instead of using date format to converted into a string
+		 * This flag takes precedence over simpleDateFormat
+		 */
+		public Boolean date2Long = null;
+
+		/*
+		 * property specific date formatter, in case it is Date type
+		 */
+		private String simpleDateFormat = null;
+		
+		
+		/*
+		 * a private flag used to jackson
+		 */
+		private boolean processed = false;
+		
+		
+		boolean isValid() {
+			if (java == null && json == null) {
+				return false;
+			}
+			
+			return true;
+		}
+		
+		public boolean isProcessed() {
+			return processed;
+		}
+
+		public void setProcessed(boolean processed) {
+			this.processed = processed;
+		}
+		
+		
 		public FieldMapper(String java, String json, Class<T> type, Function serializer, Function deserializer) {
 			this(java,json,type);
 			this.serializer = serializer;
@@ -781,7 +1022,7 @@ public class Oson {
 		
 		public FieldMapper(String java, String json, Class<T> type) {
 			this(java,json);
-			this.type = type;
+			this.setType(type);
 		}
 
 		public FieldMapper(String java, String json) {
@@ -799,13 +1040,17 @@ public class Oson {
 			return this;
 		}
 
+		public Class<T> getType() {
+			return type;
+		}
+		
 		public FieldMapper setJson(String json) {
 			this.json = json;
 			return this;
 		}
 
 		public FieldMapper setType(Class<T> type) {
-			this.type = type;
+			this.type = ObjectUtil.getObjectType(type);
 			return this;
 		}
 
@@ -1060,81 +1305,6 @@ public class Oson {
 				return false;
 			}
 		}
-		
-		// how to match field name, and its enclosing class
-		// how to ignore its value, in case either java or json value is null
-		public String java;// field name
-		public String json;
-		public Class<T> type; // for this class only, if present; otherwise, all classes for the same field name
-		
-		boolean isValid() {
-			if (java == null && json == null) {
-				return false;
-			}
-			
-			return true;
-		}
-		
-		public boolean isProcessed() {
-			return processed;
-		}
-
-		public void setProcessed(boolean processed) {
-			this.processed = processed;
-		}
-
-		/*
-		 * This field/attribute will be ignored if true
-		 */
-		public Boolean ignore = null;
-		
-		// how to get its value during serializing or deserializing
-		public Boolean useField = null;
-		public Boolean useAttribute = null;
-		
-		// how to modify it value
-		public Function serializer;
-		public Function deserializer;
-
-		// specific requirement on its value
-		// class specific date formatter, in case it is Date type
-		private String simpleDateFormat = null;
-		
-		// in case a enumType, define its type to serialize
-		public EnumType enumType = null;
-		public Boolean required = null;// not nullable
-		public Integer length = null; // Default: 255
-		public Integer scale = null; // Default: 0
-		public Integer precision = null;
-		public Long min = null; // default (int) 0;
-		public Long max = null; // default (int) 2147483647;
-		public E defaultValue = null; // default ""
-		public JSON_INCLUDE defaultType = null;
-		// serialize to double quotes, or not
-		public Boolean jsonRawValue = null;
-		// in a class, only one method returning a String value is allowed to set this value to true
-		public Boolean jsonValue = null;
-		
-		/*
-		 * method with this value set to true will get all properties not specified earlier.
-		 * It will normally return a Map<String , Object>
-		 */
-		public Boolean jsonAnyGetter = null;
-
-		/*
-		 * method with this value set to true will set all properties not consumed earlier.
-		 * It will normally store all the other data into a Map<String , Object>
-		 */
-		public Boolean jsonAnySetter = null;
-		/*
-		 * determine a date to be converted to long, instead of using date format to converted into a string
-		 */
-		public Boolean date2Long = null;
-		
-		/*
-		 * a flag used to jackson
-		 */
-		private boolean processed = false;
 	}
 
 
@@ -1298,10 +1468,16 @@ public class Oson {
 		private boolean setGetOnly = false;
 		
 		/*
-		 * Determine if a field object should inherit its field mapper configuration
-		 * during the processing of its own data: its class mapper and its fields' field mappers
+		 * Determine if a field object should inherit its configuration from a higher level enclosing class
 		 */
 		private boolean inheritMapping = true;
+
+		/*
+		 * Dertermine if Oson should use @Expose annotation from Gson.
+		 * Once Oson FieldMapper annotation is used, this flag will be disabled
+		 * Full support in seriaze, partial support in deserialize
+		 */
+		private boolean useGsonExpose = false;
 
 		/*
 		 * class level configurations
@@ -1314,6 +1490,15 @@ public class Oson {
 		private Set<FieldMapper> fieldMappers = null;
 
 
+
+		private boolean isUseGsonExpose() {
+			return useGsonExpose;
+		}
+
+		public void setUseGsonExpose(boolean useGsonExpose) {
+			this.useGsonExpose = useGsonExpose;
+		}
+		
 		private boolean isInheritMapping() {
 			return inheritMapping;
 		}
@@ -1746,7 +1931,7 @@ public class Oson {
 				if ((java != null && lname.equals(java.toLowerCase())) ||
 						(json != null && lname.equals(json.toLowerCase())) ) {
 					
-					if (fieldMapper.type == enclosingType) {
+					if (fieldMapper.getType() == enclosingType) {
 						if (fieldMapper.serializer != null) {
 							return fieldMapper.serializer;
 						}
@@ -1968,7 +2153,7 @@ public class Oson {
 			}
 			
 			for (ClassMapper classMapper: classMappers) {
-				if (classMapper.type != null) {
+				if (classMapper.getType() != null) {
 					setClassMappers(classMapper.type, classMapper);
 				}
 			}
@@ -1980,7 +2165,7 @@ public class Oson {
 			}
 			
 			for (ClassMapper classMapper: classMappers) {
-				if (classMapper.type != null) {
+				if (classMapper.getType() != null) {
 					setClassMappers(classMapper.type, classMapper);
 				}
 			}
@@ -1991,7 +2176,7 @@ public class Oson {
 				return;
 			}
 			
-			if (classMapper.type == null) {
+			if (classMapper.getType() == null) {
 				return;
 			}
 			setClassMappers(classMapper.type, classMapper);
@@ -1999,12 +2184,14 @@ public class Oson {
 		
 		public void setClassMappers(Class type, ClassMapper classMapper) {
 			if (type == null) {
-				type = classMapper.type;
-			}
-			if (type == null) {
-				return;
+				type = classMapper.getType();
+				
+				if (type == null) {
+					return;
+				}
+
 			} else {
-				classMapper.type = type;
+				classMapper.setType(type);
 			}
 
 			if (this.classMappers == null) {
@@ -2109,7 +2296,7 @@ public class Oson {
 				for (FieldMapper mapper: fieldMappers) {
 					String java = mapper.java;
 
-					if (mapper.type == null && java != null && lname.equals(java.toLowerCase())) {
+					if (mapper.getType() == null && java != null && lname.equals(java.toLowerCase())) {
 						return mapper;
 					}
 				}
@@ -2125,7 +2312,7 @@ public class Oson {
 				for (FieldMapper mapper: fieldMappers) {
 					String json = mapper.json;
 		
-					if (mapper.type == null && json != null && lname.equals(json.toLowerCase())) {
+					if (mapper.getType() == null && json != null && lname.equals(json.toLowerCase())) {
 						return mapper;
 					}
 				}
@@ -2138,12 +2325,14 @@ public class Oson {
 			if (fieldMappers != null && !StringUtil.isEmpty(javaName)) {
 				javaName = javaName.trim();
 				String lname = javaName.toLowerCase();
+				
+				classtype = ObjectUtil.getObjectType(classtype);
 
 				for (FieldMapper mapper: fieldMappers) {
 					String java = mapper.java;
 		
 					if (java != null && lname.equals(java.toLowerCase())) {
-						if (mapper.type == classtype) {
+						if (mapper.getType() == classtype) {
 							return mapper;
 						}
 						
@@ -2158,12 +2347,14 @@ public class Oson {
 			if (fieldMappers != null && !StringUtil.isEmpty(jsonName)) {
 				jsonName = jsonName.trim();
 				String lname = jsonName.toLowerCase();
+				
+				classtype = ObjectUtil.getObjectType(classtype);
 
 				for (FieldMapper mapper: fieldMappers) {
 					String json = mapper.json;
 		
 					if (json != null && lname.equals(json.toLowerCase())) {
-						if (mapper.type == classtype) {
+						if (mapper.getType() == classtype) {
 							return mapper;
 						}
 						
@@ -3257,6 +3448,9 @@ public class Oson {
 			return null;
 		}
 		
+		// change primitive type to object type
+		valueType = ObjectUtil.getObjectType(valueType);
+		
 		Map<Class, ClassMapper> mappers = getClassMappers();
 		
 		if (mappers == null) {
@@ -3388,6 +3582,10 @@ public class Oson {
 	}
 
 	private FieldMapper classifyFieldMapper(FieldMapper fieldMapper, ClassMapper classMapper) {
+		if (classMapper == null) {
+			return fieldMapper;
+		}
+		
 		// classify it now
 		if (fieldMapper.useAttribute == null) {
 			fieldMapper.useAttribute = classMapper.useAttribute;
@@ -3617,6 +3815,15 @@ public class Oson {
 		return this;
 	}
 	
+	private boolean isUseGsonExpose() {
+		return options.isUseGsonExpose();
+	}
+
+	public Oson setUseGsonExpose(boolean useGsonExpose) {
+		options.setUseGsonExpose(useGsonExpose);
+
+		return this;
+	}
 	
 	/////////////////////////////////////////////////////////////////////////////////
 	// start to set up class mapper
@@ -4398,7 +4605,7 @@ public class Oson {
 			String json = fieldMapper.json;
 			String java = fieldMapper.java;
 			
-			if (fieldMapper.type == null || json == null || java == null) {
+			if (fieldMapper.getType() == null || json == null || java == null) {
 				fieldMapper.setProcessed(true);
 				continue;
 			}
@@ -4587,14 +4794,14 @@ public class Oson {
 								
 								if (mapper.java == null) {
 									if (mapper.json.equals(name)) {
-										if (mapper.type == null || cls.equals(mapper.type)) {
+										if (mapper.getType() == null || cls.equals(mapper.getType())) {
 											return true;
 										}
 									}
 									
 								} else if (mapper.json == null || mapper.ignore) {
 									if (mapper.java.equals(name)) {
-										if (mapper.type == null || cls.equals(mapper.type)) {
+										if (mapper.getType() == null || cls.equals(mapper.getType())) {
 											return true;
 										}
 									}
@@ -4617,8 +4824,8 @@ public class Oson {
 			if (classMappers != null) {
 				for (Entry<Class, ClassMapper> entry: classMappers.entrySet()) {
 					ClassMapper mapper = entry.getValue();
-					if (mapper.type == null) {
-						mapper.type = entry.getKey();
+					if (mapper.getType() == null) {
+						mapper.setType(entry.getKey());
 					}
 					if (mapper.ignore != null && mapper.ignore) {
 						strategies.add(new ExclusionStrategy() {
@@ -4655,6 +4862,10 @@ public class Oson {
 			Double ignoreVersionsAfter = getIgnoreVersionsAfter();
 			if (ignoreVersionsAfter != null) {
 				gsonBuilder.setVersion(ignoreVersionsAfter);
+			}
+			
+			if (isUseGsonExpose()) {
+				gsonBuilder.excludeFieldsWithoutExposeAnnotation();
 			}
 			
 			
@@ -6831,7 +7042,11 @@ public class Oson {
 					Function function = objectDTO.getSerializer();
 					if (function != null) {
 						try {
-							if (function instanceof Integer2JsonFunction) {
+							if (function instanceof DataMapper2JsonFunction) {
+								DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+								return ((DataMapper2JsonFunction)function).apply(classData);
+								
+							} else if (function instanceof Integer2JsonFunction) {
 								return ((Integer2JsonFunction)function).apply(valueToProcess);
 								
 							} else {
@@ -10426,11 +10641,13 @@ public class Oson {
 	 * 3. Apply annotations from other sources;
 	 * 4. Apply annotations from Oson;
 	 * 5. Apply Java configuration for this particular class;
-	 * 6. Create a blank field mapper instance;
-	 * 7. Classify this field mapper;
-	 * 8. Apply annotations from other sources;
-	 * 9. Apply annotations from Oson;
-	 * 10. Apply Java configuration for this particular field.
+	 * 6. Create a blank field mapper instance for certain property with a returnType;
+	 * 7. Get the class mapper of the returnType;
+	 * 8. Classify this field mapper with the class mapper of the return type;
+	 * 9. Classify this field mapper with the class mapper created at step 5
+	 * 10. Apply annotations from other sources;
+	 * 11. Apply annotations from Oson;
+	 * 12. Apply Java configuration for this particular field.
 	 */
 	private <E,R> String object2Serialize(FieldData objectDTO) {
 		E obj = (E) objectDTO.valueToProcess;
@@ -10468,6 +10685,12 @@ public class Oson {
 		String repeatedItem = getPrettyIndentationln(objectDTO.level);
 		
 
+		// @Expose
+		Set<String> exposed = null;
+		if (isUseGsonExpose()) {
+			exposed = new HashSet<>();
+		}
+		
 		boolean annotationSupport = getAnnotationSupport();
 		Annotation[] annotations = null;
 
@@ -10577,6 +10800,7 @@ public class Oson {
 			// 4. Apply annotations from Oson
 			if (classMapperAnnotation != null) {
 				classMapper = overwriteBy (classMapper, classMapperAnnotation);
+				exposed = null;
 			}
 			
 		}
@@ -10642,6 +10866,7 @@ public class Oson {
 		
 		Set<Method> jsonAnyGetterMethods = new HashSet<>();
 		
+		
 		try {
 			Field[] fields = getFields(obj);
 
@@ -10661,7 +10886,18 @@ public class Oson {
 				// 6. Create a blank field mapper instance
 				FieldMapper fieldMapper = new FieldMapper(name, name, valueType);
 				
-				// 7. Classify this field mapper
+
+				Class<?> returnType = f.getType(); // value.getClass();
+				
+				// 7. get the class mapper of returnType
+				ClassMapper fieldClassMapper = getClassMapper(returnType);
+				
+				
+				// 8. Classify this field mapper with returnType
+				fieldMapper = classifyFieldMapper(fieldMapper, fieldClassMapper);
+				
+				
+				// 9. Classify this field mapper
 				fieldMapper = classifyFieldMapper(fieldMapper, classMapper);
 
 				FieldMapper javaFieldMapper = getFieldMapper(name, null, valueType);
@@ -10748,6 +10984,8 @@ public class Oson {
 								Expose expose = (Expose) annotation;
 								if (!expose.serialize()) {
 									fieldMapper.ignore = true;
+								} else if (exposed != null) {
+									exposed.add(lcfieldName);
 								}
 								break;
 								
@@ -10868,10 +11106,11 @@ public class Oson {
 						}
 					}
 					
-					// 9. Apply annotations from Oson
+					// 10. Apply annotations from Oson
 					// special name to handle
 					if (fieldMapperAnnotation != null) {
 						fieldMapper = overwriteBy (fieldMapper, fieldMapperAnnotation, classMapper);
+						exposed = null;
 					}
 				}
 
@@ -10882,7 +11121,7 @@ public class Oson {
 					continue;
 				}
 				
-				// 10. Apply Java configuration for this particular field
+				// 11. Apply Java configuration for this particular field
 				if (javaFieldMapper != null) {
 					fieldMapper = overwriteBy (fieldMapper, javaFieldMapper);
 				}
@@ -11004,8 +11243,6 @@ public class Oson {
 				
 				String str;
 
-				Class<?> returnType = f.getType(); // value.getClass();
-
 				FieldData fieldData = new FieldData(obj, f, value, returnType, false, fieldMapper, objectDTO.level, objectDTO.set);
 
 				str = object2Json(fieldData);
@@ -11077,7 +11314,18 @@ public class Oson {
 				// 6. Create a blank field mapper instance
 				FieldMapper fieldMapper = new FieldMapper(name, name, valueType);
 				
-				// 7. Classify this field mapper
+
+				Class<?> returnType = getter.getReturnType(); // value.getClass();
+				
+				// 7. get the class mapper of returnType
+				ClassMapper fieldClassMapper = getClassMapper(returnType);
+				
+				
+				// 8. Classify this field mapper with returnType
+				fieldMapper = classifyFieldMapper(fieldMapper, fieldClassMapper);
+				
+				
+				// 9. Classify this field mapper
 				fieldMapper = classifyFieldMapper(fieldMapper, classMapper);
 
 				FieldMapper javaFieldMapper = getFieldMapper(name, null, valueType);
@@ -11133,6 +11381,8 @@ public class Oson {
 								Expose expose = (Expose) annotation;
 								if (!expose.serialize()) {
 									fieldMapper.ignore = true;
+								} else if (exposed != null) {
+									exposed.add(lcfieldName);
 								}
 								break;
 								
@@ -11253,10 +11503,11 @@ public class Oson {
 						}
 					}
 					
-					// 9. Apply annotations from Oson
+					// 10. Apply annotations from Oson
 					// special name to handle
 					if (fieldMapperAnnotation != null) {
 						fieldMapper = overwriteBy (fieldMapper, fieldMapperAnnotation, classMapper);
+						exposed = null;
 					}
 				}
 
@@ -11264,7 +11515,7 @@ public class Oson {
 					continue;
 				}
 				
-				// 10. Apply Java configuration for this particular field
+				// 11. Apply Java configuration for this particular field
 				if (javaFieldMapper != null) {
 					fieldMapper = overwriteBy (fieldMapper, javaFieldMapper);
 				}
@@ -11352,8 +11603,6 @@ public class Oson {
 				
 
 				String str;
-
-				Class<?> returnType = getter.getReturnType(); // value.getClass();
 				
 				FieldData fieldData = new FieldData(obj, null, value, returnType, false, fieldMapper, objectDTO.level, objectDTO.set);
 				objectDTO.getter = getter;
@@ -11522,7 +11771,6 @@ public class Oson {
 					}
 				}
 			}
-
 			
 			
 			int size = keyJsonStrings.size();
@@ -11534,6 +11782,20 @@ public class Oson {
 				if (classMapper.includeClassTypeInJson) { //getIncludeClassTypeInJson()
 					includeClassType = repeatedItem + "\"@class\":" + pretty + "\"" + valueType.getName() + "\",";
 				}
+				
+				
+				if (exposed != null && exposed.size() > 0) {
+					Map<String, String> map = new HashMap<>();
+					
+					for (String key: keyJsonStrings.keySet()) {
+						if (exposed.contains(key)) {
+							map.put(key, keyJsonStrings.get(key));
+						}
+					}
+					
+					keyJsonStrings = map;
+				}
+				
 
 				// based on sorting requirements
 				StringBuffer sb = new StringBuffer();
@@ -12229,10 +12491,12 @@ public class Oson {
 	 * 4. Apply annotations from Oson;
 	 * 5. Apply Java configuration for this particular class;
 	 * 6. Create a blank field mapper instance;
-	 * 7. Classify this field mapper;
-	 * 8. Apply annotations from other sources;
-	 * 9. Apply annotations from Oson;
-	 * 10. Apply Java configuration for this particular field.
+	 * 7. get the global class mapper for this field
+	 * 8. Classify this field mapper with returnType class mapper
+	 * 9. Classify this field mapper;
+	 * 10. Apply annotations from other sources;
+	 * 11. Apply annotations from Oson;
+	 * 12. Apply Java configuration for this particular field.
 	 */
 	<T> T deserialize2Object(FieldData objectDTO) {
 		Map<String, Object> map = (Map)objectDTO.valueToProcess;
@@ -12465,13 +12729,20 @@ public class Oson {
 				// 6. Create a blank field mapper instance
 				// using valueType of enclosing obj
 				FieldMapper fieldMapper = new FieldMapper(name, name, valueType);
+
+
+				Class<?> returnType = f.getType(); // value.getClass();
 				
-				// 7. Classify this field mapper
+				// 7. get the class mapper of returnType
+				ClassMapper fieldClassMapper = getClassMapper(returnType);
+				
+				// 8. Classify this field mapper with returnType
+				fieldMapper = classifyFieldMapper(fieldMapper, fieldClassMapper);
+				
+				// 9. Classify this field mapper with enclosing class type
 				fieldMapper = classifyFieldMapper(fieldMapper, classMapper);
 
 				FieldMapper javaFieldMapper = getFieldMapper(name, null, valueType);
-
-				Class<?> returnType = f.getType(); // value.getClass();
 
 				boolean ignored = false;
 				
@@ -12644,7 +12915,7 @@ public class Oson {
 						}
 					}
 
-					// 9. Apply annotations from Oson
+					// 10. Apply annotations from Oson
 					if (fieldMapperAnnotation != null) {
 						fieldMapper = overwriteBy (fieldMapper, fieldMapperAnnotation, classMapper);
 					}
@@ -12657,7 +12928,7 @@ public class Oson {
 					continue;
 				}
 
-				// 10. Apply Java configuration for this particular field
+				// 11. Apply Java configuration for this particular field
 				if (javaFieldMapper != null) {
 					fieldMapper = overwriteBy (fieldMapper, javaFieldMapper);
 				}
@@ -12804,7 +13075,24 @@ public class Oson {
 				// 6. Create a blank field mapper instance
 				FieldMapper fieldMapper = new FieldMapper(name, name, valueType);
 				
-				// 7. Classify this field mapper
+				Class returnType = null;
+				Class[] types = setter.getParameterTypes();
+				if (types != null && types.length > 0) {
+					returnType = types[0];
+				}
+				
+				// not a proper setter
+				if (returnType == null) {
+					continue;
+				}
+				
+				// 7. get the class mapper of returnType
+				ClassMapper fieldClassMapper = getClassMapper(returnType);
+				
+				// 8. Classify this field mapper with returnType
+				fieldMapper = classifyFieldMapper(fieldMapper, fieldClassMapper);
+				
+				// 9. Classify this field mapper with enclosing class type
 				fieldMapper = classifyFieldMapper(fieldMapper, classMapper);
 
 				FieldMapper javaFieldMapper = getFieldMapper(name, null, valueType);
@@ -12972,7 +13260,7 @@ public class Oson {
 						}
 					}
 
-					// 9. Apply annotations from Oson
+					// 10. Apply annotations from Oson
 					if (fieldMapperAnnotation != null) {
 						fieldMapper = overwriteBy (fieldMapper, fieldMapperAnnotation, classMapper);
 					}
@@ -12984,7 +13272,7 @@ public class Oson {
 					continue;
 				}
 
-				// 10. Apply Java configuration for this particular field
+				// 11. Apply Java configuration for this particular field
 				if (javaFieldMapper != null) {
 					fieldMapper = overwriteBy (fieldMapper, javaFieldMapper);
 				}
@@ -13041,11 +13329,6 @@ public class Oson {
 				fieldMapper.json = name;
 
 				if (value != null) {
-					Class returnType = null;
-					Class[] types = setter.getParameterTypes();
-					if (types != null && types.length > 0) {
-						returnType = types[0];
-					}
 					
 					FieldData fieldData = new FieldData(obj, null, value, returnType, true, fieldMapper);
 					fieldData.setter = setter;

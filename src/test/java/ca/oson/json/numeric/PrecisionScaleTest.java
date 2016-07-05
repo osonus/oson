@@ -321,7 +321,7 @@ public class PrecisionScaleTest extends TestCaseBase {
 		
 		String expected51 = "12.3";
 		String expected30 = "12";
-		String expectedDecimal = "{\"valueDouble\":12.35,\"valueBigDecimal\":12.35,\"value\":12.35}";
+		String expectedDecimal = "{\"valueDouble\":12.35,\"valueBigDecimal\":12.35,\"value\":12}";
 
 		oson.clear().setPrecision(5).setScale(1);
 		oson.setClassMappers(new ca.oson.json.Oson.ClassMapper[] {

@@ -6,6 +6,9 @@
 4. [General Conversion Rules](#TOC-General-Conversion-Rules)
 5. [How to convert Java object to Json document](#TOC-How-To-Convert-Java-Object-To-Json-Document)
   * [Java Configuration](#TOC-Serialize-Java-Configuration)
+    * [Global Options](#TOC-Global-Options)
+    * [Class Mappers](#TOC-Class-Mappers)
+    * [Field Mappers](#TOC-Field-Mappers)
   * [Annotation](#TOC-Serialize-Annotation)
   * [Lambda Expression](#TOC-Serialize-Lambda-Expression)
 6. [How to convert Json document to Java object](#TOC-How-To-Convert-Json-Document-Java-Object)
@@ -164,17 +167,21 @@ In order to achieve these features, two Java classes and two Annotation classes 
 
 The Java classes have slightly more features than their corresponding annotation classes, owing to the fact that annotation can only support primitive types and Enum, not even null value. These classes contain more features than all configuration abilities from external sources, including com.fasterxml.jackson, com.google.gson, org.codehaus.jackson, javax.persistence, and javax.validation. To simulate the null default concept in annotation, NONE enum entry is introduced to various enums, including the BOOOLEAN enum, which has 3 values: BOOOLEAN.TRUE, BOOOLEAN.FALSE, BOOOLEAN.NONE, corresponding to true, false, and null in Boolean Java type. This way, the value false can be used to override previous true value. For example, if a field in ignored in external Java classes, and we cannot change its source code, yet we can easily set ignore to be false using FieldMapper class.
 
-The detail overriding rules are:
+The class and property level overriding rules are:
 
 1. Global Java configuration at the top
-2. Apply annotations from other sources at the second level
-3. Override these previous settings with annotation from Oson, which is ca.oson.json.ClassMapper
-4. Override last 3 settings using Java code configuration. This configuration class is ca.oson.json.Oson.ClassMapper. At this step, we have class level configuration for the current Java class. The following steps of each field in this class will use this setting as the basis for each of its own configuration
-5. Using the ClassMapper created at step 4, a new FieldMapper object is created
-6. Apply configuration information from other sources to this FieldMapper
-7. Apply configuration information from Oson field annotations class to this FieldMapper. Oson has a single Field annotation class, which is ca.oson.json.FieldMapper
-8. Apply configuration information using Java code, with the help of Oson Java configuration class: ca.oson.json.Oson.FieldMapper
-9. Make use of this final configuration data to configure how a field in a Java class is mapped, for both of its name and value
+2. Inherit configuration from a higher level class if the current object serves as a field in the higher level class, unless configured not to do so
+3. Apply annotations from other sources at the second level
+4. Override these previous settings with annotation from Oson, which is ca.oson.json.ClassMapper
+5. Override last 3 settings using Java code configuration. This configuration class is ca.oson.json.Oson.ClassMapper. At this step, we have class level configuration for the current Java class. The following steps of each field in this class will use this setting as the basis for each of its own configuration
+6. Create a blank field mapper instance for certain property with a returnType
+7. Get the class mapper of the returnType
+8. Classify this field mapper with the class mapper of the return type
+9. Classify this field mapper with the class mapper created at step 5
+10. Apply configuration information from other sources to this FieldMapper
+11. Apply configuration information from Oson field annotations class to this FieldMapper. Oson has a single Field annotation class, which is ca.oson.json.FieldMapper
+12. Apply configuration information using Java code, with the help of Oson Java configuration class: ca.oson.json.Oson.FieldMapper
+13. Make use of this final configuration data to configure how a field in a Java class is mapped, for both of its name and value
 
 Once you understand these overriding rules, you will be able to configure any Java class at ease.
 
@@ -259,6 +266,8 @@ A few notes:
 
 There are lots of way you can use to change the behavior of Oson Tool. At the center point, there is an option class that is used to all purposes.
 
+#### <a name="TOC-Global-Options"></a>**Global Options**
+    
 Here are the list of atributes you can set in order to make it the way you want it to act:
 
 ```java
@@ -421,10 +430,16 @@ Here are the list of atributes you can set in order to make it the way you want 
 		private boolean setGetOnly = false;
 		
 		/*
-		 * Determine if a field object should inherit its field mapper configuration
-		 * during the processing of its own data: its class mapper and its fields' field mappers
+		 * Determine if a field object should inherit its configuration from a higher level enclosing class
 		 */
 		private boolean inheritMapping = true;
+
+		/*
+		 * Dertermine if Oson should use @Expose annotation from Gson.
+		 * Once Oson FieldMapper annotation is used, this flag will be disabled
+		 * Full support in seriaze, partial support in deserialize
+		 */
+		private boolean useGsonExpose = false;
 
 		/*
 		 * class level configurations
@@ -442,7 +457,7 @@ either in the constructor of Oson class, or as parameter to the configure builde
 
 It can be in JSONObject json, Object[] array, Map<String, Object> map, Options options, or simply a Json string, which will be deserialized by Oson itself, to retrieve all configuration information.
 
-You can specify only the ones you want to, and use the rest of default values. And you can specify any time, either before or during the serializing or deserializing process. You can use any of the Builder method to set the configuration value you desire, in a train, and later ones will overwrite the earlier settings, or combined with you, depending on the circonstances. For most of the collection (Set) attributes, it behavior like add, unless you use a null value to set, which act like reset or clear, all previous values of this particular attribut is gone.
+You can specify only the ones you want to, and use the rest of default values. And you can specify any time, either before or during the serializing or deserializing process. You can use any of the Builder method to set the configuration value you desire, in a chain, and later ones will overwrite the earlier settings, or combined with you, depending on the circonstances. For most of the collection (Set) attributes, it behavior like add, unless you use a null value to set, which act like reset or clear, all previous values of this particular attribut is gone.
 
 Some examples:
   * oson.pretty(): indentation is requested for output, the same as oson.pretty(true), or prettyPrinting(true)
@@ -453,17 +468,313 @@ Some examples:
   * oson.setClassMappers(...): parameter can be one or multiple ClassMapper objects, useful to set class-level behavior
   * oson.setFieldMappers(...): parameter can be one or multiple FieldMapper objects, useful to set field-level behavior
 
-Or you can train them all up, like this:
+Or you can chain them all up, like this:
 String json = oson.pretty().setLevel(5).includeClassTypeInJson(true).sort().setDefaultType(JSON_INCLUDE.NON_NULL)...serialize(myObject);
 
-More details on each of these settings.
+
+#### <a name="TOC-Class-Mappers"></a>**Class Mappers**
+
+ClassMapper class and its annotation counterpart control the class level configuration.
+
+Here is the attributes for the class level configuration of the Java class ClassMapper. Its annotation partner has similar features, excluding ones requiring Object abilities, such as constructor:
+
+```java
+		/*
+		 * the class type of this mapper
+		 * primitive type is processed as Object counterpart in the aspect of configuration
+		 */
+		private Class<T> type;
+
+		/*
+		 * user implemented creator of this type
+		 */
+		public InstanceCreator<T> constructor;
+		/*
+		 * a default or dummy object of this type
+		 */
+		public T defaultValue;
+		
+		/*
+		 * Fields or variables of this class type will be ignored or not
+		 */
+		public Boolean ignore = null;
+		
+		/*
+		 * user defines function to convert specific type
+		 * it can be user declared classes, or basic Java type, such as how an Integer value
+		 * can be converted into string, using single function interface, such as a Lambda expression
+		 */
+		public Function serializer;
+		
+		/*
+		 * a custom deserializer from user, using single function interface, such as a Lambda expression
+		 */
+		public Function deserializer;
+		
+		/*
+		 *  class level specification on how to get values from an object
+		 *  use field to get or set a value
+		 */
+		public Boolean useField = null;
+		
+		/*
+		 * use attribute to get or set a value
+		 * here attribute means a method, either a getter or a setter
+		 */
+		public Boolean useAttribute = null;
+		
+		/*
+		 *  fields inside this class, mostly for user declared fields
+		 *  include field or attribute with this java MODIFIER, such as public, private
+		 */
+		public Set<MODIFIER> includeFieldsWithModifiers = null;
+		
+		/*
+		 *  class specific date formatting, such as "MM/dd/yyyy"
+		 */
+		public String simpleDateFormat = null;
+		
+		/*
+		 * Sort a Json output based on the natural order of key for a Java map,
+		 * or properties for a Java class object
+		 */
+		public Boolean orderByKeyAndProperties = null;
+		
+		/*
+		 * Set a Json output using hard-coded list of properties in the specified order
+		 */
+		public String[] propertyOrders = null;
+
+		/*
+		 * Embed class name meta data in a Json output
+		 */
+		public Boolean includeClassTypeInJson = null;
+		
+		/*
+		 * Ignore any field or attribute with a version greater than the specified value
+		 */
+		public Double ignoreVersionsAfter;
+		
+		/*
+		 * Ignore any class, field, or attribute in this set of annotations
+		 */
+		public Set<Class> ignoreFieldsWithAnnotations = null;
+		
+		/*
+		 * Ignore these specified properties
+		 */
+		public Set<String> jsonIgnoreProperties;
+		
+		/*
+		 * Control certain values to be output to a Json document or not, such as NON_NULL
+		 */
+		public JSON_INCLUDE defaultType = null;
+		
+		/*
+		 * maximum length of a string
+		 */
+		public Integer length = null;
+		
+		/*
+		 * leading digits before 0 in a number
+		 */
+		public Integer precision = null;
+		
+		/*
+		 * Number of digits after decimal point
+		 * Only used for float, double, and big decimal
+		 */
+		public Integer scale = null;
+		
+		/*
+		 * The minimum value a number can have
+		 */
+		public Long min = null;
+		
+		/*
+		 * The maximum value a number is allowed
+		 */
+		public Long max = null;
+		
+		/*
+		 * Output an enum to integer or a string format
+		 */
+		public EnumType enumType = null;
+		
+		/*
+		 * convert a date to a long number or a string format
+		 */
+		public Boolean date2Long = null;
+```
+
+There are two ways to set up a Class mapper:
+
+1. set directly to oson by class type
+2. set through a new ClassMapper object, then set this object to the oson instance
+
+The first one looks like: oson.setSimpleDateFormat(MyClass.class, "E, dd MMM yyyy HH:mm:ss Z")
+			.setMax(Integer.class, 1000l)
+			.setLength(MyCustomerClass.class, 6)
+			.setMax(MyCustomerClass.class, 500l);
+			
+The second one looks like this: oson.clear().setPrecision(5).setScale(1);
+		oson.setClassMappers(new ca.oson.json.Oson.ClassMapper[] {
+		new ca.oson.json.Oson.ClassMapper(Float.class).setPrecision(3).setScale(0),
+		new ca.oson.json.Oson.ClassMapper(Decimal2.class).setPrecision(8).setScale(5)
+		});
+		
+They have the similar effect, and follows the overwriting rule: configuration for the same class type overwrites previous ones.
+
+
+#### <a name="TOC-Field-Mappers"></a>**Field Mappers**
+
+FieldMapper class and its annotation counterpart control the field level configuration.
+
+The following are the attributes for the field or attribute level configuration of the Java class FieldMapper. Its annotation partner has similar features, excluding ones requiring Object abilities, such as serializer and deserializer:
+
+```java
+		/*
+		 * Java property name
+		 */
+		public String java;
+		
+		/*
+		 * Corresponding json name
+		 */
+		public String json;
+		
+		/*
+		 * If present, it means the type of the enclosing class.
+		 * otherwise, this mapper can be used by all properties with the same field name
+		 */
+		private Class<T> type;
+		
+		/*
+		 * Not really used here, just for reference.
+		 * Actual data are kept in another class called FieldData
+		 */
+		private Class<E> returnType;
+
+
+		/*
+		 * This field/attribute will be ignored if true
+		 */
+		public Boolean ignore = null;
+
+		/*
+		 * use field to get or set value of a Java object during serializing or deserializing
+		 */
+		public Boolean useField = null;
+		
+		/*
+		 * Use attribute or getter and setter method of a Java object
+		 */
+		public Boolean useAttribute = null;
+
+		/*
+		 * Lambda expression style single method interface
+		 * used to provide custom serializing mechanism
+		 */
+		public Function serializer;
+		
+		/*
+		 * function for user to deserialize a Json data into Java property
+		 */
+		public Function deserializer;
+		
+		/*
+		 * In case the field is an enumType, define its type to serialize
+		 * Can be either int, or String format
+		 */
+		public EnumType enumType = null;
+		
+		/*
+		 * Is this property is required, or not nullable
+		 */
+		public Boolean required = null;
+		
+		/*
+		 * length of a string property
+		 */
+		public Integer length = null;
+		
+		/*
+		 * the number of digits after decimal point in a float, double, or big decimal field
+		 */
+		public Integer scale = null;
+		
+		/*
+		 * Non-zero leading digits
+		 */
+		public Integer precision = null;
+		
+		/*
+		 * Minimum value of a property
+		 */
+		public Long min = null;
+		
+		/*
+		 * Maximu value of a property
+		 */
+		public Long max = null;
+		
+		/*
+		 * Default value of this property, in case it is required
+		 * or defaultType is configured to be JSON_INCLUDE.DEFAULT
+		 */
+		public E defaultValue = null;
+		
+		/*
+		 * How null or default values are handled in its serializing and deserializing process
+		 */
+		public JSON_INCLUDE defaultType = null;
+		
+		/*
+		 *  serialize to double quotes, or not
+		 */
+		public Boolean jsonRawValue = null;
+		
+		
+		/*
+		 * If this value is true, the getter method of this property will return the Json data for the whole class.
+		 * In a class, only one method returning a String value is allowed to set this value to true
+		 */
+		public Boolean jsonValue = null;
+		
+		/*
+		 * method with this value set to true will get all properties not specified earlier.
+		 * It will normally return a Map<String, Object>
+		 */
+		public Boolean jsonAnyGetter = null;
+
+		/*
+		 * method with this value set to true will set all properties not consumed earlier.
+		 * It will normally store all the other data into a Map<String, Object>
+		 */
+		public Boolean jsonAnySetter = null;
+		
+		/*
+		 * determine a date to be converted to long, instead of using date format to converted into a string
+		 * This flag takes precedence over simpleDateFormat
+		 */
+		public Boolean date2Long = null;
+
+		/*
+		 * property specific date formatter, in case it is Date type
+		 */
+		private String simpleDateFormat = null;
+```
 
 
 ### <a name="TOC-Serialize-Annotation"></a>Annotation
 
 Annotations can be used to set how to name an attribute, change a value, etc. And you can have lots of options to do the same thing. All up to personal flavor. In most cases, you might choose to annotate your own classes, and to configure classes from external sources using Java configurations.
 
-When I faced with so many annotations, from different sources, and one processor only chooses to use its own set of annotations, I choose to implement a different Json-Java processor, which will support them all, and also provide its own set of annotations: only two of them: one is class level, and anothe one is field level. Both of these annotations try to deliver the same amount of information as its counterpart class, with the same name, just slightly different class path.
+When faced with so many annotations, from different sources, and one processor only chooses to use its own set of annotations, a decision is made to implement a different Json-Java processor, which will support most of them, and also provide its own set of annotations: only two of them: one is class level, and anothe one is field level. Both of these annotations try to deliver the same amount of information as its counterpart class, with the same name, just slightly different class path.
+
+For now, ClassMapper annotation holds 20 attributes, and FieldMapper annotation holds 21 attributes. The should cover most of existing annotations used in Java-Json conversion libaries, and with some extra ones used in JPA framework.
+
+As described in the overwriting rules, Oson annotations will hide annotations from external sources, and Java configurations will overwrite annotation configurations, and the final effect can also be inherited in an object-oriented way.
 
 
 ### <a name="TOC-Serialize-Lambda-Expression"></a>Lambda Expression
@@ -471,6 +782,51 @@ When I faced with so many annotations, from different sources, and one processor
 Lambda expression is one of the most powerful featuers in Java programming language. Or Java tends to behavior like a functional language, apart from the pure object-oriented language idealism.
 
 Lambda expression as a single functional interface is perfect to act as a serializer and deserializer. It gives the true powerful of transformation into Oson processor. Basically, it allows you to do everything, or almost anything you want, to have full access to contextual data, to return types of Java data you want. This only feature makes Oson as the one you like to use, as a Json-Java processor.
+
+To serialize a class object, you can provide a serializer using lambda expression. All Oson serializer and deserializer interfaces are @FunctionalInterface, and they still support overloading, the reason behind this is that Java provides an nice feature: default method in an interface. Here is an extract, out of the total 41 interfaces:
+
+```java
+	public static interface OsonFunction extends Function {
+		@Override
+		public default Object apply(Object t) {
+			return t;
+		}
+	}
+	
+	@FunctionalInterface
+	public static interface Integer2JsonFunction extends OsonFunction {
+		public String apply(Integer t);
+	}
+	
+	@FunctionalInterface
+	public static interface Json2IntegerFunction extends OsonFunction {
+		public Integer apply(String t);
+	}
+	
+	...
+	
+	@FunctionalInterface
+	public static interface DataMapper2JsonFunction extends OsonFunction {
+		public String apply(DataMapper classData);
+	}
+	
+	@FunctionalInterface
+	public static interface Json2DataMapperFunction extends OsonFunction {
+		public Object apply(DataMapper classData);
+	}
+```
+
+All data types have at least 3 overloading versions of functions:
+
+one accepting DataMapper parameter, and returns Object
+the second accepts a specific data type, and return a specific data type
+the last one accepts a specific data type, and return Object
+
+Take BigInteger as an example:
+
+
+
+
 
 This setting will transform all String data into lowercase, and BigInteger with a value of 1 to 10 translated into its English words in the outputed Json document:
 
@@ -768,26 +1124,7 @@ If curious, you can see how it works by using any IDE in debug mode.
 ### <a name="TOC-Deserialize-Lambda-Expression"></a>How to Use Lambda Expression to Deserialize Java Object
 
 To deserialize a class object, you can provide a deserializer using lambda expression. Here is interface you use:
-oson.setDeserializer(Class<T> type, Function deserializer), or oson.setDeserializer(Class<T> type, Json2DataMapperFunction deserializer). The two versions are overloading each other. All Oson deserializer interfaces are @FunctionalInterface, and they still support overloading, the reason behind this is that Java provides an nice feature: default method in an interface. In this case, it looks like this:
-
-```java
-	public static interface OsonFunction extends Function {
-		@Override
-		public default Object apply(Object t) {
-			return t;
-		}
-	}
-	
-	@FunctionalInterface
-	public static interface Integer2JsonFunction extends OsonFunction {
-		public String apply(Integer t);
-	}
-	
-	@FunctionalInterface
-	public static interface Json2DataMapperFunction extends OsonFunction {
-		public <T> T apply(DataMapper classData);
-	}
-```
+oson.setDeserializer(Class<T> type, Function deserializer), or oson.setDeserializer(Class<T> type, Json2DataMapperFunction deserializer). The two versions are overloading each other.
 
 If you provide a specific parameter, it will use it, which is Json2DataMapperFunction. Otherwise, it will use the generic one, which is java.util.function.Function. Here is the rule for handling a deserializer: if it returns an object of expected (which is Class<T> type), it will use this object as the deserialized product and return it. If the deserializer returns a null, then Oson uses this as your intention to ignore this class and returns null. Any other cases, Oson will continue its normal routine, which is to continue the deserialization process.
 
