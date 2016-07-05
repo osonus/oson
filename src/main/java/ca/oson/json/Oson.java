@@ -9802,6 +9802,7 @@ public class Oson {
 			} else {
 				objectDTO.classMapper = getGlobalizedClassMapper(type);
 				json = object2Serialize(objectDTO);
+				objectDTO.jsonRawValue = true;
 			}
 			
 			// set it back
@@ -10844,7 +10845,7 @@ public class Oson {
 			try {
 				if (function instanceof DataMapper2JsonFunction) {
 					DataMapper classData = new DataMapper(valueType, obj, classMapper, objectDTO.level);
-					
+					objectDTO.jsonRawValue = false;
 					return ((DataMapper2JsonFunction)function).apply(classData);
 					
 				} else {

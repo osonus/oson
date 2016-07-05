@@ -1,11 +1,13 @@
 package ca.oson.json.numeric;
 
 import java.math.BigInteger;
+import java.util.function.Function;
 
 import org.junit.Test;
 
 import ca.oson.json.Oson.*;
 import ca.oson.json.support.TestCaseBase;
+import ca.oson.json.domain.Car;
 
 public class BigIntegerTest extends TestCaseBase {
 	   
@@ -108,6 +110,67 @@ public class BigIntegerTest extends TestCaseBase {
 		   
 		   String result = oson.serialize(value);
 		   
+		   assertEquals(expected, result);
+	   }
+	   
+
+	   @Test
+	   public void testSerializeBigIntegerWithDataMapper2JsonFunction() {
+		   BigInteger value = BigInteger.valueOf(8);
+		   String expected = "Eight";
+		   
+		   DataMapper2JsonFunction function = (DataMapper p) -> {
+			   BigInteger bint = (BigInteger) p.getObj();
+			   
+			   switch (bint.intValue()) {
+			   case 1: return "One";
+			   case 2: return "Two";
+			   case 3: return "Three";
+			   case 4: return "Four";
+			   case 5: return "Five";
+			   case 6: return "Six";
+			   case 7: return "Seven";
+			   case 8: return "Eight";
+			   case 9: return "Nine";
+			   case 10: return "Ten";
+			   default: return p.toString();
+			   }
+		   };
+
+		   oson.setSerializer(BigInteger.class, function);
+		   
+		   String result = oson.serialize(value);
+		   
+		   assertEquals(expected, result);
+	   }
+	   
+	   @Test
+	   public void testSerializeBigIntegerWithGenericFunction() {
+		   BigInteger value = BigInteger.valueOf(8);
+		   String expected = "{\"@class\":\"ca.oson.json.domain.Car\",\"doors\":4,\"year\":2016,\"brand\":\"Eight\",\"years\":null}";
+		   
+		   Function function = (Object p) -> {
+			   BigInteger bint = (BigInteger) p;
+			   
+			   switch (bint.intValue()) {
+			   case 1: return new Car("One");
+			   case 2: return new Car("Two");
+			   case 3: return new Car("Three");
+			   case 4: return new Car("Four");
+			   case 5: return new Car("Five");
+			   case 6: return new Car("Six");
+			   case 7: return new Car("Seven");
+			   case 8: return new Car("Eight");
+			   case 9: return new Car("Nine");
+			   case 10: return new Car("Ten");
+			   default: return new Car(p.toString());
+			   }
+		   };
+
+		   oson.setSerializer(BigInteger.class, function);
+		   
+		   String result = oson.serialize(value);
+
 		   assertEquals(expected, result);
 	   }
 	   

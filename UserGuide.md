@@ -818,21 +818,19 @@ To serialize a class object, you can provide a serializer using lambda expressio
 
 All data types have at least 3 overloading versions of functions:
 
-one accepting DataMapper parameter, and returns Object
-the second accepts a specific data type, and return a specific data type
-the last one accepts a specific data type, and return Object
+one accepting DataMapper parameter, and returns String
+the second accepts a specific data type, and returns String
+the last one accepts an Object, and return Object
 
-Take BigInteger as an example:
-
-
-
-
-
-This setting will transform all String data into lowercase, and BigInteger with a value of 1 to 10 translated into its English words in the outputed Json document:
+Take BigInteger as an example. You can see that the the first one is targeted directly for the current data type. The second one provides lots of contextual information to a user, do as the user wants in order to return a appropriate String. The last one is so flexible as to allow a user to return any thing as pleased, in third example, the function returns a Car object, from a simple BigInteger.
 
 ```java
-oson.setClassMappers(new ClassMapper(String.class).setSerializer((String p) -> p.toLowerCase()))
-	.setClassMappers(new ClassMapper(BigInteger.class).setSerializer((BigInteger p) -> {
+	   @Test
+	   public void testSerializeBigIntegerWithBigInteger2JsonFunction() {
+		   BigInteger value = BigInteger.valueOf(6);
+		   String expected = "Six";
+
+		   oson.setClassMappers(new ClassMapper(BigInteger.class).setSerializer((BigInteger p) -> {
 			   switch (p.intValue()) {
 			   case 1: return "One";
 			   case 2: return "Two";
@@ -846,7 +844,72 @@ oson.setClassMappers(new ClassMapper(String.class).setSerializer((String p) -> p
 			   case 10: return "Ten";
 			   default: return p.toString();
 			   }
-		   }))
+		   }));
+		   
+		   String result = oson.serialize(value);
+		   
+		   assertEquals(expected, result);
+	   }
+
+	   @Test
+	   public void testSerializeBigIntegerWithDataMapper2JsonFunction() {
+		   BigInteger value = BigInteger.valueOf(8);
+		   String expected = "Eight";
+		   
+		   DataMapper2JsonFunction function = (DataMapper p) -> {
+			   BigInteger bint = (BigInteger) p.getObj();
+			   
+			   switch (bint.intValue()) {
+			   case 1: return "One";
+			   case 2: return "Two";
+			   case 3: return "Three";
+			   case 4: return "Four";
+			   case 5: return "Five";
+			   case 6: return "Six";
+			   case 7: return "Seven";
+			   case 8: return "Eight";
+			   case 9: return "Nine";
+			   case 10: return "Ten";
+			   default: return p.toString();
+			   }
+		   };
+
+		   oson.setSerializer(BigInteger.class, function);
+		   
+		   String result = oson.serialize(value);
+		   
+		   assertEquals(expected, result);
+	   }
+	   
+	   @Test
+	   public void testSerializeBigIntegerWithGenericFunction() {
+		   BigInteger value = BigInteger.valueOf(8);
+		   String expected = "{\"@class\":\"ca.oson.json.domain.Car\",\"doors\":4,\"year\":2016,\"brand\":\"Eight\",\"years\":null}";
+		   
+		   Function function = (Object p) -> {
+			   BigInteger bint = (BigInteger) p;
+			   
+			   switch (bint.intValue()) {
+			   case 1: return new Car("One");
+			   case 2: return new Car("Two");
+			   case 3: return new Car("Three");
+			   case 4: return new Car("Four");
+			   case 5: return new Car("Five");
+			   case 6: return new Car("Six");
+			   case 7: return new Car("Seven");
+			   case 8: return new Car("Eight");
+			   case 9: return new Car("Nine");
+			   case 10: return new Car("Ten");
+			   default: return new Car(p.toString());
+			   }
+		   };
+
+		   oson.setSerializer(BigInteger.class, function);
+		   
+		   String result = oson.serialize(value);
+
+		   assertEquals(expected, result);
+	   }
 ```
 
 
@@ -875,7 +938,7 @@ The second method accepts a class type, in addition to its Json content. This wi
 
 Yet there are still more complex cases involving Map, Array, or Collection, that can hold objects of various class types, using Object data type in its generic type: Map<String, Object>, Collection<Object>, or Object[], so it becomes a real challenge in figuring out each unique case. Some hard-coded approaches are recommended in GSON's documentation. Here we can adopt a simple apploach, either embed type information inside a Json document, or provide more type information insdie the implementation of the Type interface.
 
-One of this implementation is ca.oson.json.Oson.ComponentType, which accepts one or multiple component types in one of its constructors:
+One of this implementation is ca.oson.json.ComponentType, which accepts one or multiple component types in one of its constructors:
 
 ```java
 		public ComponentType(String typeName)
@@ -885,7 +948,9 @@ One of this implementation is ca.oson.json.Oson.ComponentType, which accepts one
 		public ComponentType(Class type, Class... componentTypes)
 ```
 
-The third constructor accepts a variable array of component types, which can be used to guess data types in complex data structures, such as array, collection, and map, including array, collection and map themselves. Inside the [CollectionsTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/userguide/CollectionsTest.java) test cases, you can find various approaches to solve this issue. Pick one to show here:
+The third constructor accepts a variable array of component types, which can be used to guess data types in complex data structures, such as array, collection, and map, including array, collection and map themselves. Oson has a sophisticated guessing algorithm to match Json input data to Java classes. It bases its matching criteria on the depth of data structures, field name and types, etc, to calculate a percentage float points, to decide the winner of a piece of data. Inside one load of processing, it accumulates its knowledge about the data types, and uses this component store as the knowledge basis for analysis. For most of the time, you only need to provide a top level user-defined class type.
+
+Inside the [CollectionsTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/userguide/CollectionsTest.java) test cases, you can find various approaches to solve this issue. Pick one to show here:
 
 ```java
 	@Test
@@ -1022,7 +1087,7 @@ The third constructor accepts a variable array of component types, which can be 
 	}
 ```
 
-Inside this test case, we create a list of data, with 9 different types: Customer, Event, Car, int[][][], Boolean[], HashMap, ArrayList, and Integer, String. We only need to pass in the class types of self-defined classes, and complex data structure, into the variable array of ComponentType class, which implements the Type interface. The Oson library uses this information to figure out these data types correctly. The main reason to pass in such data types as List, Array, or Map is to confirm that we do use them inside the Json document, and it is not a mistake, as normally people would not do such a crazy thing, unless inside a actual class, which would have no problem to process. After Oson has serialized and deserialized this data structure successfully, I myself fully convinced that it can handle very complex data structures.
+Inside this test case, we create a list of data, with 9 different types: Customer, Event, Car, int[][][], Boolean[], HashMap, ArrayList, and Integer, String. We only need to pass in the class types of self-defined classes, and complex data structure, into the variable array of ComponentType class, which implements the Type interface. The Oson library uses this information to figure out these data types correctly. The main reason to pass in such data types as List, Array, or Map is to confirm that we do use them inside the Json document, and it is not a mistake, as normally people would not do such a crazy thing, unless inside a actual class, which would have no problem to process. After Oson has serialized and deserialized this data structure successfully, it might have convinced you that it can handle very complex data structures.
 
 ### <a name="TOC-Deserialize-How-To-Create-Initial-Java-Object"></a>How to Create Initial Java Object
 
@@ -1163,6 +1228,19 @@ Here is an example of lambda expression as a deserializer:
 ```
 
 The DataMapper parameter to function Json2DataMapperFunction provides lots of detailed information to help you build your own version of deserializer.
+
+
+## <a name="TOC-How-To-Filter-Out-Information"></a>How to filter out information
+
+Json-Java converter is all about data exchange, and filtering is one major aspect of this conversion process. You can choose what to show, based on various criteria.
+
+### <a name="TOC-Filter-Java-Configuration"></a>Java Configuration
+
+1. 
+
+
+
+
 
 
 
