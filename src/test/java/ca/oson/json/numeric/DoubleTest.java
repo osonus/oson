@@ -1,15 +1,14 @@
 package ca.oson.json.numeric;
 
-import java.math.BigDecimal;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Test;
 
 import ca.oson.json.Oson.ClassMapper;
-import ca.oson.json.support.TestCaseBase;
+import ca.oson.json.support.TestCaseNumeric;
 
-public class DoubleTest extends TestCaseBase {
+public class DoubleTest extends TestCaseNumeric {
 	   
 	   @Test
 	   public void testSerializeDouble() {

@@ -4,6 +4,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 import ca.oson.json.userguide.ArrayTest;
+import ca.oson.json.userguide.ClassMapperConfigurationTest;
 import ca.oson.json.userguide.CollectionsTest;
 import ca.oson.json.userguide.ConfigInheritanceTest;
 import ca.oson.json.userguide.DeserializeFunctionTest;
@@ -23,7 +24,9 @@ import ca.oson.json.userguide.SerializeCarTest;
 	NewInstanceTest.class,
 	DeserializeFunctionTest.class,
 	ConfigInheritanceTest.class,
-	OptionalTest.class
+	OptionalTest.class,
+	ClassMapperConfigurationTest.class
+	
 })
 public class UserGuideTestSuite {
 

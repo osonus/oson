@@ -5,9 +5,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.junit.Test;
 
 import ca.oson.json.Oson.*;
-import ca.oson.json.support.TestCaseBase;
+import ca.oson.json.support.TestCaseNumeric;
 
-public class AtomicLongTest extends TestCaseBase {
+public class AtomicLongTest extends TestCaseNumeric {
 	   
 	   @Test
 	   public void testSerializeAtomicLong() {

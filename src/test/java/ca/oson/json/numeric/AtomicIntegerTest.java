@@ -5,9 +5,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Test;
 
 import ca.oson.json.Oson.*;
-import ca.oson.json.support.TestCaseBase;
+import ca.oson.json.support.TestCaseNumeric;
 
-public class AtomicIntegerTest extends TestCaseBase {
+public class AtomicIntegerTest extends TestCaseNumeric {
 	   
 	   @Test
 	   public void testSerializeAtomicInteger() {

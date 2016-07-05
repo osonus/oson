@@ -442,6 +442,15 @@ Here are the list of atributes you can set in order to make it the way you want 
 		private boolean useGsonExpose = false;
 
 		/*
+		 * Patterns of comments in Java regular expressions
+		 * User can define custom comment regex patterns
+		 * The default comments are: single-line //, 
+		 * single-line #, 
+		 * and multiple lines /* .... *\/
+		 */
+		private String[] commentPatterns = new String[] {"//[^\n\r]*\n?", "#[^\n\r]*\n?", "/\\*[^\\*/]*\\*/"};
+
+		/*
 		 * class level configurations
 		 */
 		private Map<Class, ClassMapper> classMappers = null;

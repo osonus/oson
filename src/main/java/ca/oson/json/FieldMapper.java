@@ -3,6 +3,7 @@ package ca.oson.json;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -12,10 +13,16 @@ import ca.oson.json.Oson.BOOLEAN;
 import ca.oson.json.Oson.ENUM_TYPE;
 import ca.oson.json.Oson.JSON_INCLUDE;
 
+@Repeatable(FieldMappers.class)
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.CONSTRUCTOR})
 @Retention(RUNTIME)
 public @interface FieldMapper {
-    
+	
+	/*
+	 * Determine if the field mapper is applied to serialization, deserialization, or both, or none of them
+	 */
+	BOOLEAN serialize() default BOOLEAN.BOTH;
+
 	/*
 	 * field or attribute name in a Java class.
 	 * During serialization, the name in Java object will be changed to this name in the outputed Json document;

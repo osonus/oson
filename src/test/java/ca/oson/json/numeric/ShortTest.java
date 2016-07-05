@@ -4,9 +4,9 @@ import java.math.BigInteger;
 import org.junit.Test;
 
 import ca.oson.json.Oson.ClassMapper;
-import ca.oson.json.support.TestCaseBase;
+import ca.oson.json.support.TestCaseNumeric;
 
-public class ShortTest extends TestCaseBase {
+public class ShortTest extends TestCaseNumeric {
 	   
 	   @Test
 	   public void testSerializeShort() {

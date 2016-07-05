@@ -6,9 +6,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Test;
 
 import ca.oson.json.Oson.ClassMapper;
-import ca.oson.json.support.TestCaseBase;
+import ca.oson.json.support.TestCaseNumeric;
 
-public class ByteTest extends TestCaseBase {
+public class ByteTest extends TestCaseNumeric {
 	   
 	   @Test
 	   public void testSerializeByte() {

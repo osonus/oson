@@ -55,6 +55,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -126,6 +127,7 @@ import com.google.gson.annotations.Since;
 
 
 
+
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtField;
@@ -168,14 +170,15 @@ public class Oson {
 	public static enum BOOLEAN {
 		FALSE,
 		TRUE,
-		NONE; // the same as null
+		NONE, // the same as null
+		BOTH; // the same as all
 		
 		public static Boolean valueOf(BOOLEAN bool) {
 			switch (bool) {
 				case FALSE: return false;
 				case TRUE: return true;
 				case NONE: return null;
-				default: return false;
+				default: return null;
 			}
 		}
 		
@@ -1478,6 +1481,17 @@ public class Oson {
 		 * Full support in seriaze, partial support in deserialize
 		 */
 		private boolean useGsonExpose = false;
+		
+		/*
+		 * Patterns of comments in Java regular expressions
+		 * User can define custom comment regex patterns
+		 * The default comments are: single-line //, 
+		 * single-line #, 
+		 * and multiple lines /* .... *\/
+		 */
+		private String[] commentPatterns = new String[] {"//[^\n\r]*\n?", "#[^\n\r]*\n?", "/\\*[^\\*/]*\\*/"};
+
+		private Pattern[] patterns = StringUtil.compilePatterns(commentPatterns);
 
 		/*
 		 * class level configurations
@@ -1490,7 +1504,19 @@ public class Oson {
 		private Set<FieldMapper> fieldMappers = null;
 
 
+		private Pattern[] getPatterns() {
+			return patterns;
+		}
+		
+		private String[] getCommentPatterns() {
+			return commentPatterns;
+		}
 
+		public void setCommentPatterns(String[] commentPatterns) {
+			this.commentPatterns = commentPatterns;
+			this.patterns = StringUtil.compilePatterns(commentPatterns);
+		}
+		
 		private boolean isUseGsonExpose() {
 			return useGsonExpose;
 		}
@@ -3824,6 +3850,22 @@ public class Oson {
 
 		return this;
 	}
+	
+	private String[] getCommentPatterns() {
+		return options.getCommentPatterns();
+	}
+
+	public Oson setCommentPatterns(String[] commentPatterns) {
+		options.setCommentPatterns(commentPatterns);
+
+		return this;
+	}
+	
+	private Pattern[] getPatterns() {
+		return options.getPatterns();
+	}
+	
+	
 	
 	/////////////////////////////////////////////////////////////////////////////////
 	// start to set up class mapper
@@ -11930,6 +11972,8 @@ public class Oson {
 				
 				startCachedComponentTypes(componentType);
 			}
+			
+			source = removeComments(source);
 
 			source = source.trim();
 			if (source.startsWith("[")) {
@@ -11969,6 +12013,11 @@ public class Oson {
 	<T> T fromJsonMap(String source, Class<T> valueType) {
 		return fromJsonMap(source, valueType, null);
 	}
+	
+	
+	private String removeComments(String source) {
+		return StringUtil.removeComments(source, getPatterns());
+	}
 
 	<T> T fromJsonMap(String source, Class<T> valueType, T object) {
 		if (source == null) {
@@ -11976,6 +12025,9 @@ public class Oson {
 		}
 
 		try {
+			
+			source = removeComments(source);
+			
 			source = source.trim();
 			if (source.startsWith("[")) {
 				JSONArray obj = new JSONArray(source);
@@ -14001,6 +14053,37 @@ public class Oson {
 	}
 
 	public static class StringUtil {
+		
+		public static String removeComments(String content, Pattern[] patterns) {
+			if (patterns == null || patterns.length == 0) {
+				return content;
+			}
+			
+		    Pattern p = Pattern.compile("<script[^>]*>(.*?)</script>",
+		            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
+		    
+		    for (Pattern pattern: patterns) {
+		    	content = pattern.matcher(content).replaceAll("");
+		    }
+		    
+		    return content;
+		}
+		
+		public static Pattern[] compilePatterns(String[] comments) {
+			if (comments == null || comments.length == 0) {
+				return null;
+			}
+			Pattern[] patterns = new Pattern[comments.length];
+		    
+		    for (int i = 0; i < comments.length; i++) {
+		    	patterns[i] = Pattern.compile(comments[i],
+			            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
+		    }
+		    
+		    return patterns;
+		}
+		
+		
 		public static <T> boolean isNull(T obj) {
 			if (obj == null) return true;
 			

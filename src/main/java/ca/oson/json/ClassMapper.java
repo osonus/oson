@@ -16,6 +16,7 @@ package ca.oson.json;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -24,10 +25,16 @@ import ca.oson.json.Oson.ENUM_TYPE;
 import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.Oson.MODIFIER;
 
+@Repeatable(ClassMappers.class)
 @Target({ ElementType.TYPE})
 @Retention(RUNTIME)
 public @interface ClassMapper {
     
+	/*
+	 * Determine if the class mapper is applied to serialization, deserialization, or both, or none of them
+	 */
+	BOOLEAN serialize() default BOOLEAN.BOTH;
+	
 	/*
 	 * Defautl value for a certain type, for now only String is allowed
 	 */
