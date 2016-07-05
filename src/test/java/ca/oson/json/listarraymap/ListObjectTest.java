@@ -9,7 +9,7 @@ import org.junit.Test;
 
 import com.google.gson.reflect.TypeToken;
 
-import ca.oson.json.Oson.ComponentType;
+import ca.oson.json.ComponentType;
 import ca.oson.json.domain.Car;
 import ca.oson.json.support.TestCaseBase;
 

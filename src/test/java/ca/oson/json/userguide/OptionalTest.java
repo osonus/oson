@@ -2,7 +2,7 @@ package ca.oson.json.userguide;
 
 import org.junit.Test;
 
-import ca.oson.json.Oson.ComponentType;
+import ca.oson.json.ComponentType;
 import ca.oson.json.domain.Customer;
 import ca.oson.json.domain.OptionalCustomer;
 import ca.oson.json.domain.OptionalCustomerNoGenericType;

@@ -8,7 +8,7 @@ import org.junit.Test;
 import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.domain.Car;
 import ca.oson.json.support.TestCaseBase;
-import ca.oson.json.Oson.ComponentType;
+import ca.oson.json.ComponentType;
 
 public class MapTest extends TestCaseBase {
 

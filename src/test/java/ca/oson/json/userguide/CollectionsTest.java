@@ -13,7 +13,7 @@ import org.junit.Test;
 import com.google.gson.reflect.TypeToken;
 
 import ca.oson.json.Oson;
-import ca.oson.json.Oson.ComponentType;
+import ca.oson.json.ComponentType;
 import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.domain.Car;
 import ca.oson.json.domain.Customer;

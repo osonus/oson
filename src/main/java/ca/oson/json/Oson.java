@@ -4183,9 +4183,17 @@ public class Oson {
 	public Oson clear() {
 		options = new Options();
 		reset();
+
+		return this;
+	}
+	
+	public Oson clearAll() {
+		clear();
+		
 		cachedFields = new ConcurrentHashMap<>();
 		cachedMethods = new ConcurrentHashMap<>();
 		cachedComponentTypes = new ConcurrentHashMap<>();
+		
 		return this;
 	}
 	
@@ -8378,7 +8386,15 @@ public class Oson {
 		return null;
 	}
 	
+	private void startCachedComponentTypes(ComponentType componentType) {
+		this.masterClass = null;
+		cachedComponentTypes(componentType);
+	}
 	
+	private void startCachedComponentTypes(Class classType) {
+		this.masterClass = classType;
+		cachedComponentTypes(classType);
+	}
 	
 	private ComponentType cachedComponentTypes(ComponentType componentType) {
 		Class ClassType = componentType.getClassType();
@@ -8619,6 +8635,8 @@ public class Oson {
 							return ctypes[maxIdx];
 						}
 						
+						Set<Class> processed = new HashSet(Arrays.asList(ctypes));
+						
 						// now try to locate it in all cachedComponentTypes
 						for (Entry<Class, ComponentType> entry: cachedComponentTypes.entrySet()) {
 							Class myMasterClass = entry.getKey();
@@ -8632,33 +8650,35 @@ public class Oson {
 									for (int i = 0; i < length; i++) {
 										Class ctype = ctypes[i];
 										
-										Field[] fields = getFields(ctype);
-										if (fields != null && fields.length > 0) {
-											int count = 0;
-											
-											for (Field field: fields) {
-												String name = field.getName();
-												if (name != null) {
-													name = name.toLowerCase();
-													if (lnames.containsKey(name)) {
-														count++;
-														
-														Class ftype = field.getType();
-														Class mtype = lnames.get(name);
-														if (ObjectUtil.isSameType(ftype, mtype)) {
+										if (!processed.contains(ctype)) {
+											Field[] fields = getFields(ctype);
+											if (fields != null && fields.length > 0) {
+												int count = 0;
+												
+												for (Field field: fields) {
+													String name = field.getName();
+													if (name != null) {
+														name = name.toLowerCase();
+														if (lnames.containsKey(name)) {
 															count++;
+															
+															Class ftype = field.getType();
+															Class mtype = lnames.get(name);
+															if (ObjectUtil.isSameType(ftype, mtype)) {
+																count++;
+															}
 														}
 													}
 												}
+												float currentCount = count * 100.0f / fields.length;
+												if (currentCount > maxCount) {
+													maxCount = currentCount;
+													maxIdx = i;
+												}
+	//											else if (maxIdx == -1 && ctype.isAssignableFrom(itemType)) {
+	//												maxIdx = i;
+	//											}
 											}
-											float currentCount = count * 100.0f / fields.length;
-											if (currentCount > maxCount) {
-												maxCount = currentCount;
-												maxIdx = i;
-											}
-//											else if (maxIdx == -1 && ctype.isAssignableFrom(itemType)) {
-//												maxIdx = i;
-//											}
 										}
 									}
 									
@@ -8669,6 +8689,9 @@ public class Oson {
 										
 										return ctypes[maxIdx];
 									}
+									
+									
+									processed.addAll(Arrays.asList(ctypes));
 								}
 							}
 						}
@@ -8801,6 +8824,8 @@ public class Oson {
 					}
 					
 					//Class<E> componentType = objectDTO.getComponentType(getJsonClassType());
+					
+					objectDTO.incrLevel();
 					
 					for (Entry<String, Object> entry: values.entrySet()) {
 						Object obj = entry.getValue(); // obj.getClass()
@@ -9012,6 +9037,8 @@ public class Oson {
 					objectDTO.returnObj = returnObj;
 				}
 				
+				objectDTO.incrLevel();
+				
 				objectDTO.valueToProcess = collection;
 				//Class<E> componentType = objectDTO.getComponentType(getJsonClassType());
 
@@ -9204,6 +9231,9 @@ public class Oson {
 					objectDTO.returnObj = returnObj;
 				}
 				objectDTO.valueToProcess = values;
+				
+				objectDTO.incrLevel();
+				
 				Class<E> componentType = objectDTO.getComponentType(getJsonClassType());
 				
 				E[] arr = (E[]) Array.newInstance(componentType, values.size());
@@ -9682,16 +9712,7 @@ public class Oson {
 	
 		return "{" + repeatedItem + "\"value\":" + pretty + object2Json(objectDTO) + repeated + "}";
 	}
-	
-	
-	private <E,R> Optional json2Optional(FieldData objectDTO) {
-		objectDTO.valueToProcess = (E) ((Map) objectDTO.valueToProcess).get("value");
 
-		objectDTO.incrLevel();
-	
-		return null;
-	}
-	
 	
 	private String object2String(FieldData objectDTO) {
 		Object returnedValue = objectDTO.valueToProcess;
@@ -11906,7 +11927,7 @@ public class Oson {
 				}
 				valueType = componentType.getClassType();
 				
-				cachedComponentTypes(componentType);
+				startCachedComponentTypes(componentType);
 			}
 
 			source = source.trim();
@@ -11959,8 +11980,8 @@ public class Oson {
 				JSONArray obj = new JSONArray(source);
 
 				List list = (List)fromJsonMap(obj);
-				
-				cachedComponentTypes(valueType);
+
+				startCachedComponentTypes(valueType);
 
 				return json2Object(new FieldData(list, valueType, object, true));
 
@@ -11980,7 +12001,7 @@ public class Oson {
 					}
 				}
 				
-				cachedComponentTypes(valueType);
+				startCachedComponentTypes(valueType);
 
 				if (valueType != null && Map.class.isAssignableFrom(valueType)) {
 					return json2Object(new FieldData(map, valueType, object, true));
@@ -11994,7 +12015,7 @@ public class Oson {
 				}
 
 			} else {
-				cachedComponentTypes(valueType);
+				startCachedComponentTypes(valueType);
 				
 				return json2Object(new FieldData(source, valueType, true));
 			}
@@ -12524,6 +12545,8 @@ public class Oson {
 		if (objectDTO.fieldMapper != null && isInheritMapping()) {
 			classMapper = overwriteBy (classMapper, objectDTO.fieldMapper);
 		}
+
+		objectDTO.incrLevel();
 
 		try {
 			boolean annotationSupport = getAnnotationSupport();
@@ -15021,122 +15044,7 @@ public class Oson {
 	}
 	
 	
-	/*
-	 * Make it as simple as possible
-	 */
-	public static class ComponentType implements Type {
-		// just keep for reference
-		private Type erasuredType;
-		private String typeName;
-		private Class type;
-		private Class[] componentTypes;
-		
-		private ComponentType() {
-		}
-		
-		public ComponentType(String typeName) {
-			this.typeName = typeName;
-			fixTypeNames();
-		}
-		
-		public ComponentType(Type type) {
-			this.erasuredType = type;
-			this.typeName = type.getTypeName();
-			fixTypeNames();
-		}
-		
-		public ComponentType(Class type, Class... componentTypes) {
-			this.type = type;
-			this.componentTypes = componentTypes;
-			this.typeName = type.getName();
-			fixTypeNames();
-		}
-		
-		public ComponentType(Class type) {
-			this.type = type;
-			fixTypeNames();
-		}
-		
-		public ComponentType add(Class componentClass) {
-			if (componentClass == null || componentClass == type) {
-				return this;
-			}
-			if (componentTypes == null || componentTypes.length == 0) {
-				componentTypes = new Class[]{componentClass};
-			}
-			
-			if (!(new HashSet(Arrays.asList(this.componentTypes)).contains(componentClass))) {
-				int length = this.componentTypes.length;
-				this.componentTypes = Arrays.copyOf(this.componentTypes, length + 1);
-				this.componentTypes[length] = componentClass;
-			}
-			
-			return this;
-		}
-		
-		private void fixTypeNames() {
-			if (this.typeName == null) {
-				if (type != null) {
-					this.typeName = type.getName();
-				}
-				// simply use the first name, for nothing
-				if (componentTypes != null && componentTypes.length > 0) {
-					this.typeName = this.typeName + "<" + componentTypes[0].getName() + ">";
-				}
-				
-			} else {
-				int idx = typeName.indexOf('<');
 
-				if (idx > -1) {
-					String className = typeName.substring(0, idx);
-					String componentTypeName = typeName.substring(idx + 1, typeName.length() - 1);
-					
-					try {
-						this.type = Class.forName(className);
-						Class componentClass = Class.forName(componentTypeName);
-						if (this.componentTypes == null || this.componentTypes.length == 0) {
-							this.componentTypes = new Class[] {componentClass};
-						} else {
-							add(componentClass);
-						}
-					} catch (ClassNotFoundException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					
-				} else if (this.type == null) {
-					try {
-						this.type = Class.forName(typeName);
-					} catch (ClassNotFoundException e) {
-						e.printStackTrace();
-					}
-				}
-				
-			}
-		}
-		
-		@Override
-		public String getTypeName() {
-	        return typeName;
-	    }
-		
-		public Class getClassType() {
-			return type;
-		}
-
-		public Class[] getComponentClassType() {
-			return componentTypes;
-		}
-		
-		public Class getMainComponentType() {
-			if (componentTypes != null && componentTypes.length > 0) {
-				return componentTypes[0];
-			} else {
-				return null;
-			}
-		}
-	}
-	
 	
 	public static interface OsonFunction extends Function {
 		@Override
