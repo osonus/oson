@@ -1,13 +1,54 @@
+/*******************************************************************************
+ * Copyright (c) 2016- Oson.ca
+ * @author	David Ruifang He
+ * @email	osonus@gmail.com
+ * 
+ * All rights reserved.
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * You may elect to redistribute this code, under the condition that you may not
+ * modify this copyright header
+ *******************************************************************************/
 package ca.oson.json;
 
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
+import ca.oson.json.util.StringUtil;
 
 /*
  * Make it as simple as possible
  */
 public class ComponentType implements Type {
+	
+	public static final Map<String, String> primitiveTypeNames = new HashMap<>();
+	{
+		primitiveTypeNames.put("int", "I");
+		primitiveTypeNames.put("long", "J");
+		primitiveTypeNames.put("byte", "B");
+		primitiveTypeNames.put("double", "D");
+		primitiveTypeNames.put("float", "F");
+		primitiveTypeNames.put("short", "S");
+		primitiveTypeNames.put("char", "C");
+		primitiveTypeNames.put("boolean", "Z");
+	};
+	public static final Map<String, Class> primitiveTypeClasses = new HashMap<>();
+	{
+		primitiveTypeClasses.put("int", int.class);
+		primitiveTypeClasses.put("long", long.class);
+		primitiveTypeClasses.put("byte", byte.class);
+		primitiveTypeClasses.put("double", double.class);
+		primitiveTypeClasses.put("float", float.class);
+		primitiveTypeClasses.put("short", short.class);
+		primitiveTypeClasses.put("char", char.class);
+		primitiveTypeClasses.put("boolean", boolean.class);
+	};
+	
+	
 	// just keep for reference
 	private Type erasuredType;
 	private String typeName;
@@ -25,6 +66,7 @@ public class ComponentType implements Type {
 	public ComponentType(Type type) {
 		this.erasuredType = type;
 		this.typeName = type.getTypeName();
+
 		fixTypeNames();
 	}
 	
@@ -89,7 +131,43 @@ public class ComponentType implements Type {
 				
 			} else if (this.type == null) {
 				try {
-					this.type = Class.forName(typeName);
+					int index = typeName.indexOf("/");
+					if (index > -1) {
+						typeName = typeName.replaceAll("/", ".");
+					}
+					
+					index = typeName.indexOf("[");
+					String start = "", end = "";
+					int repeat = 0;
+					if (index > -1) {
+						start = typeName.substring(0, index);
+						end = typeName.substring(index);
+						repeat = end.length()/2;
+					} else {
+						start = typeName;
+					}
+					
+					if (primitiveTypeNames.containsKey(start)) {
+						if (repeat == 0) {
+							this.type = primitiveTypeClasses.get(start);
+						} else {
+							String nickname = primitiveTypeNames.get(start);
+							this.type = Class.forName(StringUtil.repeatChar('[', repeat) + nickname);
+						}
+						
+					} else {
+						if (repeat == 0) {
+							this.type = Class.forName(start);
+						} else {
+							this.type = Class.forName(StringUtil.repeatChar('[', repeat) + "L" + start + ";");
+						}
+						
+					}
+
+					if (this.type == null) {
+						this.type = Class.forName(typeName);
+					}
+					
 				} catch (ClassNotFoundException e) {
 					e.printStackTrace();
 				}

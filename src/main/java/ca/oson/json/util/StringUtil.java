@@ -64,6 +64,13 @@ public class StringUtil {
 		return (str.length() == 0 || str.equals("\"\"") || str.equals("''") || obj.getClass().getName().equals("org.json.JSONObject$Null"));
 	}
 
+	public static boolean isEmpty(String str) {
+		if (str == null) {
+			return true;
+		}
+
+		return (str.length() == 0 || str.equals("\"\"") || str.equals("''"));
+	}
 	
 	public static String repeatSpace(int repeat) {
 		return repeatChar(SPACE, repeat);
