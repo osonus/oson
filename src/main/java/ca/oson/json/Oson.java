@@ -5430,9 +5430,6 @@ public class Oson {
 			String valueToProcess = value.toString().trim();
 			Character valueToReturn = null;
 			
-			Long min = objectDTO.getMin();
-			Long max = objectDTO.getMax();
-			
 			try {
 				Function function = objectDTO.getDeserializer();
 				
@@ -5453,6 +5450,9 @@ public class Oson {
 						if (returnedValue instanceof Optional) {
 							returnedValue = ObjectUtil.unwrap(returnedValue);
 						}
+						
+						Long min = objectDTO.getMin();
+						Long max = objectDTO.getMax();
 						
 						if (returnedValue == null) {
 							return null;
@@ -5494,27 +5494,17 @@ public class Oson {
 					}
 					
 				} else {
-					if (StringUtil.isNumeric(valueToProcess)) {
-						long longvalue = Long.parseLong(valueToProcess);
-						
-						valueToReturn = long2Character(longvalue, min, max);
-						
-					} else {
+//					if (StringUtil.isNumeric(valueToProcess)) {
+//						long longvalue = Long.parseLong(valueToProcess);
+//						
+//						valueToReturn = long2Character(longvalue, min, max);
+//						
+//					} else {
 						valueToReturn = valueToProcess.charAt(0);
-					}
-
+					//}
 				}
 				
 				if (valueToReturn != null) {
-					
-					if (min != null && min > (int)valueToReturn) {
-						valueToReturn = (char)min.intValue();
-					}
-					
-					if (max != null && max < (int)valueToReturn) {
-						valueToReturn = (char)max.intValue();
-					}
-					
 					return valueToReturn;
 				}
 	
@@ -9917,7 +9907,7 @@ public class Oson {
 	 * more confortable to work with map and list
 	 * instead of JSONObject and JSONArray
 	 */
-	Object fromJsonMap(Object obj) {
+	static Object fromJsonMap(Object obj) {
 		if (obj instanceof JSONArray) {
 			JSONArray jobj = (JSONArray) obj; // .getJSONArray(key);
 
@@ -9996,6 +9986,14 @@ public class Oson {
 	private String removeComments(String source) {
 		return StringUtil.removeComments(source, getPatterns());
 	}
+	
+	// used to test data types only
+	public static Object getListMapObject (String source) {
+		JSONObject obj = new JSONObject(source);
+		
+		return fromJsonMap(obj);
+	}
+	
 
 	<T> T fromJsonMap(String source, Class<T> valueType, T object, boolean started) {
 		if (source == null) {

@@ -32,7 +32,7 @@ public class CharacterTest extends TestCaseBase {
 	   @Test
 	   public void testDeserializeCharacterFromNumber() {
 		   String value = "69";
-		   Character expected = 'E';
+		   Character expected = '6';
 
 		   Character result = oson.deserialize(value, Character.class);
 
@@ -41,17 +41,18 @@ public class CharacterTest extends TestCaseBase {
 	   
 	   @Test
 	   public void testDeserializeCharacterOutOfRange() {
-		   String value = "6900000";
-
+		   String value = "900000";
+		   Character expected = '9';
+		   
 		   Character result = oson.deserialize(value, Character.class);
 
-		   assertNull(result);
+		   assertEquals(expected, result);
 	   }
 	   
 	   @Test
 	   public void testDeserializeCharacterOutOfRangeWithMax() {
 		   String value = "6900000";
-		   Character expected = 'E';
+		   Character expected = '6';
 
 		   Character result = oson.setClassMappers(new ClassMapper(Character.class).setMax(69l)).deserialize(value, Character.class);
 
@@ -61,7 +62,7 @@ public class CharacterTest extends TestCaseBase {
 	   @Test
 	   public void testDeserializeCharacterWithMin() {
 		   String value = "1";
-		   Character expected = 'A';
+		   Character expected = '1';
 
 		   Character result = oson.setClassMappers(new ClassMapper(Character.class).setMin(65l)).deserialize(value, Character.class);
 
