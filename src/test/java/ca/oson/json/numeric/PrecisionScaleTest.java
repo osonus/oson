@@ -374,7 +374,7 @@ public class PrecisionScaleTest extends TestCaseBase {
 		assertEquals(expected51, json);
 
 		json = oson.serialize(decimal);
-		//System.err.println(json);
+		// System.err.println(json);
 		assertEquals(expectedDecimal, json);
 
 	}

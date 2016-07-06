@@ -1,6 +1,7 @@
 package ca.oson.json;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.math.RoundingMode;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -23,7 +24,6 @@ import ca.oson.json.Oson.FIELD_NAMING;
 import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.Oson.JSON_PROCESSOR;
 import ca.oson.json.Oson.MODIFIER;
-import ca.oson.json.util.ObjectUtil;
 import ca.oson.json.util.*;
 
 
@@ -221,6 +221,63 @@ public class Options {
 	 * field level configurations
 	 */
 	private Set<FieldMapper> fieldMappers = null;
+	
+	
+	public void excludeFieldsWithModifiers(int... modifiers) {
+		if (modifiers == null || modifiers.length == 0) {
+			return;
+		}
+		
+		if (includeFieldsWithModifiers == null) {
+			includeFieldsWithModifiers = new HashSet(Arrays.asList(MODIFIER.values()));
+			includeFieldsWithModifiers.remove(MODIFIER.Synthetic);
+			includeFieldsWithModifiers.remove(MODIFIER.Transient);
+			includeFieldsWithModifiers.remove(MODIFIER.Volatile);
+			includeFieldsWithModifiers.remove(MODIFIER.All);
+		}
+		
+		for (int modifier: modifiers) {
+			if (Modifier.isAbstract(modifier)) {
+				includeFieldsWithModifiers.remove(MODIFIER.Abstract);
+			}
+			if (Modifier.isFinal(modifier)) {
+				includeFieldsWithModifiers.remove(MODIFIER.Final);
+			}
+			if (Modifier.isInterface(modifier)) {
+				includeFieldsWithModifiers.remove(MODIFIER.Interface);
+			}
+			if (Modifier.isNative(modifier)) {
+				includeFieldsWithModifiers.remove(MODIFIER.Native);
+			}
+			if (Modifier.isPrivate(modifier)) {
+				includeFieldsWithModifiers.remove(MODIFIER.Private);
+			}
+			if (Modifier.isProtected(modifier)) {
+				includeFieldsWithModifiers.remove(MODIFIER.Protected);
+			}
+			if (Modifier.isPublic(modifier)) {
+				includeFieldsWithModifiers.remove(MODIFIER.Public);
+			}
+			if (Modifier.isStatic(modifier)) {
+				includeFieldsWithModifiers.remove(MODIFIER.Static);
+			}
+			if (Modifier.isStrict(modifier)) {
+				includeFieldsWithModifiers.remove(MODIFIER.Strict);
+			}
+			if (Modifier.isSynchronized(modifier)) {
+				includeFieldsWithModifiers.remove(MODIFIER.Synchronized);
+			}
+			if (Modifier.isTransient(modifier)) {
+				includeFieldsWithModifiers.remove(MODIFIER.Transient);
+			}
+			if (Modifier.isVolatile(modifier)) {
+				includeFieldsWithModifiers.remove(MODIFIER.Volatile);
+			}
+			if (ObjectUtil.isPackage(modifier)) {
+				includeFieldsWithModifiers.remove(MODIFIER.Package);
+			}
+		}
+	}
 
 
 	public Pattern[] getPatterns() {

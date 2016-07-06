@@ -41,6 +41,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -62,6 +63,7 @@ import javax.validation.constraints.Size;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import com.fasterxml.jackson.databind.introspect.AnnotatedField;
 import com.fasterxml.jackson.databind.introspect.AnnotatedMethod;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
@@ -101,6 +103,8 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.Since;
 
 //import org.springframework.web.bind.annotation.RequestParam;
+
+
 
 import ca.oson.json.function.*;
 import ca.oson.json.util.*;
@@ -730,22 +734,15 @@ public class Oson {
 				return dateFormat;
 			}
 			if (fieldMapper != null) {
-				if (fieldMapper.simpleDateFormat != null) {
-					dateFormat = new SimpleDateFormat(fieldMapper.simpleDateFormat);
-					
-					return dateFormat;
-				}
+				dateFormat = fieldMapper.getDateFormat();
 			}
-			if (classMapper != null) {
-				if (classMapper.simpleDateFormat != null) {
-					dateFormat = new SimpleDateFormat(classMapper.simpleDateFormat);
-					
-					return dateFormat;
-				}
+			if (dateFormat == null && classMapper != null) {
+				dateFormat = classMapper.getDateFormat();
 			}
 			
-			
-			dateFormat = new SimpleDateFormat(DefaultValue.simpleDateFormat);
+			if (dateFormat == null) {
+				dateFormat = new SimpleDateFormat(DefaultValue.simpleDateFormat);
+			}
 			
 			return dateFormat;
 		}
@@ -941,7 +938,39 @@ public class Oson {
 
 		return this;
 	}
+	public Oson setDateFormat(DateFormat dateFormat) {
+		options.setDateFormat(dateFormat);
+		reset();
 
+		return this;
+	}
+	public Oson setDateFormat(int style) {
+		options.setDateFormat(DateFormat.getDateInstance(style));
+		reset();
+
+		return this;
+	}
+	public Oson setDateFormat(int style, Locale locale) {
+		options.setDateFormat(DateFormat.getDateInstance(style, locale));
+		reset();
+
+		return this;
+	}
+	public Oson setDateFormat(int dateStyle, int timeStyle) {
+		options.setDateFormat(DateFormat.getDateTimeInstance(dateStyle, timeStyle));
+		reset();
+
+		return this;
+	}
+	public Oson setDateFormat(int dateStyle, int timeStyle, Locale locale) {
+		options.setDateFormat(DateFormat.getDateTimeInstance(dateStyle, timeStyle, locale));
+		reset();
+
+		return this;
+	}
+	
+	
+	
 	private boolean getPrettyPrinting() {
 		return options.getPrettyPrinting();
 	}
@@ -1409,8 +1438,8 @@ public class Oson {
 	private ClassMapper globalize(ClassMapper mapper) {
 		// a little bit convenient
 		// && Date.class.isAssignableFrom(valueType)
-		if (mapper.simpleDateFormat == null) {
-			mapper.simpleDateFormat =  getSimpleDateFormat();
+		if (mapper.getDateFormat() == null) {
+			mapper.setDateFormat(getDateFormat());
 		}
 		
 		if (mapper.includeClassTypeInJson == null) {
@@ -1537,9 +1566,9 @@ public class Oson {
 		if (fieldMapper.useField == null) {
 			fieldMapper.useField = classMapper.useField;
 		}
-		
-		if (fieldMapper.simpleDateFormat == null) {
-			fieldMapper.simpleDateFormat = classMapper.simpleDateFormat;
+
+		if (fieldMapper.getDateFormat() == null) {
+			fieldMapper.setDateFormat(classMapper.getDateFormat());
 		}
 		
 		if (fieldMapper.defaultType == null) {
@@ -1782,6 +1811,12 @@ public class Oson {
 		return options.getPatterns();
 	}
 	
+	
+	public Oson excludeFieldsWithModifiers(int... modifiers) {
+		options.excludeFieldsWithModifiers(modifiers);
+
+		return this;
+	}
 	
 	
 	/////////////////////////////////////////////////////////////////////////////////
@@ -2059,6 +2094,11 @@ public class Oson {
 	
 	public <T> Oson setSimpleDateFormat(Class<T> type, String simpleDateFormat) {
 		cMap(type).setSimpleDateFormat(simpleDateFormat);
+
+		return this;
+	}
+	public <T> Oson setDateFormat(Class<T> type, DateFormat dateFormat) {
+		cMap(type).setDateFormat(dateFormat);
 
 		return this;
 	}
@@ -8224,7 +8264,7 @@ public class Oson {
 
 		String simpleDateFormat = classMapperAnnotation.simpleDateFormat();
 		if (simpleDateFormat != null && simpleDateFormat.length() > 0) {
-			classMapper.simpleDateFormat = simpleDateFormat;
+			classMapper.setSimpleDateFormat(simpleDateFormat);
 		}
 
 		String[] propertyOrders = classMapperAnnotation.propertyOrders();
@@ -8358,8 +8398,9 @@ public class Oson {
 			classMapper.serializer = javaClassMapper.serializer;
 		}
 		
-		if (javaClassMapper.simpleDateFormat != null) {
-			classMapper.simpleDateFormat = javaClassMapper.simpleDateFormat;
+		DateFormat dateFormat = javaClassMapper.getDateFormat();
+		if (dateFormat != null) {
+			classMapper.setDateFormat(dateFormat);
 		}
 		
 		if (javaClassMapper.length != null) {
@@ -8383,9 +8424,10 @@ public class Oson {
 		if (fieldMapper.useField != null) {
 			classMapper.useField = fieldMapper.useField;
 		}
-		
-		if (fieldMapper.simpleDateFormat != null) {
-			classMapper.simpleDateFormat = fieldMapper.simpleDateFormat;
+
+		DateFormat dateFormat = fieldMapper.getDateFormat();
+		if (dateFormat != null) {
+			classMapper.setDateFormat(dateFormat);
 		}
 		
 		if (fieldMapper.defaultType != null) {
@@ -8503,7 +8545,7 @@ public class Oson {
 		
 		String simpleDateFormat = fieldMapperAnnotation.simpleDateFormat();
 		if (simpleDateFormat != null && simpleDateFormat.length() > 0) {
-			fieldMapper.simpleDateFormat = simpleDateFormat;
+			fieldMapper.setSimpleDateFormat(simpleDateFormat);
 		}
 
 		if (fieldMapperAnnotation.ignoreVersionsAfter() > classMapper.ignoreVersionsAfter) {
@@ -8604,8 +8646,8 @@ public class Oson {
 			fieldMapper.serializer = javaFieldMapper.serializer;
 		}
 		
-		if (javaFieldMapper.simpleDateFormat != null) {
-			fieldMapper.simpleDateFormat = javaFieldMapper.simpleDateFormat;
+		if (javaFieldMapper.getDateFormat() != null) {
+			fieldMapper.setDateFormat(javaFieldMapper.getDateFormat());
 		}
 		
 		return fieldMapper;
@@ -8699,7 +8741,7 @@ public class Oson {
 					for (ca.oson.json.annotation.ClassMapper ann: classMapperAnnotations.value()) {
 						if (ann.serialize() == BOOLEAN.BOTH || ann.serialize() == BOOLEAN.TRUE) {
 							classMapperAnnotation = ann;
-							break;
+							//break;
 						}
 					}
 					break;
@@ -8862,7 +8904,7 @@ public class Oson {
 		
 		
 		try {
-			Field[] fields = getFields(obj);
+			Field[] fields = getFields(valueType); // getFields(obj);
 
 			for (Field f : fields) {
 				f.setAccessible(true);
@@ -8874,6 +8916,10 @@ public class Oson {
 				// in the ignored list
 				if (ObjectUtil.inSet(name, classMapper.jsonIgnoreProperties)) {
 					getters.remove(lcfieldName);
+					continue;
+				}
+				
+				if (ignoreModifiers(f.getModifiers(), classMapper.includeFieldsWithModifiers)) {
 					continue;
 				}
 				
@@ -8960,7 +9006,7 @@ public class Oson {
 							for (ca.oson.json.annotation.FieldMapper ann: fieldMapperAnnotations.value()) {
 								if (ann.serialize() == BOOLEAN.BOTH || ann.serialize() == BOOLEAN.TRUE) {
 									fieldMapperAnnotation = ann;
-									break;
+									//break;
 								}
 							}
 							break;
@@ -9170,7 +9216,7 @@ public class Oson {
 				
 				if (!jnameFixed) {
 					for (String jsoname: names) {
-						if (!name.equals(jsoname)) {
+						if (!name.equals(jsoname) && !StringUtil.isEmpty(jsoname)) {
 							name = jsoname;
 							jnameFixed = true;
 							break;
@@ -9369,7 +9415,7 @@ public class Oson {
 							for (ca.oson.json.annotation.FieldMapper ann: fieldMapperAnnotations.value()) {
 								if (ann.serialize() == BOOLEAN.BOTH || ann.serialize() == BOOLEAN.TRUE) {
 									fieldMapperAnnotation = ann;
-									break;
+									//break;
 								}
 							}
 							break;
@@ -9566,7 +9612,7 @@ public class Oson {
 				
 				if (!jnameFixed) {
 					for (String jsoname: names) {
-						if (!name.equals(jsoname)) {
+						if (!name.equals(jsoname) && !StringUtil.isEmpty(jsoname)) {
 							name = jsoname;
 							jnameFixed = true;
 							break;
@@ -9979,10 +10025,14 @@ public class Oson {
 
 		try {
 			
+			if (valueType == null && object != null) {
+				valueType = (Class<T>) object.getClass();
+			}
+			
 			source = removeComments(source);
 			
 			source = source.trim();
-			if (source.startsWith("[")) {
+			if (source.startsWith("[") && ObjectUtil.isArrayOrCollection(valueType)) {
 				JSONArray obj = new JSONArray(source);
 
 				List list = (List)fromJsonMap(obj);
@@ -9991,7 +10041,7 @@ public class Oson {
 
 				return json2Object(new FieldData(list, valueType, object, true));
 
-			} else if (source.startsWith("{")) {
+			} else if (source.startsWith("{") && ObjectUtil.isMapOrObject(valueType)) {
 				JSONObject obj = new JSONObject(source);
 
 				Map<String, Object> map = (Map)fromJsonMap(obj);
@@ -10339,16 +10389,18 @@ public class Oson {
 				try {
 					parameterNames = ObjectUtil.getParameterNames(constructor);
 
-					int length = parameterTypes.length;
+					if (parameterNames != null) {
+						int length = parameterTypes.length;
+		
+						Object[] parameterValues = new Object[length];
+						for (int i = 0; i < length; i++) {
+							parameterValues[i] = getParameterValue(map, valueType, parameterNames.get(i), parameterTypes[i]);
+						}
 	
-					Object[] parameterValues = new Object[length];
-					for (int i = 0; i < length; i++) {
-						parameterValues[i] = getParameterValue(map, valueType, parameterNames.get(i), parameterTypes[i]);
-					}
-
-					obj = (T) constructor.newInstance(parameterValues);
-					if (obj != null) {
-						return obj;
+						obj = (T) constructor.newInstance(parameterValues);
+						if (obj != null) {
+							return obj;
+						}
 					}
 
 				} catch (InstantiationException
@@ -10581,7 +10633,7 @@ public class Oson {
 						for (ca.oson.json.annotation.ClassMapper ann: classMapperAnnotations.value()) {
 							if (ann.serialize() == BOOLEAN.BOTH || ann.serialize() == BOOLEAN.FALSE) {
 								classMapperAnnotation = ann;
-								break;
+								// break;
 							}
 						}
 						break;
@@ -10733,16 +10785,27 @@ public class Oson {
 			
 			Method jsonAnySetterMethod = null;
 			
-			Field[] fields = getFields(obj);
+			Field[] fields = getFields(valueType); // getFields(obj);
 
 			FIELD_NAMING format = getFieldNaming();
 
 			for (Field f : fields) {
-				f.setAccessible(true);
-
 				String name = f.getName();
 				String fieldName = name;
 				String lcfieldName = name.toLowerCase();
+				
+				Class<?> returnType = f.getType(); // value.getClass();
+				
+//				if (Modifier.isFinal(f.getModifiers())) {
+//					if (ObjectUtil.isBasicDataType(returnType)) {
+//						setters.remove(lcfieldName);
+//						nameKeys.remove(name);
+//						continue;
+//					} else if (Modifier.isStatic(f.getModifiers())) {
+//					}
+//				}
+				
+				f.setAccessible(true);
 
 				// in the ignored list
 				if (ObjectUtil.inSet(name, classMapper.jsonIgnoreProperties)) {
@@ -10771,9 +10834,6 @@ public class Oson {
 				// 6. Create a blank field mapper instance
 				// using valueType of enclosing obj
 				FieldMapper fieldMapper = new FieldMapper(name, name, valueType);
-
-
-				Class<?> returnType = f.getType(); // value.getClass();
 				
 				// 7. get the class mapper of returnType
 				ClassMapper fieldClassMapper = getClassMapper(returnType);
@@ -10831,7 +10891,7 @@ public class Oson {
 							for (ca.oson.json.annotation.FieldMapper ann: fieldMapperAnnotations.value()) {
 								if (ann.serialize() == BOOLEAN.BOTH || ann.serialize() == BOOLEAN.FALSE) {
 									fieldMapperAnnotation = ann;
-									break;
+									//break; to enable the last one wins
 								}
 							}
 							break;
@@ -11028,7 +11088,7 @@ public class Oson {
 				
 				if (!jnameFixed) {
 					for (String jsoname: names) {
-						if (!name.equals(jsoname)) {
+						if (!name.equals(jsoname) && !StringUtil.isEmpty(jsoname)) {
 							name = jsoname;
 							value = getMapValue(map, name, nameKeys);
 							jnameFixed = true;
@@ -11124,6 +11184,11 @@ public class Oson {
 					nameKeys.remove(name);
 					continue;
 				}
+
+//				if (Modifier.isFinal(setter.getModifiers())) {
+//					nameKeys.remove(name);
+//					continue;
+//				}
 				
 				// 6. Create a blank field mapper instance
 				FieldMapper fieldMapper = new FieldMapper(name, name, valueType);
@@ -11188,7 +11253,7 @@ public class Oson {
 							for (ca.oson.json.annotation.FieldMapper ann: fieldMapperAnnotations.value()) {
 								if (ann.serialize() == BOOLEAN.BOTH || ann.serialize() == BOOLEAN.FALSE) {
 									fieldMapperAnnotation = ann;
-									break;
+									// break;
 								}
 							}
 							break;
@@ -11376,7 +11441,7 @@ public class Oson {
 				
 				if (!jnameFixed) {
 					for (String jsoname: names) {
-						if (!name.equals(jsoname)) {
+						if (!name.equals(jsoname) && !StringUtil.isEmpty(jsoname)) {
 							name = jsoname;
 							value = getMapValue(map, name, nameKeys);
 							jnameFixed = true;

@@ -1,5 +1,8 @@
 package ca.oson.json;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -9,6 +12,7 @@ import ca.oson.json.function.*;
 import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.Oson.MODIFIER;
 import ca.oson.json.util.ObjectUtil;
+
 import com.google.gson.InstanceCreator;
 
 /*
@@ -64,11 +68,6 @@ public class ClassMapper<T> {
 	 *  include field or attribute with this java MODIFIER, such as public, private
 	 */
 	public Set<MODIFIER> includeFieldsWithModifiers = null;
-	
-	/*
-	 *  class specific date formatting, such as "MM/dd/yyyy"
-	 */
-	public String simpleDateFormat = null;
 	
 	/*
 	 * Sort a Json output based on the natural order of key for a Java map,
@@ -142,6 +141,12 @@ public class ClassMapper<T> {
 	 */
 	public Boolean date2Long = null;
 	
+	
+	/*
+	 *  class specific date formatting, such as "MM/dd/yyyy"
+	 */
+	//public String simpleDateFormat = null;
+	private DateFormat dateFormat = null;
 	
 	public ClassMapper() {
 		super();
@@ -361,9 +366,36 @@ public class ClassMapper<T> {
 		return this;
 	}
 	public ClassMapper setSimpleDateFormat(String simpleDateFormat) {
-		this.simpleDateFormat = simpleDateFormat;
+		if (simpleDateFormat != null) {
+			setDateFormat(new SimpleDateFormat(simpleDateFormat));
+		} else {
+			setDateFormat(null);
+		}
 		return this;
 	}
+	public ClassMapper ClassMapper(int style) {
+		this.setDateFormat(DateFormat.getDateInstance(style));
+
+		return this;
+	}
+	public ClassMapper setDateFormat(int style, Locale locale) {
+		this.setDateFormat(DateFormat.getDateInstance(style, locale));
+
+		return this;
+	}
+	public ClassMapper setDateFormat(int dateStyle, int timeStyle) {
+		this.setDateFormat(DateFormat.getDateTimeInstance(dateStyle, timeStyle));
+
+		return this;
+	}
+	public ClassMapper setDateFormat(int dateStyle, int timeStyle, Locale locale) {
+		this.setDateFormat(DateFormat.getDateTimeInstance(dateStyle, timeStyle, locale));
+
+		return this;
+	}
+	
+	
+	
 	public ClassMapper setOrderByKeyAndProperties(Boolean orderByKeyAndProperties) {
 		this.orderByKeyAndProperties = orderByKeyAndProperties;
 		return this;
@@ -432,6 +464,16 @@ public class ClassMapper<T> {
 	 */
 	public ClassMapper setPrecision(Integer precision) {
 		this.precision = precision;
+		return this;
+	}
+	
+	public DateFormat getDateFormat() {
+		return dateFormat;
+	}
+
+	public ClassMapper setDateFormat(DateFormat dateFormat) {
+		this.dateFormat = dateFormat;
+		
 		return this;
 	}
 }

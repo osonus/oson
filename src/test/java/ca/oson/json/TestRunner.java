@@ -7,7 +7,8 @@ import org.junit.runner.notification.Failure;
 public class TestRunner {
 	public static void main(String[] args) {
 		Class[] testSuites = new Class[] {NumericTestSuite.class, EnumBooleanDateTestSuite.class,
-				CharacterStringTestSuite.class, ListArrayMapTestSuite.class, UserGuideTestSuite.class};
+				CharacterStringTestSuite.class, ListArrayMapTestSuite.class, UserGuideTestSuite.class,
+				AnnotationTestSuite.class, GsonTestSuite.class};
 		
 		int i = 1;
 		int total_success = 0;

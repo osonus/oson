@@ -1,5 +1,8 @@
 package ca.oson.json;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
 import java.util.function.Function;
 
 import javax.persistence.EnumType;
@@ -144,7 +147,7 @@ public class FieldMapper<T, E> {
 	/*
 	 * property specific date formatter, in case it is Date type
 	 */
-	public String simpleDateFormat = null;
+	private DateFormat dateFormat = null;
 	
 	
 	/*
@@ -387,10 +390,34 @@ public class FieldMapper<T, E> {
 	}
 	
 	public FieldMapper setSimpleDateFormat(String simpleDateFormat) {
-		this.simpleDateFormat = simpleDateFormat;
+		if (simpleDateFormat != null) {
+			setDateFormat(new SimpleDateFormat(simpleDateFormat));
+		} else {
+			setDateFormat(null);
+		}
 		return this;
 	}
+	public FieldMapper ClassMapper(int style) {
+		this.setDateFormat(DateFormat.getDateInstance(style));
 
+		return this;
+	}
+	public FieldMapper setDateFormat(int style, Locale locale) {
+		this.setDateFormat(DateFormat.getDateInstance(style, locale));
+
+		return this;
+	}
+	public FieldMapper setDateFormat(int dateStyle, int timeStyle) {
+		this.setDateFormat(DateFormat.getDateTimeInstance(dateStyle, timeStyle));
+
+		return this;
+	}
+	public FieldMapper setDateFormat(int dateStyle, int timeStyle, Locale locale) {
+		this.setDateFormat(DateFormat.getDateTimeInstance(dateStyle, timeStyle, locale));
+
+		return this;
+	}
+	
 	public FieldMapper setEnumType(EnumType enumType) {
 		this.enumType = enumType;
 		return this;
@@ -460,5 +487,16 @@ public class FieldMapper<T, E> {
 		} else {
 			return false;
 		}
+	}
+
+
+	public DateFormat getDateFormat() {
+		return dateFormat;
+	}
+
+	public FieldMapper setDateFormat(DateFormat dateFormat) {
+		this.dateFormat = dateFormat;
+		
+		return this;
 	}
 }

@@ -12,6 +12,8 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +59,81 @@ import com.fasterxml.jackson.annotation.JsonSetter;
 import com.google.gson.annotations.SerializedName;
 
 public class ObjectUtil {
+
+	public static boolean isBasicDataType(Class valueType) {
+		if (valueType == null) { // no idea, just assume
+			return true;
+		}
+		
+		if (valueType.isPrimitive() || valueType.isEnum()) {
+			return false;
+		}
+
+		if (Number.class.isAssignableFrom(valueType) || Date.class.isAssignableFrom(valueType)) {
+			return false;
+		}
+		
+		if (valueType == String.class
+			|| valueType == Character.class
+			|| valueType == Boolean.class) {
+			return false;
+		}
+		
+		return true;
+	}
+	
+	public static boolean isArrayOrCollection(Class valueType) {
+		if (valueType == null) { // no idea, just assume
+			return true;
+		}
+		
+		if (valueType.isArray()) {
+			return true;
+		}
+		
+		if (Collection.class.isAssignableFrom(valueType)) {
+			return true;
+		}
+		
+		if (Iterable.class.isAssignableFrom(valueType)) {
+			return true;
+		}
+		
+		return false;
+	}
 	 
+	public static boolean isMapOrObject(Class valueType) {
+		if (valueType == null) { // no idea, just assume
+			return true;
+		}
+		
+		if (Map.class.isAssignableFrom(valueType)) {
+			return true;
+		}
+		
+		if (valueType.isPrimitive() || valueType.isEnum()) {
+			return false;
+		}
+
+		if (Number.class.isAssignableFrom(valueType) || Date.class.isAssignableFrom(valueType)) {
+			return false;
+		}
+		
+		if (isArrayOrCollection(valueType)) {
+			return false;
+		}
+		
+		if (valueType == String.class
+			|| valueType == Character.class
+			|| valueType == Boolean.class) {
+			return false;
+		}
+		
+		
+		return true;
+	}
+	
+	
 	public static <T> T unwraponce(T obj) {
 		if (obj != null && obj instanceof Optional) {
 			Optional<T> opt = (Optional)obj;
@@ -147,13 +223,12 @@ public class ObjectUtil {
 		if (modifiers == 0) {
 			return true;
 		}
-		
-		if (Modifier.isPrivate(modifiers) || Modifier.isProtected(modifiers)
-				|| Modifier.isPublic(modifiers)) {
-			return false;
-		}
+//		if (Modifier.isPrivate(modifiers) || Modifier.isProtected(modifiers)
+//				|| Modifier.isPublic(modifiers)) {
+//			return false;
+//		}
 
-		return true;
+		return false;
 	}
 	
 	public static void addAnnotationToMethod(String className,
@@ -588,7 +663,7 @@ public class ObjectUtil {
 
 	public static String getName(Annotation annotation) {
 		switch(annotation.annotationType().getName()) {
-		case "ca.oson.json.FieldMapper":
+		case "ca.oson.json.annotation.FieldMapper":
 			ca.oson.json.annotation.FieldMapper fieldMapper = (ca.oson.json.annotation.FieldMapper)annotation;
 			return fieldMapper.name();
 			
