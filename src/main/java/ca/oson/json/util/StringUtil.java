@@ -11,13 +11,10 @@ import ca.oson.json.Oson.FIELD_NAMING;
 public class StringUtil {
 	public static final char SPACE = ' ';
 	
-	public static String removeComments(String content, Pattern[] patterns) {
+	public static String applyPatterns(String content, Pattern[] patterns) {
 		if (patterns == null || patterns.length == 0) {
 			return content;
 		}
-		
-	    Pattern p = Pattern.compile("<script[^>]*>(.*?)</script>",
-	            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 	    
 	    for (Pattern pattern: patterns) {
 	    	content = pattern.matcher(content).replaceAll("");
@@ -26,14 +23,14 @@ public class StringUtil {
 	    return content;
 	}
 	
-	public static Pattern[] compilePatterns(String[] comments) {
-		if (comments == null || comments.length == 0) {
+	public static Pattern[] compilePatterns(String[] strpatterns) {
+		if (strpatterns == null || strpatterns.length == 0) {
 			return null;
 		}
-		Pattern[] patterns = new Pattern[comments.length];
+		Pattern[] patterns = new Pattern[strpatterns.length];
 	    
-	    for (int i = 0; i < comments.length; i++) {
-	    	patterns[i] = Pattern.compile(comments[i],
+	    for (int i = 0; i < strpatterns.length; i++) {
+	    	patterns[i] = Pattern.compile(strpatterns[i],
 		            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 	    }
 	    
@@ -182,16 +179,109 @@ public class StringUtil {
 			return null;
 		}
 		
-		if (str.startsWith("\"") && str.endsWith("\"")) {
-			return str;
-		}
-		return "\"" + str.replaceAll("\"", "\\\\\"").replaceAll("\n", "").replaceAll("\r", "") + "\"";
+		return quote(str);
+		
+//		if (str.startsWith("\"") && str.endsWith("\"")) {
+//			return str;
+//		}
+//		return "\"" + str.replaceAll("\"", "\\\\\"").replaceAll("\n", "").replaceAll("\r", "") + "\"";
 	}
 	public static String doublequote(Object obj) {
 		return doublequote(obj.toString());
 	}
 	
+	// modified From Jettison
+	 public static String quote(String string) {
+		 int length = string.length();
+         if (string == null || length == 0) {
+             return "\"\"";
+         }
+         
+		if (length > 1 && (string.startsWith("\"") && string.endsWith("\""))) {
+			return string;
+		}
+
+         char         c = 0;
+         int          i;
+         int          len = string.length();
+         StringBuilder sb = new StringBuilder(len + 10);
+         String       t;
+
+         sb.append('"');
+         for (i = 0; i < len; i += 1) {
+             c = string.charAt(i);
+             switch (c) {
+             case '\\':
+             case '"':
+                 sb.append('\\');
+                 sb.append(c);
+                 break;
+             case '/':
+ //                if (b == '<') {
+                     sb.append('\\');
+ //                }
+                 sb.append(c);
+                 break;
+             case '\b':
+                 sb.append("\\b");
+                 break;
+             case '\t':
+                 sb.append("\\t");
+                 break;
+             case '\n':
+                 sb.append("\\\\n");
+                 break;
+             case '\f':
+                 sb.append("\\f");
+                 break;
+             case '\r':
+                sb.append("\\\\r");
+                break;
+             case ',':
+                 sb.append(",");
+                 break;
+             default:
+                 if (c < ' ') {
+                     t = "000" + Integer.toHexString(c);
+                     sb.append("\\u" + t.substring(t.length() - 4));
+                 } else {
+                     sb.append(c);
+                 }
+             }
+         }
+         sb.append('"');
+         return sb.toString();
+     }
+	 
+	 
 	public static String unquote(String str) {
+		if (isEmpty(str)) {
+			return null;
+		}
+		int length = str.length();
+		if (length > 1) {
+			if (str.startsWith("\"") && str.endsWith("\"")) {
+				str = str.substring(1, length-1);
+			} else if (str.startsWith("'") && str.endsWith("'")) {
+				str = str.substring(1, length-1);
+			}
+		}
+
+		String [][] filters = new String[][] { 
+                {"\\\\n", "\n"},
+                {"\\\\r", "\r"},
+                {"\\\"", "\""},
+                {"\\'", "'"}
+                };
+		
+		for (String [] filter: filters) {
+			str = str.replaceAll(filter[0], filter[1]);
+		}
+		
+		return str;
+	}
+		
+	public static String unquote2(String str) {
 		if (str == null || str.equals("null")) {
 			return null;
 		}
@@ -202,17 +292,12 @@ public class StringUtil {
 			if (parser.ttype == '"') {
 				result = parser.sval;
 			} else {
-				if (str.startsWith("\"") && str.endsWith("\"")) {
-					str = str.substring(1, str.length()-1);
-				}
-				result = str.replaceAll("\\\\\"", "\"");
+				result = unquote(str);
 			}
 		} catch (IOException e) {
-			if (str.startsWith("\"") && str.endsWith("\"")) {
-				str = str.substring(1, str.length()-1);
-			}
-			result = str.replaceAll("\\\\\"", "\"");
+			result = unquote(str);
 		}
+		
 		return result;
 	}
 	

@@ -113,8 +113,14 @@ public class ComponentType implements Type {
 			int idx = typeName.indexOf('<');
 
 			if (idx > -1) {
-				String className = typeName.substring(0, idx);
+				String[] classNames = typeName.substring(0, idx).split(", ");
+				String className = classNames[0];
+
 				String componentTypeName = typeName.substring(idx + 1, typeName.length() - 1);
+				idx = componentTypeName.lastIndexOf(", ");
+				if (idx > -1) {
+					componentTypeName = componentTypeName.substring(idx + 2);
+				}
 				
 				try {
 					this.type = Class.forName(className);

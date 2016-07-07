@@ -1,3 +1,16 @@
+/*******************************************************************************
+ * Copyright (c) 2016- Oson.ca
+ * @author	David Ruifang He
+ * @email	osonus@gmail.com
+ * 
+ * All rights reserved.
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * You may elect to redistribute this code, under the condition that you may not
+ * modify this copyright header
+ *******************************************************************************/
 package ca.oson.json.util;
 
 import java.io.IOException;
@@ -6,10 +19,11 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -20,6 +34,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -174,6 +190,60 @@ public class ObjectUtil {
 		}
 	
 		return type;
+	}
+	
+	
+	public static boolean isSameDataType(Class ftype, Class mtype) {
+		if (mtype == java.lang.Integer.class) {
+			if (ftype == int.class
+					|| ftype == byte.class
+					|| ftype == short.class
+					|| ftype == long.class
+					|| ftype == float.class
+					|| ftype == double.class
+					|| ftype == Integer.class
+					|| ftype == BigInteger.class
+					|| ftype == BigDecimal.class
+					|| ftype == Short.class
+					|| ftype == Byte.class
+					|| ftype == Long.class
+					|| ftype == Float.class
+					|| ftype == Double.class
+					|| ftype == AtomicInteger.class
+					|| ftype == AtomicLong.class
+					|| ftype.isEnum()
+					|| Date.class.isAssignableFrom(ftype)) {
+				return true;
+			}
+			
+		} else if (mtype == String.class) {
+			if (ftype == String.class
+					|| ftype == char.class
+					|| ftype == Character.class
+					|| ftype == Date.class
+					|| ftype.isEnum()) {
+				return true;
+			}
+			
+		} else if (mtype == Boolean.class) {
+			if (ftype == Boolean.class
+					|| ftype == boolean.class) {
+				return true;
+			}
+			
+		} else if (mtype == Double.class) {
+			if (ftype == double.class
+					|| ftype == float.class
+					|| ftype == Float.class
+					|| ftype == Double.class) {
+				return true;
+			}
+			
+		} else if (mtype.isAssignableFrom(ftype) || ftype.isAssignableFrom(mtype)) {
+			return true;
+		}
+		
+		return false;
 	}
 	
 	public static boolean isSameType(Class aType, Class bType) {

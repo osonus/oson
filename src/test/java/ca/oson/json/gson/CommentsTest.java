@@ -43,7 +43,7 @@ public final class CommentsTest extends TestCaseBase {
         + "  \"c\"\n"
         + "]";
 
-    List<String> abc = oson.fromJson(json, new TypeToken<List<String>>() {}.getType());
+    List<String> abc = oson.setCommentPatterns().fromJson(json, new TypeToken<List<String>>() {}.getType());
     assertEquals(Arrays.asList("a", "b", "c"), abc);
   }
   
@@ -58,7 +58,7 @@ public final class CommentsTest extends TestCaseBase {
         + "  \"c\"\n"
         + "]";
 
-    List<String> abc = oson.deserialize(json);
+    List<String> abc = oson.setCommentPatterns().deserialize(json);
     assertEquals(Arrays.asList("a", "b", "c"), abc);
   }
   

@@ -107,6 +107,7 @@ import com.google.gson.annotations.Since;
 
 
 
+
 import ca.oson.json.function.*;
 import ca.oson.json.util.*;
 
@@ -776,6 +777,11 @@ public class Oson {
 				if (componentType == null && valueToProcess != null && Map.class.isAssignableFrom(valueToProcess.getClass())) {
 					Map<String, Object> values = (Map)valueToProcess;
 					componentType = CollectionArrayTypeGuesser.guessElementType(values, returnType, jsonClassType);
+				}
+				
+				if (componentType == null && valueToProcess != null && returnType.isArray()) {
+					E[] array = (E[])valueToProcess;
+					componentType = CollectionArrayTypeGuesser.guessElementType(array, returnType);
 				}
 				
 				if (componentType == null) componentType = (Class<E>) Object.class;
@@ -1797,11 +1803,9 @@ public class Oson {
 
 		return this;
 	}
-	
-	private String[] getCommentPatterns() {
-		return options.getCommentPatterns();
+	public Oson setCommentPatterns() {
+		return setCommentPatterns(null);
 	}
-
 	public Oson setCommentPatterns(String[] commentPatterns) {
 		options.setCommentPatterns(commentPatterns);
 
@@ -3060,16 +3064,14 @@ public class Oson {
 		E value = (E) objectDTO.valueToProcess;
 		Class<R> returnType = objectDTO.returnType;
 
-		if (value != null && value.toString().trim().length() > 0) {
+		if (value != null && returnType != null && (returnType == double.class || returnType == Double.class)) {
 			Double valueToProcess = null;
 			String valueToReturn = null;
 			
-			if (value instanceof Double) {
-				valueToProcess = (Double)value;
+			if (returnType == double.class) {
+				valueToProcess = Double.valueOf((double)value);
 			} else {
-				try {
-					valueToProcess = Double.valueOf(value.toString().trim());
-				} catch (Exception ex) {}
+				valueToProcess = (Double)value;
 			}
 			
 			if (valueToProcess != null) {
@@ -3332,16 +3334,14 @@ public class Oson {
 		E value = (E) objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
 
-		if (value != null && value.toString().trim().length() > 0) {
+		if (value != null && returnType != null && (returnType == float.class || returnType == Float.class)) {
 			Float valueToProcess = null;
 			String valueToReturn = null;
 			
-			if (value instanceof Float) {
-				valueToProcess = (Float)value;
+			if (returnType == float.class) {
+				valueToProcess = Float.valueOf((float)value);
 			} else {
-				try {
-					valueToProcess = Float.valueOf(value.toString().trim());
-				} catch (Exception ex) {}
+				valueToProcess = (Float)value;
 			}
 			
 			if (valueToProcess != null) {
@@ -4668,15 +4668,13 @@ public class Oson {
 		E value = (E) objectDTO.valueToProcess;
 		Class<R> returnType = objectDTO.returnType;
 
-		if (value != null && value.toString().trim().length() > 0) {
+		if (returnType != null && value != null && (returnType == long.class || returnType == Long.class)) {
 			Long valueToProcess = null;
 			
-			if (value instanceof Long) {
-				valueToProcess = (Long)value;
+			if (returnType == long.class) {
+				valueToProcess = Long.valueOf((long)value);
 			} else {
-				try {
-					valueToProcess = Long.valueOf(value.toString().trim());
-				} catch (Exception ex) {}
+				valueToProcess = (Long)value;
 			}
 			
 			if (valueToProcess != null) {
@@ -5033,16 +5031,14 @@ public class Oson {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
 
-		if (value != null && value.toString().trim().length() > 0) {
+		if (value != null && returnType != null && (returnType == int.class || returnType == Integer.class)) {
 			Integer valueToProcess = null;
 			String valueToReturn = null;
 			
-			if (value instanceof Integer) {
-				valueToProcess = (Integer)value;
+			if (returnType == int.class) {
+				valueToProcess = Integer.valueOf((int)value);
 			} else {
-				try {
-					valueToProcess = Integer.valueOf(value.toString().trim());
-				} catch (Exception ex) {}
+				valueToProcess = (Integer)value;
 			}
 			
 			if (valueToProcess != null) {
@@ -5281,16 +5277,14 @@ public class Oson {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
 
-		if (value != null && value.toString().trim().length() > 0) {
+		if (returnType != null && value != null && (returnType == byte.class || returnType == Byte.class)) {
 			Byte valueToProcess = null;
 			String valueToReturn = null;
 			
-			if (value instanceof Byte) {
-				valueToProcess = (Byte)value;
+			if (returnType == byte.class) {
+				valueToProcess = Byte.valueOf((byte)value);
 			} else {
-				try {
-					valueToProcess = Byte.valueOf(value.toString().trim());
-				} catch (Exception ex) {}
+				valueToProcess = (Byte)value;
 			}
 			
 			if (valueToProcess != null) {
@@ -5528,16 +5522,15 @@ public class Oson {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
 
-		if (value != null && value.toString().trim().length() > 0) {
-			Character valueToProcess = null;
+		if (returnType != null && value != null && (returnType == char.class || returnType == Character.class)) {
+			Character valueToProcess = (Character)value;
 			String valueToReturn = null;
 			
-			if (value instanceof Character) {
-				valueToProcess = (Character)value;
+			// convert from char to Character
+			if (returnType == char.class) {
+				valueToProcess = Character.valueOf((char)value); // new Character(value)
 			} else {
-				try {
-					valueToProcess = value.toString().trim().charAt(0);
-				} catch (Exception ex) {}
+				valueToProcess = (Character)value;
 			}
 			
 			if (valueToProcess != null) {
@@ -5577,18 +5570,7 @@ public class Oson {
 					}
 
 					if (valueToProcess != null) {
-						Long min = objectDTO.getMin();
-						Long max = objectDTO.getMax();
-						
-						if (min != null && min > (int)valueToProcess) {
-							valueToProcess = (char)min.intValue();
-						}
-						
-						if (max != null && max < (int)valueToProcess) {
-							valueToProcess = (char)max.intValue();
-						}
-						
-						return valueToProcess.toString();
+						return Character.toString(valueToProcess); // String.valueOf(valueToProcess);
 					}
 
 				} catch (Exception ex) {
@@ -5778,16 +5760,14 @@ public class Oson {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
 
-		if (value != null && value.toString().trim().length() > 0) {
+		if (returnType != null && value != null && (returnType == short.class || returnType == Short.class)) {
 			Short valueToProcess = null;
 			String valueToReturn = null;
 			
-			if (value instanceof Short) {
-				valueToProcess = (Short)value;
+			if (returnType == short.class) {
+				valueToProcess = Short.valueOf((short)value);
 			} else {
-				try {
-					valueToProcess = Short.valueOf(value.toString().trim());
-				} catch (Exception ex) {}
+				valueToProcess = (Short)value;
 			}
 			
 			if (valueToProcess != null) {
@@ -6179,16 +6159,15 @@ public class Oson {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
 
-		if (value != null && value.toString().trim().length() > 0) {
+		if (returnType != null && value != null && (returnType == boolean.class || returnType == Boolean.class)) {
 			Boolean valueToProcess = null;
 			String valueToReturn = null;
 			
-			if (value instanceof Boolean) {
-				valueToProcess = (Boolean)value;
+			if (returnType == boolean.class) {
+				// return String.valueOf((boolean)value);
+				valueToProcess = Boolean.valueOf((boolean)value);
 			} else {
-				try {
-					valueToProcess = Boolean.valueOf(value.toString().trim());
-				} catch (Exception ex) {}
+				valueToProcess = (Boolean)value;
 			}
 			
 			if (valueToProcess != null) {
@@ -6204,7 +6183,7 @@ public class Oson {
 								return ((Boolean2JsonFunction)function).apply(valueToProcess);
 								
 							} else {
-								
+								// cannot return primitive here?
 								Object returnedValue = function.apply(valueToProcess);
 							
 								if (returnedValue instanceof Optional) {
@@ -6227,9 +6206,7 @@ public class Oson {
 						} catch (Exception e) {}
 					}
 
-					if (valueToProcess != null) {
-						return valueToProcess.toString();
-					}
+					return Boolean.toString(valueToProcess);
 
 				} catch (Exception ex) {
 					//ex.printStackTrace();
@@ -6606,7 +6583,7 @@ public class Oson {
 										
 										Class ftype = field.getType();
 										Class mtype = lnames.get(name);
-										if (ObjectUtil.isSameType(ftype, mtype)) {
+										if (ObjectUtil.isSameDataType(ftype, mtype)) {
 											count++;
 										}
 									}
@@ -7081,6 +7058,7 @@ public class Oson {
 		int i = 0;
 		for (String value: values) {
 			if (value != null) {
+				value = StringUtil.unquote(value);
 				arr[i] = value.charAt(0);
 			}
 			i++;
@@ -7297,13 +7275,16 @@ public class Oson {
 			objectDTO.incrLevel();
 			String repeatedItem = getPrettyIndentationln(objectDTO.level);
 			StringBuilder sbuilder = new StringBuilder();
+			Class ctype = objectDTO.getComponentType(getJsonClassType());
 			
 			for (int i = 0; i < size; i++) {
 				Object componentValue = Array.get(value, i);
+				String str = null;
 				FieldData newFieldData = new FieldData(componentValue, componentValue.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
 				newFieldData.returnType = guessComponentType(newFieldData);
 				newFieldData.fieldMapper = objectDTO.fieldMapper;
-				String str = object2Json(newFieldData);
+				str = object2Json(newFieldData);
+
 				if (str != null && str.length() > 0) {
 					sbuilder.append(repeatedItem + str + ",");
 				}
@@ -8181,8 +8162,15 @@ public class Oson {
 
 	public static <T> Field[] getFields(Class<T> valueType) {
 		if (valueType == null) {
-			return null;
+			return new Field[0];
 		}
+		String valueTypeName = valueType.getName(); // valueTypeName.startsWith("java.lang.Class") || 
+		if (valueTypeName.startsWith("java.security.") || valueTypeName.startsWith("sun.reflect.")
+				|| valueType == java.lang.ClassLoader.class
+				) {
+			return new Field[0];
+		}
+		
 		if (cachedFields.containsKey(valueType)) {
 			return cachedFields.get(valueType);
 		}
@@ -8199,7 +8187,14 @@ public class Oson {
 		Set<String> set = new HashSet<>();
 		for (Field field: stream.collect(Collectors.toList())) {
 			String name = field.getName().toLowerCase();
-			if (!set.contains(name)) {
+			Class ftype = field.getType();
+			String fname = ftype.getName();
+			if (!set.contains(name) && !name.startsWith("this$") && ftype != Class.class && ftype != valueType
+					&& ftype != Field.class && ftype != Field[].class && ftype != sun.reflect.ReflectionFactory.class
+					// && ftype != ClassLoader.class
+					&& !fname.startsWith("java.security.") && !fname.startsWith("[Ljava.security.") && !fname.startsWith("java.lang.Class$")
+					&& !fname.startsWith("sun.reflect.") 
+					) {
 				set.add(name);
 				uniqueFields.add(field);
 			}
@@ -9925,7 +9920,9 @@ public class Oson {
 		} else if (obj instanceof JSONObject) {
 			JSONObject jobj = (JSONObject) obj;
 
-			Map<String, Object> map = new LinkedHashMap<String, Object>();
+			// since JSONObject gives unordered map, nothing can be done about it?
+			// LinkedHashMap
+			Map<String, Object> map = new HashMap<String, Object>();
 
 			Iterator<?> keys = jobj.keys();
 
@@ -9984,7 +9981,7 @@ public class Oson {
 	
 	
 	private String removeComments(String source) {
-		return StringUtil.removeComments(source, getPatterns());
+		return StringUtil.applyPatterns(source, getPatterns());
 	}
 	
 	// used to test data types only

@@ -208,9 +208,9 @@ public class Options {
 	 * single-line #, 
 	 * and multiple lines /* .... *\/
 	 */
-	private String[] commentPatterns = new String[] {"//[^\n\r]*\n?", "#[^\n\r]*\n?", "/\\*[^\\*/]*\\*/"};
+	public static final String[] defaultPatterns = new String[] {"//[^\n\r]*\n?", "#[^\n\r]*\n?", "/\\*[^\\*/]*\\*/"};
 
-	private Pattern[] patterns = StringUtil.compilePatterns(commentPatterns);
+	private Pattern[] patterns = null; // StringUtil.compilePatterns(commentPatterns);
 
 	/*
 	 * class level configurations
@@ -283,14 +283,12 @@ public class Options {
 	public Pattern[] getPatterns() {
 		return patterns;
 	}
-	
-	public String[] getCommentPatterns() {
-		return commentPatterns;
-	}
 
 	public void setCommentPatterns(String[] commentPatterns) {
-		this.commentPatterns = commentPatterns;
 		this.patterns = StringUtil.compilePatterns(commentPatterns);
+		if (this.patterns == null) {
+			this.patterns = StringUtil.compilePatterns(defaultPatterns);
+		}
 	}
 	
 	public boolean isUseGsonExpose() {
