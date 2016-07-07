@@ -108,6 +108,7 @@ import com.google.gson.annotations.Since;
 
 
 
+
 import ca.oson.json.function.*;
 import ca.oson.json.util.*;
 
@@ -6565,7 +6566,10 @@ public class Oson {
 
 						Map<String, Class> lnames = new HashMap<>(); //names.stream().map(name -> name.toLowerCase()).collect(Collectors.toSet());
 						for (String name: map.keySet()) {
-							lnames.put(name.toLowerCase(), map.get(name).getClass());
+							Object value = map.get(name);
+							if (value != null) {
+								lnames.put(name.toLowerCase(), map.get(name).getClass());
+							}
 						}
 						int maxIdx = -1;
 						float maxCount = 0.0f;
@@ -6792,16 +6796,26 @@ public class Oson {
 						}
 					}
 					
-					//Class<E> componentType = objectDTO.getComponentType(getJsonClassType());
+					Class<E> componentType = objectDTO.getComponentType(getJsonClassType());
 					
 					objectDTO.incrLevel();
 					
 					for (Entry<String, Object> entry: values.entrySet()) {
 						Object obj = entry.getValue(); // obj.getClass()
-						FieldData newFieldData = new FieldData(obj, obj.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
-						newFieldData.returnType = guessComponentType(newFieldData);
-						newFieldData.fieldMapper = objectDTO.fieldMapper;
-						returnObj.put(entry.getKey(), json2Object(newFieldData));
+						
+						Object component = null;
+						if (obj != null) {
+							FieldData newFieldData = new FieldData(obj, obj.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
+							newFieldData.returnType = guessComponentType(newFieldData);
+							newFieldData.fieldMapper = objectDTO.fieldMapper;
+							component = json2Object(newFieldData);
+						}
+						
+						if (component == null && getDefaultType() == JSON_INCLUDE.DEFAULT) {
+							component = getDefaultValue(componentType);
+						}
+						
+						returnObj.put(entry.getKey(), component);
 					}
 					
 					return returnObj;
@@ -6866,6 +6880,8 @@ public class Oson {
 				if (getOrderByKeyAndProperties()) {//LinkedHashSet
 					names = new TreeSet(names);
 				}
+				
+				Class lastValueType = null;
 
 				for (String name : names) {
 					Object v = map.get(name);
@@ -6873,10 +6889,21 @@ public class Oson {
 					if (name != null) {
 						sbuilder.append(repeatedItem + "\"" + name + "\":" + pretty);
 						
-						FieldData newFieldData = new FieldData(v, v.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
-						newFieldData.fieldMapper = objectDTO.fieldMapper;
-						sbuilder.append(object2Json(newFieldData));
+						String str = null;
+						if (v != null) {
+							lastValueType = v.getClass();
+							FieldData newFieldData = new FieldData(v, lastValueType, objectDTO.json2Java, objectDTO.level, objectDTO.set);
+							newFieldData.fieldMapper = objectDTO.fieldMapper;
+							str = object2Json(newFieldData);
+						}
+						
+						if (str == null && getDefaultType() == JSON_INCLUDE.DEFAULT) {
+							str = getDefaultValue(lastValueType).toString();
+						}
+						
+						sbuilder.append(str);
 						sbuilder.append(",");
+						
 					}
 				}
 			} catch (Exception e) {
@@ -7280,14 +7307,19 @@ public class Oson {
 			for (int i = 0; i < size; i++) {
 				Object componentValue = Array.get(value, i);
 				String str = null;
-				FieldData newFieldData = new FieldData(componentValue, componentValue.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
-				newFieldData.returnType = guessComponentType(newFieldData);
-				newFieldData.fieldMapper = objectDTO.fieldMapper;
-				str = object2Json(newFieldData);
-
-				if (str != null && str.length() > 0) {
-					sbuilder.append(repeatedItem + str + ",");
+				if (componentValue != null) {
+					FieldData newFieldData = new FieldData(componentValue, componentValue.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
+					newFieldData.returnType = guessComponentType(newFieldData);
+					newFieldData.fieldMapper = objectDTO.fieldMapper;
+					str = object2Json(newFieldData);
 				}
+				
+				if (str == null && ((ctype != null && ctype.isPrimitive())
+						|| getDefaultType() == JSON_INCLUDE.DEFAULT) ) {
+					str = getDefaultValue(ctype).toString();
+				}
+
+				sbuilder.append(repeatedItem + str + ",");
 			}
 
 			String str = sbuilder.toString();
@@ -7358,6 +7390,7 @@ public class Oson {
 		Class<E> returnType = objectDTO.returnType;
 		if (returnType == null || returnType == Object.class) {
 			returnType = (Class<E>) value.getClass();
+			objectDTO.returnType = returnType;
 		}
 		
 		
@@ -7606,15 +7639,24 @@ public class Oson {
 			objectDTO.incrLevel();
 			String repeatedItem = getPrettyIndentationln(objectDTO.level);
 			StringBuilder sbuilder = new StringBuilder();
+			Class ctype = objectDTO.getComponentType(getJsonClassType());
+			
 			try {
 				for (Object s : collection) {
-					FieldData newFieldData = new FieldData(s, s.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
-					newFieldData.returnType = guessComponentType(newFieldData);
-					newFieldData.fieldMapper = objectDTO.fieldMapper;
-					String str = object2Json(newFieldData);
-					if (str != null && str.length() > 0) {
-						sbuilder.append(repeatedItem + str + ",");
+					String str = null;
+					if (s != null) {
+						FieldData newFieldData = new FieldData(s, s.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
+						newFieldData.returnType = guessComponentType(newFieldData);
+						newFieldData.fieldMapper = objectDTO.fieldMapper;
+						str = object2Json(newFieldData);
 					}
+					
+					if (str == null && ((ctype != null && ctype.isPrimitive())
+							|| getDefaultType() == JSON_INCLUDE.DEFAULT) ) {
+						str = getDefaultValue(ctype).toString();
+					}
+					
+					sbuilder.append(repeatedItem + str + ",");
 				}
 			} catch (Exception ex) {}
 		
@@ -7811,6 +7853,7 @@ public class Oson {
 		if (returnType == null || returnType == Object.class) {
 			if (value != null) {
 				returnType = (Class<R>) value.getClass();
+				objectDTO.returnType = returnType;
 			}
 		}
 		
@@ -9354,7 +9397,7 @@ public class Oson {
 				FieldMapper fieldMapper = new FieldMapper(name, name, valueType);
 				
 
-				Class<?> returnType = getter.getReturnType(); // value.getClass();
+				Class<?> returnType = getter.getReturnType();
 				
 				// 7. get the class mapper of returnType
 				ClassMapper fieldClassMapper = getClassMapper(returnType);
@@ -9649,13 +9692,23 @@ public class Oson {
 						}
 					}
 				}
-				
 
-				String str;
 				
-				FieldData fieldData = new FieldData(obj, null, value, returnType, false, fieldMapper, objectDTO.level, objectDTO.set);
-				objectDTO.getter = getter;
-				str = object2Json(fieldData);
+				if (returnType == Class.class) {
+					if (value != null && returnType != value.getClass()) {
+						returnType = value.getClass();
+					} else {
+						continue;
+					}
+				}
+				
+				String str = null;
+				
+				//if (returnType != valueType) {
+					FieldData fieldData = new FieldData(obj, null, value, returnType, false, fieldMapper, objectDTO.level, objectDTO.set);
+					objectDTO.getter = getter;
+					str = object2Json(fieldData);
+				//}
 
 				if (StringUtil.isNull(str)) {
 					if (classMapper.defaultType == JSON_INCLUDE.NON_NULL 
@@ -9931,6 +9984,8 @@ public class Oson {
 					String key = (String) keys.next();
 					if (!jobj.isNull(key)) {
 						map.put(key, fromJsonMap(jobj.get(key)));
+					} else {
+						map.put(key, null);
 					}
 				}
 			} catch (JSONException ex) {
@@ -10037,7 +10092,7 @@ public class Oson {
 					startCachedComponentTypes(valueType);
 				}
 
-				if (valueType != null && Map.class.isAssignableFrom(valueType)) {
+				if (valueType == null || Map.class.isAssignableFrom(valueType)) {
 					return json2Object(new FieldData(map, valueType, object, true));
 
 				} else {
