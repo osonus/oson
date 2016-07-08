@@ -6299,19 +6299,15 @@ public class Oson {
 						} else if (returnedValue instanceof Character || returnedValue.getClass() == char.class) {
 							char c = (Character) returnedValue;
 							
-							if (c == 'f' || c == 'F' || c == '0' || c == '\0' || c == DefaultValue.character) {
-								valueToReturn = DefaultValue.bool;
-							} else {
-								valueToReturn = true;
-							}
+							valueToReturn = BooleanUtil.char2Boolean((char)returnedValue);
 							
 						} else if (returnedValue instanceof String) {
-							valueToReturn = string2Boolean((String)returnedValue);
+							valueToReturn = BooleanUtil.string2Boolean((String)returnedValue);
 							
 						} else if (DefaultValue.isDefault(returnedValue)) {
 							valueToReturn = false;
 						} else {
-							valueToReturn = string2Boolean(returnedValue.toString());
+							valueToReturn = BooleanUtil.string2Boolean(returnedValue.toString());
 						}
 							
 						return valueToReturn;
@@ -6321,7 +6317,7 @@ public class Oson {
 					}
 					
 				} else {
-					valueToReturn = string2Boolean(valueToProcess);
+					valueToReturn = BooleanUtil.string2Boolean(valueToProcess);
 				}
 
 				return valueToReturn;
@@ -6336,30 +6332,7 @@ public class Oson {
 	}
 	
 	
-	private Boolean string2Boolean(String str) {
-		if (str == null) {
-			return DefaultValue.bool;
-		}
-		
-		str = str.trim().toLowerCase();
 	
-		if (str.equals("false") || str.equals("null") || str.equals("no") || str.equals("f")
-				 || str.equals("null") || str.equals("0") || str.equals("\0") ) {
-			return false;
-		}
-	
-		if (str.equals("true") || str.equals("t") || str.equals("yes") ||  str.equals("1") || str.equals("t")) {
-			return true;
-		}
-		
-		try {
-			return Boolean.parseBoolean(str);
-		} catch (Exception ex) {}
-	
-		return null; // DefaultValue.bool;
-	}
-
-
 	private <E> String boolean2Json(FieldData objectDTO) {
 		if (objectDTO == null || objectDTO.json2Java) {
 			return null;
@@ -7270,19 +7243,79 @@ public class Oson {
 	}
 
 
-	private int[] json2ArrayInt(Collection<Integer> values) {
+	private int[] json2ArrayInt(FieldData objectDTO) {
+		if (objectDTO.valueToProcess == null) {
+			return null;
+		}
+		
+		Function function = objectDTO.getDeserializer();
+		
+		Object returnedValue = objectDTO.valueToProcess;
+
+		if (function != null) {
+			try {
+				
+				// suppose to return String, but in case not, try to process
+				if (function instanceof Json2DataMapperFunction) {
+					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level);
+					returnedValue = ((Json2DataMapperFunction)function).apply(classData);
+
+				} else if (function instanceof Json2ArrayFunction) {
+					returnedValue = ((Json2ArrayFunction)function).apply(objectDTO.valueToProcess);
+						
+				} else {
+					returnedValue = function.apply(objectDTO.valueToProcess);
+				}
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+		}
+
+		if (returnedValue == null) {
+			return null;
+			
+		} else if (returnedValue.getClass().isArray()) {
+			if (returnedValue.getClass() == int[].class) {
+				return (int[]) returnedValue;
+			}
+			
+			int size = Array.getLength(returnedValue);
+			int[] arr = new int[size];
+			int i = 0, j = 0;
+			while (j < size) {
+				try {
+					arr[i] = (int) NumberUtil.getNumber(Array.get(returnedValue, j), int.class);
+					i++;
+				} catch (Exception ex) {}
+				j++;
+			}
+			
+			if (i == size) {
+				return arr;
+			}
+			return Arrays.copyOfRange(arr, 0, i);
+			
+		} else if (!Collection.class.isAssignableFrom(returnedValue.getClass())) {
+			return null;
+		}
+		
+		Collection values = (Collection)returnedValue;
+		
 		int size = values.size();
 		int[] arr = new int[size];
 		int i = 0;
+
 		for (Object value: values) {
 			if (value != null) {
-				value = NumberUtil.getNumber(value, int.class);
-				if (value != null) {
-					arr[i] = (int) value;
+				try {
+					arr[i] = (int) NumberUtil.getNumber(value, int.class);
 					i++;
-				}
+				} catch (Exception ex) {}
 			}
 		}
+		
 		if (i == size) {
 			return arr;
 		}
@@ -7307,7 +7340,7 @@ public class Oson {
 					returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
 				} else if (function instanceof Json2ArrayFunction) {
-					return (byte[]) ((Json2ArrayFunction)function).apply(objectDTO.valueToProcess);
+					returnedValue = ((Json2ArrayFunction)function).apply(objectDTO.valueToProcess);
 						
 				} else {
 					returnedValue = function.apply(objectDTO.valueToProcess);
@@ -7329,11 +7362,19 @@ public class Oson {
 			
 			int size = Array.getLength(returnedValue);
 			byte[] arr = new byte[size];
-			for (int i = 0; i < size; i++) {
-				arr[i] = (byte) NumberUtil.getNumber(Array.get(returnedValue, i), byte.class);
+			int i = 0, j = 0;
+			while (j < size) {
+				try {
+					arr[i] = (byte) NumberUtil.getNumber(Array.get(returnedValue, j), byte.class);
+					i++;
+				} catch (Exception ex) {}
+				j++;
 			}
 			
-			return arr;
+			if (i == size) {
+				return arr;
+			}
+			return Arrays.copyOfRange(arr, 0, i);
 			
 		} else if (!Collection.class.isAssignableFrom(returnedValue.getClass())) {
 			return null;
@@ -7347,11 +7388,103 @@ public class Oson {
 
 		for (Object value: values) {
 			if (value != null) {
-				value = NumberUtil.getNumber(value, byte.class);
-				if (value != null) {
-					arr[i] = (byte) value;
+				try {
+					arr[i] = (byte) NumberUtil.getNumber(value, byte.class);
 					i++;
+				} catch (Exception ex) {}
+			}
+		}
+		
+		if (i == size) {
+			return arr;
+		}
+		return Arrays.copyOfRange(arr, 0, i);
+	}
+
+	
+	private char[] json2ArrayChar(FieldData objectDTO) {
+		if (objectDTO.valueToProcess == null) {
+			return null;
+		}
+		
+		Function function = objectDTO.getDeserializer();
+		
+		Object returnedValue = objectDTO.valueToProcess;
+
+		if (function != null) {
+			try {
+				
+				// suppose to return String, but in case not, try to process
+				if (function instanceof Json2DataMapperFunction) {
+					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level);
+					returnedValue = ((Json2DataMapperFunction)function).apply(classData);
+
+				} else if (function instanceof Json2ArrayFunction) {
+					returnedValue = ((Json2ArrayFunction)function).apply(objectDTO.valueToProcess);
+						
+				} else {
+					returnedValue = function.apply(objectDTO.valueToProcess);
 				}
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+		}
+
+		if (returnedValue == null) {
+			return null;
+			
+		} else if (returnedValue.getClass().isArray()) {
+			if (returnedValue.getClass() == char[].class) {
+				return (char[]) returnedValue;
+			}
+			
+			int size = Array.getLength(returnedValue);
+			char[] arr = new char[size];
+			int i = 0, j = 0;
+			while (j < size) {
+				try {
+					Object obj = Array.get(returnedValue, j);
+					if (obj.getClass() == Character.class || obj.getClass() == char.class) {
+						arr[i] = (char)obj;
+						
+					} else {
+						String str = StringUtil.unquote(obj.toString());
+						arr[i] = str.charAt(0);
+					}
+					i++;
+				} catch (Exception ex) {}
+				j++;
+			}
+			
+			if (i == size) {
+				return arr;
+			}
+			return Arrays.copyOfRange(arr, 0, i);
+			
+		} else if (!Collection.class.isAssignableFrom(returnedValue.getClass())) {
+			return null;
+		}
+		
+		Collection values = (Collection)returnedValue;
+		
+		int size = values.size();
+		char[] arr = new char[size];
+		int i = 0;
+
+		for (Object obj: values) {
+			if (obj != null) {
+				try {
+					if (obj.getClass() == Character.class || obj.getClass() == char.class) {
+						arr[i] = (char)obj;
+						
+					} else {
+						String str = StringUtil.unquote(obj.toString());
+						arr[i] = str.charAt(0);
+					}
+					i++;
+				} catch (Exception ex) {}
 			}
 		}
 		
@@ -7361,108 +7494,398 @@ public class Oson {
 		return Arrays.copyOfRange(arr, 0, i);
 	}
 	
-	private char[] json2ArrayChar(Collection<String> values) {
-		int size = values.size();
-		char[] arr = new char[size];
-		int i = 0;
-		for (String value: values) {
-			if (value != null) {
-				try {
-					value = StringUtil.unquote(value);
-					arr[i] = value.charAt(0);
-					i++;
-				} catch (Exception e) {}
+	private float[] json2ArrayFloat(FieldData objectDTO) {
+		if (objectDTO.valueToProcess == null) {
+			return null;
+		}
+		
+		Function function = objectDTO.getDeserializer();
+		
+		Object returnedValue = objectDTO.valueToProcess;
+
+		if (function != null) {
+			try {
+				
+				// suppose to return String, but in case not, try to process
+				if (function instanceof Json2DataMapperFunction) {
+					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level);
+					returnedValue = ((Json2DataMapperFunction)function).apply(classData);
+
+				} else if (function instanceof Json2ArrayFunction) {
+					returnedValue = ((Json2ArrayFunction)function).apply(objectDTO.valueToProcess);
+						
+				} else {
+					returnedValue = function.apply(objectDTO.valueToProcess);
+				}
+
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
+			
 		}
-		if (i == size) {
-			return arr;
+
+		if (returnedValue == null) {
+			return null;
+			
+		} else if (returnedValue.getClass().isArray()) {
+			if (returnedValue.getClass() == float[].class) {
+				return (float[]) returnedValue;
+			}
+			
+			int size = Array.getLength(returnedValue);
+			float[] arr = new float[size];
+			int i = 0, j = 0;
+			while (j < size) {
+				try {
+					arr[i] = (float) NumberUtil.getNumber(Array.get(returnedValue, j), float.class);
+					i++;
+				} catch (Exception ex) {}
+				j++;
+			}
+			
+			if (i == size) {
+				return arr;
+			}
+			return Arrays.copyOfRange(arr, 0, i);
+			
+		} else if (!Collection.class.isAssignableFrom(returnedValue.getClass())) {
+			return null;
 		}
-		return Arrays.copyOfRange(arr, 0, i);
-	}
-	private float[] json2ArrayFloat(Collection<Double> values) {
+		
+		Collection values = (Collection)returnedValue;
+		
 		int size = values.size();
 		float[] arr = new float[size];
 		int i = 0;
+
 		for (Object value: values) {
 			if (value != null) {
-				value = NumberUtil.getNumber(value, float.class);
-				if (value != null) {
-					arr[i] = (float) value;
+				try {
+					arr[i] = (float) NumberUtil.getNumber(value, float.class);
 					i++;
-				}
+				} catch (Exception ex) {}
 			}
 		}
+		
 		if (i == size) {
 			return arr;
 		}
 		return Arrays.copyOfRange(arr, 0, i);
 	}
-	private double[] json2ArrayDouble(Collection<Double> values) {
+	
+	private double[] json2ArrayDouble(FieldData objectDTO) {
+		if (objectDTO.valueToProcess == null) {
+			return null;
+		}
+		
+		Function function = objectDTO.getDeserializer();
+		
+		Object returnedValue = objectDTO.valueToProcess;
+
+		if (function != null) {
+			try {
+				
+				// suppose to return String, but in case not, try to process
+				if (function instanceof Json2DataMapperFunction) {
+					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level);
+					returnedValue = ((Json2DataMapperFunction)function).apply(classData);
+
+				} else if (function instanceof Json2ArrayFunction) {
+					returnedValue = ((Json2ArrayFunction)function).apply(objectDTO.valueToProcess);
+						
+				} else {
+					returnedValue = function.apply(objectDTO.valueToProcess);
+				}
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+		}
+
+		if (returnedValue == null) {
+			return null;
+			
+		} else if (returnedValue.getClass().isArray()) {
+			if (returnedValue.getClass() == double[].class) {
+				return (double[]) returnedValue;
+			}
+			
+			int size = Array.getLength(returnedValue);
+			double[] arr = new double[size];
+			int i = 0, j = 0;
+			while (j < size) {
+				try {
+					arr[i] = (double) NumberUtil.getNumber(Array.get(returnedValue, j), double.class);
+					i++;
+				} catch (Exception ex) {}
+				j++;
+			}
+			
+			if (i == size) {
+				return arr;
+			}
+			return Arrays.copyOfRange(arr, 0, i);
+			
+		} else if (!Collection.class.isAssignableFrom(returnedValue.getClass())) {
+			return null;
+		}
+		
+		Collection values = (Collection)returnedValue;
+		
 		int size = values.size();
 		double[] arr = new double[size];
 		int i = 0;
+
 		for (Object value: values) {
 			if (value != null) {
-				value = NumberUtil.getNumber(value, double.class);
-				if (value != null) {
-					arr[i] = (double) value;
+				try {
+					arr[i] = (double) NumberUtil.getNumber(value, double.class);
 					i++;
-				}
+				} catch (Exception ex) {}
 			}
 		}
+		
 		if (i == size) {
 			return arr;
 		}
 		return Arrays.copyOfRange(arr, 0, i);
 	}
-	private long[] json2ArrayLong(Collection<Integer> values) {
+	
+	
+	private long[] json2ArrayLong(FieldData objectDTO) {
+		if (objectDTO.valueToProcess == null) {
+			return null;
+		}
+		
+		Function function = objectDTO.getDeserializer();
+		
+		Object returnedValue = objectDTO.valueToProcess;
+
+		if (function != null) {
+			try {
+				
+				// suppose to return String, but in case not, try to process
+				if (function instanceof Json2DataMapperFunction) {
+					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level);
+					returnedValue = ((Json2DataMapperFunction)function).apply(classData);
+
+				} else if (function instanceof Json2ArrayFunction) {
+					returnedValue = ((Json2ArrayFunction)function).apply(objectDTO.valueToProcess);
+						
+				} else {
+					returnedValue = function.apply(objectDTO.valueToProcess);
+				}
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+		}
+
+		if (returnedValue == null) {
+			return null;
+			
+		} else if (returnedValue.getClass().isArray()) {
+			if (returnedValue.getClass() == long[].class) {
+				return (long[]) returnedValue;
+			}
+			
+			int size = Array.getLength(returnedValue);
+			long[] arr = new long[size];
+			int i = 0, j = 0;
+			while (j < size) {
+				try {
+					arr[i] = (long) NumberUtil.getNumber(Array.get(returnedValue, j), long.class);
+					i++;
+				} catch (Exception ex) {}
+				j++;
+			}
+			
+			if (i == size) {
+				return arr;
+			}
+			return Arrays.copyOfRange(arr, 0, i);
+			
+		} else if (!Collection.class.isAssignableFrom(returnedValue.getClass())) {
+			return null;
+		}
+		
+		Collection values = (Collection)returnedValue;
+		
 		int size = values.size();
 		long[] arr = new long[size];
 		int i = 0;
+
 		for (Object value: values) {
 			if (value != null) {
-				value = NumberUtil.getNumber(value, long.class);
-				if (value != null) {
-					arr[i] = (long) value;
+				try {
+					arr[i] = (long) NumberUtil.getNumber(value, long.class);
 					i++;
-				}
+				} catch (Exception ex) {}
 			}
 		}
+		
 		if (i == size) {
 			return arr;
 		}
 		return Arrays.copyOfRange(arr, 0, i);
 	}
-	private short[] json2ArrayShort(Collection<Integer> values) {
+	
+	
+	private short[] json2ArrayShort(FieldData objectDTO) {
+		if (objectDTO.valueToProcess == null) {
+			return null;
+		}
+		
+		Function function = objectDTO.getDeserializer();
+		
+		Object returnedValue = objectDTO.valueToProcess;
+
+		if (function != null) {
+			try {
+				
+				// suppose to return String, but in case not, try to process
+				if (function instanceof Json2DataMapperFunction) {
+					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level);
+					returnedValue = ((Json2DataMapperFunction)function).apply(classData);
+
+				} else if (function instanceof Json2ArrayFunction) {
+					returnedValue = ((Json2ArrayFunction)function).apply(objectDTO.valueToProcess);
+						
+				} else {
+					returnedValue = function.apply(objectDTO.valueToProcess);
+				}
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+		}
+
+		if (returnedValue == null) {
+			return null;
+			
+		} else if (returnedValue.getClass().isArray()) {
+			if (returnedValue.getClass() == short[].class) {
+				return (short[]) returnedValue;
+			}
+			
+			int size = Array.getLength(returnedValue);
+			short[] arr = new short[size];
+			int i = 0, j = 0;
+			while (j < size) {
+				try {
+					arr[i] = (short) NumberUtil.getNumber(Array.get(returnedValue, j), short.class);
+					i++;
+				} catch (Exception ex) {}
+				j++;
+			}
+			
+			if (i == size) {
+				return arr;
+			}
+			return Arrays.copyOfRange(arr, 0, i);
+			
+		} else if (!Collection.class.isAssignableFrom(returnedValue.getClass())) {
+			return null;
+		}
+		
+		Collection values = (Collection)returnedValue;
+		
 		int size = values.size();
 		short[] arr = new short[size];
 		int i = 0;
+
 		for (Object value: values) {
 			if (value != null) {
-				value = NumberUtil.getNumber(value, short.class);
-				if (value != null) {
-					arr[i] = (short) value;
+				try {
+					arr[i] = (short) NumberUtil.getNumber(value, short.class);
 					i++;
-				}
+				} catch (Exception ex) {}
 			}
 		}
+		
 		if (i == size) {
 			return arr;
 		}
 		return Arrays.copyOfRange(arr, 0, i);
 	}
-	private boolean[] json2ArrayBoolean(Collection<Boolean> values) {
+	
+	
+	private boolean[] json2ArrayBoolean(FieldData objectDTO) {
+		if (objectDTO.valueToProcess == null) {
+			return null;
+		}
+		
+		Function function = objectDTO.getDeserializer();
+		
+		Object returnedValue = objectDTO.valueToProcess;
+
+		if (function != null) {
+			try {
+				
+				// suppose to return String, but in case not, try to process
+				if (function instanceof Json2DataMapperFunction) {
+					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level);
+					returnedValue = ((Json2DataMapperFunction)function).apply(classData);
+
+				} else if (function instanceof Json2ArrayFunction) {
+					returnedValue = ((Json2ArrayFunction)function).apply(objectDTO.valueToProcess);
+						
+				} else {
+					returnedValue = function.apply(objectDTO.valueToProcess);
+				}
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+		}
+
+		if (returnedValue == null) {
+			return null;
+			
+		} else if (returnedValue.getClass().isArray()) {
+			if (returnedValue.getClass() == boolean[].class) {
+				return (boolean[]) returnedValue;
+			}
+			
+			int size = Array.getLength(returnedValue);
+			boolean[] arr = new boolean[size];
+			int i = 0, j = 0;
+			while (j < size) {
+				try {
+					arr[i] = BooleanUtil.object2Boolean(Array.get(returnedValue, j));
+					i++;
+				} catch (Exception ex) {}
+				j++;
+			}
+			
+			if (i == size) {
+				return arr;
+			}
+			return Arrays.copyOfRange(arr, 0, i);
+			
+		} else if (!Collection.class.isAssignableFrom(returnedValue.getClass())) {
+			return null;
+		}
+		
+		Collection values = (Collection)returnedValue;
+		
 		int size = values.size();
 		boolean[] arr = new boolean[size];
 		int i = 0;
-		for (Boolean value: values) {
+
+		for (Object value: values) {
 			if (value != null) {
 				try {
-					arr[i] = (boolean)value;
-				i++;
-				} catch (Exception e) {}
+					arr[i] = BooleanUtil.object2Boolean(value);
+					i++;
+				} catch (Exception ex) {}
 			}
 		}
+		
 		if (i == size) {
 			return arr;
 		}
@@ -7801,21 +8224,21 @@ public class Oson {
 
 			if (componentType.isPrimitive()) {
 				if (componentType == int.class) {
-					return (E)json2ArrayInt((Collection<Integer>) values);
+					return (E)json2ArrayInt(objectDTO);
 				} else if (componentType == byte.class) {
 					return (E)json2ArrayByte(objectDTO);
 				} else if (componentType == char.class) {
-					return (E)json2ArrayChar((Collection<String>) values);
+					return (E)json2ArrayChar(objectDTO);
 				} else if (componentType == float.class) {
-					return (E)json2ArrayFloat((Collection<Double>) values);
+					return (E)json2ArrayFloat(objectDTO);
 				} else if (componentType == double.class) {
-					return (E)json2ArrayDouble((Collection<Double>) values);
+					return (E)json2ArrayDouble(objectDTO);
 				} else if (componentType == long.class) {
-					return (E)json2ArrayLong((Collection<Integer>) values);
+					return (E)json2ArrayLong(objectDTO);
 				} else if (componentType == short.class) {
-					return (E)json2ArrayShort((Collection<Integer>) values);
+					return (E)json2ArrayShort(objectDTO);
 				} else if (componentType == boolean.class) {
-					return (E)json2ArrayBoolean((Collection<Boolean>) values);
+					return (E)json2ArrayBoolean(objectDTO);
 				} else {
 					return null;
 				}

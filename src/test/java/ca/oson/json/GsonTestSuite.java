@@ -19,6 +19,7 @@ import ca.oson.json.gson.functional.CircularReferenceTest;
 import ca.oson.json.gson.functional.CollectionTest;
 import ca.oson.json.gson.functional.ConcurrencyTest;
 import ca.oson.json.gson.functional.CustomDeserializerTest;
+import ca.oson.json.gson.functional.CustomTypeAdaptersTest;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
@@ -37,7 +38,8 @@ import ca.oson.json.gson.functional.CustomDeserializerTest;
 	CircularReferenceTest.class,
 	CollectionTest.class,
 	ConcurrencyTest.class,
-	CustomDeserializerTest.class
+	CustomDeserializerTest.class,
+	CustomTypeAdaptersTest.class
 	
 })
 public class GsonTestSuite {
