@@ -343,6 +343,14 @@ public class ClassMapper<T> {
 		this.deserializer = deserializer;
 		return this;
 	}
+	public ClassMapper setSerializer(FieldData2JsonFunction serializer) {
+		this.serializer = serializer;
+		return this;
+	}
+	public ClassMapper setDeserializer(Json2FieldDataFunction deserializer) {
+		this.deserializer = deserializer;
+		return this;
+	}
 	public ClassMapper setSerializer(String2JsonFunction serializer) {
 		this.serializer = serializer;
 		return this;

@@ -14,6 +14,11 @@ import ca.oson.json.gson.JsonArrayTest;
 import ca.oson.json.gson.LongSerializationPolicyTest;
 import ca.oson.json.gson.ObjectTypeAdapterTest;
 import ca.oson.json.gson.OverrideCoreTypeAdaptersTest;
+import ca.oson.json.gson.functional.ArrayTest;
+import ca.oson.json.gson.functional.CircularReferenceTest;
+import ca.oson.json.gson.functional.CollectionTest;
+import ca.oson.json.gson.functional.ConcurrencyTest;
+import ca.oson.json.gson.functional.CustomDeserializerTest;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
@@ -27,7 +32,13 @@ import ca.oson.json.gson.OverrideCoreTypeAdaptersTest;
 	JsonArrayTest.class,
 	LongSerializationPolicyTest.class,
 	ObjectTypeAdapterTest.class,
-	OverrideCoreTypeAdaptersTest.class
+	OverrideCoreTypeAdaptersTest.class,
+	ArrayTest.class,
+	CircularReferenceTest.class,
+	CollectionTest.class,
+	ConcurrencyTest.class,
+	CustomDeserializerTest.class
+	
 })
 public class GsonTestSuite {
 

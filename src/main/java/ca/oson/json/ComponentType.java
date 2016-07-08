@@ -13,11 +13,14 @@
  *******************************************************************************/
 package ca.oson.json;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+
 import ca.oson.json.util.StringUtil;
 
 /*
@@ -99,6 +102,33 @@ public class ComponentType implements Type {
 		return this;
 	}
 	
+	
+	private void processComponents(String componentTypeName) {
+		int idx = componentTypeName.lastIndexOf(", ");
+		if (idx > -1) {
+			componentTypeName = componentTypeName.substring(idx + 2);
+		}
+		
+		idx = componentTypeName.lastIndexOf(" ");
+		if (idx > -1) {
+			componentTypeName = componentTypeName.substring(idx + 1).trim();
+		}
+		
+		try {
+			Class componentClass = Class.forName(componentTypeName);
+			if (this.componentTypes == null || this.componentTypes.length == 0) {
+				this.componentTypes = new Class[] {componentClass};
+			} else {
+				add(componentClass);
+			}
+			
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	
+	
 	private void fixTypeNames() {
 		if (this.typeName == null) {
 			if (type != null) {
@@ -110,75 +140,129 @@ public class ComponentType implements Type {
 			}
 			
 		} else {
-			int idx = typeName.indexOf('<');
+			
+			int index = typeName.indexOf("/");
+			if (index > -1) {
+				typeName = typeName.replaceAll("/", ".");
+			}
 
-			if (idx > -1) {
+			int idx = typeName.indexOf("<");
+			int lastidx = typeName.lastIndexOf(">");
+
+			index = typeName.indexOf("[");
+			
+			// case 1: java.util.Collection<java.lang.Integer>
+			// Collection<? extends Integer>
+			// Collection<Collection<Integer>>
+			if (idx > -1 && lastidx > idx && index == -1) {
+
 				String[] classNames = typeName.substring(0, idx).split(", ");
 				String className = classNames[0];
-
-				String componentTypeName = typeName.substring(idx + 1, typeName.length() - 1);
-				idx = componentTypeName.lastIndexOf(", ");
-				if (idx > -1) {
-					componentTypeName = componentTypeName.substring(idx + 2);
-				}
-				
 				try {
 					this.type = Class.forName(className);
-					Class componentClass = Class.forName(componentTypeName);
-					if (this.componentTypes == null || this.componentTypes.length == 0) {
-						this.componentTypes = new Class[] {componentClass};
-					} else {
-						add(componentClass);
-					}
 				} catch (ClassNotFoundException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+
+				String newTypeName = typeName.substring(idx + 1, lastidx);
 				
-			} else if (this.type == null) {
+				idx = newTypeName.indexOf("<");
+				lastidx = newTypeName.lastIndexOf(">");
+				
+				while (idx > -1 && lastidx > idx) {
+					processComponents(newTypeName.substring(0, idx));
+					
+					newTypeName = newTypeName.substring(idx + 1, lastidx);
+
+					idx = newTypeName.indexOf("<");
+					lastidx = newTypeName.lastIndexOf(">");
+				}
+
+				processComponents(newTypeName);
+				
+				
+			} else {
+
 				try {
-					int index = typeName.indexOf("/");
-					if (index > -1) {
-						typeName = typeName.replaceAll("/", ".");
-					}
-					
-					index = typeName.indexOf("[");
-					String start = "", end = "";
+
 					int repeat = 0;
+					String newtypeName = typeName;
 					if (index > -1) {
-						start = typeName.substring(0, index);
-						end = typeName.substring(index);
+						String end = typeName.substring(index);
 						repeat = end.length()/2;
-					} else {
-						start = typeName;
+						
+						newtypeName = typeName.substring(0, index);
 					}
 					
-					if (primitiveTypeNames.containsKey(start)) {
+					if (primitiveTypeNames.containsKey(newtypeName)) {
 						if (repeat == 0) {
-							this.type = primitiveTypeClasses.get(start);
+							this.type = primitiveTypeClasses.get(newtypeName);
 						} else {
-							String nickname = primitiveTypeNames.get(start);
+							String nickname = primitiveTypeNames.get(newtypeName);
 							this.type = Class.forName(StringUtil.repeatChar('[', repeat) + nickname);
 						}
 						
 					} else {
-						if (repeat == 0) {
-							this.type = Class.forName(start);
+						// java.util.Collection<java.lang.Integer>[]
+						// with <>
+						if (idx > -1 && lastidx > idx) {
+							String[] classNames = newtypeName.substring(0, idx).split(", ");
+							String className = classNames[0];
+							
+							String componentTypeName = newtypeName.substring(idx + 1, lastidx);
+							idx = componentTypeName.lastIndexOf(", ");
+							if (idx > -1) {
+								componentTypeName = componentTypeName.substring(idx + 2);
+							}
+							
+							try {
+								Class type = Class.forName(className);
+								Class componentClass = Class.forName(componentTypeName);
+
+								if (repeat == 0) {
+									this.type = type;
+									if (this.componentTypes == null || this.componentTypes.length == 0) {
+										this.componentTypes = new Class[] {componentClass};
+									} else {
+										add(componentClass);
+									}
+									
+								} else {
+									ComponentType myComponentType = new ComponentType(type, componentClass);
+									
+									this.type = Array.newInstance(myComponentType.getClassType(), 0).getClass();
+								}
+								
+							} catch (ClassNotFoundException e) {
+								e.printStackTrace();
+							}
+							
+						// without <>
+						// java.lang.String[]
 						} else {
-							this.type = Class.forName(StringUtil.repeatChar('[', repeat) + "L" + start + ";");
+							
+							// not array
+							if (repeat == 0) {
+								this.type = Class.forName(newtypeName);
+								
+							// array
+							} else { // java.lang.ClassNotFoundException: java.util.Collection<java.lang.Integer>
+								String expression = StringUtil.repeatChar('[', repeat) + "L" + newtypeName + ";";
+								this.type = Class.forName(expression);
+							}
 						}
 						
 					}
 
 					if (this.type == null) {
-						this.type = Class.forName(typeName);
+						this.type = Class.forName(newtypeName);
 					}
 					
 				} catch (ClassNotFoundException e) {
 					e.printStackTrace();
 				}
 			}
-			
+
 		}
 	}
 	

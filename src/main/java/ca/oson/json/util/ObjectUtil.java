@@ -82,20 +82,20 @@ public class ObjectUtil {
 		}
 		
 		if (valueType.isPrimitive() || valueType.isEnum()) {
-			return false;
+			return true;
 		}
 
 		if (Number.class.isAssignableFrom(valueType) || Date.class.isAssignableFrom(valueType)) {
-			return false;
+			return true;
 		}
 		
 		if (valueType == String.class
 			|| valueType == Character.class
 			|| valueType == Boolean.class) {
-			return false;
+			return true;
 		}
 		
-		return true;
+		return false;
 	}
 	
 	public static boolean isArrayOrCollection(Class valueType) {

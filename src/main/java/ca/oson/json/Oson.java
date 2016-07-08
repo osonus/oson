@@ -15,6 +15,9 @@ package ca.oson.json;
 
 import java.beans.Expression;
 import java.beans.Statement;
+import java.beans.beancontext.BeanContext;
+import java.beans.beancontext.BeanContextServices;
+import java.beans.beancontext.BeanContextServicesSupport;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
@@ -30,34 +33,27 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
+import java.util.jar.Attributes;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.management.AttributeList;
+import javax.management.relation.RoleList;
+import javax.management.relation.RoleUnresolvedList;
 import javax.persistence.Column;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.print.attribute.standard.JobStateReasons;
+import javax.print.attribute.standard.PrinterStateReasons;
+import javax.script.SimpleBindings;
+import javax.swing.UIDefaults;
 import javax.validation.constraints.Size;
 
 import org.json.JSONArray;
@@ -103,6 +99,40 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.Since;
 
 //import org.springframework.web.bind.annotation.RequestParam;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -229,10 +259,166 @@ public class Oson {
 	 * 4. finally, use this system default value.
 	 */
 	public static class DefaultValue {
-		public static Collection collection() {
+		public static Collection collection(Class type) {
+			if (List.class.isAssignableFrom(type)) {
+				if (type == LinkedList.class) {
+					return new LinkedList();
+				} else if (type == ArrayList.class) {
+					return new ArrayList();
+				} else if (type == Vector.class) {
+					return new Vector();
+				} else if (type == Stack.class) {
+					return new Stack();
+				} else if (type == AttributeList.class) {
+					return new AttributeList();
+				} else if (type == CopyOnWriteArrayList.class) {
+					return new CopyOnWriteArrayList();
+				} else if (type == RoleList.class) {
+					return new RoleList();
+				} else if (type == RoleUnresolvedList.class) {
+					return new RoleUnresolvedList();
+				} 
+				
+				return new ArrayList();
+				
+			} else if (Set.class.isAssignableFrom(type)) {
+				if (type == HashSet.class) {
+					return new HashSet();
+				} else if (type == TreeSet.class) {
+					return new TreeSet();
+				} else if (type == ConcurrentSkipListSet.class) {
+					return new ConcurrentSkipListSet();
+				} else if (type == CopyOnWriteArraySet.class) {
+					return new CopyOnWriteArraySet();
+				} else if (type == LinkedHashSet.class) {
+					return new LinkedHashSet();
+				} else if (type == JobStateReasons.class) {
+					return new JobStateReasons();
+				}
+				
+				return new HashSet();
+				
+			} else if (Queue.class.isAssignableFrom(type)) {
+				if (type == PriorityQueue.class) {
+					return new PriorityQueue();
+				} else if (type == LinkedBlockingDeque.class) {
+					return new LinkedBlockingDeque();
+				} else if (type == ArrayBlockingQueue.class) {
+					return new ArrayBlockingQueue(0);
+				} else if (type == DelayQueue.class) {
+					return new DelayQueue();
+				} else if (type == LinkedBlockingQueue.class) {
+					return new LinkedBlockingQueue();
+				} else if (type == LinkedTransferQueue.class) {
+					return new LinkedTransferQueue();
+				} else if (type == PriorityBlockingQueue.class) {
+					return new PriorityBlockingQueue();
+				} else if (type == SynchronousQueue.class) {
+					return new SynchronousQueue();
+				} else if (type == ArrayDeque.class) {
+					return new ArrayDeque();
+				} else if (type == ConcurrentLinkedDeque.class) {
+					return new ConcurrentLinkedDeque();
+				} else if (type == ConcurrentLinkedQueue.class) {
+					return new ConcurrentLinkedQueue();
+				} else if (type == LinkedList.class) {
+					return new LinkedList();
+				}
+				
+				return new PriorityQueue();
+				
+			} else if (SortedSet.class.isAssignableFrom(type) || NavigableSet.class.isAssignableFrom(type)) {
+				if (type == ConcurrentSkipListSet.class) {
+					return new ConcurrentSkipListSet();
+				} else if (type == TreeSet.class) {
+					return new TreeSet();
+					
+				}
+				
+				return new TreeSet();
+				
+			} else if (Deque.class.isAssignableFrom(type)) {
+				if (type == ArrayDeque.class) {
+					return new ArrayDeque();
+				} else if (type == ConcurrentLinkedDeque.class) {
+					return new ConcurrentLinkedDeque();
+				} else if (type == LinkedBlockingDeque.class) {
+					return new LinkedBlockingDeque();
+				} else if (type == LinkedList.class) {
+					return new LinkedList();
+				}
+				
+				return new ArrayDeque();
+				
+			} else if (BlockingQueue.class.isAssignableFrom(type)) {
+				if (type == ArrayBlockingQueue.class) {
+					return new ArrayBlockingQueue(0);
+				} else if (type == DelayQueue.class) {
+					return new DelayQueue();
+				} else if (type == LinkedBlockingDeque.class) {
+					return new LinkedBlockingDeque();
+				} else if (type == LinkedBlockingQueue.class) {
+					return new LinkedBlockingQueue();
+				} else if (type == LinkedTransferQueue.class) {
+					return new LinkedTransferQueue();
+				} else if (type == PriorityBlockingQueue.class) {
+					return new PriorityBlockingQueue();
+				} else if (type == SynchronousQueue.class) {
+					return new SynchronousQueue();
+					
+				}
+				
+				return new LinkedBlockingDeque();
+				
+			} else if (BlockingDeque.class.isAssignableFrom(type)) {
+				
+				return new LinkedBlockingDeque();
+				
+			} else if (BeanContextServices.class.isAssignableFrom(type)) {
+				
+				return new BeanContextServicesSupport();
+				
+			} else if (BeanContext.class.isAssignableFrom(type)) {
+				
+				return new BeanContextServicesSupport();
+
+			}
+			
 			return new ArrayList();
 		}
-		public static Map map() {
+		
+		public static Map map(Class type) {
+			
+			if (type == HashMap.class) {
+				return new HashMap();
+			} else if (type == ConcurrentHashMap.class) {
+				return new ConcurrentHashMap();
+			} else if (type == ConcurrentSkipListMap.class) {
+				return new ConcurrentSkipListMap();
+			} else if (type == IdentityHashMap.class) {
+				return new IdentityHashMap();
+			} else if (type == TreeMap.class) {
+				return new TreeMap();
+			} else if (type == WeakHashMap.class) {
+				return new WeakHashMap();
+			} else if (type == Attributes.class) {
+				return new Attributes();
+			} else if (type == Hashtable.class) {
+				return new Hashtable();
+			} else if (type == IdentityHashMap.class) {
+				return new IdentityHashMap();
+			} else if (type == LinkedHashMap.class) {
+				return new LinkedHashMap();
+			} else if (type == PrinterStateReasons.class) {
+				return new PrinterStateReasons();
+			} else if (type == Properties.class) {
+				return new Properties();
+			} else if (type == SimpleBindings.class) {
+				return new SimpleBindings();
+			} else if (type == UIDefaults.class) {
+				return new UIDefaults();
+			}
+			
 			return new HashMap();
 		}
 		public static Object[] array() {
@@ -264,9 +450,9 @@ public class Oson {
 			if (type == String.class) {
 				return DefaultValue.string;
 			} else if (Collection.class.isAssignableFrom(type)) {
-				return DefaultValue.collection();
+				return DefaultValue.collection(type);
 			} else if (Map.class.isAssignableFrom(type)) {
-				return DefaultValue.map();
+				return DefaultValue.map(type);
 			} else if (type.isArray()) {
 				return DefaultValue.array();
 
@@ -393,7 +579,7 @@ public class Oson {
 
 
 
-	private static class FieldData<T, E, R> {
+	public static class FieldData<T, E, R> implements Cloneable {
 		// enclosing object, such as a field or component in a enclosing class
 		public T enclosingObj;
 		private Class<T> enclosingtype = null;
@@ -795,6 +981,18 @@ public class Oson {
 			return componentType;
 		}
 		
+		protected FieldData clone() throws CloneNotSupportedException {
+	        try{
+	        	FieldData clone = this;
+	            for (Field field : this.getClass().getDeclaredFields()) {
+	                field.setAccessible(true);
+	                field.set(clone, field.get(this));
+	            }
+	            return clone;
+	        }catch(Exception e){
+	        	return null;
+	        }
+	    }
 	}
 
 	// holding all states inside these 3 objects
@@ -2070,7 +2268,17 @@ public class Oson {
 
 		return this;
 	}
+	public <T> Oson setSerializer(Class<T> type, FieldData2JsonFunction serializer) {
+		cMap(type).setSerializer(serializer);
 
+		return this;
+	}
+	public <T> Oson setDeserializer(Class<T> type, Json2FieldDataFunction deserializer) {
+		cMap(type).setDeserializer(deserializer);
+
+		return this;
+	}
+	
 	public <T> Oson setSerializer(Class<T> type, String2JsonFunction serializer) {
 		cMap(type).setSerializer(serializer);
 
@@ -6354,12 +6562,13 @@ public class Oson {
 		return null;
 	}
 	
-	private void startCachedComponentTypes(ComponentType componentType) {
-		this.masterClass = null;
+	private synchronized void startCachedComponentTypes(ComponentType componentType) {
+		Class ClassType = componentType.getClassType();
+		Class[] componentClassTypes = componentType.getComponentClassType();
 		cachedComponentTypes(componentType);
 	}
 	
-	private void startCachedComponentTypes(Class classType) {
+	private synchronized void startCachedComponentTypes(Class classType) {
 		if (!ObjectUtil.isBasicDataType(classType)) {
 			this.masterClass = classType;
 			cachedComponentTypes(classType);
@@ -6373,7 +6582,9 @@ public class Oson {
 		if (this.masterClass == null) {
 			this.masterClass = ClassType;
 		}
-		
+		if (this.masterClass == null) {
+			return null;
+		}
 		ComponentType oldComponentType = cachedComponentTypes.get(masterClass);
 		
 		if (oldComponentType == null) {
@@ -6672,18 +6883,22 @@ public class Oson {
 					
 				}
 				
-			} else if (itemType != null && (Collection.class.isAssignableFrom(itemType) || itemType.isArray())) {
+			} else if ((returnType != null && (Collection.class.isAssignableFrom(returnType) || returnType.isArray())) ||
+						(itemType != null && (Collection.class.isAssignableFrom(itemType) || itemType.isArray()))) {
+				
 				//  && ComponentType.class.isAssignableFrom(erasedType.getClass())
 				if (type != null) {
 					Class[] ctypes = type.getComponentClassType();
 					if (ctypes != null && ctypes.length > 0) {
-//						if (ctypes.length == 1) {
-//							Class cmptype = ctypes[0].getComponentType();
-//							if (cmptype != null && (cmptype.isArray() || Collection.class.isAssignableFrom(cmptype))) {
-//								type.add(cmptype);
-//							}
-//							return ctypes[0];
-//						}
+						if (ctypes.length == 1) {
+							Class cmptype = ctypes[0].getComponentType();
+							if (cmptype != null && (cmptype.isArray() || Collection.class.isAssignableFrom(cmptype))) {
+								type.add(cmptype);
+							}
+							if (ObjectUtil.isBasicDataType(ctypes[0])) {
+								return ctypes[0];
+							}
+						}
 						
 						int length = ctypes.length;
 						int depth = CollectionArrayTypeGuesser.getDepth(obj);
@@ -6788,7 +7003,7 @@ public class Oson {
 						}
 			
 						if (returnObj == null) {
-							returnObj = DefaultValue.map();
+							returnObj = DefaultValue.map(returnType);
 						}
 						
 						if (returnObj == null) {
@@ -6955,7 +7170,7 @@ public class Oson {
 				return defaultValue;
 			}
 
-			return DefaultValue.map();
+			return DefaultValue.map(objectDTO.returnType);
 		}
 
 		return null;
@@ -6974,7 +7189,7 @@ public class Oson {
 			}
 
 			if (returnType == null) {
-				returnType = (Class<Collection<E>>) DefaultValue.collection().getClass();
+				returnType = (Class<Collection<E>>) DefaultValue.collection(returnType).getClass();
 			}
 			
 			objectDTO.returnType = returnType;
@@ -7027,7 +7242,7 @@ public class Oson {
 					}
 		
 					if (returnObj == null) {
-						returnObj = DefaultValue.collection();
+						returnObj = DefaultValue.collection(returnType);
 					}
 					
 					objectDTO.returnObj = returnObj;
@@ -7059,86 +7274,182 @@ public class Oson {
 		int size = values.size();
 		int[] arr = new int[size];
 		int i = 0;
-		for (Integer value: values) {
+		for (Object value: values) {
 			if (value != null) {
-				arr[i] = value.intValue();
+				value = NumberUtil.getNumber(value, int.class);
+				if (value != null) {
+					arr[i] = (int) value;
+					i++;
+				}
 			}
-			i++;
 		}
-		return arr;
+		if (i == size) {
+			return arr;
+		}
+		return Arrays.copyOfRange(arr, 0, i);
 	}
-	private byte[] json2ArrayByte(Collection<Integer> values) {
+	
+	private byte[] json2ArrayByte(FieldData objectDTO) {
+		if (objectDTO.valueToProcess == null) {
+			return null;
+		}
+		
+		Function function = objectDTO.getDeserializer();
+		
+		Object returnedValue = objectDTO.valueToProcess;
+
+		if (function != null) {
+			try {
+				
+				// suppose to return String, but in case not, try to process
+				if (function instanceof Json2DataMapperFunction) {
+					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level);
+					returnedValue = ((Json2DataMapperFunction)function).apply(classData);
+
+				} else if (function instanceof Json2ArrayFunction) {
+					return (byte[]) ((Json2ArrayFunction)function).apply(objectDTO.valueToProcess);
+						
+				} else {
+					returnedValue = function.apply(objectDTO.valueToProcess);
+				}
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+		}
+
+		if (returnedValue == null) {
+			return null;
+			
+		} else if (returnedValue.getClass().isArray()) {
+			if (returnedValue.getClass() == byte[].class) {
+				return (byte[]) returnedValue;
+			}
+			
+			int size = Array.getLength(returnedValue);
+			byte[] arr = new byte[size];
+			for (int i = 0; i < size; i++) {
+				arr[i] = (byte) NumberUtil.getNumber(Array.get(returnedValue, i), byte.class);
+			}
+			
+			return arr;
+			
+		} else if (!Collection.class.isAssignableFrom(returnedValue.getClass())) {
+			return null;
+		}
+		
+		Collection values = (Collection)returnedValue;
+		
 		int size = values.size();
 		byte[] arr = new byte[size];
 		int i = 0;
-		for (Integer value: values) {
+
+		for (Object value: values) {
 			if (value != null) {
-				arr[i] = value.byteValue();
+				value = NumberUtil.getNumber(value, byte.class);
+				if (value != null) {
+					arr[i] = (byte) value;
+					i++;
+				}
 			}
-			i++;
 		}
-		return arr;
+		
+		if (i == size) {
+			return arr;
+		}
+		return Arrays.copyOfRange(arr, 0, i);
 	}
+	
 	private char[] json2ArrayChar(Collection<String> values) {
 		int size = values.size();
 		char[] arr = new char[size];
 		int i = 0;
 		for (String value: values) {
 			if (value != null) {
-				value = StringUtil.unquote(value);
-				arr[i] = value.charAt(0);
+				try {
+					value = StringUtil.unquote(value);
+					arr[i] = value.charAt(0);
+					i++;
+				} catch (Exception e) {}
 			}
-			i++;
 		}
-		return arr;
+		if (i == size) {
+			return arr;
+		}
+		return Arrays.copyOfRange(arr, 0, i);
 	}
 	private float[] json2ArrayFloat(Collection<Double> values) {
 		int size = values.size();
 		float[] arr = new float[size];
 		int i = 0;
-		for (Double value: values) {
+		for (Object value: values) {
 			if (value != null) {
-				arr[i] = value.floatValue();
+				value = NumberUtil.getNumber(value, float.class);
+				if (value != null) {
+					arr[i] = (float) value;
+					i++;
+				}
 			}
-			i++;
 		}
-		return arr;
+		if (i == size) {
+			return arr;
+		}
+		return Arrays.copyOfRange(arr, 0, i);
 	}
 	private double[] json2ArrayDouble(Collection<Double> values) {
 		int size = values.size();
 		double[] arr = new double[size];
 		int i = 0;
-		for (Double value: values) {
+		for (Object value: values) {
 			if (value != null) {
-				arr[i] = value;
+				value = NumberUtil.getNumber(value, double.class);
+				if (value != null) {
+					arr[i] = (double) value;
+					i++;
+				}
 			}
-			i++;
 		}
-		return arr;
+		if (i == size) {
+			return arr;
+		}
+		return Arrays.copyOfRange(arr, 0, i);
 	}
 	private long[] json2ArrayLong(Collection<Integer> values) {
 		int size = values.size();
 		long[] arr = new long[size];
 		int i = 0;
-		for (Integer value: values) {
+		for (Object value: values) {
 			if (value != null) {
-				arr[i] = value;
+				value = NumberUtil.getNumber(value, long.class);
+				if (value != null) {
+					arr[i] = (long) value;
+					i++;
+				}
 			}
-			i++;
 		}
-		return arr;
+		if (i == size) {
+			return arr;
+		}
+		return Arrays.copyOfRange(arr, 0, i);
 	}
 	private short[] json2ArrayShort(Collection<Integer> values) {
 		int size = values.size();
 		short[] arr = new short[size];
 		int i = 0;
-		for (Integer value: values) {
+		for (Object value: values) {
 			if (value != null) {
-				arr[i] = value.shortValue();
+				value = NumberUtil.getNumber(value, short.class);
+				if (value != null) {
+					arr[i] = (short) value;
+					i++;
+				}
 			}
-			i++;
 		}
-		return arr;
+		if (i == size) {
+			return arr;
+		}
+		return Arrays.copyOfRange(arr, 0, i);
 	}
 	private boolean[] json2ArrayBoolean(Collection<Boolean> values) {
 		int size = values.size();
@@ -7146,14 +7457,19 @@ public class Oson {
 		int i = 0;
 		for (Boolean value: values) {
 			if (value != null) {
-				arr[i] = value;
+				try {
+					arr[i] = (boolean)value;
+				i++;
+				} catch (Exception e) {}
 			}
-			i++;
 		}
-		return arr;
+		if (i == size) {
+			return arr;
+		}
+		return Arrays.copyOfRange(arr, 0, i);
 	}
 
-	private <E> E[] json2Array(FieldData objectDTO) {
+	private <E> Object json2Array(FieldData objectDTO) {
 		Object value = objectDTO.valueToProcess;
 		E[] returnObj = (E[])objectDTO.returnObj;
 		Class<E[]> returnType = objectDTO.returnType;
@@ -7334,7 +7650,7 @@ public class Oson {
 	
 	
 	private <E> String array2JsonDefault(FieldData objectDTO) {
-		E[] valueToReturn = json2ArrayDefault(objectDTO);
+		Object valueToReturn = json2ArrayDefault(objectDTO);
 		
 		if (valueToReturn == null) {
 			return null;
@@ -7357,7 +7673,7 @@ public class Oson {
 	}
 
 	
-	private <E> E[] json2ArrayDefault(FieldData objectDTO) {
+	private <E> Object json2ArrayDefault(FieldData objectDTO) {
 		//Object value = objectDTO.valueToProcess;
 		//Class<E> returnType = objectDTO.returnType;
 		boolean required = objectDTO.required();
@@ -7369,6 +7685,10 @@ public class Oson {
 			}
 
 			return (E[]) DefaultValue.array();
+		}
+		
+		if (objectDTO.valueToProcess != null) {
+			return Array.newInstance(objectDTO.getComponentType(getJsonClassType()), 0);
 		}
 
 		return null;
@@ -7465,9 +7785,10 @@ public class Oson {
 			}
 			
 			if (values == null) {
-				return null;
+				//return null;
+			} else {
+				objectDTO.valueToProcess = values;
 			}
-			objectDTO.valueToProcess = values;
 			
 			Class<E> componentType = (Class<E>) returnType.getComponentType();
 			if (componentType == null) {
@@ -7482,7 +7803,7 @@ public class Oson {
 				if (componentType == int.class) {
 					return (E)json2ArrayInt((Collection<Integer>) values);
 				} else if (componentType == byte.class) {
-					return (E)json2ArrayByte((Collection<Integer>) values);
+					return (E)json2ArrayByte(objectDTO);
 				} else if (componentType == char.class) {
 					return (E)json2ArrayChar((Collection<String>) values);
 				} else if (componentType == float.class) {
@@ -7510,18 +7831,10 @@ public class Oson {
 			return (E) json2Map(objectDTO);
 
 		} else {
-			E obj = (E)objectDTO.returnObj;
-			Map<String, Object> mvalue = null;
-			if (value != null && Map.class.isAssignableFrom(value.getClass())) {
-				mvalue = (Map<String, Object>)value;
-			}
-			
-
-			if (obj == null) {
-				return (E) deserialize2Object(mvalue, returnType, objectDTO.fieldMapper);
+			if (objectDTO.returnObj == null) {
+				return (E) deserialize2Object(value, returnType, objectDTO);
 				
 			} else {
-				objectDTO.valueToProcess = mvalue;
 				objectDTO.returnType = returnType;
 				return (E) deserialize2Object(objectDTO);
 			}
@@ -7595,7 +7908,7 @@ public class Oson {
 		Class<?> returnType = objectDTO.returnType;
 		
 
-		if (value != null && ((Collection) value).size() > 0) {
+		if (value != null) {
 			Collection collection = (Collection) value;
 			Function function = objectDTO.getSerializer();
 			String valueToReturn = null;
@@ -7705,7 +8018,7 @@ public class Oson {
 				return defaultValue;
 			}
 
-			return DefaultValue.collection();
+			return DefaultValue.collection(returnType);
 		}
 
 		return null;
@@ -8099,8 +8412,26 @@ public class Oson {
 
 		return getSetters(valueType);
 	}
+	
+	private static boolean ignored(Class valueType) {
+		if (valueType == null || valueType == ClassLoader.class
+				|| valueType == Object.class
+				|| valueType.getName().startsWith("java.security.")
+				|| valueType.getName().startsWith("sun.reflect.")
+				) {
+			return true;
+		}
+		
+		return false;
+	}
+	
 	private <T> Map <String, Method> getSetters(Class<T> valueType) {
 		String fullName = valueType.getName();
+		
+		if (ignored(valueType)) {
+			return new HashMap <>();
+		}
+		
 		if (!cachedMethods.containsKey(fullName)) {
 			processMethods(valueType, fullName);
 		}
@@ -8117,6 +8448,10 @@ public class Oson {
 		return getGetters(valueType);
 	}
 	private <T> Map <String, Method> getGetters(Class<T> valueType) {
+		if (ignored(valueType)) {
+			return new HashMap <>();
+		}
+		
 		String fullName = valueType.getName();
 		if (!cachedMethods.containsKey(fullName)) {
 			processMethods(valueType, fullName);
@@ -8133,6 +8468,10 @@ public class Oson {
 		return getOtherMethods(valueType);
 	}
 	private <T> Map <String, Method> getOtherMethods(Class<T> valueType) {
+		if (ignored(valueType)) {
+			return new HashMap <>();
+		}
+		
 		String fullName = valueType.getName();
 		if (!cachedMethods.containsKey(fullName)) {
 			processMethods(valueType, fullName);
@@ -8204,16 +8543,10 @@ public class Oson {
 	}
 
 	public static <T> Field[] getFields(Class<T> valueType) {
-		if (valueType == null) {
+		if (ignored(valueType)) {
 			return new Field[0];
 		}
-		String valueTypeName = valueType.getName(); // valueTypeName.startsWith("java.lang.Class") || 
-		if (valueTypeName.startsWith("java.security.") || valueTypeName.startsWith("sun.reflect.")
-				|| valueType == java.lang.ClassLoader.class
-				) {
-			return new Field[0];
-		}
-		
+
 		if (cachedFields.containsKey(valueType)) {
 			return cachedFields.get(valueType);
 		}
@@ -8725,6 +9058,7 @@ public class Oson {
 			
 			// 2. Globalize it
 			classMapper = globalize(classMapper);
+			objectDTO.classMapper = classMapper;
 		}
 		
 		if (objectDTO.fieldMapper != null && isInheritMapping()) {
@@ -8888,28 +9222,37 @@ public class Oson {
 		Function function = classMapper.serializer; //getSerializer(valueType);
 		if (function != null) {
 			try {
+				Object returnValue = null;
 				if (function instanceof DataMapper2JsonFunction) {
 					DataMapper classData = new DataMapper(valueType, obj, classMapper, objectDTO.level);
 					objectDTO.jsonRawValue = false;
-					return ((DataMapper2JsonFunction)function).apply(classData);
+					DataMapper2JsonFunction f = (DataMapper2JsonFunction)function;
+					
+					return f.apply(classData);
+					
+				} else if (function instanceof FieldData2JsonFunction) {
+					FieldData2JsonFunction f = (FieldData2JsonFunction)function;
+					FieldData fieldData = objectDTO.clone();
+					
+					returnValue = f.apply(fieldData);
 					
 				} else {
-					Object returnValue = function.apply(obj);
+					returnValue = function.apply(obj);
+				}
+
+				if (returnValue != null) {
+					Class returnType = returnValue.getClass();
 					
-					if (returnValue != null) {
-						Class returnType = returnValue.getClass();
+					if (returnType == String.class) {
+						return (String)returnValue;
 						
-						if (returnType == String.class) {
-							return (String)returnValue;
-							
-						} else if (returnType == valueType || valueType.isAssignableFrom(returnType)) {
-							// just continue to do the serializing
-						} else {
-							objectDTO.valueToProcess = returnValue;
-							objectDTO.returnType = returnType;
-							
-							return object2String(objectDTO);
-						}
+					} else if (returnType == valueType || valueType.isAssignableFrom(returnType)) {
+						// just continue to do the serializing
+					} else {
+						objectDTO.valueToProcess = returnValue;
+						objectDTO.returnType = returnType;
+						
+						return object2String(objectDTO);
 					}
 				}
 				
@@ -10146,16 +10489,28 @@ public class Oson {
     	return null;
     }
 
-	<T> T deserialize2Object(Map<String, Object> map, Class<T> valueType, FieldMapper fieldMapper) {
+	<T> T deserialize2Object(Object value, Class<T> valueType, FieldData fieldData) {
+		ClassMapper classMapper = getGlobalizedClassMapper(valueType);
+		
+		Map<String, Object> map = null;
+		
+		if (value != null && Map.class.isAssignableFrom(value.getClass())) {
+			map = (Map)value;
+		}
+		
 		if (map == null) {
-			return null;
+			if (classMapper == null) {
+				return null;
+			}
+			
+			map = new HashMap();
 		}
 
 		T obj = newInstance(map, valueType);
 		
 		if (obj != null) {
-			FieldData fieldData = new FieldData(map, valueType, obj, true);
-			fieldData.fieldMapper = fieldMapper;
+			fieldData = new FieldData(value, valueType, obj, true);
+			fieldData.fieldMapper = fieldData.fieldMapper;
 			return deserialize2Object(fieldData);
 		} else {
 			return null;
@@ -10613,7 +10968,15 @@ public class Oson {
 	 * 12. Apply Java configuration for this particular field.
 	 */
 	<T> T deserialize2Object(FieldData objectDTO) {
-		Map<String, Object> map = (Map)objectDTO.valueToProcess;
+		Object valueToProcess = objectDTO.valueToProcess;
+		Map<String, Object> map = null;
+		
+		if (valueToProcess != null && Map.class.isAssignableFrom(valueToProcess.getClass())) {
+			map = (Map)valueToProcess;
+		} else {
+			map = new HashMap<>();
+		}
+		
 		Class<T> valueType = objectDTO.returnType;
 		T obj = (T) objectDTO.returnObj;
 
@@ -10633,6 +10996,7 @@ public class Oson {
 		
 			// 2. Globalize it
 			classMapper = globalize(classMapper);
+			objectDTO.classMapper = classMapper;
 		}
 
 		if (objectDTO.fieldMapper != null && isInheritMapping()) {
@@ -10787,28 +11151,36 @@ public class Oson {
 			Function function = classMapper.deserializer; // = getDeserializer(valueType);
 			if (function != null) {
 				try {
-					
+					Object returnedValue = null;
 					if (function instanceof Json2DataMapperFunction) {
 						DataMapper classData = new DataMapper(map, valueType, obj, classMapper, objectDTO.level);
+						Json2DataMapperFunction f = (Json2DataMapperFunction)function;
 						
-						return (T) ((Json2DataMapperFunction)function).apply(classData);
+						return (T) f.apply(classData);
+						
+					} else if (function instanceof Json2FieldDataFunction) {
+						Json2FieldDataFunction f = (Json2FieldDataFunction)function;
+						FieldData fieldData = objectDTO.clone();
+						
+						returnedValue = f.apply(fieldData);
 						
 					} else {
-						Object returnedValue = function.apply(obj);
-
-						if (returnedValue instanceof Optional) {
-							Optional opt = (Optional)returnedValue;
-							returnedValue = opt.orElse(null);
-						}
-						
-						if (returnedValue == null) {
-							return null;
-						} else if (valueType.isAssignableFrom(returnedValue.getClass())) {
-							return (T) returnedValue;
-						} else {
-							// not the correct returned object type, do nothing
-						}
+						returnedValue = function.apply(obj);
 					}
+
+					if (returnedValue instanceof Optional) {
+						Optional opt = (Optional)returnedValue;
+						returnedValue = opt.orElse(null);
+					}
+						
+					if (returnedValue == null) {
+						return null;
+					} else if (valueType.isAssignableFrom(returnedValue.getClass())) {
+						return (T) returnedValue;
+					} else {
+						// not the correct returned object type, do nothing
+					}
+
 				} catch (Exception e) {}
 			}
 			

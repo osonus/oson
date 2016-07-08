@@ -54,7 +54,7 @@ public final class ObjectTypeAdapterTest extends TestCaseBase {
   }
 
   public void testSerializeObject() throws Exception {
-	String result = oson.setGetOnly().toJson(new Object());
+	String result = oson.toJson(new Object()); //.setGetOnly()
     assertEquals("{}", result);
   }
 

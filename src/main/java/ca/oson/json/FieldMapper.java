@@ -178,18 +178,31 @@ public class FieldMapper<T, E> {
 		this.serializer = serializer;
 		this.deserializer = deserializer;
 	}
+	public FieldMapper(String name, Class<T> type, Function serializer, Function deserializer) {
+		this(name,name,type);
+		this.serializer = serializer;
+		this.deserializer = deserializer;
+	}
 	
 	public FieldMapper(String java, String json, Class<T> type) {
 		this(java,json);
 		this.setType(type);
 	}
-
+	public FieldMapper(String name, Class<T> type) {
+		this(name,name);
+		this.setType(type);
+	}
+	
 	public FieldMapper(String java, String json) {
 		super();
 		this.java = java;
 		this.json = json;
 	}
 
+	public FieldMapper(String name) {
+		this(name,name);
+	}
+	
 	public FieldMapper() {
 		super();
 	}
@@ -385,6 +398,14 @@ public class FieldMapper<T, E> {
 		return this;
 	}
 	public FieldMapper setDeserializer(Json2StringFunction deserializer) {
+		this.deserializer = deserializer;
+		return this;
+	}
+	public FieldMapper setSerializer(DataMapper2JsonFunction serializer) {
+		this.serializer = serializer;
+		return this;
+	}
+	public FieldMapper setDeserializer(Json2DataMapperFunction deserializer) {
 		this.deserializer = deserializer;
 		return this;
 	}
