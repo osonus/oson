@@ -592,8 +592,8 @@ public class Oson {
 		public R returnObj = null;
 		
 		// value coming in to be processed
-		public Field field;
-		public E valueToProcess;
+		private Field field;
+		transient public E valueToProcess;
 		
 		// specifically map data to process, mainly for deserializing json to class object
 		//public Map<String, Object> mapToProcess;
@@ -603,10 +603,10 @@ public class Oson {
 		public boolean json2Java = true;
 
 		// extra field information
-		public Method getter;
-		public Method setter;
+		transient private Method getter;
+		transient private Method setter;
 		
-		public FieldMapper fieldMapper = null;
+		transient private FieldMapper fieldMapper = null;
 		public ClassMapper classMapper = null;
 		
 		// various configuration attributes
@@ -656,7 +656,7 @@ public class Oson {
 			return (this.required != null && this.required);
 		}
 		
-		private Class getEnclosingtype() {
+		public Class getEnclosingtype() {
 			if (enclosingtype == null && enclosingObj != null) {
 				enclosingtype = (Class<T>) enclosingObj.getClass();
 			}
@@ -733,7 +733,9 @@ public class Oson {
 			this.set = set;
 		}
 		
-
+		private FieldData() {
+		}
+		
 		public Class getEnclosingType() {
 			if (enclosingtype != null) {
 				return enclosingtype;
@@ -983,11 +985,10 @@ public class Oson {
 		
 		protected FieldData clone() throws CloneNotSupportedException {
 	        try{
-	        	FieldData clone = this;
-	            for (Field field : this.getClass().getDeclaredFields()) {
-	                field.setAccessible(true);
-	                field.set(clone, field.get(this));
-	            }
+	        	FieldData clone = new FieldData();
+	        	CopyObjects.copy(this, clone, true);
+	        	clone.valueToProcess = this.valueToProcess;
+	        	
 	            return clone;
 	        }catch(Exception e){
 	        	return null;
@@ -6868,9 +6869,9 @@ public class Oson {
 							if (cmptype != null && (cmptype.isArray() || Collection.class.isAssignableFrom(cmptype))) {
 								type.add(cmptype);
 							}
-							if (ObjectUtil.isBasicDataType(ctypes[0])) {
+							//if (!ObjectUtil.isBasicDataType(ctypes[0])) {
 								return ctypes[0];
-							}
+							//}
 						}
 						
 						int length = ctypes.length;

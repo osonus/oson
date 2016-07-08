@@ -415,145 +415,194 @@ public class CustomTypeAdaptersTest extends TestCaseBase {
     
   }
 
-//  private static final class StringHolder {
-//    String part1;
-//    String part2;
-//
-//    public StringHolder(String string) {
-//      String[] parts = string.split(":");
-//      part1 = parts[0];
-//      part2 = parts[1];
-//    }
-//    public StringHolder(String part1, String part2) {
-//      this.part1 = part1;
-//      this.part2 = part2;
-//    }
-//  }
-//
-//  private static class StringHolderTypeAdapter implements JsonSerializer<StringHolder>,
-//      JsonDeserializer<StringHolder>, InstanceCreator<StringHolder> {
-//
-//    @Override public StringHolder createInstance(Type type) {
-//      //Fill up with objects that will be thrown away
-//      return new StringHolder("unknown:thing");
-//    }
-//
-//    @Override public StringHolder deserialize(JsonElement src, Type type,
-//        JsonDeserializationContext context) {
-//      return new StringHolder(src.getAsString());
-//    }
-//
-//    @Override public JsonElement serialize(StringHolder src, Type typeOfSrc,
-//        JsonSerializationContext context) {
-//      String contents = src.part1 + ':' + src.part2;
-//      return new JsonPrimitive(contents);
-//    }
-//  }
-//
-//  // Test created from Issue 70
-//  public void testCustomAdapterInvokedForCollectionElementSerializationWithType() {
-//    Gson gson = new GsonBuilder()
-//      .registerTypeAdapter(StringHolder.class, new StringHolderTypeAdapter())
-//      .create();
-//    Type setType = new TypeToken<Set<StringHolder>>() {}.getType();
-//    StringHolder holder = new StringHolder("Jacob", "Tomaw");
-//    Set<StringHolder> setOfHolders = new HashSet<StringHolder>();
-//    setOfHolders.add(holder);
-//    String json = gson.toJson(setOfHolders, setType);
-//    assertTrue(json.contains("Jacob:Tomaw"));
-//  }
-//
-//  // Test created from Issue 70
-//  public void testCustomAdapterInvokedForCollectionElementSerialization() {
-//    Gson gson = new GsonBuilder()
-//      .registerTypeAdapter(StringHolder.class, new StringHolderTypeAdapter())
-//      .create();
-//    StringHolder holder = new StringHolder("Jacob", "Tomaw");
-//    Set<StringHolder> setOfHolders = new HashSet<StringHolder>();
-//    setOfHolders.add(holder);
-//    String json = gson.toJson(setOfHolders);
-//    assertTrue(json.contains("Jacob:Tomaw"));
-//  }
-//
-//  // Test created from Issue 70
-//  public void testCustomAdapterInvokedForCollectionElementDeserialization() {
-//    Gson gson = new GsonBuilder()
-//      .registerTypeAdapter(StringHolder.class, new StringHolderTypeAdapter())
-//      .create();
-//    Type setType = new TypeToken<Set<StringHolder>>() {}.getType();
-//    Set<StringHolder> setOfHolders = gson.fromJson("['Jacob:Tomaw']", setType);
-//    assertEquals(1, setOfHolders.size());
-//    StringHolder foo = setOfHolders.iterator().next();
-//    assertEquals("Jacob", foo.part1);
-//    assertEquals("Tomaw", foo.part2);
-//  }
-//
-//  // Test created from Issue 70
-//  public void testCustomAdapterInvokedForMapElementSerializationWithType() {
-//    Gson gson = new GsonBuilder()
-//      .registerTypeAdapter(StringHolder.class, new StringHolderTypeAdapter())
-//      .create();
-//    Type mapType = new TypeToken<Map<String,StringHolder>>() {}.getType();
-//    StringHolder holder = new StringHolder("Jacob", "Tomaw");
-//    Map<String, StringHolder> mapOfHolders = new HashMap<String, StringHolder>();
-//    mapOfHolders.put("foo", holder);
-//    String json = gson.toJson(mapOfHolders, mapType);
-//    assertTrue(json.contains("\"foo\":\"Jacob:Tomaw\""));
-//  }
-//
-//  // Test created from Issue 70
-//  public void testCustomAdapterInvokedForMapElementSerialization() {
-//    Gson gson = new GsonBuilder()
-//      .registerTypeAdapter(StringHolder.class, new StringHolderTypeAdapter())
-//      .create();
-//    StringHolder holder = new StringHolder("Jacob", "Tomaw");
-//    Map<String, StringHolder> mapOfHolders = new HashMap<String, StringHolder>();
-//    mapOfHolders.put("foo", holder);
-//    String json = gson.toJson(mapOfHolders);
-//    assertTrue(json.contains("\"foo\":\"Jacob:Tomaw\""));
-//  }
-//
-//  // Test created from Issue 70
-//  public void testCustomAdapterInvokedForMapElementDeserialization() {
-//    Gson gson = new GsonBuilder()
-//      .registerTypeAdapter(StringHolder.class, new StringHolderTypeAdapter())
-//      .create();
-//    Type mapType = new TypeToken<Map<String, StringHolder>>() {}.getType();
-//    Map<String, StringHolder> mapOfFoo = gson.fromJson("{'foo':'Jacob:Tomaw'}", mapType);
-//    assertEquals(1, mapOfFoo.size());
-//    StringHolder foo = mapOfFoo.get("foo");
-//    assertEquals("Jacob", foo.part1);
-//    assertEquals("Tomaw", foo.part2);
-//  }
-//
-//  public void testEnsureCustomSerializerNotInvokedForNullValues() {
-//    Gson gson = new GsonBuilder()
-//        .registerTypeAdapter(DataHolder.class, new DataHolderSerializer())
-//        .create();
-//    DataHolderWrapper target = new DataHolderWrapper(new DataHolder("abc"));
-//    String json = gson.toJson(target);
-//    assertEquals("{\"wrappedData\":{\"myData\":\"abc\"}}", json);
-//  }
-//
-//  public void testEnsureCustomDeserializerNotInvokedForNullValues() {
-//    Gson gson = new GsonBuilder()
-//        .registerTypeAdapter(DataHolder.class, new DataHolderDeserializer())
-//        .create();
-//    String json = "{wrappedData:null}";
-//    DataHolderWrapper actual = gson.fromJson(json, DataHolderWrapper.class);
-//    assertNull(actual.wrappedData);
-//  }
-//
-//  // Test created from Issue 352
-//  public void testRegisterHierarchyAdapterForDate() {
-//    Gson gson = new GsonBuilder()
-//        .registerTypeHierarchyAdapter(Date.class, new DateTypeAdapter())
-//        .create();
-//    assertEquals("0", gson.toJson(new Date(0)));
-//    assertEquals("0", gson.toJson(new java.sql.Date(0)));
-//    assertEquals(new Date(0), gson.fromJson("0", Date.class));
-//    assertEquals(new java.sql.Date(0), gson.fromJson("0", java.sql.Date.class));
-//  }
+  private static final class StringHolder {
+    String part1;
+    String part2;
+
+    public StringHolder(String string) {
+      String[] parts = string.split(":");
+      part1 = parts[0];
+      part2 = parts[1];
+    }
+    public StringHolder(String part1, String part2) {
+      this.part1 = part1;
+      this.part2 = part2;
+    }
+  }
+
+  private static class StringHolderTypeAdapter implements JsonSerializer<StringHolder>,
+      JsonDeserializer<StringHolder>, InstanceCreator<StringHolder> {
+
+    @Override public StringHolder createInstance(Type type) {
+      //Fill up with objects that will be thrown away
+      return new StringHolder("unknown:thing");
+    }
+
+    @Override public StringHolder deserialize(JsonElement src, Type type,
+        JsonDeserializationContext context) {
+      return new StringHolder(src.getAsString());
+    }
+
+    @Override public JsonElement serialize(StringHolder src, Type typeOfSrc,
+        JsonSerializationContext context) {
+      String contents = src.part1 + ':' + src.part2;
+      return new JsonPrimitive(contents);
+    }
+  }
+
+  // Test created from Issue 70
+  public void testCustomAdapterInvokedForCollectionElementSerializationWithType() {
+    Gson gson = new GsonBuilder()
+      .registerTypeAdapter(StringHolder.class, new StringHolderTypeAdapter())
+      .create();
+    Type setType = new TypeToken<Set<StringHolder>>() {}.getType();
+    StringHolder holder = new StringHolder("Jacob", "Tomaw");
+    Set<StringHolder> setOfHolders = new HashSet<StringHolder>();
+    setOfHolders.add(holder);
+    String json = gson.toJson(setOfHolders, setType);
+    assertTrue(json.contains("Jacob:Tomaw"));
+    
+    json = oson.setSerializer(StringHolder.class, (Object p) -> {
+    	StringHolder h = (StringHolder)p;
+    	return h.part1 + ":" + h.part2;
+    }).toJson(setOfHolders, setType);
+    assertTrue(json.contains("Jacob:Tomaw"));
+  }
+
+  // Test created from Issue 70
+  public void testCustomAdapterInvokedForCollectionElementSerialization() {
+    Gson gson = new GsonBuilder()
+      .registerTypeAdapter(StringHolder.class, new StringHolderTypeAdapter())
+      .create();
+    StringHolder holder = new StringHolder("Jacob", "Tomaw");
+    Set<StringHolder> setOfHolders = new HashSet<StringHolder>();
+    setOfHolders.add(holder);
+    String json = gson.toJson(setOfHolders);
+    assertTrue(json.contains("Jacob:Tomaw"));
+    
+    oson.asOson().toJson(setOfHolders);
+    assertTrue(json.contains("Jacob:Tomaw"));
+  }
+
+  // Test created from Issue 70
+  public void testCustomAdapterInvokedForCollectionElementDeserialization() {
+    Gson gson = new GsonBuilder()
+      .registerTypeAdapter(StringHolder.class, new StringHolderTypeAdapter())
+      .create();
+    Type setType = new TypeToken<Set<StringHolder>>() {}.getType();
+    Set<StringHolder> setOfHolders = gson.fromJson("['Jacob:Tomaw']", setType);
+    assertEquals(1, setOfHolders.size());
+    StringHolder foo = setOfHolders.iterator().next();
+    assertEquals("Jacob", foo.part1);
+    assertEquals("Tomaw", foo.part2);
+    
+    
+    
+    setOfHolders = oson.setDeserializer(StringHolder.class, (FieldData p) -> {
+    	String str = p.valueToProcess.toString();
+    	return new StringHolder(str);
+    	}
+    ).fromJson("['Jacob:Tomaw']", setType);
+    assertEquals(1, setOfHolders.size());
+    foo = setOfHolders.iterator().next();
+    assertEquals("Jacob", foo.part1);
+    assertEquals("Tomaw", foo.part2);
+  }
+
+  // Test created from Issue 70
+  public void testCustomAdapterInvokedForMapElementSerializationWithType() {
+    Gson gson = new GsonBuilder()
+      .registerTypeAdapter(StringHolder.class, new StringHolderTypeAdapter())
+      .create();
+    Type mapType = new TypeToken<Map<String,StringHolder>>() {}.getType();
+    StringHolder holder = new StringHolder("Jacob", "Tomaw");
+    Map<String, StringHolder> mapOfHolders = new HashMap<String, StringHolder>();
+    mapOfHolders.put("foo", holder);
+    String json = gson.toJson(mapOfHolders, mapType);
+    assertTrue(json.contains("\"foo\":\"Jacob:Tomaw\""));
+    
+    oson.toJson(mapOfHolders, mapType);
+    assertTrue(json.contains("\"foo\":\"Jacob:Tomaw\""));
+  }
+
+  // Test created from Issue 70
+  public void testCustomAdapterInvokedForMapElementSerialization() {
+    Gson gson = new GsonBuilder()
+      .registerTypeAdapter(StringHolder.class, new StringHolderTypeAdapter())
+      .create();
+    StringHolder holder = new StringHolder("Jacob", "Tomaw");
+    Map<String, StringHolder> mapOfHolders = new HashMap<String, StringHolder>();
+    mapOfHolders.put("foo", holder);
+    String json = gson.toJson(mapOfHolders);
+    assertTrue(json.contains("\"foo\":\"Jacob:Tomaw\""));
+    
+    json = oson.toJson(mapOfHolders);
+    assertTrue(json.contains("\"foo\":\"Jacob:Tomaw\""));
+  }
+
+  // Test created from Issue 70
+  public void testCustomAdapterInvokedForMapElementDeserialization() {
+    Gson gson = new GsonBuilder()
+      .registerTypeAdapter(StringHolder.class, new StringHolderTypeAdapter())
+      .create();
+    Type mapType = new TypeToken<Map<String, StringHolder>>() {}.getType();
+    Map<String, StringHolder> mapOfFoo = gson.fromJson("{'foo':'Jacob:Tomaw'}", mapType);
+    assertEquals(1, mapOfFoo.size());
+    StringHolder foo = mapOfFoo.get("foo");
+    assertEquals("Jacob", foo.part1);
+    assertEquals("Tomaw", foo.part2);
+    
+    oson.setDeserializer(StringHolder.class, (FieldData p) -> {
+    	String str = p.valueToProcess.toString();
+    	return new StringHolder(str);
+    	});
+    
+    mapOfFoo = oson.fromJson("{'foo':'Jacob:Tomaw'}", mapType);
+    assertEquals(1, mapOfFoo.size());
+    foo = mapOfFoo.get("foo");
+    assertEquals("Jacob", foo.part1);
+    assertEquals("Tomaw", foo.part2);
+  }
+
+  public void testEnsureCustomSerializerNotInvokedForNullValues() {
+    Gson gson = new GsonBuilder()
+        .registerTypeAdapter(DataHolder.class, new DataHolderSerializer())
+        .create();
+    DataHolderWrapper target = new DataHolderWrapper(new DataHolder("abc"));
+    String json = gson.toJson(target);
+    assertEquals("{\"wrappedData\":{\"myData\":\"abc\"}}", json);
+    
+    json = oson.toJson(target);
+    assertEquals("{\"wrappedData\":{\"myData\":\"abc\"}}", json);
+  }
+
+  public void testEnsureCustomDeserializerNotInvokedForNullValues() {
+    Gson gson = new GsonBuilder()
+        .registerTypeAdapter(DataHolder.class, new DataHolderDeserializer())
+        .create();
+    String json = "{wrappedData:null}";
+    DataHolderWrapper actual = gson.fromJson(json, DataHolderWrapper.class);
+    assertNull(actual.wrappedData);
+    
+    actual = oson.fromJson(json, DataHolderWrapper.class);
+    assertNull(actual.wrappedData);
+  }
+
+  // Test created from Issue 352
+  public void testRegisterHierarchyAdapterForDate() {
+    Gson gson = new GsonBuilder()
+        .registerTypeHierarchyAdapter(Date.class, new DateTypeAdapter())
+        .create();
+    assertEquals("0", gson.toJson(new Date(0)));
+    assertEquals("0", gson.toJson(new java.sql.Date(0)));
+    assertEquals(new Date(0), gson.fromJson("0", Date.class));
+    assertEquals(new java.sql.Date(0), gson.fromJson("0", java.sql.Date.class));
+    
+    assertEquals("0", oson.toJson(new Date(0)));
+    assertEquals("0", oson.toJson(new java.sql.Date(0)));
+    assertEquals(new Date(0), oson.fromJson("0", Date.class));
+    assertEquals(new java.sql.Date(0), oson.fromJson("0", java.sql.Date.class));
+  }
 
   private static class DataHolder {
     final String data;
