@@ -36,7 +36,7 @@ public class DeserializeFunctionTest extends TestCaseBase {
 			   return newcar;
 		   };
 		   
-		   Car newcar = oson.setDeserializer(Car.class, function).deserialize(json, Car.class);
+		   Car newcar = oson.des(Car.class, function).deserialize(json, Car.class);
 
 		   assertNotEquals(car.toString(), newcar.toString());
 		   

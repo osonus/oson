@@ -1164,6 +1164,22 @@ public class Options {
 		
 		return null;
 	}
+	
+	public Set<FieldMapper> getFieldMappers(Class type) {
+		Set <FieldMapper> fldMappers = new HashSet<>();
+		if (type == null) {
+			return fldMappers;
+		}
+		
+		for (FieldMapper fieldMapper: fieldMappers) {
+			if (fieldMapper.getType() != null && fieldMapper.getType() == type) {
+				fldMappers.add(fieldMapper);
+			}
+		}
+		
+		return fldMappers;
+	}
+	
 
 	public Boolean isUseField() {
 		return useField;

@@ -34,7 +34,7 @@ public class OptionalTest extends TestCaseBase {
 		//oson.asGson(); // {"value":12,"opt":{"value":12}} //  .asJackson(); {"value":12,"opt":{"present":true}}
 		//oson.pretty();
 		
-		String json = oson.serialize(obj);
+		String json = oson.clearAll().serialize(obj);
 		
 		ComponentType componentType = new ComponentType(OptionalObject.class, Customer.class);
 
@@ -82,7 +82,7 @@ public class OptionalTest extends TestCaseBase {
 	public void testSerializeOptionalWithNoGenericType() {
 		OptionalCustomerNoGenericType obj = new OptionalCustomerNoGenericType();
 
-		String json = oson.serialize(obj);
+		String json = oson.clear().serialize(obj);
 
 		String expected = "{\"optCustomer\":{\"value\":{\"vehicles\":[{\"doors\":4,\"year\":2016,\"brand\":\"Audi\",\"years\":null},{\"doors\":4,\"year\":2016,\"brand\":\"Mercedes\",\"years\":null}],\"carList\":[{\"doors\":4,\"year\":2016,\"brand\":\"BMW\",\"years\":null},{\"doors\":4,\"year\":2016,\"brand\":\"Chevy\",\"years\":null}]}}}";
 		

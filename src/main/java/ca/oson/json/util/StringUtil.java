@@ -216,12 +216,12 @@ public class StringUtil {
                  sb.append('\\');
                  sb.append(c);
                  break;
-             case '/':
- //                if (b == '<') {
-                     sb.append('\\');
- //                }
-                 sb.append(c);
-                 break;
+//             case '/':
+//                 if (b == '<') {
+//                     sb.append('\\');
+//                 }
+//                 sb.append(c);
+//                 break;
              case '\b':
                  sb.append("\\b");
                  break;
@@ -271,7 +271,8 @@ public class StringUtil {
                 {"\\\\n", "\n"},
                 {"\\\\r", "\r"},
                 {"\\\"", "\""},
-                {"\\'", "'"}
+                {"\\'", "'"},
+                {"\\\\/", "/"}
                 };
 		
 		for (String [] filter: filters) {

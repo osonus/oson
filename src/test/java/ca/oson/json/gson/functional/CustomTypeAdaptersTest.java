@@ -31,6 +31,8 @@ import ca.oson.json.DataMapper;
 import ca.oson.json.Oson.FieldData;
 import ca.oson.json.domain.TestTypes.BagOfPrimitives;
 import ca.oson.json.domain.TestTypes.ClassWithCustomTypeConverter;
+import ca.oson.json.function.Date2LongFunction;
+import ca.oson.json.function.Json2DateFunction;
 import ca.oson.json.support.TestCaseBase;
 import ca.oson.json.util.StringUtil;
 
@@ -70,7 +72,7 @@ public class CustomTypeAdaptersTest extends TestCaseBase {
 //      }
 //    }).create();
     
-    oson.setSerializer(ClassWithCustomTypeConverter.class, (DataMapper p) -> "{\"bag\":5,\"value\":25}");
+    oson.ser(ClassWithCustomTypeConverter.class, (DataMapper p) -> "{\"bag\":5,\"value\":25}");
     
     ClassWithCustomTypeConverter target = new ClassWithCustomTypeConverter();
     assertEquals("{\"bag\":5,\"value\":25}", oson.toJson(target));
@@ -89,7 +91,7 @@ public class CustomTypeAdaptersTest extends TestCaseBase {
 //    }).create();
     String json = "{\"bag\":5,\"value\":25}";
     
-    oson.setDeserializer(ClassWithCustomTypeConverter.class, (FieldData p) -> {
+    oson.des(ClassWithCustomTypeConverter.class, (FieldData p) -> {
     	Map<String, Object> map = (Map)p.valueToProcess;
     	int value = Integer.parseInt(map.get("bag").toString());
     	return new ClassWithCustomTypeConverter(new BagOfPrimitives(value, value, false, ""), value);
@@ -132,7 +134,7 @@ public class CustomTypeAdaptersTest extends TestCaseBase {
     ClassWithCustomTypeConverter target = new ClassWithCustomTypeConverter();
     assertEquals("{\"bag\":6,\"value\":10}", gson.toJson(target));
     
-    oson.asOson().setSerializer(BagOfPrimitives.class, (Object p) -> 6).sort().setUseAttribute(false);
+    oson.asOson().ser(BagOfPrimitives.class, (Object p) -> 6).sort().useAttribute(false);
     
     assertEquals("{\"bag\":6,\"value\":10}", oson.toJson(target));
   }
@@ -150,11 +152,11 @@ public class CustomTypeAdaptersTest extends TestCaseBase {
     ClassWithCustomTypeConverter target = gson.fromJson(json, ClassWithCustomTypeConverter.class);
     assertEquals(7, target.getBag().getIntValue());
     
-    oson.clear().asOson().setDeserializer(BagOfPrimitives.class, (FieldData p) -> {
+    oson.clear().asOson().des(BagOfPrimitives.class, (FieldData p) -> {
     	Object valueToProcess = p.valueToProcess;
     	int value = Integer.parseInt(valueToProcess.toString());
     	return new BagOfPrimitives(value, value, false, "");
-    	}).sort().setUseAttribute(false);
+    	}).sort().useAttribute(false);
     
     target = oson.fromJson(json, ClassWithCustomTypeConverter.class);
     assertEquals(7, target.getBag().getIntValue());
@@ -178,7 +180,7 @@ public class CustomTypeAdaptersTest extends TestCaseBase {
     assertTrue(json.contains("derivedValue"));
     
     b = new Base();
-    json = oson.clear().setUseAttribute(false).setSerializer(Base.class, (Object p) -> {
+    json = oson.clear().useAttribute(false).ser(Base.class, (Object p) -> {
     	Base src = (Base)p;
     	JsonObject obj = new JsonObject();
     	obj.addProperty("value", src.baseValue);
@@ -208,7 +210,7 @@ public class CustomTypeAdaptersTest extends TestCaseBase {
     assertFalse(json.contains("derivedValue"));
     
     b = new Base();
-    json = oson.clear().setUseAttribute(false).setSerializer(Base.class, (Object p) -> {
+    json = oson.clear().useAttribute(false).ser(Base.class, (Object p) -> {
     	Base src = (Base)p;
     	JsonObject obj = new JsonObject();
     	obj.addProperty("value", src.baseValue);
@@ -273,7 +275,7 @@ public class CustomTypeAdaptersTest extends TestCaseBase {
     assertEquals("1", gson.toJson(true, boolean.class));
     assertEquals("true", gson.toJson(true, Boolean.class));
     
-    oson.clear().setSerializer(Boolean.class, (DataMapper p) -> {
+    oson.clear().ser(Boolean.class, (DataMapper p) -> {
     	Class cls = p.getValueType();
     	
     	if (cls == boolean.class) {
@@ -327,7 +329,7 @@ public class CustomTypeAdaptersTest extends TestCaseBase {
     String json = gson.toJson(data);
     assertEquals("\"0123456789\"", json);
     
-    oson.clear().setSerializer(byte[].class, (DataMapper p) -> {
+    oson.clear().ser(byte[].class, (DataMapper p) -> {
     	StringBuilder sb = new StringBuilder();
     	for (byte b : (byte[])p.getObj()) {
     		sb.append(b);
@@ -360,7 +362,7 @@ public class CustomTypeAdaptersTest extends TestCaseBase {
       assertEquals(expected[i], actual[i]);
     }
     
-    oson.clear().setDeserializer(byte[].class, (Object p) -> {
+    oson.clear().des(byte[].class, (Object p) -> {
     	String str = StringUtil.unquote(p.toString());
     	byte[] data = new byte[str.length()];
         for (int i = 0; i < data.length; ++i) {
@@ -374,7 +376,7 @@ public class CustomTypeAdaptersTest extends TestCaseBase {
       assertEquals(expected[i], actual[i]);
     }
     
-    oson.clear().setDeserializer(byte[].class, (Object p) -> {
+    oson.clear().des(byte[].class, (Object p) -> {
     	String str = StringUtil.unquote(p.toString());
     	Integer[] data = new Integer[str.length()];
         for (int i = 0; i < str.length(); ++i) {
@@ -387,7 +389,7 @@ public class CustomTypeAdaptersTest extends TestCaseBase {
       assertEquals(expected[i], actual[i]);
     }
     
-    oson.clear().setDeserializer(byte[].class, (Object p) -> {
+    oson.clear().des(byte[].class, (Object p) -> {
     	String str = StringUtil.unquote(p.toString());
     	char[] data = new char[str.length()];
         for (int i = 0; i < data.length; ++i) {
@@ -400,7 +402,7 @@ public class CustomTypeAdaptersTest extends TestCaseBase {
       assertEquals(expected[i], actual[i]);
     }
     
-    oson.clear().setDeserializer(byte[].class, (Object p) -> {
+    oson.clear().des(byte[].class, (Object p) -> {
     	String str = StringUtil.unquote(p.toString());
     	List<String> data = new ArrayList<>(str.length());
         for (int i = 0; i < str.length(); ++i) {
@@ -462,7 +464,7 @@ public class CustomTypeAdaptersTest extends TestCaseBase {
     String json = gson.toJson(setOfHolders, setType);
     assertTrue(json.contains("Jacob:Tomaw"));
     
-    json = oson.setSerializer(StringHolder.class, (Object p) -> {
+    json = oson.ser(StringHolder.class, (Object p) -> {
     	StringHolder h = (StringHolder)p;
     	return h.part1 + ":" + h.part2;
     }).toJson(setOfHolders, setType);
@@ -498,7 +500,7 @@ public class CustomTypeAdaptersTest extends TestCaseBase {
     
     
     
-    setOfHolders = oson.setDeserializer(StringHolder.class, (FieldData p) -> {
+    setOfHolders = oson.des(StringHolder.class, (FieldData p) -> {
     	String str = p.valueToProcess.toString();
     	return new StringHolder(str);
     	}
@@ -536,6 +538,10 @@ public class CustomTypeAdaptersTest extends TestCaseBase {
     String json = gson.toJson(mapOfHolders);
     assertTrue(json.contains("\"foo\":\"Jacob:Tomaw\""));
     
+    oson.clearAll().ser(StringHolder.class, (Object p) -> {
+    	StringHolder h = (StringHolder)p;
+    	return h.part1 + ":" + h.part2;
+    });
     json = oson.toJson(mapOfHolders);
     assertTrue(json.contains("\"foo\":\"Jacob:Tomaw\""));
   }
@@ -552,7 +558,7 @@ public class CustomTypeAdaptersTest extends TestCaseBase {
     assertEquals("Jacob", foo.part1);
     assertEquals("Tomaw", foo.part2);
     
-    oson.setDeserializer(StringHolder.class, (FieldData p) -> {
+    oson.clearAll().des(StringHolder.class, (FieldData p) -> {
     	String str = p.valueToProcess.toString();
     	return new StringHolder(str);
     	});
@@ -572,7 +578,18 @@ public class CustomTypeAdaptersTest extends TestCaseBase {
     String json = gson.toJson(target);
     assertEquals("{\"wrappedData\":{\"myData\":\"abc\"}}", json);
     
+    oson.clearAll().ser(DataHolder.class, (Object p) -> {
+    	DataHolder dataHolder = (DataHolder)p;
+//    	JsonObject obj = new JsonObject();
+//        obj.addProperty("myData", dataHolder.data);
+    	Map obj = new HashMap();
+    	obj.put("myData", dataHolder.data);
+    	
+        return obj;
+    }).useAttribute(false);
+
     json = oson.toJson(target);
+    
     assertEquals("{\"wrappedData\":{\"myData\":\"abc\"}}", json);
   }
 
@@ -597,6 +614,32 @@ public class CustomTypeAdaptersTest extends TestCaseBase {
     assertEquals("0", gson.toJson(new java.sql.Date(0)));
     assertEquals(new Date(0), gson.fromJson("0", Date.class));
     assertEquals(new java.sql.Date(0), gson.fromJson("0", java.sql.Date.class));
+    
+//    public Date deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) {
+//        return typeOfT == Date.class
+//            ? new Date(json.getAsLong())
+//            : new java.sql.Date(json.getAsLong());
+//      }
+//      @Override
+//      public JsonElement serialize(Date src, Type typeOfSrc, JsonSerializationContext context) {
+//        return new JsonPrimitive(src.getTime());
+//      }
+//      
+    Date2LongFunction f = (Date p) -> (Long)p.getTime();
+    
+    oson.ser(Date.class, f).ser(java.sql.Date.class, (Object p) -> {
+    	java.sql.Date date = (java.sql.Date)p; return date.getTime();})
+    	.des(Date.class, (DataMapper p) -> {
+			DataMapper dataMapper = (DataMapper)p;
+			long value = Long.parseLong(dataMapper.getObj().toString());
+			Class valueType = dataMapper.getValueType();
+			if (valueType == Date.class) {
+				return new Date(value);
+			} else {
+				return new java.sql.Date(value);
+			}
+		});
+      
     
     assertEquals("0", oson.toJson(new Date(0)));
     assertEquals("0", oson.toJson(new java.sql.Date(0)));

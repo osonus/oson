@@ -73,7 +73,7 @@ public class CollectionTest extends TestCaseBase {
   public void testTopLevelListOfIntegerCollectionsDeserialization() throws Exception {
     String json = "[[1,2,3],[4,5,6],[7,8,9]]";
     Type collectionType = new TypeToken<Collection<Collection<Integer>>>() {}.getType();
-    List<Collection<Integer>> target = oson.fromJson(json, collectionType);
+    List<Collection<Integer>> target = oson.clearAll().fromJson(json, collectionType);
     int[][] expected = new int[3][3];
     for (int i = 0; i < 3; ++i) {
       int start = (3 * i) + 1;
@@ -227,7 +227,7 @@ public class CollectionTest extends TestCaseBase {
   public void testCollectionOfStringsDeserialization() {
     String json = "[\"Hello\",\"World\"]";
     Type collectionType = new TypeToken<Collection<String>>() { }.getType();
-    Collection<String> target = oson.fromJson(json, collectionType);
+    Collection<String> target = oson.clearAll().fromJson(json, collectionType);
 
     assertTrue(target.contains("Hello"));
     assertTrue(target.contains("World"));
@@ -249,7 +249,7 @@ public class CollectionTest extends TestCaseBase {
   @SuppressWarnings("rawtypes")
   public void testRawCollectionDeserializationNotAlllowed() {
     String json = "[0,1,2,3,4,5,6,7,8,9]";
-    Collection integers = oson.fromJson(json, Collection.class);
+    Collection integers = oson.clearAll().fromJson(json, Collection.class);
     // JsonReader converts numbers to double by default so we need a floating point comparison
     assertEquals(Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 8, 9), integers);
 
@@ -287,7 +287,7 @@ public class CollectionTest extends TestCaseBase {
   public void testWildcardPrimitiveCollectionDeserilaization() throws Exception {
     String json = "[1,2,3,4,5,6,7,8,9]";
     Type collectionType = new TypeToken<Collection<? extends Integer>>() { }.getType();
-    Collection<? extends Integer> target = oson.fromJson(json, collectionType);
+    Collection<? extends Integer> target = oson.clearAll().fromJson(json, collectionType);
     assertEquals(9, target.size());
     assertTrue(target.contains(1));
     assertTrue(target.contains(9));

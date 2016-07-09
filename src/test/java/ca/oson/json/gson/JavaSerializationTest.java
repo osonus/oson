@@ -58,7 +58,7 @@ public final class JavaSerializationTest extends TestCaseBase {
 
   public void testNumberIsSerializable() throws Exception {
     Type type = new TypeToken<List<Number>>() {}.getType();
-    List<Number> list = oson.fromJson("[1,3.14,6.673e-11]", type);
+    List<Number> list = oson.clearAll().fromJson("[1,3.14,6.673e-11]", type);
     List<Number> serialized = serializedCopy(list);
     assertEquals(1.0, serialized.get(0).doubleValue());
     assertEquals(3.14, serialized.get(1).doubleValue());

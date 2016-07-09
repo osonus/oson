@@ -48,7 +48,7 @@ public class CustomDeserializerTest extends TestCaseBase {
 	    DataHolder data = new DataHolder(DEFAULT_VALUE);
 	    String json = oson.toJson(data);
 
-	    DataHolder actual = oson.setDeserializer(DataHolder.class, (DataMapper p) -> {
+	    DataHolder actual = oson.des(DataHolder.class, (DataMapper p) -> {
 	    	DataHolder holder = (DataHolder)p.getObj();
 	    	return new DataHolder(holder.getData() + SUFFIX);
 	    	}).fromJson(json, DataHolder.class);
@@ -59,7 +59,7 @@ public class CustomDeserializerTest extends TestCaseBase {
 	    DataHolderWrapper dataWrapper = new DataHolderWrapper(new DataHolder(DEFAULT_VALUE));
 	    String json = oson.toJson(dataWrapper);
 
-	    DataHolderWrapper actual = oson.setDeserializer(DataHolder.class, (DataMapper p) -> {
+	    DataHolderWrapper actual = oson.des(DataHolder.class, (DataMapper p) -> {
 	    	DataHolder holder = (DataHolder)p.getObj();
 	    	return new DataHolder(holder.getData() + SUFFIX);
 	    	}).fromJson(json, DataHolderWrapper.class);

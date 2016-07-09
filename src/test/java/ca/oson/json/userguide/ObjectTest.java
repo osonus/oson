@@ -100,7 +100,7 @@ public class ObjectTest extends TestCaseBase {
 		URL url = getClass().getResource("volume.txt");
 		File file = new File(url.getPath());
 		
-		ComponentType type = new ComponentType(HashMap.class, Volume.class);
+		ComponentType type = new ComponentType("java.util.Map<String, java.util.List<ca.oson.json.domain.Volume>>");
 		
 		Map<String, List<Volume>> vc = oson.readValue(file, type);
 		
@@ -112,7 +112,7 @@ public class ObjectTest extends TestCaseBase {
 
 		// System.out.println(json);
 	}
-	List<Volume> volumes;
+
 }
 
 

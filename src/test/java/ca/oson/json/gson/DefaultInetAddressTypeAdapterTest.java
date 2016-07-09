@@ -17,7 +17,9 @@
 package ca.oson.json.gson;
 
 import java.net.InetAddress;
+import java.net.URL;
 
+import ca.oson.json.FieldMapper;
 import ca.oson.json.support.TestCaseBase;
 
 /**
@@ -28,11 +30,13 @@ import ca.oson.json.support.TestCaseBase;
 public class DefaultInetAddressTypeAdapterTest extends TestCaseBase {
 
   public void testInetAddressSerializationAndDeserialization() throws Exception {
+	oson.clearAll().setFieldMappers(new FieldMapper("hostAddress", java.net.Inet4Address.class).setJsonValue(true));
+	  
     InetAddress address = InetAddress.getByName("8.8.8.8");
     String jsonAddress = oson.setLevel(1).toJson(address);
-    assertTrue(jsonAddress.contains("\"8.8.8.8\""));
-    
+    assertEquals("\"8.8.8.8\"", jsonAddress);
+
     InetAddress value = oson.fromJson(jsonAddress, InetAddress.class);
-    //assertTrue(null == value);
+    // assertTrue(null == value);
   }
 }

@@ -139,6 +139,9 @@ import com.google.gson.annotations.Since;
 
 
 
+
+
+
 import ca.oson.json.function.*;
 import ca.oson.json.util.*;
 
@@ -590,6 +593,7 @@ public class Oson {
 		// object to return, might be created from the defaultValue
 		public Class<R> returnType;
 		public R returnObj = null;
+		// private Class<E> componentType = null;
 		
 		// value coming in to be processed
 		private Field field;
@@ -637,6 +641,9 @@ public class Oson {
 		
 		public void incrLevel() {
 			this.level++;
+		}
+		public void descLevel() {
+			this.level--;
 		}
 		
 		//true if this set did not already contain the specified element
@@ -1859,11 +1866,16 @@ public class Oson {
 		return fieldMapper;
 	}
 	
+	private Set<FieldMapper> getFieldMappers(Class type) {
+		return options.getFieldMappers(type);
+	}
+	
+	
 	private Boolean isUseField() {
 		return options.isUseField();
 	}
 
-	public Oson setUseField(Boolean useField) {
+	public Oson useField(Boolean useField) {
 		options.setUseField(useField);
 		reset();
 
@@ -1874,7 +1886,7 @@ public class Oson {
 		return options.isUseAttribute();
 	}
 
-	public Oson setUseAttribute(Boolean useAttribute) {
+	public Oson useAttribute(Boolean useAttribute) {
 		options.setUseAttribute(useAttribute);
 		reset();
 
@@ -1998,7 +2010,7 @@ public class Oson {
 		return options.isUseGsonExpose();
 	}
 
-	public Oson setUseGsonExpose(boolean useGsonExpose) {
+	public Oson useGsonExpose(boolean useGsonExpose) {
 		options.setUseGsonExpose(useGsonExpose);
 
 		return this;
@@ -2290,13 +2302,169 @@ public class Oson {
 
 		return this;
 	}
+	
+	public <T> Oson ser(Class<T> type, Function serializer) {
+		return setSerializer(type, serializer);
+	}
+	
+	public <T> Oson des(Class<T> type, Function deserializer) {
+		return setDeserializer(type, deserializer);
+	}
+	
+	public <T> Oson ser(Class<T> type, Integer2JsonFunction serializer) {
+		return setSerializer(type, serializer);
+	}
+	public <T> Oson des(Class<T> type, Json2IntegerFunction deserializer) {
+		return setDeserializer(type, deserializer);
+	}
 
-	public <T> Oson setUseField(Class<T> type, Boolean useField) {
+	public <T> Oson ser(Class<T> type, Long2JsonFunction serializer) {
+		return setSerializer(type, serializer);
+	}
+	public <T> Oson des(Class<T> type, Json2LongFunction deserializer) {
+		return setDeserializer(type, deserializer);
+	}
+	
+	public <T> Oson ser(Class<T> type, Double2JsonFunction serializer) {
+		return setSerializer(type, serializer);
+	}
+	public <T> Oson des(Class<T> type, Json2DoubleFunction deserializer) {
+		return setDeserializer(type, deserializer);
+	}
+	
+	public <T> Oson ser(Class<T> type, Short2JsonFunction serializer) {
+		return setSerializer(type, serializer);
+	}
+	public <T> Oson des(Class<T> type, Json2ShortFunction deserializer) {
+		return setDeserializer(type, deserializer);
+	}
+	
+	public <T> Oson ser(Class<T> type, Float2JsonFunction serializer) {
+		return setSerializer(type, serializer);
+	}
+	public <T> Oson des(Class<T> type, Json2FloatFunction deserializer) {
+		return setDeserializer(type, deserializer);
+	}
+
+	public <T> Oson ser(Class<T> type, BigDecimal2JsonFunction serializer) {
+		return setSerializer(type, serializer);
+	}
+	public <T> Oson des(Class<T> type, Json2BigDecimalFunction deserializer) {
+		return setDeserializer(type, deserializer);
+	}
+	
+	public <T> Oson ser(Class<T> type, BigInteger2JsonFunction serializer) {
+		return setSerializer(type, serializer);
+	}
+	public <T> Oson des(Class<T> type, Json2BigIntegerFunction deserializer) {
+		return setDeserializer(type, deserializer);
+	}
+	
+	public <T> Oson ser(Class<T> type, Character2JsonFunction serializer) {
+		return setSerializer(type, serializer);
+	}
+	public <T> Oson des(Class<T> type, Json2CharacterFunction deserializer) {
+		return setDeserializer(type, deserializer);
+	}
+	
+	public <T> Oson ser(Class<T> type, Byte2JsonFunction serializer) {
+		return setSerializer(type, serializer);
+	}
+	public <T> Oson des(Class<T> type, Json2ByteFunction deserializer) {
+		return setDeserializer(type, deserializer);
+	}
+	
+	public <T> Oson ser(Class<T> type, Boolean2JsonFunction serializer) {
+		return setSerializer(type, serializer);
+	}
+	public <T> Oson des(Class<T> type, Json2BooleanFunction deserializer) {
+		return setDeserializer(type, deserializer);
+	}
+	
+	public <T> Oson ser(Class<T> type, Date2JsonFunction serializer) {
+		return setSerializer(type, serializer);
+	}
+	public <T> Oson des(Class<T> type, Json2DateFunction deserializer) {
+		return setDeserializer(type, deserializer);
+	}
+	
+	public <T> Oson ser(Class<T> type, Date2LongFunction serializer) {
+		return setSerializer(type, serializer);
+	}
+	public <T> Oson des(Class<T> type, Long2DateFunction deserializer) {
+		return setDeserializer(type, deserializer);
+	}
+	
+	public <T> Oson ser(Class<T> type, Enum2JsonFunction serializer) {
+		return setSerializer(type, serializer);
+	}
+	public <T> Oson des(Class<T> type, Json2EnumFunction deserializer) {
+		return setDeserializer(type, deserializer);
+	}
+
+	public <T> Oson ser(Class<T> type, Collection2JsonFunction serializer) {
+		return setSerializer(type, serializer);
+	}
+	public <T> Oson des(Class<T> type, Json2CollectionFunction deserializer) {
+		return setDeserializer(type, deserializer);
+	}
+	
+	public <T> Oson ser(Class<T> type, Map2JsonFunction serializer) {
+		return setSerializer(type, serializer);
+	}
+	public <T> Oson des(Class<T> type, Json2MapFunction deserializer) {
+		return setDeserializer(type, deserializer);
+	}
+	
+	public <T> Oson ser(Class<T> type, Array2JsonFunction serializer) {
+		return setSerializer(type, serializer);
+	}
+	public <T> Oson des(Class<T> type, Json2ArrayFunction deserializer) {
+		return setDeserializer(type, deserializer);
+	}
+	
+	public <T> Oson ser(Class<T> type, AtomicInteger2JsonFunction serializer) {
+		return setSerializer(type, serializer);
+	}
+	public <T> Oson des(Class<T> type, Json2AtomicIntegerFunction deserializer) {
+		return setDeserializer(type, deserializer);
+	}
+	
+	public <T> Oson ser(Class<T> type, AtomicLong2JsonFunction serializer) {
+		return setSerializer(type, serializer);
+	}
+	public <T> Oson des(Class<T> type, Json2AtomicLongFunction deserializer) {
+		return setDeserializer(type, deserializer);
+	}
+	
+	public <T> Oson ser(Class<T> type, DataMapper2JsonFunction serializer) {
+		return setSerializer(type, serializer);
+	}
+	public <T> Oson des(Class<T> type, Json2DataMapperFunction deserializer) {
+		return setDeserializer(type, deserializer);
+	}
+	public <T> Oson ser(Class<T> type, FieldData2JsonFunction serializer) {
+		return setSerializer(type, serializer);
+	}
+	public <T> Oson des(Class<T> type, Json2FieldDataFunction deserializer) {
+		return setDeserializer(type, deserializer);
+	}
+	
+	public <T> Oson ser(Class<T> type, String2JsonFunction serializer) {
+		return setSerializer(type, serializer);
+	}
+	public <T> Oson des(Class<T> type, Json2StringFunction deserializer) {
+		return setDeserializer(type, deserializer);
+	}
+	
+	
+
+	public <T> Oson useField(Class<T> type, Boolean useField) {
 		cMap(type).setUseField(useField);
 
 		return this;
 	}
-	public <T> Oson setUseAttribute(Class<T> type, Boolean useAttribute) {
+	public <T> Oson useAttribute(Class<T> type, Boolean useAttribute) {
 		cMap(type).setUseAttribute(useAttribute);
 
 		return this;
@@ -6609,17 +6777,9 @@ public class Oson {
 		} else {
 			E obj = (E) newFieldData.valueToProcess;
 			
-			ComponentType type = getComponentType();
-			if (type == null) {
-				Class enclosingtype = newFieldData.getEnclosingtype();
-				if (enclosingtype != null) {
-					type = cachedComponentTypes(enclosingtype);
-				}
-			}
-			
-			
 			Class returnType = newFieldData.returnType;
 			Class itemType = obj.getClass();
+			
 			String returnTypeName = null;
 			if (returnType != null) {
 				returnTypeName = returnType.getName();
@@ -6674,6 +6834,16 @@ public class Oson {
 					}
 				}
 			}
+			
+			ComponentType type = getComponentType();
+			if (type == null) {
+				Class enclosingtype = newFieldData.getEnclosingtype();
+				if (enclosingtype != null) {
+					type = cachedComponentTypes(enclosingtype);
+				}
+			}
+			
+			int level = newFieldData.level;
 
 			if (fieldType != null) {
 				if (returnTypeCount < itemTypeCount) {
@@ -6738,12 +6908,19 @@ public class Oson {
 				}
 
 				if (type != null) {
+					ComponentType componentType = type.componentType;
+					while (componentType != null && componentType.componentType != null && level > 1) {
+						componentType = componentType.componentType;
+						level--;
+					}
+					
+					if (level == 1 && componentType != null && componentType.getClassType() != null) {
+						return componentType.getClassType();
+					}
+					
 					Class[] ctypes = type.getComponentClassType();
 					float MIN_MAX_COUNT = 20.0f;
 					if (ctypes != null && ctypes.length > 0) {
-//						if (ctypes.length == 1) {
-//							return ctypes[0];
-//						}
 						int length = ctypes.length;
 						
 						
@@ -6853,16 +7030,33 @@ public class Oson {
 								}
 							}
 						}
+						
+						if (ctypes != null && ctypes.length == 1) {
+							return ctypes[0];
+						}
 					}
 					
 				}
+
 				
 			} else if ((returnType != null && (Collection.class.isAssignableFrom(returnType) || returnType.isArray())) ||
 						(itemType != null && (Collection.class.isAssignableFrom(itemType) || itemType.isArray()))) {
 				
 				//  && ComponentType.class.isAssignableFrom(erasedType.getClass())
 				if (type != null) {
+					
+					ComponentType componentType = type.componentType;
+					while (componentType != null && componentType.componentType != null && level > 1) {
+						componentType = componentType.componentType;
+						level--;
+					}
+					
+					if (level == 1 && componentType != null && componentType.getClassType() != null) {
+						return componentType.getClassType();
+					}
+					
 					Class[] ctypes = type.getComponentClassType();
+					
 					if (ctypes != null && ctypes.length > 0) {
 						if (ctypes.length == 1) {
 							Class cmptype = ctypes[0].getComponentType();
@@ -6985,10 +7179,12 @@ public class Oson {
 						}
 					}
 					
-					Class<E> componentType = objectDTO.getComponentType(getJsonClassType());
-					
 					objectDTO.incrLevel();
 					
+					Class<E> componentType = guessComponentType(objectDTO); // objectDTO.getComponentType(getJsonClassType());
+					boolean isObject = ObjectUtil.isObject(componentType);
+					
+
 					for (Entry<String, Object> entry: values.entrySet()) {
 						Object obj = entry.getValue(); // obj.getClass()
 						
@@ -6996,6 +7192,9 @@ public class Oson {
 						if (obj != null) {
 							FieldData newFieldData = new FieldData(obj, obj.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
 							newFieldData.returnType = guessComponentType(newFieldData);
+							if (isObject && ObjectUtil.isBasicDataType(newFieldData.returnType)) {
+								newFieldData.returnType = componentType;
+							}
 							newFieldData.fieldMapper = objectDTO.fieldMapper;
 							component = json2Object(newFieldData);
 						}
@@ -8187,8 +8386,8 @@ public class Oson {
 			} else if (returnType == AtomicLong.class) {
 				return (E) json2AtomicLong(objectDTO);
 				
-			} else {
-				return null;
+			} else { // default to Double, in case no specific type is specified
+				return (E) json2Double(objectDTO);
 			}
 			
 		} else if (returnType.isEnum() || Enum.class.isAssignableFrom(returnType)) {
@@ -8216,7 +8415,9 @@ public class Oson {
 			
 			Class<E> componentType = (Class<E>) returnType.getComponentType();
 			if (componentType == null) {
+				objectDTO.incrLevel();
 				componentType = guessComponentType(objectDTO);
+				objectDTO.descLevel();
 			}
 			if (componentType == null) {
 				componentType = CollectionArrayTypeGuesser.guessElementType(values, returnType,  getJsonClassType());
@@ -8531,13 +8732,11 @@ public class Oson {
 			
 			int oldLevel = this.getLevel();
 			boolean oldPrettyPrinting = this.getPrettyPrinting();
-			Boolean oldIncludeClassTypeInJson = this.getIncludeClassTypeInJson();
-			
+
 			// now change it
 			this.setLevel(5);
 			this.pretty(false);
-			this.includeClassTypeInJson(true);
-			
+
 			String json = null;
 			
 			objectDTO.returnType = type;
@@ -8551,6 +8750,9 @@ public class Oson {
 			} else if (type.isArray()) {
 				json = array2Json(objectDTO);
 				
+			} else if (Map.class.isAssignableFrom(type)) {
+				json = map2Json(objectDTO);
+				
 			} else {
 				objectDTO.classMapper = getGlobalizedClassMapper(type);
 				json = object2Serialize(objectDTO);
@@ -8560,7 +8762,6 @@ public class Oson {
 			// set it back
 			this.setLevel(oldLevel);
 			this.pretty(oldPrettyPrinting);
-			this.includeClassTypeInJson(oldIncludeClassTypeInJson);
 			
 			return json;
 		}
@@ -8905,7 +9106,7 @@ public class Oson {
 	}
 	
 	private <T> void processMethods(Class<T> valueType, String fullName) {
-		Stream<Method> stream = Arrays.stream(valueType.getDeclaredMethods());
+//		Stream<Method> stream = Arrays.stream(valueType.getDeclaredMethods());
 //		while (valueType != null && valueType != Object.class) {
 //			stream = Stream.concat(stream, Arrays.stream(valueType
 //					.getSuperclass().getDeclaredMethods()));
@@ -8918,7 +9119,8 @@ public class Oson {
 		
 		String name;
 		boolean notSetGetOnly = !getSetGetOnly();
-		for (Method method: stream.collect(Collectors.toList())) {
+		//for (Method method: stream.collect(Collectors.toList())) {
+		for (Method method: valueType.getDeclaredMethods()) {
 			name = method.getName();
 			
 			if (name.startsWith("set")) {
@@ -9668,7 +9870,7 @@ public class Oson {
 					Class returnType = returnValue.getClass();
 					
 					if (returnType == String.class) {
-						return (String)returnValue;
+						return StringUtil.doublequote(returnValue);
 						
 					} else if (returnType == valueType || valueType.isAssignableFrom(returnType)) {
 						// just continue to do the serializing
@@ -9701,6 +9903,46 @@ public class Oson {
 		Set<Method> jsonAnyGetterMethods = new HashSet<>();
 		
 		
+		// get all fieldmappers for this class?
+		Set<FieldMapper> fieldMappers = getFieldMappers(valueType);
+		// looking for the method
+		for (FieldMapper fieldMapper: fieldMappers) {
+			if (fieldMapper.jsonValue != null && fieldMapper.jsonValue) {
+				String java = fieldMapper.java;
+				String lcjava = java.toLowerCase();
+				if (getters != null && getters.containsKey(lcjava)) {
+					Method getter = getters.get(lcjava);
+					E getterValue = null;
+
+					try {
+						getterValue = (E) getter.invoke(obj, null);
+					} catch (InvocationTargetException | IllegalAccessException | IllegalArgumentException e) {
+						// e.printStackTrace();
+						try {
+							Expression expr = new Expression(obj, getter.getName(), new Object[0]);
+							expr.execute();
+							getterValue = (E) expr.getValue();
+							
+							if (getterValue == null) {
+								getterValue = (E) getter.getDefaultValue();
+							}
+							
+						} catch (Exception e1) {
+							// e1.printStackTrace();
+						}
+					}
+					
+					if (getterValue != null) {
+						if (fieldMapper.isJsonRawValue()) {
+							return getterValue.toString();
+						} else {
+							return StringUtil.doublequote(getterValue);
+						}
+					}
+				}
+			}
+		}
+		
 		try {
 			Field[] fields = getFields(valueType); // getFields(obj);
 
@@ -9718,6 +9960,11 @@ public class Oson {
 				}
 				
 				if (ignoreModifiers(f.getModifiers(), classMapper.includeFieldsWithModifiers)) {
+					continue;
+				}
+
+				if (Modifier.isFinal(f.getModifiers()) && Modifier.isStatic(f.getModifiers())) {
+					getters.remove(lcfieldName);
 					continue;
 				}
 				
@@ -10136,6 +10383,9 @@ public class Oson {
 				Method getter = entry.getValue();
 
 				if (ignoreModifiers(getter.getModifiers(), classMapper.includeFieldsWithModifiers)) {
+					continue;
+				}
+				if (Modifier.isFinal(getter.getModifiers()) && Modifier.isStatic(getter.getModifiers())) {
 					continue;
 				}
 				
@@ -10928,13 +11178,27 @@ public class Oson {
 			}
 			
 			map = new HashMap();
+			map.put(valueType.getName(), value);
 		}
 
-		T obj = newInstance(map, valueType);
+		T obj = null;
+		
+		 if (valueType == Class.class) {
+				obj = (T) ComponentType.forName(value.toString());
+		 } else {
+			 obj = newInstance(map, valueType);
+		 }
 		
 		if (obj != null) {
-			fieldData = new FieldData(value, valueType, obj, true);
-			fieldData.fieldMapper = fieldData.fieldMapper;
+			if (fieldData == null) {
+				fieldData = new FieldData(value, valueType, obj, true);
+			} else {
+				fieldData.valueToProcess = value;
+				fieldData.returnType = valueType;
+				fieldData.returnObj = obj;
+			}
+			
+			
 			return deserialize2Object(fieldData);
 		} else {
 			return null;
@@ -11074,6 +11338,38 @@ public class Oson {
 
 		} catch (InstantiationException | IllegalAccessException e) {
 			//e.printStackTrace();
+		}
+		
+		
+		Object singleMapValue = null;
+		if (map.size() == 1) {
+			singleMapValue = map.get(valueType.getName());
+			
+			if (singleMapValue != null) {
+				Class singleMapValueType = singleMapValue.getClass();
+				
+				if (singleMapValueType == String.class) {
+					singleMapValue = StringUtil.unquote(singleMapValue.toString());
+				}
+
+				try {
+					Constructor constructor = valueType.getConstructor(singleMapValueType);
+
+					if (constructor != null) {
+						obj = (T) constructor.newInstance(singleMapValue);
+
+						if (obj != null) {
+							return obj;
+						}
+					}
+
+				} catch (InstantiationException
+						| IllegalAccessException
+						| IllegalArgumentException
+						| InvocationTargetException | NoSuchMethodException | SecurityException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 
 		Constructor<?>[] constructors = valueType.getDeclaredConstructors();//.getConstructors();
@@ -11577,7 +11873,7 @@ public class Oson {
 				try {
 					Object returnedValue = null;
 					if (function instanceof Json2DataMapperFunction) {
-						DataMapper classData = new DataMapper(map, valueType, obj, classMapper, objectDTO.level);
+						DataMapper classData = new DataMapper(valueToProcess, valueType, obj, classMapper, objectDTO.level);
 						Json2DataMapperFunction f = (Json2DataMapperFunction)function;
 						
 						return (T) f.apply(classData);
@@ -11609,9 +11905,9 @@ public class Oson {
 			}
 			
 
-			Map<String, Method> getters = getGetters(obj);
-			Map<String, Method> setters = getSetters(obj);
-			Map<String, Method> otherMethods = getOtherMethods(obj);
+			Map<String, Method> getters = getGetters(valueType);
+			Map<String, Method> setters = getSetters(valueType);
+			Map<String, Method> otherMethods = getOtherMethods(valueType);
 			Set<String> processedNameSet = new HashSet<>();
 			
 			Method jsonAnySetterMethod = null;
@@ -11627,14 +11923,11 @@ public class Oson {
 				
 				Class<?> returnType = f.getType(); // value.getClass();
 				
-//				if (Modifier.isFinal(f.getModifiers())) {
-//					if (ObjectUtil.isBasicDataType(returnType)) {
-//						setters.remove(lcfieldName);
-//						nameKeys.remove(name);
-//						continue;
-//					} else if (Modifier.isStatic(f.getModifiers())) {
-//					}
-//				}
+				if (Modifier.isFinal(f.getModifiers()) && Modifier.isStatic(f.getModifiers())) {
+					setters.remove(lcfieldName);
+					nameKeys.remove(name);
+					continue;
+				}
 				
 				f.setAccessible(true);
 
@@ -11646,8 +11939,15 @@ public class Oson {
 				}
 				
 				// getter and setter methods
-				Method getter = getters.get(lcfieldName);
-				Method setter = setters.get(lcfieldName);
+				
+				Method getter = null;
+				Method setter = null;
+				if (getters != null) {
+					getter = getters.get(lcfieldName);
+				}
+				if (setters != null) {
+					setter = setters.get(lcfieldName);
+				}
 				
 				if (ignoreModifiers(f.getModifiers(), classMapper.includeFieldsWithModifiers)) {
 					if (setter != null) {
@@ -11939,7 +12239,7 @@ public class Oson {
 				fieldMapper.json = name;
 				
 				if (value != null) {
-					FieldData fieldData = new FieldData(obj, f, value, returnType, true, fieldMapper);
+					FieldData fieldData = new FieldData(obj, f, value, returnType, true, fieldMapper, objectDTO.level, objectDTO.set);
 					fieldData.setter = setter;
 					Class fieldType = guessComponentType(fieldData);
 					value = json2Object(fieldData);
@@ -12018,10 +12318,10 @@ public class Oson {
 					continue;
 				}
 
-//				if (Modifier.isFinal(setter.getModifiers())) {
-//					nameKeys.remove(name);
-//					continue;
-//				}
+				if (Modifier.isFinal(setter.getModifiers()) && Modifier.isStatic(setter.getModifiers())) {
+					nameKeys.remove(name);
+					continue;
+				}
 				
 				// 6. Create a blank field mapper instance
 				FieldMapper fieldMapper = new FieldMapper(name, name, valueType);
@@ -12292,7 +12592,7 @@ public class Oson {
 
 				if (value != null) {
 					
-					FieldData fieldData = new FieldData(obj, null, value, returnType, true, fieldMapper);
+					FieldData fieldData = new FieldData(obj, null, value, returnType, true, fieldMapper, objectDTO.level, objectDTO.set);
 					fieldData.setter = setter;
 					Class fieldType = guessComponentType(fieldData);
 

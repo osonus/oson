@@ -149,6 +149,37 @@ public class ObjectUtil {
 		return true;
 	}
 	
+	public static boolean isObject(Class valueType) {
+		if (valueType == null) { // no idea, just assume
+			return false;
+		}
+		
+		if (valueType.isPrimitive() || valueType.isEnum()) {
+			return false;
+		}
+
+		if (Number.class.isAssignableFrom(valueType) || Date.class.isAssignableFrom(valueType)) {
+			return false;
+		}
+		
+		if (Map.class.isAssignableFrom(valueType)) {
+			return false;
+		}
+		
+		if (isArrayOrCollection(valueType)) {
+			return false;
+		}
+		
+		if (valueType == String.class
+			|| valueType == Character.class
+			|| valueType == Boolean.class) {
+			return false;
+		}
+		
+		
+		return true;
+	}
+	
 	
 	public static <T> T unwraponce(T obj) {
 		if (obj != null && obj instanceof Optional) {

@@ -485,7 +485,7 @@ public class FieldMapper<T, E> {
 	}
 
 	public FieldMapper setJsonValue(boolean jsonValue) {
-		jsonValue = jsonValue;
+		this.jsonValue = jsonValue;
 		return this;
 	}
 

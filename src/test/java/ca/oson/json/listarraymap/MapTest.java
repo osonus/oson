@@ -78,7 +78,8 @@ public class MapTest extends TestCaseBase {
 
 		   String value = "{\"Wyoming\":1541,\"Alabama\":1529,\"Arizona\":1222}";
 		   
-		   Map<String, Number> result = oson.deserialize(value, expected.getClass());
+		   // new ComponentType("Map<String, Double>")
+		   Map<String, Number> result = oson.deserialize(value, Map.class);
 
 		   for (String key: expected.keySet()) {
 			   assertTrue(expected.get(key).intValue() == result.get(key).intValue());
@@ -95,7 +96,7 @@ public class MapTest extends TestCaseBase {
 		   
 		   ComponentType type = new ComponentType(HashMap.class, Car.class);
 
-		   Map<String, Car> result = oson.setDefaultType(JSON_INCLUDE.NON_NULL).deserialize(text, type);
+		   Map<String, Car> result = oson.clearAll().setDefaultType(JSON_INCLUDE.NON_NULL).deserialize(text, type);
 
 		   for (String key: result.keySet()) {
 			   Object obj = result.get(key);

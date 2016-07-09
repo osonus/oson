@@ -140,7 +140,7 @@ public class BigIntegerTest extends TestCaseBase {
 			   }
 		   };
 
-		   oson.setSerializer(BigInteger.class, function);
+		   oson.ser(BigInteger.class, function);
 		   
 		   String result = oson.serialize(value);
 		   
@@ -150,7 +150,7 @@ public class BigIntegerTest extends TestCaseBase {
 	   @Test
 	   public void testSerializeBigIntegerWithGenericFunction() {
 		   BigInteger value = BigInteger.valueOf(8);
-		   String expected = "{\"@class\":\"ca.oson.json.domain.Car\",\"doors\":4,\"year\":2016,\"brand\":\"Eight\",\"years\":null}";
+		   String expected = "{\"doors\":4,\"year\":2016,\"brand\":\"Eight\",\"years\":null}";
 		   
 		   Function function = (Object p) -> {
 			   BigInteger bint = (BigInteger) p;
@@ -170,7 +170,7 @@ public class BigIntegerTest extends TestCaseBase {
 			   }
 		   };
 
-		   oson.setSerializer(BigInteger.class, function);
+		   oson.ser(BigInteger.class, function);
 		   
 		   String result = oson.serialize(value);
 

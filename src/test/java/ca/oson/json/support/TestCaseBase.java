@@ -11,13 +11,13 @@ public abstract class TestCaseBase extends TestCase {
 	public static JSON_PROCESSOR processor = JSON_PROCESSOR.OSON;
 	
    @Before 
-   public void setUp() {
+   protected void setUp() {
 	   oson = new OsonIO();
 	   oson.setJsonProcessor(processor);
    }
    
    
    //tearDown used to close the connection or clean up activities
-   public void tearDown() {
+   protected void tearDown() {
    }
 }

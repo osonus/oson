@@ -161,7 +161,7 @@ public class CollectionsTest extends TestCaseBase {
 		
 		String json = "[\"hello\",6,{\"@class\":\"ca.oson.json.domain.Event\",\"name\":\"GREETINGS\",\"source\":\"guest\"}]";
 
-		List<Object> result = oson.deserialize(json, List.class);
+		List<Object> result = oson.clearAll().deserialize(json, List.class);
 
 		assertEquals(expected.get(0), result.get(0));
 		assertEquals(expected.get(1), result.get(1));

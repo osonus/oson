@@ -15,11 +15,7 @@ package ca.oson.json;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Type;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 import ca.oson.json.util.StringUtil;
 
@@ -52,8 +48,40 @@ public class ComponentType implements Type {
 	};
 	
 	
+	
+	public static final Map<String, Class> commonClasses = new HashMap<>();
+	{
+		commonClasses.put("int", int.class);
+		commonClasses.put("long", long.class);
+		commonClasses.put("byte", byte.class);
+		commonClasses.put("double", double.class);
+		commonClasses.put("float", float.class);
+		commonClasses.put("short", short.class);
+		commonClasses.put("char", char.class);
+		commonClasses.put("boolean", boolean.class);
+		commonClasses.put("String", String.class);
+		commonClasses.put("Integer", Integer.class);
+		commonClasses.put("Long", Long.class);
+		commonClasses.put("Byte", Byte.class);
+		commonClasses.put("Double", Double.class);
+		commonClasses.put("Float", Float.class);
+		commonClasses.put("Short", Short.class);
+		commonClasses.put("Character", Character.class);
+		commonClasses.put("Boolean", Boolean.class);
+		commonClasses.put("Date", Date.class);
+		commonClasses.put("Map", Map.class);
+		commonClasses.put("List", List.class);
+	};
+	
+	private static final String[] delimiters = new String[] {",", " extends "};
+	
 	// just keep for reference
 	private Type erasuredType;
+	
+	String genericLeftName = null;
+	String genericRightName = null;
+	ComponentType componentType = null;
+	
 	private String typeName;
 	private Class type;
 	private Class[] componentTypes;
@@ -85,10 +113,17 @@ public class ComponentType implements Type {
 		fixTypeNames();
 	}
 	
+	
+	
 	public ComponentType add(Class componentClass) {
 		if (componentClass == null || componentClass == type) {
 			return this;
 		}
+		if (componentClass != null && type == null) {
+			type = componentClass;
+			return this;
+		}
+		
 		if (componentTypes == null || componentTypes.length == 0) {
 			componentTypes = new Class[]{componentClass};
 		}
@@ -127,7 +162,26 @@ public class ComponentType implements Type {
 		}
 	}
 	
-	
+	public static Class forName(String className) {
+		if (className == null) {
+			return null;
+		}
+		className = className.trim();
+		int idx = className.lastIndexOf(' ');
+		if (idx > -1) {
+			className = className.substring(idx+1);
+		}
+		if (commonClasses.containsKey(className)) {
+			return commonClasses.get(className);
+		}
+		
+		try {
+			return Class.forName(className);
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
 	
 	private void fixTypeNames() {
 		if (this.typeName == null) {
@@ -156,111 +210,98 @@ public class ComponentType implements Type {
 			// Collection<Collection<Integer>>
 			if (idx > -1 && lastidx > idx && index == -1) {
 
-				String[] classNames = typeName.substring(0, idx).split(", ");
-				String className = classNames[0];
-				try {
-					this.type = Class.forName(className);
-				} catch (ClassNotFoundException e) {
-					e.printStackTrace();
+				String className = typeName.substring(0, idx);
+				this.type = this.forName(className);
+
+				String componentTypeName = typeName.substring(idx + 1, lastidx);
+				
+				idx = -1;
+				for (String delimiter: delimiters) {
+					idx = componentTypeName.indexOf(delimiter);
+					if (idx > -1) {
+						this.genericLeftName = componentTypeName.substring(0, idx).trim();
+						this.genericRightName = componentTypeName.substring(idx + delimiter.length()).trim();
+						this.componentType = new ComponentType(this.genericRightName);
+						
+						return;
+					}
 				}
 
-				String newTypeName = typeName.substring(idx + 1, lastidx);
+				this.componentType = new ComponentType(componentTypeName);
 				
-				idx = newTypeName.indexOf("<");
-				lastidx = newTypeName.lastIndexOf(">");
+//				idx = newTypeName.indexOf("<");
+//				lastidx = newTypeName.lastIndexOf(">");		
+//				while (idx > -1 && lastidx > idx) {
+//					processComponents(newTypeName.substring(0, idx));
+//					
+//					newTypeName = newTypeName.substring(idx + 1, lastidx);
+//
+//					idx = newTypeName.indexOf("<");
+//					lastidx = newTypeName.lastIndexOf(">");
+//				}
+//				processComponents(newTypeName);
 				
-				while (idx > -1 && lastidx > idx) {
-					processComponents(newTypeName.substring(0, idx));
-					
-					newTypeName = newTypeName.substring(idx + 1, lastidx);
-
-					idx = newTypeName.indexOf("<");
-					lastidx = newTypeName.lastIndexOf(">");
-				}
-
-				processComponents(newTypeName);
+				
 				
 				
 			} else {
 
-				try {
-
-					int repeat = 0;
-					String newtypeName = typeName;
-					if (index > -1) {
-						String end = typeName.substring(index);
-						repeat = end.length()/2;
-						
-						newtypeName = typeName.substring(0, index);
-					}
+				int repeat = 0;
+				String newtypeName = typeName;
+				if (index > -1) {
+					String end = typeName.substring(index);
+					repeat = end.length()/2;
 					
-					if (primitiveTypeNames.containsKey(newtypeName)) {
-						if (repeat == 0) {
-							this.type = primitiveTypeClasses.get(newtypeName);
-						} else {
-							String nickname = primitiveTypeNames.get(newtypeName);
-							this.type = Class.forName(StringUtil.repeatChar('[', repeat) + nickname);
-						}
-						
-					} else {
-						// java.util.Collection<java.lang.Integer>[]
-						// with <>
-						if (idx > -1 && lastidx > idx) {
-							String[] classNames = newtypeName.substring(0, idx).split(", ");
-							String className = classNames[0];
-							
-							String componentTypeName = newtypeName.substring(idx + 1, lastidx);
-							idx = componentTypeName.lastIndexOf(", ");
-							if (idx > -1) {
-								componentTypeName = componentTypeName.substring(idx + 2);
-							}
-							
-							try {
-								Class type = Class.forName(className);
-								Class componentClass = Class.forName(componentTypeName);
-
-								if (repeat == 0) {
-									this.type = type;
-									if (this.componentTypes == null || this.componentTypes.length == 0) {
-										this.componentTypes = new Class[] {componentClass};
-									} else {
-										add(componentClass);
-									}
-									
-								} else {
-									ComponentType myComponentType = new ComponentType(type, componentClass);
-									
-									this.type = Array.newInstance(myComponentType.getClassType(), 0).getClass();
-								}
-								
-							} catch (ClassNotFoundException e) {
-								e.printStackTrace();
-							}
-							
-						// without <>
-						// java.lang.String[]
-						} else {
-							
-							// not array
-							if (repeat == 0) {
-								this.type = Class.forName(newtypeName);
-								
-							// array
-							} else { // java.lang.ClassNotFoundException: java.util.Collection<java.lang.Integer>
-								String expression = StringUtil.repeatChar('[', repeat) + "L" + newtypeName + ";";
-								this.type = Class.forName(expression);
-							}
-						}
-						
-					}
-
-					if (this.type == null) {
-						this.type = Class.forName(newtypeName);
-					}
-					
-				} catch (ClassNotFoundException e) {
-					e.printStackTrace();
+					newtypeName = typeName.substring(0, index);
 				}
+				
+				if (primitiveTypeNames.containsKey(newtypeName)) {
+					if (repeat == 0) {
+						this.type = primitiveTypeClasses.get(newtypeName);
+					} else {
+						String nickname = primitiveTypeNames.get(newtypeName);
+						this.type =this.forName(StringUtil.repeatChar('[', repeat) + nickname);
+					}
+					
+				} else {
+					// java.util.Collection<java.lang.Integer>[]
+					// with <>
+					if (idx > -1 && lastidx > idx) {
+						//java.util.Collection<java.lang.Integer>[]
+						String className = newtypeName.substring(0, idx);
+						String componentTypeName = newtypeName.substring(idx + 1, lastidx);
+
+						Class type = this.forName(className);
+
+						if (repeat == 0) {
+							this.type = type;
+
+						} else {
+							String expression = StringUtil.repeatChar('[', repeat) + "L" + type.getName() + ";";
+							this.type = this.forName(expression);
+						}
+						
+						this.componentType = new ComponentType(componentTypeName);
+
+						
+					// without <>
+					// java.lang.String[]
+					} else {
+						this.type = this.forName(newtypeName);
+						if (repeat > 0) {
+							String expression = StringUtil.repeatChar('[', repeat) + "L" + type.getName() + ";";
+							this.type = this.forName(expression);
+						}
+					}
+
+				}
+
+				//java.lang.String, java.lang.Integer
+				//java.lang.String, ca.oson.json.gson.functional.CustomTypeAdaptersTest$StringHolder
+				if (this.type == null) {
+					this.type = this.forName(newtypeName);
+				}
+
 			}
 
 		}
