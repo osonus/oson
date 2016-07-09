@@ -30,7 +30,7 @@ import ca.oson.json.support.TestCaseBase;
 public class DefaultInetAddressTypeAdapterTest extends TestCaseBase {
 
   public void testInetAddressSerializationAndDeserialization() throws Exception {
-	oson.clearAll().setFieldMappers(new FieldMapper("hostAddress", java.net.Inet4Address.class).setJsonValue(true));
+	// oson.clearAll().setFieldMappers(new FieldMapper("hostAddress", java.net.Inet4Address.class).setJsonValue(true));
 	  
     InetAddress address = InetAddress.getByName("8.8.8.8");
     String jsonAddress = oson.setLevel(1).toJson(address);

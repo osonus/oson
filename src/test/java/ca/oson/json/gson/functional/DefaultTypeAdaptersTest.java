@@ -17,6 +17,7 @@ package ca.oson.json.gson.functional;
 
 import ca.oson.json.ComponentType;
 import ca.oson.json.FieldMapper;
+import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.support.TestCaseBase;
 
 import com.google.gson.Gson;
@@ -145,35 +146,45 @@ public class DefaultTypeAdaptersTest extends TestCaseBase {
     
   }
 
-//  public void testUrlNullSerialization() throws Exception {
-//    ClassWithUrlField target = new ClassWithUrlField();
-//    assertEquals("{}", gson.toJson(target));
-//  }
-//
-//  public void testUrlNullDeserialization() {
-//    String json = "{}";
-//    ClassWithUrlField target = gson.fromJson(json, ClassWithUrlField.class);
-//    assertNull(target.url);
-//  }
-//
-//  private static class ClassWithUrlField {
-//    URL url;
-//  }
-//
-//  public void testUriSerialization() throws Exception {
-//    String uriValue = "http://google.com/";
-//    URI uri = new URI(uriValue);
-//    assertEquals("\"http://google.com/\"", gson.toJson(uri));
-//  }
-//
-//  public void testUriDeserialization() {
-//    String uriValue = "http://google.com/";
-//    String json = '"' + uriValue + '"';
-//    URI target = gson.fromJson(json, URI.class);
-//    assertEquals(uriValue, target.toASCIIString());
-//  }
-//  
-//  public void testNullSerialization() throws Exception {
+  public void testUrlNullSerialization() throws Exception {
+    ClassWithUrlField target = new ClassWithUrlField();
+    assertEquals("{}", gson.toJson(target));
+    
+    String json = oson.setDefaultType(JSON_INCLUDE.NON_NULL).toJson(target);
+    assertEquals("{}", json);
+  }
+
+  public void testUrlNullDeserialization() {
+    String json = "{}";
+    ClassWithUrlField target = oson.fromJson(json, ClassWithUrlField.class);
+    assertNull(target.url);
+  }
+
+  private static class ClassWithUrlField {
+    URL url;
+  }
+
+  public void testUriSerialization() throws Exception {
+    String uriValue = "http://google.com/";
+    URI uri = new URI(uriValue);
+    assertEquals("\"http://google.com/\"", gson.toJson(uri));
+    
+    String json = oson.toJson(uri);
+    
+    assertEquals("\"http://google.com/\"", json);
+  }
+
+  public void testUriDeserialization() {
+    String uriValue = "http://google.com/";
+    String json = '"' + uriValue + '"';
+    URI target = gson.fromJson(json, URI.class);
+    assertEquals(uriValue, target.toASCIIString());
+    
+    target = oson.fromJson(json, URI.class);
+    assertEquals(uriValue, target.toASCIIString());
+  }
+  
+  public void testNullSerialization() throws Exception {
 //    testNullSerializationAndDeserialization(Boolean.class);
 //    testNullSerializationAndDeserialization(Byte.class);
 //    testNullSerializationAndDeserialization(Short.class);
@@ -206,13 +217,13 @@ public class DefaultTypeAdaptersTest extends TestCaseBase {
 //    testNullSerializationAndDeserialization(java.sql.Date.class);
 //    testNullSerializationAndDeserialization(Enum.class);
 //    testNullSerializationAndDeserialization(Class.class);
-//  }
-//
-//  private void testNullSerializationAndDeserialization(Class<?> c) {
-//    assertEquals("null", gson.toJson(null, c));
-//    assertEquals(null, gson.fromJson("null", c));
-//  }
-//
+  }
+
+  private void testNullSerializationAndDeserialization(Class<?> c) {
+    assertEquals("null", oson.clearAll().toJson(null, c));
+    assertEquals(null, oson.fromJson("null", c));
+  }
+
 //  public void testUuidSerialization() throws Exception {
 //    String uuidValue = "c237bec1-19ef-4858-a98e-521cf0aad4c0";
 //    UUID uuid = UUID.fromString(uuidValue);

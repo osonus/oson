@@ -19,7 +19,6 @@ import java.util.regex.Pattern;
 
 import javax.persistence.EnumType;
 
-import ca.oson.json.Oson.DefaultValue;
 import ca.oson.json.Oson.FIELD_NAMING;
 import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.Oson.JSON_PROCESSOR;
@@ -1167,7 +1166,7 @@ public class Options {
 	
 	public Set<FieldMapper> getFieldMappers(Class type) {
 		Set <FieldMapper> fldMappers = new HashSet<>();
-		if (type == null) {
+		if (type == null || fieldMappers == null) {
 			return fldMappers;
 		}
 		
