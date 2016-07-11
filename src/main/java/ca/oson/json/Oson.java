@@ -144,6 +144,7 @@ import com.google.gson.annotations.Since;
 
 
 
+
 import ca.oson.json.function.*;
 import ca.oson.json.util.*;
 
@@ -5469,6 +5470,8 @@ public class Oson {
 		if (value != null && value.toString().trim().length() > 0) {
 			String valueToProcess = value.toString().trim();
 			Character valueToReturn = null;
+			Long min = objectDTO.getMin();
+			Long max = objectDTO.getMax();
 			
 			try {
 				Function function = objectDTO.getDeserializer();
@@ -5491,20 +5494,17 @@ public class Oson {
 							returnedValue = ObjectUtil.unwrap(returnedValue);
 						}
 						
-						Long min = objectDTO.getMin();
-						Long max = objectDTO.getMax();
-						
 						if (returnedValue == null) {
 							return null;
+							
+						} else if (returnedValue instanceof Character) {
+							return (Character) returnedValue;
 							
 						} else if (Number.class.isAssignableFrom(returnedValue.getClass()) || returnedValue.getClass().isPrimitive()) {
 							long longvalue = ((Number) returnedValue).longValue();
 							
 							valueToReturn = long2Character(longvalue, min, max);
-							
-						} else if (returnedValue instanceof Character) {
-							valueToReturn = (Character) returnedValue;
-							
+
 						} else if (returnedValue instanceof Boolean) {
 							if ((Boolean) returnedValue)
 								valueToReturn = (char)1;
@@ -5534,14 +5534,14 @@ public class Oson {
 					}
 					
 				} else {
-//					if (StringUtil.isNumeric(valueToProcess)) {
-//						long longvalue = Long.parseLong(valueToProcess);
-//						
-//						valueToReturn = long2Character(longvalue, min, max);
-//						
-//					} else {
-						valueToReturn = valueToProcess.charAt(0);
-					//}
+					if (valueToProcess.length() == 1) {
+						return valueToProcess.charAt(0);
+						
+					} else {
+						long longvalue = Long.parseLong(valueToProcess);
+						
+						valueToReturn = long2Character(longvalue, min, max);
+					}
 				}
 				
 				if (valueToReturn != null) {
@@ -5551,7 +5551,6 @@ public class Oson {
 			} catch (Exception ex) {
 				//ex.printStackTrace();
 			}
-		
 		}
 		
 		return json2CharacterDefault(objectDTO);
@@ -8123,6 +8122,13 @@ public class Oson {
 		} else if (returnType != Optional.class && Map.class.isAssignableFrom(returnType)) {
 			return (E) json2Map(objectDTO);
 
+
+		} else if (returnType == StringBuilder.class || returnType == StringBuffer.class) {
+			if (value != null) {
+				objectDTO.valueToProcess = value.toString();
+			}
+			return (E) json2String(objectDTO);
+			
 		} else {
 			if (objectDTO.returnObj == null) {
 				return (E) deserialize2Object(value, returnType, objectDTO);
@@ -8448,10 +8454,6 @@ public class Oson {
 	
 	//, int level, Set set
 	private <E,R> String object2Json(FieldData objectDTO) {
-		if (objectDTO == null) {
-			return null;
-		}
-		
 		E value = (E) objectDTO.valueToProcess;
 		
 		Class<R> returnType = objectDTO.returnType;
@@ -8460,6 +8462,29 @@ public class Oson {
 			if (value != null) {
 				returnType = (Class<R>) value.getClass();
 				objectDTO.returnType = returnType;
+			}
+		}
+		
+		int level  = objectDTO.level;
+		if (value == null) {
+			if ((returnType != null && returnType.isPrimitive())  || objectDTO.required()) {
+				Object obj = DefaultValue.getSystemDefault(returnType);
+				if (obj != null) {
+					return obj.toString();
+				}
+				
+			} else if (level > 0) {
+				return null;
+			}
+			
+			switch(getDefaultType()) {
+			case ALWAYS: return "null";
+			case NON_NULL: return "";
+			case NON_EMPTY: return "";
+			case NON_DEFAULT: return "";
+			case DEFAULT: return "null";
+			case NONE: return "null";
+			default: return "null";
 			}
 		}
 		
@@ -10857,7 +10882,9 @@ public class Oson {
 			}
 			
 			map = new HashMap();
-			map.put(valueType.getName(), value);
+			if (value != null) {
+				map.put(valueType.getName(), value);
+			}
 		}
 
 		T obj = null;
@@ -12494,10 +12521,6 @@ public class Oson {
 	}
 
 	public <T> String serialize(T source, Type type) {
-		if (source == null) {
-			return "";
-		}
-
 		JSON_PROCESSOR processor = getJsonProcessor();
 
 		// should not reach here, just for reference
@@ -12543,11 +12566,7 @@ public class Oson {
 		return object2Json(new FieldData(source, valueType, componentType, false));
 	}
 	
-	public <T> String serialize(T source) {
-		if (source == null) {
-			return "";
-		}
-
+	public <T> String serialize(T source, Class<T> valueType) {
 		JSON_PROCESSOR processor = getJsonProcessor();
 
 		// should not reach here, just for reference
@@ -12563,7 +12582,7 @@ public class Oson {
 			}
 		} else if (processor == JSON_PROCESSOR.GSON) {
 			try {
-				return getGson().toJson(source);
+				return getGson().toJson(source, valueType);
 			} catch (Exception e) {
 				if (getPrintErrorUseOsonInFailure()) {
 					e.printStackTrace();
@@ -12573,9 +12592,21 @@ public class Oson {
 			}
 		}
 
+		if (valueType == null) {
+			valueType = (Class<T>) source.getClass();
+		}
+
+		return object2Json(new FieldData(source, valueType, false));
+	}
+	
+	public <T> String serialize(T source) {
+		if (source == null) {
+			return "";
+		}
+
 		Class<T> valueType = (Class<T>) source.getClass();
 		
-		return object2Json(new FieldData(source, valueType, false));
+		return serialize(source, valueType);
 	}
 
 	public <T> T deserialize(String source) {
@@ -12596,6 +12627,9 @@ public class Oson {
 	}
 	public <T> String toJson(T source, Type type) {
 		return serialize(source, type);
+	}
+	public <T> String toJson(T source, Class<T> valueType) {
+		return serialize(source, valueType);
 	}
 	public <T> String toJson(T source) {
 		return serialize(source);

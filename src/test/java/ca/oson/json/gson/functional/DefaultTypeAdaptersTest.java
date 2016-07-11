@@ -185,51 +185,52 @@ public class DefaultTypeAdaptersTest extends TestCaseBase {
   }
   
   public void testNullSerialization() throws Exception {
-//    testNullSerializationAndDeserialization(Boolean.class);
-//    testNullSerializationAndDeserialization(Byte.class);
-//    testNullSerializationAndDeserialization(Short.class);
-//    testNullSerializationAndDeserialization(Integer.class);
-//    testNullSerializationAndDeserialization(Long.class);
-//    testNullSerializationAndDeserialization(Double.class);
-//    testNullSerializationAndDeserialization(Float.class);
-//    testNullSerializationAndDeserialization(Number.class);
-//    testNullSerializationAndDeserialization(Character.class);
-//    testNullSerializationAndDeserialization(String.class);
-//    testNullSerializationAndDeserialization(StringBuilder.class);
-//    testNullSerializationAndDeserialization(StringBuffer.class);
-//    testNullSerializationAndDeserialization(BigDecimal.class);
-//    testNullSerializationAndDeserialization(BigInteger.class);
-//    testNullSerializationAndDeserialization(TreeSet.class);
-//    testNullSerializationAndDeserialization(ArrayList.class);
-//    testNullSerializationAndDeserialization(HashSet.class);
-//    testNullSerializationAndDeserialization(Properties.class);
-//    testNullSerializationAndDeserialization(URL.class);
-//    testNullSerializationAndDeserialization(URI.class);
-//    testNullSerializationAndDeserialization(UUID.class);
-//    testNullSerializationAndDeserialization(Locale.class);
-//    testNullSerializationAndDeserialization(InetAddress.class);
-//    testNullSerializationAndDeserialization(BitSet.class);
-//    testNullSerializationAndDeserialization(Date.class);
-//    testNullSerializationAndDeserialization(GregorianCalendar.class);
-//    testNullSerializationAndDeserialization(Calendar.class);
-//    testNullSerializationAndDeserialization(Time.class);
-//    testNullSerializationAndDeserialization(Timestamp.class);
-//    testNullSerializationAndDeserialization(java.sql.Date.class);
-//    testNullSerializationAndDeserialization(Enum.class);
-//    testNullSerializationAndDeserialization(Class.class);
+    testNullSerializationAndDeserialization(Boolean.class);
+    testNullSerializationAndDeserialization(Byte.class);
+    testNullSerializationAndDeserialization(Short.class);
+    testNullSerializationAndDeserialization(Integer.class);
+    testNullSerializationAndDeserialization(Long.class);
+    testNullSerializationAndDeserialization(Double.class);
+    testNullSerializationAndDeserialization(Float.class);
+    testNullSerializationAndDeserialization(Number.class);
+    testNullSerializationAndDeserialization(Character.class);
+    testNullSerializationAndDeserialization(String.class);
+    testNullSerializationAndDeserialization(StringBuilder.class);
+    testNullSerializationAndDeserialization(StringBuffer.class);
+    testNullSerializationAndDeserialization(BigDecimal.class);
+    testNullSerializationAndDeserialization(BigInteger.class);
+    testNullSerializationAndDeserialization(TreeSet.class);
+    testNullSerializationAndDeserialization(ArrayList.class);
+    testNullSerializationAndDeserialization(HashSet.class);
+    testNullSerializationAndDeserialization(Properties.class);
+    testNullSerializationAndDeserialization(URL.class);
+    testNullSerializationAndDeserialization(URI.class);
+    testNullSerializationAndDeserialization(UUID.class);
+    testNullSerializationAndDeserialization(Locale.class);
+    testNullSerializationAndDeserialization(InetAddress.class);
+    testNullSerializationAndDeserialization(BitSet.class);
+    testNullSerializationAndDeserialization(Date.class);
+    testNullSerializationAndDeserialization(GregorianCalendar.class);
+    testNullSerializationAndDeserialization(Calendar.class);
+    testNullSerializationAndDeserialization(Time.class);
+    testNullSerializationAndDeserialization(Timestamp.class);
+    testNullSerializationAndDeserialization(java.sql.Date.class);
+    testNullSerializationAndDeserialization(Enum.class);
+    testNullSerializationAndDeserialization(Class.class);
   }
 
   private void testNullSerializationAndDeserialization(Class<?> c) {
-    assertEquals("null", oson.clearAll().toJson(null, c));
+	String str = oson.clearAll().toJson(null, c);
+    assertEquals("null", str);
     assertEquals(null, oson.fromJson("null", c));
   }
 
-//  public void testUuidSerialization() throws Exception {
-//    String uuidValue = "c237bec1-19ef-4858-a98e-521cf0aad4c0";
-//    UUID uuid = UUID.fromString(uuidValue);
-//    assertEquals('"' + uuidValue + '"', gson.toJson(uuid));
-//  }
-//
+  public void testUuidSerialization() throws Exception {
+    String uuidValue = "c237bec1-19ef-4858-a98e-521cf0aad4c0";
+    UUID uuid = UUID.fromString(uuidValue);
+    assertEquals('"' + uuidValue + '"', gson.toJson(uuid));
+  }
+
 //  public void testUuidDeserialization() {
 //    String uuidValue = "c237bec1-19ef-4858-a98e-521cf0aad4c0";
 //    String json = '"' + uuidValue + '"';

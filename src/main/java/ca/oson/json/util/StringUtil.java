@@ -58,7 +58,7 @@ public class StringUtil {
 		}
 		
 		String str = obj.toString().trim();
-		return (str.length() == 0 || str.equals("\"\"") || str.equals("''") || obj.getClass().getName().equals("org.json.JSONObject$Null"));
+		return (str.length() == 0 || str.equalsIgnoreCase("null") || str.equals("\"\"") || str.equals("''") || obj.getClass().getName().equals("org.json.JSONObject$Null"));
 	}
 
 	public static boolean isEmpty(String str) {

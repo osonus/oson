@@ -2,10 +2,10 @@ package ca.oson.json.util;
 
 public class BooleanUtil {
 	
-	public static <E> boolean object2Boolean (E obj) {
+	public static <E> Boolean object2Boolean (E obj) {
 		try {
 			if (obj == null) {
-				return false;
+				return null;
 			}
 			
 			Class cls = obj.getClass();
@@ -26,43 +26,52 @@ public class BooleanUtil {
 		
 		} catch (Exception ex) {}
 		
-		return false;
+		return null;
 	}
 	
-	public static boolean string2Boolean(String str) {
+	public static Boolean string2Boolean(String str) {
 		if (str == null) {
-			return false;
+			return null;
 		}
 		
 		str = str.trim().toLowerCase();
 	
 		if (str.equals("true") || str.equals("t") ||  str.equals("1")) {
 			return true;
+		} else if (str.equals("false") || str.equals("f") ||  str.equals("0")) {
+			return false;
 		}
 		
 		try {
 			return Boolean.parseBoolean(str);
-		} catch (Exception ex) {}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
 	
-		return false;
+		return null;
 	}
 
-	public static boolean char2Boolean(char c) {
+	public static Boolean char2Boolean(char c) {
 		if (c == '1' || c == 't' || c == 'T') {
 			return true;
-		} else {
+		} else if (c == '0' || c == 'f' || c == 'F') {
 			return false;
+		} else {
+			return null;
 		}
 	}
 	
-	public static boolean number2Boolean(Number n) {
+	public static Boolean number2Boolean(Number n) {
 		if (n == null) {
+			return null;
+		}
+		int intValue = n.intValue();
+		if (intValue == 1) {
+			return true;
+		} else if (intValue == 0) {
 			return false;
 		}
-		if (n.intValue() == 1) {
-			return true;
-		}
 		
-		return false;
+		return null;
 	}
 }
