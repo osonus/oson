@@ -270,6 +270,8 @@ public class DefaultValue {
 	public static String getJsonValueFieldName(String className) {
 		switch (className) {
 		case "java.net.URL": return "toString";
+		case "java.lang.StringBuilder": return "toString";
+		
 		case "java.net.Inet4Address": return "hostAddress";
 		case "java.net.URI": return "toURL";
 
