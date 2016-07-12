@@ -78,7 +78,7 @@ public class BooleanTest extends TestCaseBase {
 
 		   Boolean result = oson.deserialize(value, Boolean.class);
 
-		   assertFalse(result);
+		   assertTrue(result == null);
 	   }
 	   
 	   @Test

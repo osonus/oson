@@ -201,6 +201,12 @@ public class Options {
 	private boolean useGsonExpose = false;
 	
 	/*
+	 * Set the toString method as the default serializer.
+	 * If this is set to be true, toString method will be used for serialization
+	 */
+	private boolean toStringAsSerializer = false;
+	
+	/*
 	 * Patterns of comments in Java regular expressions
 	 * User can define custom comment regex patterns
 	 * The default comments are: single-line //, 
@@ -1207,5 +1213,15 @@ public class Options {
 		if (level > 0 && level <= MAX_LEVEL) {
 			this.level = level;
 		}
+	}
+
+
+	public boolean isToStringAsSerializer() {
+		return toStringAsSerializer;
+	}
+
+
+	public void setToStringAsSerializer(boolean toStringAsSerializer) {
+		this.toStringAsSerializer = toStringAsSerializer;
 	}
 }

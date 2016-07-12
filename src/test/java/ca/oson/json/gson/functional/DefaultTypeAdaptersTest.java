@@ -228,52 +228,53 @@ public class DefaultTypeAdaptersTest extends TestCaseBase {
   public void testUuidSerialization() throws Exception {
     String uuidValue = "c237bec1-19ef-4858-a98e-521cf0aad4c0";
     UUID uuid = UUID.fromString(uuidValue);
-    assertEquals('"' + uuidValue + '"', gson.toJson(uuid));
+    assertEquals('"' + uuidValue + '"', oson.toJson(uuid));
   }
 
-//  public void testUuidDeserialization() {
-//    String uuidValue = "c237bec1-19ef-4858-a98e-521cf0aad4c0";
-//    String json = '"' + uuidValue + '"';
-//    UUID target = gson.fromJson(json, UUID.class);
-//    assertEquals(uuidValue, target.toString());
-//  }
-//
-//  public void testLocaleSerializationWithLanguage() {
-//    Locale target = new Locale("en");
-//    assertEquals("\"en\"", gson.toJson(target));
-//  }
-//
-//  public void testLocaleDeserializationWithLanguage() {
-//    String json = "\"en\"";
-//    Locale locale = gson.fromJson(json, Locale.class);
-//    assertEquals("en", locale.getLanguage());
-//  }
-//
-//  public void testLocaleSerializationWithLanguageCountry() {
-//    Locale target = Locale.CANADA_FRENCH;
-//    assertEquals("\"fr_CA\"", gson.toJson(target));
-//  }
-//
-//  public void testLocaleDeserializationWithLanguageCountry() {
-//    String json = "\"fr_CA\"";
-//    Locale locale = gson.fromJson(json, Locale.class);
-//    assertEquals(Locale.CANADA_FRENCH, locale);
-//  }
-//
-//  public void testLocaleSerializationWithLanguageCountryVariant() {
-//    Locale target = new Locale("de", "DE", "EURO");
-//    String json = gson.toJson(target);
-//    assertEquals("\"de_DE_EURO\"", json);
-//  }
-//
-//  public void testLocaleDeserializationWithLanguageCountryVariant() {
-//    String json = "\"de_DE_EURO\"";
-//    Locale locale = gson.fromJson(json, Locale.class);
-//    assertEquals("de", locale.getLanguage());
-//    assertEquals("DE", locale.getCountry());
-//    assertEquals("EURO", locale.getVariant());
-//  }
-//
+  public void testUuidDeserialization() {
+    String uuidValue = "c237bec1-19ef-4858-a98e-521cf0aad4c0";
+    String json = '"' + uuidValue + '"';
+    UUID target = oson.fromJson(json, UUID.class);
+    assertEquals(uuidValue, target.toString());
+  }
+
+  public void testLocaleSerializationWithLanguage() {
+    Locale target = new Locale("en");
+    assertEquals("\"en\"", oson.toJson(target));
+  }
+
+  public void testLocaleDeserializationWithLanguage() {
+    String json = "\"en\"";
+    Locale locale = oson.fromJson(json, Locale.class);
+    assertEquals("en", locale.getLanguage());
+  }
+
+  public void testLocaleSerializationWithLanguageCountry() {
+    Locale target = Locale.CANADA_FRENCH;
+    assertEquals("\"fr_CA\"", oson.toJson(target));
+  }
+
+  public void testLocaleDeserializationWithLanguageCountry() {
+    String json = "\"fr_CA\"";
+    Locale locale = oson.fromJson(json, Locale.class);
+    // System.err.println(locale.toString());
+    assertEquals(Locale.CANADA_FRENCH, locale);
+  }
+
+  public void testLocaleSerializationWithLanguageCountryVariant() {
+    Locale target = new Locale("de", "DE", "EURO");
+    String json = oson.toJson(target);
+    assertEquals("\"de_DE_EURO\"", json);
+  }
+
+  public void testLocaleDeserializationWithLanguageCountryVariant() {
+    String json = "\"de_DE_EURO\"";
+    Locale locale = oson.fromJson(json, Locale.class);
+    assertEquals("de", locale.getLanguage());
+    assertEquals("DE", locale.getCountry());
+    assertEquals("EURO", locale.getVariant());
+  }
+
 //  public void testBigDecimalFieldSerialization() {
 //    ClassWithBigDecimal target = new ClassWithBigDecimal("-122.01e-21");
 //    String json = gson.toJson(target);

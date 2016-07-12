@@ -271,6 +271,9 @@ public class DefaultValue {
 		switch (className) {
 		case "java.net.URL": return "toString";
 		case "java.lang.StringBuilder": return "toString";
+		case "java.lang.StringBuffer": return "toString";
+		case "java.util.UUID": return "toString";
+		case "java.util.Locale": return "toString";
 		
 		case "java.net.Inet4Address": return "hostAddress";
 		case "java.net.URI": return "toURL";

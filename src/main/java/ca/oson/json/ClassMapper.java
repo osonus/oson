@@ -141,6 +141,12 @@ public class ClassMapper<T> {
 	 */
 	public Boolean date2Long = null;
 	
+	/*
+	 * Set the toString method as the default serializer.
+	 * If this is set to be true, toString method will be used for serialization
+	 */
+	private Boolean toStringAsSerializer = null;
+	
 	
 	/*
 	 *  class specific date formatting, such as "MM/dd/yyyy"
@@ -483,5 +489,13 @@ public class ClassMapper<T> {
 		this.dateFormat = dateFormat;
 		
 		return this;
+	}
+	
+	public Boolean isToStringAsSerializer() {
+		return toStringAsSerializer;
+	}
+	
+	public void setToStringAsSerializer(Boolean toStringAsSerializer) {
+		this.toStringAsSerializer = toStringAsSerializer;
 	}
 }

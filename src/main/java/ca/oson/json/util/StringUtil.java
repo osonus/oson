@@ -97,7 +97,7 @@ public class StringUtil {
 
 
 	private static String camelCase2Delimiter(String name, char delimiter) {
-		if (!name.matches(".*[A-Z].*"))
+		if (name == null || !name.matches(".*[A-Z].*"))
 			return name;
 
 		String regex = "([a-z])([A-Z])";
@@ -120,6 +120,9 @@ public class StringUtil {
 
 	//
 	public static String camelCase(String name) {
+		if (name == null) {
+			return null;
+		}
 		String regex = "[_ -]([a-zA-Z])";
 		String replacement = "_$1";
 
@@ -304,6 +307,10 @@ public class StringUtil {
 	
 
 	public static String formatName(String name, FIELD_NAMING format) {
+		if (name == null) {
+			return name;
+		}
+		
 		switch(format) {
 		case FIELD: // someField_name
 			return name;

@@ -31,6 +31,7 @@ import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.net.InetAddress;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -100,6 +101,9 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.Since;
 
 //import org.springframework.web.bind.annotation.RequestParam;
+
+
+
 
 
 
@@ -1385,6 +1389,10 @@ public class Oson {
 			mapper.max = getMax();
 		}
 		
+		if (mapper.isToStringAsSerializer() == null) {
+			mapper.setToStringAsSerializer(isToStringAsSerializer());
+		}
+		
 		return mapper;
 	}
 	
@@ -2125,8 +2133,6 @@ public class Oson {
 	public <T> Oson des(Class<T> type, Json2StringFunction deserializer) {
 		return setDeserializer(type, deserializer);
 	}
-	
-	
 
 	public <T> Oson useField(Class<T> type, Boolean useField) {
 		cMap(type).setUseField(useField);
@@ -2225,6 +2231,17 @@ public class Oson {
 	// end of setting up class mapper
 	
 	
+	private boolean isToStringAsSerializer() {
+		return options.isToStringAsSerializer();
+	}
+
+
+	public Oson setToStringAsSerializer(boolean toStringAsSerializer) {
+		options.setToStringAsSerializer(toStringAsSerializer);
+		
+		return this;
+	}
+
 	
 	private void reset() {
 		jackson = null;
@@ -3005,6 +3022,12 @@ public class Oson {
 							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
+						} else if (function instanceof Json2FieldDataFunction) {
+							Json2FieldDataFunction f = (Json2FieldDataFunction)function;
+							FieldData fieldData = objectDTO.clone();
+							
+							returnedValue = f.apply(fieldData);
+							
 						} else if (function instanceof Json2DoubleFunction) {
 							return ((Json2DoubleFunction)function).apply(valueToProcess);
 						} else {
@@ -3135,7 +3158,14 @@ public class Oson {
 								
 							} else {
 								
-								Object returnedValue = function.apply(valueToProcess);
+								Object returnedValue = null;
+								if (function instanceof FieldData2JsonFunction) {
+									FieldData2JsonFunction f = (FieldData2JsonFunction)function;
+									FieldData fieldData = objectDTO.clone();
+									returnedValue = f.apply(fieldData);
+								} else {
+									returnedValue = function.apply(value);
+								}
 							
 								if (returnedValue instanceof Optional) {
 									returnedValue = ObjectUtil.unwrap(returnedValue);
@@ -3266,6 +3296,12 @@ public class Oson {
 							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
+						} else if (function instanceof Json2FieldDataFunction) {
+							Json2FieldDataFunction f = (Json2FieldDataFunction)function;
+							FieldData fieldData = objectDTO.clone();
+							
+							returnedValue = f.apply(fieldData);
+							
 						} else if (function instanceof Json2FloatFunction) {
 							return ((Json2FloatFunction)function).apply(valueToProcess);
 						} else {
@@ -3405,7 +3441,14 @@ public class Oson {
 								
 							} else {
 								
-								Object returnedValue = function.apply(valueToProcess);
+								Object returnedValue = null;
+								if (function instanceof FieldData2JsonFunction) {
+									FieldData2JsonFunction f = (FieldData2JsonFunction)function;
+									FieldData fieldData = objectDTO.clone();
+									returnedValue = f.apply(fieldData);
+								} else {
+									returnedValue = function.apply(value);
+								}
 							
 								if (returnedValue instanceof Optional) {
 									returnedValue = ObjectUtil.unwrap(returnedValue);
@@ -3536,6 +3579,12 @@ public class Oson {
 							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
+						} else if (function instanceof Json2FieldDataFunction) {
+							Json2FieldDataFunction f = (Json2FieldDataFunction)function;
+							FieldData fieldData = objectDTO.clone();
+							
+							returnedValue = f.apply(fieldData);
+							
 						} else if (function instanceof Json2DateFunction) {
  							return ((Json2DateFunction)function).apply(valueToProcess);
  							
@@ -3627,7 +3676,14 @@ public class Oson {
  	 								
  							} else {
  								
- 								Object returnedValue = function.apply(valueToProcess);
+								Object returnedValue = null;
+								if (function instanceof FieldData2JsonFunction) {
+									FieldData2JsonFunction f = (FieldData2JsonFunction)function;
+									FieldData fieldData = objectDTO.clone();
+									returnedValue = f.apply(fieldData);
+								} else {
+									returnedValue = function.apply(value);
+								}
  							
 								if (returnedValue instanceof Optional) {
 									returnedValue = ObjectUtil.unwrap(returnedValue);
@@ -3716,6 +3772,12 @@ public class Oson {
 							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
+						} else if (function instanceof Json2FieldDataFunction) {
+							Json2FieldDataFunction f = (Json2FieldDataFunction)function;
+							FieldData fieldData = objectDTO.clone();
+							
+							returnedValue = f.apply(fieldData);
+							
 						} else if (function instanceof Json2BigDecimalFunction) {
 							return ((Json2BigDecimalFunction)function).apply(valueToProcess);
 						} else {
@@ -3859,7 +3921,14 @@ public class Oson {
 								
 							} else {
 								
-								Object returnedValue = function.apply(valueToProcess);
+								Object returnedValue = null;
+								if (function instanceof FieldData2JsonFunction) {
+									FieldData2JsonFunction f = (FieldData2JsonFunction)function;
+									FieldData fieldData = objectDTO.clone();
+									returnedValue = f.apply(fieldData);
+								} else {
+									returnedValue = function.apply(value);
+								}
 							
 								if (returnedValue instanceof Optional) {
 									returnedValue = ObjectUtil.unwrap(returnedValue);
@@ -3985,6 +4054,12 @@ public class Oson {
 							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
+						} else if (function instanceof Json2FieldDataFunction) {
+							Json2FieldDataFunction f = (Json2FieldDataFunction)function;
+							FieldData fieldData = objectDTO.clone();
+							
+							returnedValue = f.apply(fieldData);
+							
 						} else if (function instanceof Json2BigIntegerFunction) {
 							return ((Json2BigIntegerFunction)function).apply(valueToProcess);
 						} else {
@@ -4117,7 +4192,14 @@ public class Oson {
 								
 							} else {
 								
-								Object returnedValue = function.apply(valueToProcess);
+								Object returnedValue = null;
+								if (function instanceof FieldData2JsonFunction) {
+									FieldData2JsonFunction f = (FieldData2JsonFunction)function;
+									FieldData fieldData = objectDTO.clone();
+									returnedValue = f.apply(fieldData);
+								} else {
+									returnedValue = function.apply(value);
+								}
 							
 								if (returnedValue instanceof Optional) {
 									returnedValue = ObjectUtil.unwrap(returnedValue);
@@ -4234,6 +4316,12 @@ public class Oson {
 							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
+						} else if (function instanceof Json2FieldDataFunction) {
+							Json2FieldDataFunction f = (Json2FieldDataFunction)function;
+							FieldData fieldData = objectDTO.clone();
+							
+							returnedValue = f.apply(fieldData);
+							
 						} else if (function instanceof Json2AtomicIntegerFunction) {
 							return ((Json2AtomicIntegerFunction)function).apply(valueToProcess);
 							
@@ -4365,8 +4453,14 @@ public class Oson {
 								return ((AtomicInteger2JsonFunction)function).apply(valueToProcess);
 								
 							} else {
-								
-								Object returnedValue = function.apply(valueToProcess);
+								Object returnedValue = null;
+								if (function instanceof FieldData2JsonFunction) {
+									FieldData2JsonFunction f = (FieldData2JsonFunction)function;
+									FieldData fieldData = objectDTO.clone();
+									returnedValue = f.apply(fieldData);
+								} else {
+									returnedValue = function.apply(value);
+								}
 							
 								if (returnedValue instanceof Optional) {
 									returnedValue = ObjectUtil.unwrap(returnedValue);
@@ -4483,6 +4577,12 @@ public class Oson {
 							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
+						} else if (function instanceof Json2FieldDataFunction) {
+							Json2FieldDataFunction f = (Json2FieldDataFunction)function;
+							FieldData fieldData = objectDTO.clone();
+							
+							returnedValue = f.apply(fieldData);
+							
 						} else if (function instanceof Json2AtomicLongFunction) {
 							return ((Json2AtomicLongFunction)function).apply(valueToProcess);
 						} else {
@@ -4612,8 +4712,14 @@ public class Oson {
 								return ((AtomicLong2JsonFunction)function).apply(valueToProcess);
 								
 							} else {
-								
-								Object returnedValue = function.apply(valueToProcess);
+								Object returnedValue = null;
+								if (function instanceof FieldData2JsonFunction) {
+									FieldData2JsonFunction f = (FieldData2JsonFunction)function;
+									FieldData fieldData = objectDTO.clone();
+									returnedValue = f.apply(fieldData);
+								} else {
+									returnedValue = function.apply(value);
+								}
 							
 								if (returnedValue instanceof Optional) {
 									returnedValue = ObjectUtil.unwrap(returnedValue);
@@ -4813,6 +4919,12 @@ public class Oson {
 							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
+						} else if (function instanceof Json2FieldDataFunction) {
+							Json2FieldDataFunction f = (Json2FieldDataFunction)function;
+							FieldData fieldData = objectDTO.clone();
+							
+							returnedValue = f.apply(fieldData);
+							
 						} else if (function instanceof Json2LongFunction) {
 							return ((Json2LongFunction)function).apply(valueToProcess);
 						} else {
@@ -4973,6 +5085,12 @@ public class Oson {
 							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
+						} else if (function instanceof Json2FieldDataFunction) {
+							Json2FieldDataFunction f = (Json2FieldDataFunction)function;
+							FieldData fieldData = objectDTO.clone();
+							
+							returnedValue = f.apply(fieldData);
+							
 						} else if (function instanceof Json2IntegerFunction) {
 							return (R) ((Json2IntegerFunction)function).apply(valueToProcess);
 						} else {
@@ -5209,6 +5327,12 @@ public class Oson {
 							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
+						} else if (function instanceof Json2FieldDataFunction) {
+							Json2FieldDataFunction f = (Json2FieldDataFunction)function;
+							FieldData fieldData = objectDTO.clone();
+							
+							returnedValue = f.apply(fieldData);
+							
 						} else if (function instanceof Json2ByteFunction) {
 							return ((Json2ByteFunction)function).apply(valueToProcess);
 						} else {
@@ -5348,7 +5472,14 @@ public class Oson {
 								
 							} else {
 								
-								Object returnedValue = function.apply(valueToProcess);
+								Object returnedValue = null;
+								if (function instanceof FieldData2JsonFunction) {
+									FieldData2JsonFunction f = (FieldData2JsonFunction)function;
+									FieldData fieldData = objectDTO.clone();
+									returnedValue = f.apply(fieldData);
+								} else {
+									returnedValue = function.apply(value);
+								}
 								
 								if (returnedValue instanceof Optional) {
 									returnedValue = ObjectUtil.unwrap(returnedValue);
@@ -5484,6 +5615,12 @@ public class Oson {
 							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
+						} else if (function instanceof Json2FieldDataFunction) {
+							Json2FieldDataFunction f = (Json2FieldDataFunction)function;
+							FieldData fieldData = objectDTO.clone();
+							
+							returnedValue = f.apply(fieldData);
+							
 						} else if (function instanceof Json2CharacterFunction) {
 							return ((Json2CharacterFunction)function).apply(valueToProcess);
 						} else {
@@ -5592,7 +5729,14 @@ public class Oson {
 								
 							} else {
 								
-								Object returnedValue = function.apply(valueToProcess);
+								Object returnedValue = null;
+								if (function instanceof FieldData2JsonFunction) {
+									FieldData2JsonFunction f = (FieldData2JsonFunction)function;
+									FieldData fieldData = objectDTO.clone();
+									returnedValue = f.apply(fieldData);
+								} else {
+									returnedValue = function.apply(value);
+								}
 							
 								if (returnedValue instanceof Optional) {
 									returnedValue = ObjectUtil.unwrap(returnedValue);
@@ -5691,6 +5835,12 @@ public class Oson {
 							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
+						} else if (function instanceof Json2FieldDataFunction) {
+							Json2FieldDataFunction f = (Json2FieldDataFunction)function;
+							FieldData fieldData = objectDTO.clone();
+							
+							returnedValue = f.apply(fieldData);
+							
 						} else if (function instanceof Json2ShortFunction) {
 							return ((Json2ShortFunction)function).apply(valueToProcess);
 						} else {
@@ -5829,7 +5979,14 @@ public class Oson {
 								
 							} else {
 								
-								Object returnedValue = function.apply(valueToProcess);
+								Object returnedValue = null;
+								if (function instanceof FieldData2JsonFunction) {
+									FieldData2JsonFunction f = (FieldData2JsonFunction)function;
+									FieldData fieldData = objectDTO.clone();
+									returnedValue = f.apply(fieldData);
+								} else {
+									returnedValue = function.apply(value);
+								}
 							
 								if (returnedValue instanceof Optional) {
 									returnedValue = ObjectUtil.unwrap(returnedValue);
@@ -5943,6 +6100,12 @@ public class Oson {
 							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
+						} else if (function instanceof Json2FieldDataFunction) {
+							Json2FieldDataFunction f = (Json2FieldDataFunction)function;
+							FieldData fieldData = objectDTO.clone();
+							
+							returnedValue = f.apply(fieldData);
+							
 						} else if (function instanceof Json2StringFunction) {
 							return ((Json2StringFunction)function).apply(valueToProcess);
 						} else {
@@ -6019,7 +6182,14 @@ public class Oson {
 								
 							} else {
 								
-								Object returnedValue = function.apply(valueToProcess);
+								Object returnedValue = null;
+								if (function instanceof FieldData2JsonFunction) {
+									FieldData2JsonFunction f = (FieldData2JsonFunction)function;
+									FieldData fieldData = objectDTO.clone();
+									returnedValue = f.apply(fieldData);
+								} else {
+									returnedValue = function.apply(value);
+								}
 							
 								if (returnedValue == null) {
 									return null;
@@ -6116,6 +6286,12 @@ public class Oson {
 							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
+						} else if (function instanceof Json2FieldDataFunction) {
+							Json2FieldDataFunction f = (Json2FieldDataFunction)function;
+							FieldData fieldData = objectDTO.clone();
+							
+							returnedValue = f.apply(fieldData);
+							
 						} else if (function instanceof Json2BooleanFunction) {
 							return ((Json2BooleanFunction)function).apply(valueToProcess);
 						} else {
@@ -6201,8 +6377,14 @@ public class Oson {
 								return ((Boolean2JsonFunction)function).apply(valueToProcess);
 								
 							} else {
-								// cannot return primitive here?
-								Object returnedValue = function.apply(valueToProcess);
+								Object returnedValue = null;
+								if (function instanceof FieldData2JsonFunction) {
+									FieldData2JsonFunction f = (FieldData2JsonFunction)function;
+									FieldData fieldData = objectDTO.clone();
+									returnedValue = f.apply(fieldData);
+								} else {
+									returnedValue = function.apply(value);
+								}
 							
 								if (returnedValue instanceof Optional) {
 									returnedValue = ObjectUtil.unwrap(returnedValue);
@@ -6301,6 +6483,12 @@ public class Oson {
 					DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
 					returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
+				} else if (function instanceof Json2FieldDataFunction) {
+					Json2FieldDataFunction f = (Json2FieldDataFunction)function;
+					FieldData fieldData = objectDTO.clone();
+					
+					returnedValue = f.apply(fieldData);
+					
 				} else if (function instanceof Json2EnumFunction) {
 					return (Enum<?>) ((Json2EnumFunction)function).apply(valueToProcess);
 				} else {
@@ -6803,6 +6991,12 @@ public class Oson {
 							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
+						} else if (function instanceof Json2FieldDataFunction) {
+							Json2FieldDataFunction f = (Json2FieldDataFunction)function;
+							FieldData fieldData = objectDTO.clone();
+							
+							returnedValue = f.apply(fieldData);
+							
 						} else if (function instanceof Json2MapFunction) {
 							return ((Json2MapFunction)function).apply(values);
 
@@ -7049,6 +7243,12 @@ public class Oson {
 							DataMapper classData = new DataMapper(returnType, collection, objectDTO.classMapper, objectDTO.level);
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 							
+						} else if (function instanceof Json2FieldDataFunction) {
+							Json2FieldDataFunction f = (Json2FieldDataFunction)function;
+							FieldData fieldData = objectDTO.clone();
+							
+							returnedValue = f.apply(fieldData);
+							
 						} else if (function instanceof Json2CollectionFunction) {
 							return ((Json2CollectionFunction)function).apply(collection);
 								
@@ -7127,6 +7327,12 @@ public class Oson {
 					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level);
 					returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
+				} else if (function instanceof Json2FieldDataFunction) {
+					Json2FieldDataFunction f = (Json2FieldDataFunction)function;
+					FieldData fieldData = objectDTO.clone();
+					
+					returnedValue = f.apply(fieldData);
+					
 				} else if (function instanceof Json2ArrayFunction) {
 					returnedValue = ((Json2ArrayFunction)function).apply(objectDTO.valueToProcess);
 						
@@ -7206,6 +7412,12 @@ public class Oson {
 					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level);
 					returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
+				} else if (function instanceof Json2FieldDataFunction) {
+					Json2FieldDataFunction f = (Json2FieldDataFunction)function;
+					FieldData fieldData = objectDTO.clone();
+					
+					returnedValue = f.apply(fieldData);
+					
 				} else if (function instanceof Json2ArrayFunction) {
 					returnedValue = ((Json2ArrayFunction)function).apply(objectDTO.valueToProcess);
 						
@@ -7286,6 +7498,12 @@ public class Oson {
 					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level);
 					returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
+				} else if (function instanceof Json2FieldDataFunction) {
+					Json2FieldDataFunction f = (Json2FieldDataFunction)function;
+					FieldData fieldData = objectDTO.clone();
+					
+					returnedValue = f.apply(fieldData);
+					
 				} else if (function instanceof Json2ArrayFunction) {
 					returnedValue = ((Json2ArrayFunction)function).apply(objectDTO.valueToProcess);
 						
@@ -7378,6 +7596,12 @@ public class Oson {
 					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level);
 					returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
+				} else if (function instanceof Json2FieldDataFunction) {
+					Json2FieldDataFunction f = (Json2FieldDataFunction)function;
+					FieldData fieldData = objectDTO.clone();
+					
+					returnedValue = f.apply(fieldData);
+					
 				} else if (function instanceof Json2ArrayFunction) {
 					returnedValue = ((Json2ArrayFunction)function).apply(objectDTO.valueToProcess);
 						
@@ -7457,6 +7681,12 @@ public class Oson {
 					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level);
 					returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
+				} else if (function instanceof Json2FieldDataFunction) {
+					Json2FieldDataFunction f = (Json2FieldDataFunction)function;
+					FieldData fieldData = objectDTO.clone();
+					
+					returnedValue = f.apply(fieldData);
+					
 				} else if (function instanceof Json2ArrayFunction) {
 					returnedValue = ((Json2ArrayFunction)function).apply(objectDTO.valueToProcess);
 						
@@ -7537,6 +7767,12 @@ public class Oson {
 					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level);
 					returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
+				} else if (function instanceof Json2FieldDataFunction) {
+					Json2FieldDataFunction f = (Json2FieldDataFunction)function;
+					FieldData fieldData = objectDTO.clone();
+					
+					returnedValue = f.apply(fieldData);
+					
 				} else if (function instanceof Json2ArrayFunction) {
 					returnedValue = ((Json2ArrayFunction)function).apply(objectDTO.valueToProcess);
 						
@@ -7617,6 +7853,12 @@ public class Oson {
 					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level);
 					returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
+				} else if (function instanceof Json2FieldDataFunction) {
+					Json2FieldDataFunction f = (Json2FieldDataFunction)function;
+					FieldData fieldData = objectDTO.clone();
+					
+					returnedValue = f.apply(fieldData);
+					
 				} else if (function instanceof Json2ArrayFunction) {
 					returnedValue = ((Json2ArrayFunction)function).apply(objectDTO.valueToProcess);
 						
@@ -7697,6 +7939,12 @@ public class Oson {
 					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level);
 					returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
+				} else if (function instanceof Json2FieldDataFunction) {
+					Json2FieldDataFunction f = (Json2FieldDataFunction)function;
+					FieldData fieldData = objectDTO.clone();
+					
+					returnedValue = f.apply(fieldData);
+					
 				} else if (function instanceof Json2ArrayFunction) {
 					returnedValue = ((Json2ArrayFunction)function).apply(objectDTO.valueToProcess);
 						
@@ -7793,6 +8041,12 @@ public class Oson {
 							DataMapper classData = new DataMapper(returnType, values, objectDTO.classMapper, objectDTO.level);
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
+						} else if (function instanceof Json2FieldDataFunction) {
+							Json2FieldDataFunction f = (Json2FieldDataFunction)function;
+							FieldData fieldData = objectDTO.clone();
+							
+							returnedValue = f.apply(fieldData);
+							
 						} else if (function instanceof Json2ArrayFunction) {
 							return (E[]) ((Json2ArrayFunction)function).apply(values);
 								
@@ -7881,7 +8135,14 @@ public class Oson {
 							
 					} else {
 						
-						Object returnedValue = function.apply(value);
+						Object returnedValue = null;
+						if (function instanceof FieldData2JsonFunction) {
+							FieldData2JsonFunction f = (FieldData2JsonFunction)function;
+							FieldData fieldData = objectDTO.clone();
+							returnedValue = f.apply(fieldData);
+						} else {
+							returnedValue = function.apply(value);
+						}
 	
 						if (returnedValue instanceof Optional) {
 							returnedValue = ObjectUtil.unwrap(returnedValue);
@@ -8121,13 +8382,6 @@ public class Oson {
 
 		} else if (returnType != Optional.class && Map.class.isAssignableFrom(returnType)) {
 			return (E) json2Map(objectDTO);
-
-
-		} else if (returnType == StringBuilder.class || returnType == StringBuffer.class) {
-			if (value != null) {
-				objectDTO.valueToProcess = value.toString();
-			}
-			return (E) json2String(objectDTO);
 			
 		} else {
 			if (objectDTO.returnObj == null) {
@@ -8164,7 +8418,14 @@ public class Oson {
 						
 					} else {
 						
-						Object returnedValue = function.apply(en);
+						Object returnedValue = null;
+						if (function instanceof FieldData2JsonFunction) {
+							FieldData2JsonFunction f = (FieldData2JsonFunction)function;
+							FieldData fieldData = objectDTO.clone();
+							returnedValue = f.apply(fieldData);
+						} else {
+							returnedValue = function.apply(value);
+						}
 					
 						if (returnedValue instanceof Optional) {
 							returnedValue = ObjectUtil.unwrap(returnedValue);
@@ -8225,7 +8486,14 @@ public class Oson {
 							
 					} else {
 						
-						Object returnedValue = function.apply(collection);
+						Object returnedValue = null;
+						if (function instanceof FieldData2JsonFunction) {
+							FieldData2JsonFunction f = (FieldData2JsonFunction)function;
+							FieldData fieldData = objectDTO.clone();
+							returnedValue = f.apply(fieldData);
+						} else {
+							returnedValue = function.apply(value);
+						}
 	
 						if (returnedValue instanceof Optional) {
 							returnedValue = ObjectUtil.unwrap(returnedValue);
@@ -9094,6 +9362,10 @@ public class Oson {
 			classMapper.precision = javaClassMapper.precision;
 		}
 		
+		if (javaClassMapper.isToStringAsSerializer() != null) {
+			classMapper.setToStringAsSerializer(javaClassMapper.isToStringAsSerializer());
+		}
+		
 		return classMapper;
 	}
 	
@@ -9589,11 +9861,48 @@ public class Oson {
 		Set<String> processedNameSet = new HashSet<>();
 		//StringBuffer sb = new StringBuffer();
 		
-		Map<String, Method> getters = getGetters(obj);
-		Map<String, Method> setters = getSetters(obj);
-		Map<String, Method> otherMethods = getOtherMethods(obj);
+		Map<String, Method> getters = getGetters(valueType); // obj
+		Map<String, Method> setters = getSetters(valueType);
+		Map<String, Method> otherMethods = getOtherMethods(valueType);
 		
 		Set<Method> jsonAnyGetterMethods = new HashSet<>();
+		
+		
+		if (classMapper.isToStringAsSerializer()) {
+			try {
+				Method getter = valueType.getDeclaredMethod("toString", null);
+				
+				if (getter != null) {
+					E getterValue = null;
+
+					try {
+						getterValue = (E) getter.invoke(obj, null);
+					} catch (InvocationTargetException | IllegalAccessException | IllegalArgumentException e) {
+						// e.printStackTrace();
+						try {
+							Expression expr = new Expression(obj, getter.getName(), new Object[0]);
+							expr.execute();
+							getterValue = (E) expr.getValue();
+							
+							if (getterValue == null) {
+								getterValue = (E) getter.getDefaultValue();
+							}
+							
+						} catch (Exception e1) {
+							// e1.printStackTrace();
+						}
+					}
+					
+					if (getterValue != null) {
+						return StringUtil.doublequote(getterValue);
+					}
+				}
+				
+			} catch (NoSuchMethodException | SecurityException e) {
+				// e.printStackTrace();
+			}
+		}
+		
 		
 		if (getters != null && getters.size() > 0) {
 			boolean isJsonRawValue = false;
@@ -10966,6 +11275,47 @@ public class Oson {
 		
 		return parameterValue;
 	}
+	
+	
+	private <T> T setSingleMapValue(T obj, Class<T> valueType, Object singleMapValue, Class singleMapValueType) {
+		if (obj == null || valueType == null || singleMapValue == null || singleMapValueType == null) {
+			return obj;
+		}
+		
+		//check all methods
+		// and invoke the right one
+		// public static InetAddress getByName(String host)
+		//Map<String, Method> setters = getSetters(valueType);
+		for (Method method: valueType.getDeclaredMethods()) {
+			if (method.getParameterCount() == 1) {
+				if (ObjectUtil.isSameDataType(method.getParameterTypes()[0], singleMapValueType)) {
+					try {
+						method.setAccessible(true);
+						Object object = method.invoke(obj, singleMapValue);
+						
+						if (object != null && valueType.isAssignableFrom(object.getClass())) {
+							return (T) object;
+						}
+
+					} catch (IllegalAccessException
+							| IllegalArgumentException | InvocationTargetException ex) {
+							//ex.printStackTrace();
+						try {
+							Statement stmt = new Statement(obj, method.getName(), new Object[]{singleMapValue});
+							stmt.execute();
+						} catch (Exception e) {
+							//e.printStackTrace();
+						}
+					}
+					
+				}
+
+			}
+			
+		}
+		
+		return obj;
+	}
 
 	/*
 	 * create an initial object of valueType type to copy data into
@@ -10997,7 +11347,6 @@ public class Oson {
 		String JsonClassType = null;
 
 		if (valueType != null) {
-			valueType.getAnnotations();
 			if (getAnnotationSupport()) {
 				for (Annotation annotation : valueType.getAnnotations()) {
 					if (annotation instanceof JsonTypeInfo) {
@@ -11034,25 +11383,14 @@ public class Oson {
 			return (T)map; // or null, which is better?
 		}
 
-
-		try {
-			obj = valueType.newInstance();
-
-			if (obj != null) {
-				return obj;
-			}
-
-		} catch (InstantiationException | IllegalAccessException e) {
-			//e.printStackTrace();
-		}
-		
 		
 		Object singleMapValue = null;
+		Class singleMapValueType = null;
 		if (map.size() == 1) {
 			singleMapValue = map.get(valueType.getName());
 			
 			if (singleMapValue != null) {
-				Class singleMapValueType = singleMapValue.getClass();
+				singleMapValueType = singleMapValue.getClass();
 				
 				if (singleMapValueType == String.class) {
 					singleMapValue = StringUtil.unquote(singleMapValue.toString());
@@ -11063,7 +11401,22 @@ public class Oson {
 
 					if (constructor != null) {
 						constructor.setAccessible(true);
-						obj = (T) constructor.newInstance(singleMapValue);
+						if (valueType == Locale.class) {
+							String[] parts = ((String)singleMapValue).split("_");
+							if (parts.length == 1) {
+								obj = (T) constructor.newInstance(singleMapValue);
+							} else if (parts.length == 2) {
+								constructor = valueType.getConstructor(String.class, String.class);
+								obj = (T) constructor.newInstance(parts);
+								
+							} else if (parts.length == 3) {
+								constructor = valueType.getConstructor(String.class, String.class, String.class);
+								obj = (T) constructor.newInstance(parts);
+							}
+							
+						} else {
+							obj = (T) constructor.newInstance(singleMapValue);
+						}
 
 						if (obj != null) {
 							return obj;
@@ -11078,7 +11431,20 @@ public class Oson {
 				}
 			}
 		}
+		
 
+		try {
+			obj = valueType.newInstance();
+
+			if (obj != null) {
+				return setSingleMapValue(obj, valueType, singleMapValue, singleMapValueType);
+			}
+
+		} catch (InstantiationException | IllegalAccessException e) {
+			//e.printStackTrace();
+		}
+
+			
 		Constructor<?>[] constructors = valueType.getDeclaredConstructors();//.getConstructors();
 
 		///*
@@ -11119,7 +11485,7 @@ public class Oson {
 							obj = (T) constructor.newInstance(parameterValues);
 
 							if (obj != null) {
-								return obj;
+								return setSingleMapValue(obj, valueType, singleMapValue, singleMapValueType);
 							}
 
 						} catch (InstantiationException
@@ -11137,7 +11503,7 @@ public class Oson {
 					obj = (T) constructor.newInstance();
 
 					if (obj != null) {
-						return obj;
+						return setSingleMapValue(obj, valueType, singleMapValue, singleMapValueType);
 					}
 
 				} catch (InstantiationException
@@ -11175,7 +11541,7 @@ public class Oson {
 							try {
 								obj = (T) constructor.newInstance(parameterValues);
 								if (obj != null) {
-									return obj;
+									return setSingleMapValue(obj, valueType, singleMapValue, singleMapValueType);
 								}
 
 							} catch (InstantiationException
@@ -11216,7 +11582,7 @@ public class Oson {
 	
 						obj = (T) constructor.newInstance(parameterValues);
 						if (obj != null) {
-							return obj;
+							return setSingleMapValue(obj, valueType, singleMapValue, singleMapValueType);
 						}
 					}
 
@@ -11252,7 +11618,7 @@ public class Oson {
 								try {
 									obj = (T)method.invoke(null);
 									if (obj != null) {
-										return obj;
+										return setSingleMapValue(obj, valueType, singleMapValue, singleMapValueType);
 									}
 
 								} catch (IllegalAccessException
@@ -11301,7 +11667,7 @@ public class Oson {
 
 						obj = (T)method.invoke(null, parameterValues);
 						if (obj != null) {
-							return obj;
+							return setSingleMapValue(obj, valueType, singleMapValue, singleMapValueType);
 						}
 
 					} catch (IOException
@@ -11317,6 +11683,7 @@ public class Oson {
 		} catch (SecurityException e) {
 			// e.printStackTrace();
 		}
+
 		
 		// try all static methods, if the return type is correct, get it as the final object
 		Method[] methods = valueType.getDeclaredMethods();
@@ -11330,6 +11697,15 @@ public class Oson {
 						
 						int parameterCount = method.getParameterCount();
 						if (parameterCount > 0) {
+							if (parameterCount == 1 && map.size() == 1 && singleMapValue != null && singleMapValueType != null) {
+								if (ObjectUtil.isSameDataType(method.getParameterTypes()[0], singleMapValueType)) {
+									obj = (T)method.invoke(null, singleMapValueType);
+									if (obj != null) {
+										return obj;
+									}
+								}
+							}
+
 							parameterValues = new Object[parameterCount];
 							Object parameterValue;
 							int i = 0;
@@ -11358,7 +11734,7 @@ public class Oson {
 
 						obj = (T)method.invoke(null, parameterValues);
 						if (obj != null) {
-							return obj;
+							return setSingleMapValue(obj, valueType, singleMapValue, singleMapValueType);
 						}
 
 					} catch (IOException

@@ -718,8 +718,10 @@ public class ObjectUtil {
 
 	    Map<Integer, String> variableNames = variableDiscoverer.getVariableNames(m);
 	    String[] parameterNames = new String[m.getParameterTypes().length];
-	    for(int i = 0; i < parameterNames.length; i++) {
-	      parameterNames[i] = variableNames.get(i);
+	    if (variableNames != null) {
+		    for(int i = 0; i < parameterNames.length; i++) {
+		      parameterNames[i] = variableNames.get(i);
+		    }
 	    }
 	    return parameterNames;
 	  }
