@@ -13,7 +13,7 @@ public abstract class TestCaseBase extends TestCase {
    @Before 
    protected void setUp() {
 	   oson = new OsonIO();
-	   oson.setJsonProcessor(processor);
+	   oson.setJsonProcessor(processor).setPrintErrorUseOsonInFailure(true);
    }
    
    

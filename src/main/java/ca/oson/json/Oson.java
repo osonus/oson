@@ -11133,9 +11133,13 @@ public class Oson {
 			
 			source = source.trim();
 			if (source.startsWith("[") && ObjectUtil.isArrayOrCollection(valueType)) {
-				JSONArray obj = new JSONArray(source);
-
-				List list = (List)fromJsonMap(obj);
+				List list = null;
+//				try {
+//					list = new ObjectMapper().readValue(source, List.class);
+//				} catch (IOException e) {
+					JSONArray obj = new JSONArray(source);
+					list = (List)fromJsonMap(obj);
+//				}
 
 				if (!started) {
 					startCachedComponentTypes(valueType);
@@ -11144,9 +11148,14 @@ public class Oson {
 				return json2Object(new FieldData(list, valueType, object, true));
 
 			} else if (source.startsWith("{") && ObjectUtil.isMapOrObject(valueType)) {
-				JSONObject obj = new JSONObject(source);
 
-				Map<String, Object> map = (Map)fromJsonMap(obj);
+				Map<String, Object> map = null;
+//				try {
+//					map = new ObjectMapper().readValue(source, Map.class);
+//				} catch (IOException e1) {
+					JSONObject obj = new JSONObject(source);
+					map = (Map)fromJsonMap(obj);
+//				}
 				
 				if (valueType == null) {
 					String className = (String) map.get(getJsonClassType());
