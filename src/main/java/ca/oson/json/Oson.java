@@ -149,6 +149,7 @@ import com.google.gson.annotations.Since;
 
 
 
+
 import ca.oson.json.function.*;
 import ca.oson.json.util.*;
 
@@ -909,6 +910,13 @@ public class Oson {
 		return this;
 	}
 
+	private int getPrettyIndentation() {
+		if (!getPrettyPrinting()) {
+			return 0;
+		}
+		return options.getIndentation();
+	}
+	
 	private int getIndentation() {
 		return options.getIndentation();
 	}
@@ -3019,7 +3027,7 @@ public class Oson {
 						Object returnedValue = null;
 
 						if (function instanceof Json2DataMapperFunction) {
-							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
 						} else if (function instanceof Json2FieldDataFunction) {
@@ -3150,7 +3158,7 @@ public class Oson {
 					if (function != null) {
 						try {
 							if (function instanceof DataMapper2JsonFunction) {
-								DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+								DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 								return ((DataMapper2JsonFunction)function).apply(classData);
 								
 							} else if (function instanceof Double2JsonFunction) {
@@ -3293,7 +3301,7 @@ public class Oson {
 						Object returnedValue = null;
 
 						if (function instanceof Json2DataMapperFunction) {
-							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
 						} else if (function instanceof Json2FieldDataFunction) {
@@ -3433,7 +3441,7 @@ public class Oson {
 					if (function != null) {
 						try {
 							if (function instanceof DataMapper2JsonFunction) {
-								DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+								DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 								return ((DataMapper2JsonFunction)function).apply(classData);
 								
 							} else if (function instanceof Float2JsonFunction) {
@@ -3576,7 +3584,7 @@ public class Oson {
  						Object returnedValue = null;
 
 						if (function instanceof Json2DataMapperFunction) {
-							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
 						} else if (function instanceof Json2FieldDataFunction) {
@@ -3664,7 +3672,7 @@ public class Oson {
  					if (function != null) {
  						try {
  							if (function instanceof DataMapper2JsonFunction) {
- 								DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+ 								DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
  								return ((DataMapper2JsonFunction)function).apply(classData);
  								
  							} else if (function instanceof Date2JsonFunction) {
@@ -3769,7 +3777,7 @@ public class Oson {
 						Object returnedValue = null;
 
 						if (function instanceof Json2DataMapperFunction) {
-							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
 						} else if (function instanceof Json2FieldDataFunction) {
@@ -3913,7 +3921,7 @@ public class Oson {
 					if (function != null) {
 						try {
 							if (function instanceof DataMapper2JsonFunction) {
-								DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+								DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 								return ((DataMapper2JsonFunction)function).apply(classData);
 								
 							} else if (function instanceof BigDecimal2JsonFunction) {
@@ -4051,7 +4059,7 @@ public class Oson {
 						Object returnedValue = null;
 
 						if (function instanceof Json2DataMapperFunction) {
-							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
 						} else if (function instanceof Json2FieldDataFunction) {
@@ -4184,7 +4192,7 @@ public class Oson {
 					if (function != null) {
 						try {
 							if (function instanceof DataMapper2JsonFunction) {
-								DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+								DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 								return ((DataMapper2JsonFunction)function).apply(classData);
 								
 							} else if (function instanceof BigInteger2JsonFunction) {
@@ -4313,7 +4321,7 @@ public class Oson {
 						Object returnedValue = null;
 						// suppose to return AtomicInteger, but in case not, try to process
 						if (function instanceof Json2DataMapperFunction) {
-							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
 						} else if (function instanceof Json2FieldDataFunction) {
@@ -4446,7 +4454,7 @@ public class Oson {
 					if (function != null) {
 						try {
 							if (function instanceof DataMapper2JsonFunction) {
-								DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+								DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 								return ((DataMapper2JsonFunction)function).apply(classData);
 								
 							} else if (function instanceof AtomicInteger2JsonFunction) {
@@ -4574,7 +4582,7 @@ public class Oson {
 						Object returnedValue = null;
 
 						if (function instanceof Json2DataMapperFunction) {
-							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
 						} else if (function instanceof Json2FieldDataFunction) {
@@ -4705,7 +4713,7 @@ public class Oson {
 					if (function != null) {
 						try {
 							if (function instanceof DataMapper2JsonFunction) {
-								DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+								DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 								return ((DataMapper2JsonFunction)function).apply(classData);
 								
 							} else if (function instanceof AtomicLong2JsonFunction) {
@@ -4836,7 +4844,7 @@ public class Oson {
 					Function function = objectDTO.getSerializer();
 					if (function != null) {
 						if (function instanceof DataMapper2JsonFunction) {
-							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 							return ((DataMapper2JsonFunction)function).apply(classData);
 							
 						} else if (function instanceof Long2JsonFunction) {
@@ -4916,7 +4924,7 @@ public class Oson {
 						Object returnedValue = null;
 
 						if (function instanceof Json2DataMapperFunction) {
-							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
 						} else if (function instanceof Json2FieldDataFunction) {
@@ -5082,7 +5090,7 @@ public class Oson {
 						Object returnedValue = null;
 
 						if (function instanceof Json2DataMapperFunction) {
-							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
 						} else if (function instanceof Json2FieldDataFunction) {
@@ -5212,7 +5220,7 @@ public class Oson {
 					if (function != null) {
 						try {
 							if (function instanceof DataMapper2JsonFunction) {
-								DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+								DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 								return ((DataMapper2JsonFunction)function).apply(classData);
 								
 							} else if (function instanceof Integer2JsonFunction) {
@@ -5324,7 +5332,7 @@ public class Oson {
 						Object returnedValue = null;
 
 						if (function instanceof Json2DataMapperFunction) {
-							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
 						} else if (function instanceof Json2FieldDataFunction) {
@@ -5464,7 +5472,7 @@ public class Oson {
 					if (function != null) {
 						try {
 							if (function instanceof DataMapper2JsonFunction) {
-								DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+								DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 								return ((DataMapper2JsonFunction)function).apply(classData);
 								
 							} else if (function instanceof Byte2JsonFunction) {
@@ -5612,7 +5620,7 @@ public class Oson {
 						Object returnedValue = null;
 
 						if (function instanceof Json2DataMapperFunction) {
-							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
 						} else if (function instanceof Json2FieldDataFunction) {
@@ -5721,7 +5729,7 @@ public class Oson {
 					if (function != null) {
 						try {
 							if (function instanceof DataMapper2JsonFunction) {
-								DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+								DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 								return ((DataMapper2JsonFunction)function).apply(classData);
 								
 							} else if (function instanceof Character2JsonFunction) {
@@ -5832,7 +5840,7 @@ public class Oson {
 						Object returnedValue = null;
 
 						if (function instanceof Json2DataMapperFunction) {
-							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
 						} else if (function instanceof Json2FieldDataFunction) {
@@ -5971,7 +5979,7 @@ public class Oson {
 					if (function != null) {
 						try {
 							if (function instanceof DataMapper2JsonFunction) {
-								DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+								DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 								return ((DataMapper2JsonFunction)function).apply(classData);
 								
 							} else if (function instanceof Short2JsonFunction) {
@@ -6097,7 +6105,7 @@ public class Oson {
 						Object returnedValue = null;
 
 						if (function instanceof Json2DataMapperFunction) {
-							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
 						} else if (function instanceof Json2FieldDataFunction) {
@@ -6174,7 +6182,7 @@ public class Oson {
 					if (function != null) {
 						try {
 							if (function instanceof DataMapper2JsonFunction) {
-								DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+								DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 								return ((DataMapper2JsonFunction)function).apply(classData);
 								
 							} else if (function instanceof String2JsonFunction) {
@@ -6283,7 +6291,7 @@ public class Oson {
 						Object returnedValue = null;
 
 						if (function instanceof Json2DataMapperFunction) {
-							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
 						} else if (function instanceof Json2FieldDataFunction) {
@@ -6370,7 +6378,7 @@ public class Oson {
 					if (function != null) {
 						try {
 							if (function instanceof DataMapper2JsonFunction) {
-								DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+								DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 								return ((DataMapper2JsonFunction)function).apply(classData);
 								
 							} else if (function instanceof Boolean2JsonFunction) {
@@ -6480,7 +6488,7 @@ public class Oson {
 				Object returnedValue = null;
 
 				if (function instanceof Json2DataMapperFunction) {
-					DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+					DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 					returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
 				} else if (function instanceof Json2FieldDataFunction) {
@@ -6988,7 +6996,7 @@ public class Oson {
 						Object returnedValue = null;
 
 						if (function instanceof Json2DataMapperFunction) {
-							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
 						} else if (function instanceof Json2FieldDataFunction) {
@@ -7089,7 +7097,7 @@ public class Oson {
 
 					// suppose to return String, but in case not, try to process
 					if (function instanceof DataMapper2JsonFunction) {
-						DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+						DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 						return ((DataMapper2JsonFunction)function).apply(classData);
 						
 					} else if (function instanceof Map2JsonFunction) {
@@ -7240,7 +7248,7 @@ public class Oson {
 						Object returnedValue = null;
 						// suppose to return String, but in case not, try to process
 						if (function instanceof Json2DataMapperFunction) {
-							DataMapper classData = new DataMapper(returnType, collection, objectDTO.classMapper, objectDTO.level);
+							DataMapper classData = new DataMapper(returnType, collection, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 							
 						} else if (function instanceof Json2FieldDataFunction) {
@@ -7324,7 +7332,7 @@ public class Oson {
 				
 				// suppose to return String, but in case not, try to process
 				if (function instanceof Json2DataMapperFunction) {
-					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level);
+					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 					returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
 				} else if (function instanceof Json2FieldDataFunction) {
@@ -7409,7 +7417,7 @@ public class Oson {
 				
 				// suppose to return String, but in case not, try to process
 				if (function instanceof Json2DataMapperFunction) {
-					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level);
+					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 					returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
 				} else if (function instanceof Json2FieldDataFunction) {
@@ -7495,7 +7503,7 @@ public class Oson {
 				
 				// suppose to return String, but in case not, try to process
 				if (function instanceof Json2DataMapperFunction) {
-					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level);
+					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 					returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
 				} else if (function instanceof Json2FieldDataFunction) {
@@ -7593,7 +7601,7 @@ public class Oson {
 				
 				// suppose to return String, but in case not, try to process
 				if (function instanceof Json2DataMapperFunction) {
-					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level);
+					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 					returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
 				} else if (function instanceof Json2FieldDataFunction) {
@@ -7678,7 +7686,7 @@ public class Oson {
 				
 				// suppose to return String, but in case not, try to process
 				if (function instanceof Json2DataMapperFunction) {
-					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level);
+					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 					returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
 				} else if (function instanceof Json2FieldDataFunction) {
@@ -7764,7 +7772,7 @@ public class Oson {
 				
 				// suppose to return String, but in case not, try to process
 				if (function instanceof Json2DataMapperFunction) {
-					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level);
+					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 					returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
 				} else if (function instanceof Json2FieldDataFunction) {
@@ -7850,7 +7858,7 @@ public class Oson {
 				
 				// suppose to return String, but in case not, try to process
 				if (function instanceof Json2DataMapperFunction) {
-					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level);
+					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 					returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
 				} else if (function instanceof Json2FieldDataFunction) {
@@ -7936,7 +7944,7 @@ public class Oson {
 				
 				// suppose to return String, but in case not, try to process
 				if (function instanceof Json2DataMapperFunction) {
-					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level);
+					DataMapper classData = new DataMapper(objectDTO.returnType, objectDTO.valueToProcess, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 					returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
 				} else if (function instanceof Json2FieldDataFunction) {
@@ -8038,7 +8046,7 @@ public class Oson {
 						Object returnedValue = null;
 						// suppose to return String, but in case not, try to process
 						if (function instanceof Json2DataMapperFunction) {
-							DataMapper classData = new DataMapper(returnType, values, objectDTO.classMapper, objectDTO.level);
+							DataMapper classData = new DataMapper(returnType, values, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
 						} else if (function instanceof Json2FieldDataFunction) {
@@ -8127,7 +8135,7 @@ public class Oson {
 
 					// suppose to return String, but in case not, try to process
 					if (function instanceof DataMapper2JsonFunction) {
-						DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level);
+						DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 						return ((DataMapper2JsonFunction)function).apply(classData);
 						
 					} else if (function instanceof Array2JsonFunction) {
@@ -8285,6 +8293,8 @@ public class Oson {
 			
 		} else if (Number.class.isAssignableFrom(returnType) || returnType.isPrimitive()) {
 			
+			objectDTO.valueToProcess = StringUtil.unquote(objectDTO.valueToProcess);
+			
 			if (returnType == Integer.class || returnType == int.class) {
 				return (E) json2Integer(objectDTO);
 			} else if (returnType == Long.class || returnType == long.class) {
@@ -8410,7 +8420,7 @@ public class Oson {
 			if (function != null) {
 				try {
 					if (function instanceof DataMapper2JsonFunction) {
-						DataMapper classData = new DataMapper(objectDTO.returnType, value, objectDTO.classMapper, objectDTO.level);
+						DataMapper classData = new DataMapper(objectDTO.returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 						return ((DataMapper2JsonFunction)function).apply(classData);
 						
 					} else if (function instanceof Enum2JsonFunction) {
@@ -8478,7 +8488,7 @@ public class Oson {
 
 					// suppose to return String, but in case not, try to process
 					if (function instanceof DataMapper2JsonFunction) {
-						DataMapper classData = new DataMapper(returnType, collection, objectDTO.classMapper, objectDTO.level);
+						DataMapper classData = new DataMapper(returnType, collection, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 						return ((DataMapper2JsonFunction)function).apply(classData);
 						
 					} else if (function instanceof Collection2JsonFunction) {
@@ -9811,11 +9821,15 @@ public class Oson {
 		}
 		
 		Function function = classMapper.serializer; //getSerializer(valueType);
+		if (function == null) {
+			function = ClassMapperUtil.getSerializer(valueType.getName());
+		}
+		
 		if (function != null) {
 			try {
 				Object returnValue = null;
 				if (function instanceof DataMapper2JsonFunction) {
-					DataMapper classData = new DataMapper(valueType, obj, classMapper, objectDTO.level);
+					DataMapper classData = new DataMapper(valueType, obj, classMapper, objectDTO.level, getPrettyIndentation());
 					objectDTO.jsonRawValue = false;
 					DataMapper2JsonFunction f = (DataMapper2JsonFunction)function;
 					
@@ -9847,7 +9861,9 @@ public class Oson {
 					}
 				}
 				
-			} catch (Exception e) {}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 		
 
@@ -9894,7 +9910,19 @@ public class Oson {
 					}
 					
 					if (getterValue != null) {
-						return StringUtil.doublequote(getterValue);
+						Class returnType = getterValue.getClass();
+						
+						if (returnType == String.class) {
+							return StringUtil.doublequote(getterValue);
+							
+						} else if (returnType == valueType || valueType.isAssignableFrom(returnType)) {
+							// just continue to do the serializing
+						} else {
+							objectDTO.valueToProcess = getterValue;
+							objectDTO.returnType = returnType;
+							
+							return object2String(objectDTO);
+						}
 					}
 				}
 				
@@ -9945,10 +9973,23 @@ public class Oson {
 					}
 					
 					if (getterValue != null) {
-						if (isJsonRawValue) {
-							return getterValue.toString();
+						Class returnType = getterValue.getClass();
+						
+						if (returnType == String.class) {
+							if (isJsonRawValue) {
+								return getterValue.toString();
+							} else {
+								return StringUtil.doublequote(getterValue);
+							}
+							
+						} else if (returnType == valueType || valueType.isAssignableFrom(returnType)) {
+							// just continue to do the serializing
 						} else {
-							return StringUtil.doublequote(getterValue);
+							objectDTO.valueToProcess = getterValue;
+							objectDTO.returnType = returnType;
+							objectDTO.jsonRawValue = isJsonRawValue;
+							
+							return object2String(objectDTO);
 						}
 					}
 				}
@@ -11952,11 +11993,14 @@ public class Oson {
 			}
 			
 			Function function = classMapper.deserializer; // = getDeserializer(valueType);
+			if (function == null) {
+				function = ClassMapperUtil.getDeserializer(valueType.getName());
+			}
 			if (function != null) {
 				try {
 					Object returnedValue = null;
 					if (function instanceof Json2DataMapperFunction) {
-						DataMapper classData = new DataMapper(valueToProcess, valueType, obj, classMapper, objectDTO.level);
+						DataMapper classData = new DataMapper(valueToProcess, valueType, obj, classMapper, objectDTO.level, getPrettyIndentation());
 						Json2DataMapperFunction f = (Json2DataMapperFunction)function;
 						
 						return (T) f.apply(classData);
@@ -11984,7 +12028,9 @@ public class Oson {
 						// not the correct returned object type, do nothing
 					}
 
-				} catch (Exception e) {}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 			
 

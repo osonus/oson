@@ -275,97 +275,96 @@ public class DefaultTypeAdaptersTest extends TestCaseBase {
     assertEquals("EURO", locale.getVariant());
   }
 
-//  public void testBigDecimalFieldSerialization() {
-//    ClassWithBigDecimal target = new ClassWithBigDecimal("-122.01e-21");
-//    String json = gson.toJson(target);
-//    String actual = json.substring(json.indexOf(':') + 1, json.indexOf('}'));
-//    assertEquals(target.value, new BigDecimal(actual));
-//  }
-//
-//  public void testBigDecimalFieldDeserialization() {
-//    ClassWithBigDecimal expected = new ClassWithBigDecimal("-122.01e-21");
-//    String json = expected.getExpectedJson();
-//    ClassWithBigDecimal actual = gson.fromJson(json, ClassWithBigDecimal.class);
-//    assertEquals(expected.value, actual.value);
-//  }
-//
+  public void testBigDecimalFieldSerialization() {
+    ClassWithBigDecimal target = new ClassWithBigDecimal("-122.01e-21");
+    String json = oson.toJson(target);
+    String actual = json.substring(json.lastIndexOf(':') + 1, json.indexOf('}'));
+    assertEquals(target.value, new BigDecimal(actual));
+  }
+
+  public void testBigDecimalFieldDeserialization() {
+    ClassWithBigDecimal expected = new ClassWithBigDecimal("-122.01e-21");
+    String json = expected.getExpectedJson();
+    ClassWithBigDecimal actual = oson.fromJson(json, ClassWithBigDecimal.class);
+    assertEquals(expected.value, actual.value);
+  }
+
 //  public void testBadValueForBigDecimalDeserialization() {
 //    try {
-//      gson.fromJson("{\"value\"=1.5e-1.0031}", ClassWithBigDecimal.class);
-//      fail("Exponent of a BigDecimal must be an integer value.");
-//    } catch (JsonParseException expected) { }
+//      oson.fromJson("{\"value\"=1.5e-1.0031}", ClassWithBigDecimal.class);
+//      fail("Expected a ':' after a key at 9 [character 10 line 1]");
+//    } catch (org.json.JSONException expected) { }
 //  }
-//
-//  public void testBigIntegerFieldSerialization() {
-//    ClassWithBigInteger target = new ClassWithBigInteger("23232323215323234234324324324324324324");
-//    String json = gson.toJson(target);
-//    assertEquals(target.getExpectedJson(), json);
-//  }
-//
-//  public void testBigIntegerFieldDeserialization() {
-//    ClassWithBigInteger expected = new ClassWithBigInteger("879697697697697697697697697697697697");
-//    String json = expected.getExpectedJson();
-//    ClassWithBigInteger actual = gson.fromJson(json, ClassWithBigInteger.class);
-//    assertEquals(expected.value, actual.value);
-//  }
-//  
-//  public void testOverrideBigIntegerTypeAdapter() throws Exception {
+
+  public void testBigIntegerFieldSerialization() {
+    ClassWithBigInteger target = new ClassWithBigInteger("23232323215323234234324324324324324324");
+    String json = oson.useAttribute(false).toJson(target);
+    assertEquals(target.getExpectedJson(), json);
+  }
+
+  public void testBigIntegerFieldDeserialization() {
+    ClassWithBigInteger expected = new ClassWithBigInteger("879697697697697697697697697697697697");
+    String json = expected.getExpectedJson();
+    ClassWithBigInteger actual = oson.fromJson(json, ClassWithBigInteger.class);
+    assertEquals(expected.value, actual.value);
+  }
+  
+  public void testOverrideBigIntegerTypeAdapter() throws Exception {
 //    gson = new GsonBuilder()
 //        .registerTypeAdapter(BigInteger.class, new NumberAsStringAdapter(BigInteger.class))
 //        .create();
-//    assertEquals("\"123\"", gson.toJson(new BigInteger("123"), BigInteger.class));
-//    assertEquals(new BigInteger("123"), gson.fromJson("\"123\"", BigInteger.class));
-//  }
-//
-//  public void testOverrideBigDecimalTypeAdapter() throws Exception {
+    assertEquals("123", oson.toJson(new BigInteger("123"), BigInteger.class));
+    assertEquals(new BigInteger("123"), oson.fromJson("\"123\"", BigInteger.class));
+  }
+
+  public void testOverrideBigDecimalTypeAdapter() throws Exception {
 //    gson = new GsonBuilder()
 //        .registerTypeAdapter(BigDecimal.class, new NumberAsStringAdapter(BigDecimal.class))
 //        .create();
-//    assertEquals("\"1.1\"", gson.toJson(new BigDecimal("1.1"), BigDecimal.class));
-//    assertEquals(new BigDecimal("1.1"), gson.fromJson("\"1.1\"", BigDecimal.class));
-//  }
-//
-//  public void testSetSerialization() throws Exception {
-//    Gson gson = new Gson();
-//    HashSet<String> s = new HashSet<String>();
-//    s.add("blah");
-//    String json = gson.toJson(s);
-//    assertEquals("[\"blah\"]", json);
-//
-//    json = gson.toJson(s, Set.class);
-//    assertEquals("[\"blah\"]", json);
-//  }
-//
-//  public void testBitSetSerialization() throws Exception {
-//    Gson gson = new Gson();
-//    BitSet bits = new BitSet();
-//    bits.set(1);
-//    bits.set(3, 6);
-//    bits.set(9);
-//    String json = gson.toJson(bits);
-//    assertEquals("[0,1,0,1,1,1,0,0,0,1]", json);
-//  }
-//
-//  public void testBitSetDeserialization() throws Exception {
-//    BitSet expected = new BitSet();
-//    expected.set(0);
-//    expected.set(2, 6);
-//    expected.set(8);
-//
-//    Gson gson = new Gson();
-//    String json = gson.toJson(expected);
-//    assertEquals(expected, gson.fromJson(json, BitSet.class));
-//
-//    json = "[1,0,1,1,1,1,0,0,1,0,0,0]";
-//    assertEquals(expected, gson.fromJson(json, BitSet.class));
-//
-//    json = "[\"1\",\"0\",\"1\",\"1\",\"1\",\"1\",\"0\",\"0\",\"1\"]";
-//    assertEquals(expected, gson.fromJson(json, BitSet.class));
-//
-//    json = "[true,false,true,true,true,true,false,false,true,false,false]";
-//    assertEquals(expected, gson.fromJson(json, BitSet.class));
-//  }
-//
+    assertEquals("1.1", oson.toJson(new BigDecimal("1.1"), BigDecimal.class));
+    assertEquals(new BigDecimal("1.1"), oson.fromJson("\"1.1\"", BigDecimal.class));
+  }
+
+  public void testSetSerialization() throws Exception {
+    //Gson gson = new Gson();
+    HashSet<String> s = new HashSet<String>();
+    s.add("blah");
+    String json = oson.toJson(s);
+    assertEquals("[\"blah\"]", json);
+
+    json = oson.toJson(s, Set.class);
+    assertEquals("[\"blah\"]", json);
+  }
+
+  public void testBitSetSerialization() throws Exception {
+    //Gson gson = new Gson();
+    BitSet bits = new BitSet();
+    bits.set(1);
+    bits.set(3, 6);
+    bits.set(9);
+    String json = oson.toJson(bits);
+    assertEquals("[0,1,0,1,1,1,0,0,0,1]", json);
+  }
+
+  public void testBitSetDeserialization() throws Exception {
+    BitSet expected = new BitSet();
+    expected.set(0);
+    expected.set(2, 6);
+    expected.set(8);
+
+    String json = oson.toJson(expected);
+    assertEquals(expected, oson.fromJson(json, BitSet.class));
+
+    json = "[1,0,1,1,1,1,0,0,1,0,0,0]";
+    assertEquals(expected, oson.fromJson(json, BitSet.class));
+
+    json = "[\"1\",\"0\",\"1\",\"1\",\"1\",\"1\",\"0\",\"0\",\"1\"]";
+    assertEquals(expected, oson.fromJson(json, BitSet.class));
+
+    json = "[true,false,true,true,true,true,false,false,true,false,false]";
+    assertEquals(expected, oson.fromJson(json, BitSet.class));
+  }
+
 //  public void testDefaultDateSerialization() {
 //    Date now = new Date(1315806903103L);
 //    String json = gson.toJson(now);
@@ -668,27 +667,27 @@ public class DefaultTypeAdaptersTest extends TestCaseBase {
 //          expected.getMessage());
 //    }
 //  }
-//
-//  private static class ClassWithBigDecimal {
-//    BigDecimal value;
-//    ClassWithBigDecimal(String value) {
-//      this.value = new BigDecimal(value);
-//    }
-//    String getExpectedJson() {
-//      return "{\"value\":" + value.toEngineeringString() + "}";
-//    }
-//  }
-//
-//  private static class ClassWithBigInteger {
-//    BigInteger value;
-//    ClassWithBigInteger(String value) {
-//      this.value = new BigInteger(value);
-//    }
-//    String getExpectedJson() {
-//      return "{\"value\":" + value + "}";
-//    }
-//  }
-//
+
+  private static class ClassWithBigDecimal {
+    BigDecimal value;
+    ClassWithBigDecimal(String value) {
+      this.value = new BigDecimal(value);
+    }
+    String getExpectedJson() {
+      return "{\"value\":" + value.toEngineeringString() + "}";
+    }
+  }
+
+  private static class ClassWithBigInteger {
+    BigInteger value;
+    ClassWithBigInteger(String value) {
+      this.value = new BigInteger(value);
+    }
+    String getExpectedJson() {
+      return "{\"value\":" + value + "}";
+    }
+  }
+
 //  public void testPropertiesSerialization() {
 //    Properties props = new Properties();
 //    props.setProperty("foo", "bar");

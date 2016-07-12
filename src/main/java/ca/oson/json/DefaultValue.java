@@ -274,7 +274,7 @@ public class DefaultValue {
 		case "java.lang.StringBuffer": return "toString";
 		case "java.util.UUID": return "toString";
 		case "java.util.Locale": return "toString";
-		
+
 		case "java.net.Inet4Address": return "hostAddress";
 		case "java.net.URI": return "toURL";
 

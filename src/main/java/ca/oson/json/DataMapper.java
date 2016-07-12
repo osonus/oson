@@ -11,12 +11,13 @@ public class DataMapper<T> {
 	private T obj;
 	private ClassMapper classMapper;
 	private int level;
+	private int prettyIndentation;
 	
 	public int getLevel() {
 		return level;
 	}
 
-	public DataMapper(Object map, Class<T> valueType, T obj, ClassMapper classMapper, int level) {
+	public DataMapper(Object map, Class<T> valueType, T obj, ClassMapper classMapper, int level, int prettyIndentation) {
 		// when expose the data, do not get corrupted
 		this.map = map;
 		this.valueType = valueType;
@@ -26,7 +27,7 @@ public class DataMapper<T> {
 		this.classMapper = mapper;
 	}
 	
-	public DataMapper(Map<String, Object> map, Class<T> valueType, T obj, ClassMapper classMapper, int level) {
+	public DataMapper(Map<String, Object> map, Class<T> valueType, T obj, ClassMapper classMapper, int level, int prettyIndentation) {
 		// when expose the data, do not get corrupted
 		this.map = new HashMap(map);
 		this.valueType = valueType;
@@ -36,7 +37,7 @@ public class DataMapper<T> {
 		this.classMapper = mapper;
 	}
 
-	public DataMapper(Class<T> valueType, T obj, ClassMapper classMapper, int level) {
+	public DataMapper(Class<T> valueType, T obj, ClassMapper classMapper, int level, int prettyIndentation) {
 		this.valueType = valueType;
 		this.obj = obj;
 		ClassMapper mapper = new ClassMapper();
@@ -66,5 +67,13 @@ public class DataMapper<T> {
 
 	public ClassMapper getClassMapper() {
 		return classMapper;
+	}
+
+	public int getPrettyIndentation() {
+		return prettyIndentation;
+	}
+
+	public void setPrettyIndentation(int prettyIndentation) {
+		this.prettyIndentation = prettyIndentation;
 	}
 }

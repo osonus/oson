@@ -12,6 +12,10 @@ public class NumberUtil {
 		if (number instanceof BigDecimal) {
 			return ((BigDecimal)number).toPlainString();
 		}
+		if (number instanceof BigInteger) {
+			return ((BigInteger)number).toString();
+		}
+		
 		return new BigDecimal(number.doubleValue()).toPlainString();
 	}
 	
@@ -100,7 +104,7 @@ public class NumberUtil {
 				}
 			}
 			
-			String str = number.toString();
+			String str = StringUtil.unquote(number);
 			
 			switch (valueType.getName()) {
 			case "java.lang.Integer": return Integer.parseInt(str);

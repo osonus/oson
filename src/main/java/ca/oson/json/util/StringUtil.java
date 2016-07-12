@@ -69,6 +69,14 @@ public class StringUtil {
 		return (str.length() == 0 || str.equals("\"\"") || str.equals("''"));
 	}
 	
+	public static String getPrettyIndentationln(int level, int indentation) {
+		if (indentation > 0) {
+			return "\n" + StringUtil.repeatSpace(level * indentation);
+		}
+
+		return "";
+	}
+	
 	public static String repeatSpace(int repeat) {
 		return repeatChar(SPACE, repeat);
 	}
@@ -255,6 +263,14 @@ public class StringUtil {
          sb.append('"');
          return sb.toString();
      }
+	 
+	 
+	 public static String unquote(Object str) {
+		if (isEmpty(str)) {
+			return null;
+		}
+		return unquote(str.toString());
+	 }
 	 
 	 
 	public static String unquote(String str) {
