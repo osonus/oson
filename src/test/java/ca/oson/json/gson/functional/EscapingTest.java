@@ -59,12 +59,12 @@ public class EscapingTest extends TestCaseBase {
     strings.add("'");
     strings.add("\"");
     assertEquals("[\"\\u003c\",\"\\u003e\",\"\\u003d\",\"\\u0026\",\"\\u0027\",\"\\\"\"]",
-        oson.toJson(strings));
+        oson.toJson(strings)); // .setEscapeHtml(true)
   }
 
   public void testEscapingObjectFields() throws Exception {
     BagOfPrimitives objWithPrimitives = new BagOfPrimitives(1L, 1, true, "test with\" <script>");
-    String jsonRepresentation = oson.toJson(objWithPrimitives);
+    String jsonRepresentation = oson.toJson(objWithPrimitives);//.setEscapeHtml(true)
     assertFalse(jsonRepresentation.contains("<"));
     assertFalse(jsonRepresentation.contains(">"));
     assertTrue(jsonRepresentation.contains("\\\""));

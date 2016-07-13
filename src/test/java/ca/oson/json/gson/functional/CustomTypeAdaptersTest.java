@@ -334,7 +334,7 @@ public class CustomTypeAdaptersTest extends TestCaseBase {
     	for (byte b : (byte[])p.getObj()) {
     		sb.append(b);
     	}
-    	return StringUtil.doublequote(sb.toString());
+    	return StringUtil.doublequote(sb.toString(), oson.isEscapeHtml());
     	});
     
     json = oson.toJson(data);
@@ -363,7 +363,7 @@ public class CustomTypeAdaptersTest extends TestCaseBase {
     }
     
     oson.clear().des(byte[].class, (Object p) -> {
-    	String str = StringUtil.unquote(p.toString());
+    	String str = StringUtil.unquote(p.toString(), oson.isEscapeHtml());
     	byte[] data = new byte[str.length()];
         for (int i = 0; i < data.length; ++i) {
           data[i] = Byte.parseByte(""+str.charAt(i));
@@ -377,7 +377,7 @@ public class CustomTypeAdaptersTest extends TestCaseBase {
     }
     
     oson.clear().des(byte[].class, (Object p) -> {
-    	String str = StringUtil.unquote(p.toString());
+    	String str = StringUtil.unquote(p.toString(), oson.isEscapeHtml());
     	Integer[] data = new Integer[str.length()];
         for (int i = 0; i < str.length(); ++i) {
           data[i] = Integer.parseInt(""+str.charAt(i));
@@ -390,7 +390,7 @@ public class CustomTypeAdaptersTest extends TestCaseBase {
     }
     
     oson.clear().des(byte[].class, (Object p) -> {
-    	String str = StringUtil.unquote(p.toString());
+    	String str = StringUtil.unquote(p.toString(), oson.isEscapeHtml());
     	char[] data = new char[str.length()];
         for (int i = 0; i < data.length; ++i) {
           data[i] = str.charAt(i);
@@ -403,7 +403,7 @@ public class CustomTypeAdaptersTest extends TestCaseBase {
     }
     
     oson.clear().des(byte[].class, (Object p) -> {
-    	String str = StringUtil.unquote(p.toString());
+    	String str = StringUtil.unquote(p.toString(), oson.isEscapeHtml());
     	List<String> data = new ArrayList<>(str.length());
         for (int i = 0; i < str.length(); ++i) {
           data.add(str.charAt(i)+"");

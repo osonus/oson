@@ -34,7 +34,7 @@ public class LongSerializationPolicyTest extends TestCaseBase {
   }
 
   public void testStringLongSerializationIntegration() {
-    oson.ser(Long.class, (Long p) -> StringUtil.doublequote(p));
+    oson.ser(Long.class, (Long p) -> StringUtil.doublequote(p, oson.isEscapeHtml()));
     
     String result = oson.toJson(new Long[] { 1L }, Long[].class);
 

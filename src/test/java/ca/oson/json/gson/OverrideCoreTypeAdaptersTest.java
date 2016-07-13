@@ -49,8 +49,8 @@ public class OverrideCoreTypeAdaptersTest extends TestCaseBase {
   }
 
   public void testOverrideStringAdapter() {
-	  oson.ser(String.class, (String p) -> StringUtil.doublequote(p.toUpperCase()))
-	  		.des(String.class, (String p) -> StringUtil.unquote(p.toLowerCase()));
+	  oson.ser(String.class, (String p) -> StringUtil.doublequote(p.toUpperCase(), oson.isEscapeHtml()))
+	  		.des(String.class, (String p) -> StringUtil.unquote(p.toLowerCase(), oson.isEscapeHtml()));
     assertEquals("\"HELLO\"", oson.toJson("Hello", String.class));
     assertEquals("hello", oson.fromJson("\"Hello\"", String.class));
   }

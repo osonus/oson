@@ -22,6 +22,7 @@ import ca.oson.json.gson.functional.CustomDeserializerTest;
 import ca.oson.json.gson.functional.CustomTypeAdaptersTest;
 import ca.oson.json.gson.functional.DefaultTypeAdaptersTest;
 import ca.oson.json.gson.functional.EnumTest;
+import ca.oson.json.gson.functional.EscapingTest;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
@@ -43,7 +44,8 @@ import ca.oson.json.gson.functional.EnumTest;
 	CustomDeserializerTest.class,
 	CustomTypeAdaptersTest.class,
 	DefaultTypeAdaptersTest.class,
-	EnumTest.class
+	EnumTest.class,
+	EscapingTest.class
 	
 })
 public class GsonTestSuite {

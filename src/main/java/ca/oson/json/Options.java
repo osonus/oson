@@ -209,7 +209,7 @@ public class Options {
 	/*
 	 * Escape HTML characters, such as < and >
 	 */
-	private boolean escapeHtml = false;
+	private boolean escapeHtml = true;
 	
 	/*
 	 * Patterns of comments in Java regular expressions

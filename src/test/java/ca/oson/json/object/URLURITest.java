@@ -26,7 +26,7 @@ public class URLURITest extends TestCaseBase {
 		
 		String json = oson.serialize(url);
 		
-		assertEquals(StringUtil.doublequote(expected), json);
+		assertEquals(StringUtil.doublequote(expected, oson.isEscapeHtml()), json);
 	}
 	
 	public void testURLDeserialize() {
@@ -48,7 +48,7 @@ public class URLURITest extends TestCaseBase {
 		
 		String json = oson.serialize(url);
 		
-		assertEquals(StringUtil.doublequote(expected), json);
+		assertEquals(StringUtil.doublequote(expected, oson.isEscapeHtml()), json);
 	}
 	
 	public void testURIDeserialize() {
@@ -71,7 +71,7 @@ public class URLURITest extends TestCaseBase {
 
 		String json = oson.serialize(url);
 		
-		assertEquals(StringUtil.doublequote(expected), json);
+		assertEquals(StringUtil.doublequote(expected, oson.isEscapeHtml()), json);
 	}
 	
 	public void testInetAddressDeserialize() {
@@ -98,7 +98,7 @@ public class URLURITest extends TestCaseBase {
 		
 		assertEquals(UUID.class, uid2.getClass());
 		
-		assertEquals(json, StringUtil.doublequote(uid2.toString()));
+		assertEquals(json, StringUtil.doublequote(uid2.toString(), oson.isEscapeHtml()));
 	}
 	
 	

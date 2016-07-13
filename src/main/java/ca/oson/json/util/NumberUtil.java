@@ -104,7 +104,7 @@ public class NumberUtil {
 				}
 			}
 			
-			String str = StringUtil.unquote(number);
+			String str = StringUtil.unquote(number, true);
 			
 			switch (valueType.getName()) {
 			case "java.lang.Integer": return Integer.parseInt(str);

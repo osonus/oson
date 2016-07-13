@@ -220,7 +220,7 @@ public class CollectionTest extends TestCaseBase {
     assertTrue(result.startsWith("["));
     assertTrue(result.endsWith("]"));
     for (BagOfPrimitives obj : target) {
-      assertTrue(result.contains(StringUtil.doublequote(obj.getExpectedJson())));
+      assertTrue(result.contains(StringUtil.doublequote(obj.getExpectedJson(), oson.isEscapeHtml())));
     }
   }
 
@@ -243,7 +243,7 @@ public class CollectionTest extends TestCaseBase {
     BagOfPrimitives bag1 = new BagOfPrimitives();
     Collection target = Arrays.asList(bag1, bag1);
     String json = oson.toJson(target);
-    assertTrue(json.contains(StringUtil.doublequote(bag1.getExpectedJson())));
+    assertTrue(json.contains(StringUtil.doublequote(bag1.getExpectedJson(), oson.isEscapeHtml())));
   }
 
   @SuppressWarnings("rawtypes")
@@ -302,13 +302,13 @@ public class CollectionTest extends TestCaseBase {
 
     ObjectWithWildcardCollection target = new ObjectWithWildcardCollection(collection);
     String json = oson.setGetOnly().toJson(target);
-    String expected = StringUtil.doublequote(objA.getExpectedJson());
+    String expected = StringUtil.doublequote(objA.getExpectedJson(), oson.isEscapeHtml());
     
     //System.err.println(json);
    // System.err.println(expected);
 
-    assertTrue(json.contains(StringUtil.doublequote(objA.getExpectedJson())));
-    assertTrue(json.contains(StringUtil.doublequote(objB.getExpectedJson())));
+    assertTrue(json.contains(StringUtil.doublequote(objA.getExpectedJson(), oson.isEscapeHtml())));
+    assertTrue(json.contains(StringUtil.doublequote(objB.getExpectedJson(), oson.isEscapeHtml())));
 
     target = oson.fromJson(json, ObjectWithWildcardCollection.class);
     Collection<? extends BagOfPrimitives> deserializedCollection = target.getCollection();

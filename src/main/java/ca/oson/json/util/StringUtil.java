@@ -227,8 +227,8 @@ public class StringUtil {
 //		}
 //		return "\"" + str.replaceAll("\"", "\\\\\"").replaceAll("\n", "").replaceAll("\r", "") + "\"";
 	}
-	public static String doublequote(Object obj) {
-		return doublequote(obj.toString());
+	public static String doublequote(Object obj, boolean escapeHtml) {
+		return doublequote(obj.toString(), escapeHtml);
 	}
 	
 	// modified From Jettison
@@ -330,15 +330,15 @@ public class StringUtil {
      }
 	 
 	 
-	 public static String unquote(Object str) {
+	 public static String unquote(Object str, boolean escapeHtml) {
 		if (str == null) {
 			return null;
 		}
-		return unquote(str.toString());
+		return unquote(str.toString(), escapeHtml);
 	 }
 	 
 	 
-	public static String unquote(String str) {
+	public static String unquote(String str, boolean escapeHtml) {
 		if (isEmpty(str)) {
 			return null;
 		}
@@ -363,10 +363,22 @@ public class StringUtil {
 			str = str.replaceAll(filter[0], filter[1]);
 		}
 		
+		filters = new String[][] { 
+                {"\\u003c", "<"},
+                {"\\u003e", ">"},
+                {"\\u003d", "="},
+                {"\\u0026", "&"},
+                {"\\u0027", "'"}
+                };
+		
+		for (String [] filter: filters) {
+			str = str.replaceAll(filter[0], filter[1]);
+		}
+		
 		return str;
 	}
 		
-	public static String unquote2(String str) {
+	public static String unquote2(String str, boolean escapeHtml) {
 		if (str == null || str.equals("null")) {
 			return null;
 		}
@@ -377,10 +389,10 @@ public class StringUtil {
 			if (parser.ttype == '"') {
 				result = parser.sval;
 			} else {
-				result = unquote(str);
+				result = unquote(str, escapeHtml);
 			}
 		} catch (IOException e) {
-			result = unquote(str);
+			result = unquote(str, escapeHtml);
 		}
 		
 		return result;

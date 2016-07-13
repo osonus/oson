@@ -3623,7 +3623,7 @@ public class Oson {
  				}
  				
  				if (valueToProcess != null) {
- 					valueToProcess = StringUtil.unquote(valueToProcess);
+ 					valueToProcess = StringUtil.unquote(valueToProcess, isEscapeHtml());
 					if (StringUtil.isNumeric(valueToProcess)) {
 						try {
 							long longdatetime = Long.parseLong(valueToProcess);
@@ -6156,7 +6156,7 @@ public class Oson {
 						valueToProcess = valueToProcess.substring(0, length);
 					}
 					
-					return StringUtil.unquote(valueToProcess);
+					return StringUtil.unquote(valueToProcess, isEscapeHtml());
 				}
 	
 			} catch (Exception ex) {
@@ -6468,7 +6468,7 @@ public class Oson {
 
 	// deserialize only
 	private <E> Enum<?> json2Enum(FieldData objectDTO) {
-		objectDTO.valueToProcess = StringUtil.unquote(objectDTO.valueToProcess);
+		objectDTO.valueToProcess = StringUtil.unquote(objectDTO.valueToProcess, isEscapeHtml());
 		Object valueToProcess = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
 		boolean required = objectDTO.required();
@@ -7590,7 +7590,7 @@ public class Oson {
 						arr[i] = (char)obj;
 						
 					} else {
-						String str = StringUtil.unquote(obj.toString());
+						String str = StringUtil.unquote(obj.toString(), isEscapeHtml());
 						arr[i] = str.charAt(0);
 					}
 					i++;
@@ -7620,7 +7620,7 @@ public class Oson {
 						arr[i] = (char)obj;
 						
 					} else {
-						String str = StringUtil.unquote(obj.toString());
+						String str = StringUtil.unquote(obj.toString(), isEscapeHtml());
 						arr[i] = str.charAt(0);
 					}
 					i++;
@@ -8340,7 +8340,7 @@ public class Oson {
 			
 		} else if (Number.class.isAssignableFrom(returnType) || returnType.isPrimitive()) {
 			
-			objectDTO.valueToProcess = StringUtil.unquote(objectDTO.valueToProcess);
+			objectDTO.valueToProcess = StringUtil.unquote(objectDTO.valueToProcess, isEscapeHtml());
 			
 			if (returnType == Integer.class || returnType == int.class) {
 				return (E) json2Integer(objectDTO);
@@ -8699,7 +8699,7 @@ public class Oson {
 			if (objectDTO.isJsonRawValue()) {
 				return str;
 			} else if (objectDTO.doubleQuote) {
-				return StringUtil.doublequote(str);
+				return StringUtil.doublequote(str, isEscapeHtml());
 			} else {
 				return str;
 			}
@@ -8721,7 +8721,7 @@ public class Oson {
 			if (objectDTO.isJsonRawValue()) {
 				return str;
 			} else if (objectDTO.doubleQuote) {
-				return StringUtil.doublequote(str);
+				return StringUtil.doublequote(str, isEscapeHtml());
 			} else {
 				return str;
 			}
@@ -8740,7 +8740,7 @@ public class Oson {
 				if (objectDTO.isJsonRawValue()) {
 					return str;
 				} else if (objectDTO.doubleQuote) {
-					return StringUtil.doublequote(str);
+					return StringUtil.doublequote(str, isEscapeHtml());
 				} else {
 					return str;
 				}
@@ -8850,7 +8850,7 @@ public class Oson {
 			} else if (objectDTO.isJsonRawValue()) {
 				return value.toString();
 			} else {
-				return StringUtil.doublequote(value.toString());
+				return StringUtil.doublequote(value, isEscapeHtml());
 			}
 
 		} else if (value instanceof Optional) {
@@ -8872,7 +8872,7 @@ public class Oson {
 					return str;
 					
 				} else {
-					return StringUtil.doublequote(str);
+					return StringUtil.doublequote(str, isEscapeHtml());
 				}
 			}
 			
@@ -8887,7 +8887,7 @@ public class Oson {
 			if (objectDTO.isJsonRawValue()) {
 				return (String) valueToReturn;
 			} else {
-				return StringUtil.doublequote(valueToReturn);
+				return StringUtil.doublequote(valueToReturn, isEscapeHtml());
 			}
 
 		} else if (returnType == Boolean.class || returnType == boolean.class) {
@@ -8907,7 +8907,7 @@ public class Oson {
 					return returnedValue;
 					
 				} else {
-					return StringUtil.doublequote(returnedValue);
+					return StringUtil.doublequote(returnedValue, isEscapeHtml());
 				}
 			}
 			
@@ -8961,7 +8961,7 @@ public class Oson {
 					return returnedValue;
 					
 				} else {
-					return StringUtil.doublequote(returnedValue);
+					return StringUtil.doublequote(returnedValue, isEscapeHtml());
 				}
 			}
 			
@@ -8978,7 +8978,7 @@ public class Oson {
 					return returnedValue;
 					
 				} else {
-					return StringUtil.doublequote(returnedValue);
+					return StringUtil.doublequote(returnedValue, isEscapeHtml());
 				}
 			}
 			
@@ -8997,7 +8997,7 @@ public class Oson {
 					return returnedValue;
 					
 				} else {
-					return StringUtil.doublequote(returnedValue);
+					return StringUtil.doublequote(returnedValue, isEscapeHtml());
 				}
 			}
 			
@@ -9937,7 +9937,7 @@ public class Oson {
 					Class returnType = returnValue.getClass();
 					
 					if (returnType == String.class) {
-						return StringUtil.doublequote(returnValue);
+						return StringUtil.doublequote(returnValue, isEscapeHtml());
 						
 					} else if (returnType == valueType || valueType.isAssignableFrom(returnType)) {
 						// just continue to do the serializing
@@ -10001,7 +10001,7 @@ public class Oson {
 						Class returnType = getterValue.getClass();
 						
 						if (returnType == String.class) {
-							return StringUtil.doublequote(getterValue);
+							return StringUtil.doublequote(getterValue, isEscapeHtml());
 							
 						} else if (returnType == valueType || valueType.isAssignableFrom(returnType)) {
 							// just continue to do the serializing
@@ -10071,7 +10071,7 @@ public class Oson {
 								return getterValue.toString();
 								
 							} else {
-								return StringUtil.doublequote(getterValue);
+								return StringUtil.doublequote(getterValue, isEscapeHtml());
 							}
 							
 						} else if (returnType == valueType || valueType.isAssignableFrom(returnType)) {
@@ -10478,7 +10478,7 @@ public class Oson {
 						if (fieldMapper.isJsonRawValue()) {
 							return value.toString();
 						} else {
-							return StringUtil.doublequote(value);
+							return StringUtil.doublequote(value, isEscapeHtml());
 						}
 					}
 				}
@@ -10851,7 +10851,7 @@ public class Oson {
 						if (fieldMapper.isJsonRawValue()) {
 							return value.toString();
 						} else {
-							return StringUtil.doublequote(value);
+							return StringUtil.doublequote(value, isEscapeHtml());
 						}
 					}
 				}
@@ -10925,7 +10925,7 @@ public class Oson {
 								Object mvalue = method.invoke(obj, null);
 			
 								if (mvalue != null) {
-									return StringUtil.doublequote(mvalue);
+									return StringUtil.doublequote(mvalue, isEscapeHtml());
 								}
 								
 							} catch (InvocationTargetException e) {
@@ -10938,7 +10938,7 @@ public class Oson {
 								Object mvalue = method.invoke(obj, null);
 			
 								if (mvalue != null) {
-									return StringUtil.doublequote(mvalue);
+									return StringUtil.doublequote(mvalue, isEscapeHtml());
 								}
 								
 							} catch (InvocationTargetException e) {
@@ -11548,7 +11548,7 @@ public class Oson {
 				singleMapValueType = singleMapValue.getClass();
 				
 				if (singleMapValueType == String.class) {
-					singleMapValue = StringUtil.unquote(singleMapValue.toString());
+					singleMapValue = StringUtil.unquote(singleMapValue.toString(), isEscapeHtml());
 				}
 
 				try {
