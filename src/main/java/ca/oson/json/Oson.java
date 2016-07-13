@@ -9731,7 +9731,7 @@ public class Oson {
 		Class<R> valueType = objectDTO.returnType;
 
 		if (obj == null) {
-			return "";
+			return null;
 		}
 
 		int hash = ObjectUtil.hashCode(obj);
@@ -9779,7 +9779,7 @@ public class Oson {
 			// 3. Apply annotations from other sources
 			for (Annotation annotation : annotations) {
 				if (ignoreClass(annotation)) {
-					return "";
+					return null;
 				}
 
 				switch (annotation.annotationType().getName()) {
@@ -9905,7 +9905,7 @@ public class Oson {
 		// now processing at the class level
 		
 		if (classMapper.ignore()) {
-			return "";
+			return null;
 		}
 		
 		Function function = classMapper.serializer; //getSerializer(valueType);
@@ -10342,7 +10342,7 @@ public class Oson {
 							}
 	
 							String fname = ObjectUtil.getName(annotation);
-							if (StringUtil.isEmpty(fname)) {
+							if (!StringUtil.isEmpty(fname)) {
 								names.add(fname);
 							}
 						}
@@ -11972,6 +11972,17 @@ public class Oson {
 		return null;
 	}
 
+	
+	private <T> void setNull(Field f, T obj) {
+		if (f == null || obj == null) {
+			return;
+		}
+		try {
+			f.set(obj, null);
+		} catch (Exception ex) {
+		}
+	}
+	
 
 	/*
 	 * string to object, deserialize, set method should be used
@@ -12223,6 +12234,24 @@ public class Oson {
 			Field[] fields = getFields(valueType); // getFields(obj);
 
 			FIELD_NAMING format = getFieldNaming();
+			
+			// @Expose
+			boolean exposed = false;
+			if (isUseGsonExpose()) {
+				// check if @exposed is used any where
+				if (valueType.isAnnotationPresent(com.google.gson.annotations.Expose.class)) {
+					exposed = true;
+				}
+				if (!exposed) {
+					for (Field f : fields) {
+						if (f.isAnnotationPresent(com.google.gson.annotations.Expose.class)) {
+							exposed = true;
+							break;
+						}
+					}
+				}
+			}
+			
 
 			for (Field f : fields) {
 				String name = f.getName();
@@ -12311,6 +12340,7 @@ public class Oson {
 					
 					ca.oson.json.annotation.FieldMapper fieldMapperAnnotation = null;
 					
+					boolean exposexists = false;
 					for (Annotation annotation : annotations) {
 						if (ignoreField(annotation, classMapper.ignoreFieldsWithAnnotations)) {
 							ignored = true;
@@ -12361,6 +12391,7 @@ public class Oson {
 								if (!expose.deserialize()) {
 									fieldMapper.ignore = true;
 								}
+								exposexists = true;
 								break;
 								
 							case "com.google.gson.annotations.Since":
@@ -12468,6 +12499,10 @@ public class Oson {
 						
 						}
 					}
+					
+					if (exposed && !exposexists) {
+						fieldMapper.ignore = true;
+					}
 
 					// 10. Apply annotations from Oson
 					if (fieldMapperAnnotation != null) {
@@ -12479,6 +12514,9 @@ public class Oson {
 					nameKeys.remove(name);
 					nameKeys.remove(fieldMapper.json);
 					setters.remove(lcfieldName);
+					if (exposed) {
+						setNull(f, obj);
+					}
 					continue;
 				}
 
@@ -12493,6 +12531,9 @@ public class Oson {
 					}
 					nameKeys.remove(name);
 					nameKeys.remove(fieldMapper.json);
+					if (exposed) {
+						setNull(f, obj);
+					}
 					continue;
 				}
 
@@ -13202,7 +13243,7 @@ public class Oson {
 	
 	public <T> String serialize(T source) {
 		if (source == null) {
-			return "";
+			return null;
 		}
 
 		Class<T> valueType = (Class<T>) source.getClass();

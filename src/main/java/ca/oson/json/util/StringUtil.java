@@ -3,8 +3,10 @@ package ca.oson.json.util;
 import java.io.IOException;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import ca.oson.json.Oson.FIELD_NAMING;
 
@@ -95,6 +97,16 @@ public class StringUtil {
 		}
 		return (new String(new char[repeat]).replace('\0', c));
 	}
+	
+	private static boolean sameCase(char first, char last) {
+		if (first < 91 && last < 91) {
+			return true;
+		}
+		if (first > 96 && last > 96) {
+			return true;
+		}
+		return false;
+	}
 
 	public static String underscore2CamelCase(String name) {
 		int idx = name.indexOf('_');
@@ -102,18 +114,59 @@ public class StringUtil {
 			return name;
 		}
 
-		String[] parts = name.split("_");
-		String camelCaseString = parts[0];
-
-		for (int i = 1; i < parts.length; i++) {
-			camelCaseString = camelCaseString + capitalize(parts[i]);
+		StringBuilder sb = new StringBuilder();
+		// no empty string
+		String[] parts = Arrays.asList(name.split("_")).stream().filter(str -> !str.isEmpty()).collect(Collectors.toList()).toArray(new String[0]);
+		char last, first;
+		int lastIndex;
+		int i = 1;
+		boolean redo = false;
+		for (i = 1; i < parts.length; i++) {
+			first = parts[i].charAt(0);
+			lastIndex =  parts[i-1].length() - 1;
+			if (lastIndex > -1) {
+				last = parts[i-1].charAt(lastIndex);
+				
+				if (sameCase(first, last)) {
+					if (first > 96) {// both lowercase
+						parts[i] = capitalize(parts[i]);
+					} else { // both uppercase
+						parts[i-1] = parts[i-1].toLowerCase();
+						redo = true;
+					}
+				}
+			}
+			sb.append(parts[i-1]);
 		}
-		return camelCaseString;
+		// just in case
+		if (redo) {
+			sb = new StringBuilder();
+			for (i = 1; i < parts.length; i++) {
+				first = parts[i].charAt(0);
+				lastIndex =  parts[i-1].length() - 1;
+				if (lastIndex > -1) {
+					last = parts[i-1].charAt(lastIndex);
+					
+					if (sameCase(first, last)) {
+						if (first > 96) {
+							parts[i] = capitalize(parts[i]);
+						} else {
+							parts[i-1] = parts[i-1].toLowerCase();
+						}
+					}
+				}
+				
+				sb.append(parts[i-1]);
+			}
+		}
+		sb.append(parts[i-1]);
+		
+		return sb.toString();
 	}
 
 
 	private static String camelCase2Delimiter(String name, char delimiter) {
-		if (name == null || !name.matches(".*[A-Z].*"))
+		if (name == null || !name.matches(".*[A-Z].*") || !name.matches(".*[a-z].*"))
 			return name;
 
 		String regex = "([a-z])([A-Z])";
@@ -136,8 +189,8 @@ public class StringUtil {
 
 	//
 	public static String camelCase(String name) {
-		if (name == null) {
-			return null;
+		if (name == null || !name.matches(".*[_ -].*")) {
+			return name;
 		}
 		String regex = "[_ -]([a-zA-Z])";
 		String replacement = "_$1";
