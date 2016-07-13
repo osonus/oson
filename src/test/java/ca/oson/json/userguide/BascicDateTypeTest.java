@@ -22,11 +22,11 @@ public class BascicDateTypeTest extends TestCaseBase {
 		datetype.character = 'd';
 		datetype.pchar = 'A';
 
-		String json = oson.serialize(datetype);
+		String json = oson.clearAll().serialize(datetype);
 
-		String expected = "{\"pbyte\":0,\"date\":\"1969-12-31T16:00:00.00Z\",\"pbool\":false,\"pfloat\":0,\"bigInteger\":0,\"dbyte\":0,\"bool\":false,\"string\":null,\"bigDecimal\":0,\"pshort\":0,\"pint\":0,\"integer\":0,\"dfloat\":0,\"processor\":GSON,\"pdouble\":0,\"plong\":0,\"character\":\"d\",\"dshort\":0,\"dlong\":0,\"ddouble\":0,\"atomicLong\":0,\"simpleDateFormat\":\"yyyy-MM-dd'T'HH:mm:ss.SS'Z'\",\"atomicInteger\":0,\"pchar\":\"A\"}";
+		String expected = "{\"pbyte\":0,\"date\":\"1969-12-31T16:00:00.00Z\",\"pbool\":false,\"pfloat\":0,\"bigInteger\":0,\"dbyte\":0,\"bool\":false,\"string\":null,\"bigDecimal\":0,\"pshort\":0,\"pint\":0,\"integer\":0,\"dfloat\":0,\"processor\":\"GSON\",\"pdouble\":0,\"plong\":0,\"character\":\"d\",\"dshort\":0,\"dlong\":0,\"ddouble\":0,\"atomicLong\":0,\"simpleDateFormat\":\"yyyy-MM-dd'T'HH:mm:ss.SS'Z'\",\"atomicInteger\":0,\"pchar\":\"A\"}";
 
-		// System.err.println(json);
+		//System.err.println(json);
 		
 		assertEquals(expected, json);
 	}

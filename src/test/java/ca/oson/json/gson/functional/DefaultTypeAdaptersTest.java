@@ -63,7 +63,6 @@ import java.util.TimeZone;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import junit.framework.TestCase;
 
 /**
  * Functional test for Json serialization and deserialization for common classes for which default

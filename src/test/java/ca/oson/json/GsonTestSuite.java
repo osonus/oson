@@ -21,6 +21,7 @@ import ca.oson.json.gson.functional.ConcurrencyTest;
 import ca.oson.json.gson.functional.CustomDeserializerTest;
 import ca.oson.json.gson.functional.CustomTypeAdaptersTest;
 import ca.oson.json.gson.functional.DefaultTypeAdaptersTest;
+import ca.oson.json.gson.functional.EnumTest;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
@@ -41,7 +42,8 @@ import ca.oson.json.gson.functional.DefaultTypeAdaptersTest;
 	ConcurrencyTest.class,
 	CustomDeserializerTest.class,
 	CustomTypeAdaptersTest.class,
-	DefaultTypeAdaptersTest.class
+	DefaultTypeAdaptersTest.class,
+	EnumTest.class
 	
 })
 public class GsonTestSuite {

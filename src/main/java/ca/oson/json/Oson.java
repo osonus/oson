@@ -85,6 +85,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.InstanceCreator;
 import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.google.gson.annotations.Since;
 
 import ca.oson.json.function.*;
@@ -1261,7 +1262,19 @@ public class Oson {
 			return null;
 		}
 		
-		return mappers.get(valueType);
+		ClassMapper classMapper = mappers.get(valueType);
+		
+		if (classMapper != null) {
+			return classMapper;
+		}
+		
+		for (Class cls: mappers.keySet()) {
+			if (cls.isAssignableFrom(valueType)) {
+				return mappers.get(cls);
+			}
+		}
+		
+		return null;
 	}
 	
 	/*
@@ -6440,6 +6453,7 @@ public class Oson {
 
 	// deserialize only
 	private <E> Enum<?> json2Enum(FieldData objectDTO) {
+		objectDTO.valueToProcess = StringUtil.unquote(objectDTO.valueToProcess);
 		Object valueToProcess = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
 		boolean required = objectDTO.required();
@@ -6454,7 +6468,7 @@ public class Oson {
 			return null;
 		}
 
-		String value = valueToProcess.toString().trim();
+		String value = (String)valueToProcess;
 
 		Class<Enum> enumType = (Class<Enum>) returnType;
 
@@ -6476,9 +6490,9 @@ public class Oson {
 					returnedValue = f.apply(fieldData);
 					
 				} else if (function instanceof Json2EnumFunction) {
-					return (Enum<?>) ((Json2EnumFunction)function).apply(valueToProcess);
+					return (Enum<?>) ((Json2EnumFunction)function).apply(value);
 				} else {
-					returnedValue = function.apply(valueToProcess);
+					returnedValue = function.apply(value);
 				}
 				
 				if (returnedValue instanceof Optional) {
@@ -6507,8 +6521,8 @@ public class Oson {
 					String name = returnedValue.toString();
 					
 					for (Enum enumValue : enumType.getEnumConstants()) {
-						if (enumValue.toString().equalsIgnoreCase(value)
-								|| enumValue.name().equalsIgnoreCase(value)) {
+						if (enumValue.toString().equalsIgnoreCase(name)
+								|| enumValue.name().equalsIgnoreCase(name)) {
 							return enumValue;
 						}
 					}
@@ -6530,6 +6544,22 @@ public class Oson {
 				return enumValue;
 			}
 		}
+		
+		
+		for (Field field: enumType.getDeclaredFields()) {
+			SerializedName serializedName = field.getAnnotation(SerializedName.class);
+			if (serializedName != null) {
+				String name = serializedName.value();
+				
+				if (name.equalsIgnoreCase(value)) {
+					try {
+						return Enum.valueOf(enumType, field.getName().toUpperCase());
+					} catch (IllegalArgumentException ex) {
+					}
+				}
+			}
+		}
+		
 
 		FieldData fieldData = new FieldData(value, Integer.class, true);
 		Integer ordinal = json2Integer(fieldData);
@@ -6546,7 +6576,7 @@ public class Oson {
 	}
 	
 	private synchronized void startCachedComponentTypes(ComponentType componentType) {
-		Class ClassType = componentType.getClassType();
+		this.masterClass = componentType.getClassType();
 		Class[] componentClassTypes = componentType.getComponentClassType();
 		cachedComponentTypes(componentType);
 	}
@@ -7261,6 +7291,14 @@ public class Oson {
 				if (returnObj == null) {
 					if (defaultValue != null) {
 						returnObj = defaultValue;
+					}
+					
+					if (EnumSet.class.isAssignableFrom(returnType)) {
+						ComponentType type = getComponentType();
+						Class enm = type.componentType.getClassType();
+						if (enm.isEnum()) {
+							returnObj = (Collection<E>) EnumSet.allOf(enm);
+						}
 					}
 		
 					if (returnObj == null) {
@@ -8436,8 +8474,19 @@ public class Oson {
 		} catch (Exception ex) {}
 		
 		
-		if (enumType == null) {
-			return en.name();
+		String name = en.name();
+		
+		if (enumType == null || enumType == EnumType.STRING) {
+			for (Field field: valueType.getDeclaredFields()) {
+				if (name.equalsIgnoreCase(field.getName())) {
+					SerializedName serializedName = field.getAnnotation(SerializedName.class);
+					if (serializedName != null) {
+						return serializedName.value();
+					}
+				}
+			}
+
+			return name;
 		}
 
 		switch (enumType) {
@@ -8895,8 +8944,23 @@ public class Oson {
 
 		// returnType.isEnum()  || value instanceof Enum<?>
 		} else if (Enum.class.isAssignableFrom(returnType)) {
-			return enum2Json(objectDTO);
+			
+			String returnedValue = enum2Json(objectDTO);
 
+			if (returnedValue != null) {
+				if (objectDTO.isJsonRawValue()) {
+					return returnedValue;
+					
+				} else if (StringUtil.isNumeric(returnedValue)) {
+					return returnedValue;
+					
+				} else {
+					return StringUtil.doublequote(returnedValue);
+				}
+			}
+			
+			return null;
+			
 		} else if (Collection.class.isAssignableFrom(returnType)) {
 			return collection2Json(objectDTO);
 
@@ -11415,11 +11479,19 @@ public class Oson {
 			return (T)map; // or null, which is better?
 		}
 		
+		
+		Constructor<?>[] constructors = null;
+		
 		Class implClass = null;
 		if (valueType.isInterface() || Modifier.isAbstract(valueType.getModifiers())) {
 			implClass = DeSerializerUtil.implementingClass(valueType.getName());
 		}
 
+		if (implClass != null) {
+			constructors = implClass.getDeclaredConstructors();
+		} else {
+			constructors = valueType.getDeclaredConstructors();//.getConstructors();
+		}
 		
 		Object singleMapValue = null;
 		Class singleMapValueType = null;
@@ -11430,58 +11502,102 @@ public class Oson {
 				singleMapValueType = singleMapValue.getClass();
 				
 				if (singleMapValueType == String.class) {
-					if (StringUtil.isNumeric(singleMapValue.toString())) {
-						singleMapValueType = Number.class;
-						singleMapValue = NumberUtil.getNumber(singleMapValue.toString(), singleMapValueType);
-
-					} else if (BooleanUtil.isBoolean(singleMapValue.toString())) {
-						singleMapValue = BooleanUtil.string2Boolean(singleMapValue.toString());
-						singleMapValueType = singleMapValue.getClass();
-						
-					} else {
-						singleMapValue = StringUtil.unquote(singleMapValue.toString());
-					}
+					singleMapValue = StringUtil.unquote(singleMapValue.toString());
 				}
 
 				try {
-					Constructor constructor = null;
-					
-					if (implClass != null) {
-						constructor = implClass.getConstructor(singleMapValueType);
-					} else {
-						constructor = valueType.getConstructor(singleMapValueType);
-					}
-
-					if (constructor != null) {
-						constructor.setAccessible(true);
-						if (valueType == Locale.class) {
-							String[] parts = ((String)singleMapValue).split("_");
-							if (parts.length == 1) {
-								obj = (T) constructor.newInstance(singleMapValue);
-							} else if (parts.length == 2) {
-								constructor = valueType.getConstructor(String.class, String.class);
-								obj = (T) constructor.newInstance(parts);
-								
-							} else if (parts.length == 3) {
-								constructor = valueType.getConstructor(String.class, String.class, String.class);
-								obj = (T) constructor.newInstance(parts);
-							}
-							
-						} else {
+					if (valueType == Locale.class) {
+						Constructor constructor = null;
+						String[] parts = ((String)singleMapValue).split("_");
+						if (parts.length == 1) {
+							constructor = valueType.getConstructor(String.class);
+							constructor.setAccessible(true);
 							obj = (T) constructor.newInstance(singleMapValue);
+						} else if (parts.length == 2) {
+							constructor = valueType.getConstructor(String.class, String.class);
+							constructor.setAccessible(true);
+							obj = (T) constructor.newInstance(parts);
+						} else if (parts.length == 3) {
+							constructor = valueType.getConstructor(String.class, String.class, String.class);
+							constructor.setAccessible(true);
+							obj = (T) constructor.newInstance(parts);
 						}
-
+						
 						if (obj != null) {
 							return obj;
 						}
 					}
+				} catch (Exception e) {}
+				
+				Map<Class, Constructor> cmaps = new HashMap<>();
+				for (Constructor constructor: constructors) {
+					//Class[] parameterTypes = constructor.getParameterTypes();
 
-				} catch (InstantiationException
-						| IllegalAccessException
-						| IllegalArgumentException
-						| InvocationTargetException | NoSuchMethodException | SecurityException e) {
-					//e.printStackTrace();
+					int parameterCount = constructor.getParameterCount();
+					if (parameterCount == 1) {
+						
+						Class[] types = constructor.getParameterTypes();
+						
+						cmaps.put(types[0], constructor);
+					}
 				}
+				
+				if (cmaps.size() > 0) {
+					Constructor constructor = null;
+
+					if ((cmaps.containsKey(Boolean.class) || cmaps.containsKey(boolean.class))
+							&& BooleanUtil.isBoolean(singleMapValue.toString())) {
+						constructor = cmaps.get(Boolean.class);
+						if (constructor == null) {
+							constructor = cmaps.get(boolean.class);
+						}
+						if (constructor != null) {
+							try {
+								constructor.setAccessible(true);
+								obj = (T) constructor.newInstance(BooleanUtil.string2Boolean(singleMapValue.toString()));
+								
+								if (obj != null) {
+									return obj;
+								}
+							} catch (Exception e) {}
+						}
+						
+					} else if (StringUtil.isNumeric(singleMapValue.toString())) {
+						
+						Class[] classes = new Class[] {int.class, Integer.class, long.class, Long.class, double.class, Double.class,
+								Byte.class, byte.class, Short.class, short.class, Float.class, float.class, BigDecimal.class,
+								BigInteger.class, AtomicInteger.class, AtomicLong.class, Number.class};
+						
+						for (Class cls: classes) {
+							constructor = cmaps.get(cls);
+
+							if (constructor != null) {
+								try {
+									obj = (T) constructor.newInstance(NumberUtil.getNumber(singleMapValue, cls));
+									
+									if (obj != null) {
+										return obj;
+									}
+								} catch (Exception e) {}
+							}
+						}
+
+					}
+					
+				
+					for (Entry<Class, Constructor> entry: cmaps.entrySet()) {
+						Class cls = entry.getKey();
+						constructor = entry.getValue();
+						try {
+							obj = (T) constructor.newInstance(singleMapValue);
+							if (obj != null) {
+								return obj;
+							}
+						} catch (Exception e) {}
+					}
+				
+				}
+
 			}
 		}
 		
@@ -11503,7 +11619,7 @@ public class Oson {
 		}
 
 			
-		Constructor<?>[] constructors = valueType.getDeclaredConstructors();//.getConstructors();
+
 
 		///*
 		for (Constructor constructor: constructors) {
