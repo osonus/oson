@@ -119,6 +119,11 @@ public @interface ClassMapper {
 	
 	
 	/*
+	 * Escape HTML characters, such as < and >
+	 */
+	BOOLEAN escapeHtml() default BOOLEAN.NONE;
+	
+	/*
 	 * Maximum length this string field can have
 	 */
 	int length() default 0;

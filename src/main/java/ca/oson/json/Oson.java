@@ -1351,6 +1351,10 @@ public class Oson {
 			mapper.setToStringAsSerializer(isToStringAsSerializer());
 		}
 		
+		if (mapper.getEscapeHtml() == null) {
+			mapper.setEscapeHtml(isEscapeHtml());
+		}
+		
 		return mapper;
 	}
 	
@@ -2200,6 +2204,17 @@ public class Oson {
 		return this;
 	}
 
+	public boolean isEscapeHtml() {
+		return options.isEscapeHtml();
+	}
+
+
+	public Oson setEscapeHtml(boolean escapeHtml) {
+		options.setEscapeHtml(escapeHtml);
+		
+		return this;
+	}
+	
 	
 	private void reset() {
 		jackson = null;
@@ -6533,6 +6548,37 @@ public class Oson {
 		} catch (Exception ex) {
 		}
 		
+		
+		String fieldName = null;
+		for (Field field: enumType.getDeclaredFields()) {
+			String name = null;
+			ca.oson.json.annotation.FieldMapper fieldMapper = field.getAnnotation(ca.oson.json.annotation.FieldMapper.class);
+			if (fieldMapper != null) {
+				name = fieldMapper.name();
+				
+				if (value.equalsIgnoreCase(name)) {
+					fieldName = field.getName();
+					break;
+				}
+				
+			} else {
+				for (Annotation annotation: field.getAnnotations()) {
+					name = ObjectUtil.getName(annotation);
+					if (value.equalsIgnoreCase(name)) {
+						fieldName = field.getName();
+						break;
+					}
+				}
+			}
+		}
+		if (fieldName != null) {
+			try {
+				return Enum.valueOf(enumType, fieldName.toUpperCase());
+			} catch (IllegalArgumentException ex) {
+			}
+		}
+		
+		
 		try {
 			return Enum.valueOf(enumType, value.toUpperCase());
 		} catch (IllegalArgumentException ex) {
@@ -6544,22 +6590,7 @@ public class Oson {
 				return enumValue;
 			}
 		}
-		
-		
-		for (Field field: enumType.getDeclaredFields()) {
-			SerializedName serializedName = field.getAnnotation(SerializedName.class);
-			if (serializedName != null) {
-				String name = serializedName.value();
-				
-				if (name.equalsIgnoreCase(value)) {
-					try {
-						return Enum.valueOf(enumType, field.getName().toUpperCase());
-					} catch (IllegalArgumentException ex) {
-					}
-				}
-			}
-		}
-		
+
 
 		FieldData fieldData = new FieldData(value, Integer.class, true);
 		Integer ordinal = json2Integer(fieldData);
@@ -8479,9 +8510,20 @@ public class Oson {
 		if (enumType == null || enumType == EnumType.STRING) {
 			for (Field field: valueType.getDeclaredFields()) {
 				if (name.equalsIgnoreCase(field.getName())) {
-					SerializedName serializedName = field.getAnnotation(SerializedName.class);
-					if (serializedName != null) {
-						return serializedName.value();
+					ca.oson.json.annotation.FieldMapper fieldMapper = field.getAnnotation(ca.oson.json.annotation.FieldMapper.class);
+					if (fieldMapper != null) {
+						String aname = fieldMapper.name();
+						if (!StringUtil.isEmpty(aname)) {
+							return aname;
+						}
+						
+					} else {
+						for (Annotation annotation: field.getAnnotations()) {
+							String aname = ObjectUtil.getName(annotation);
+							if (!StringUtil.isEmpty(aname)) {
+								return aname;
+							}
+						}
 					}
 				}
 			}
@@ -9290,6 +9332,10 @@ public class Oson {
 		
 		if (classMapperAnnotation.date2Long() != BOOLEAN.NONE) {
 			classMapper.date2Long = classMapperAnnotation.date2Long().value();
+		}
+		
+		if (classMapperAnnotation.escapeHtml() != BOOLEAN.NONE) {
+			classMapper.escapeHtml = classMapperAnnotation.escapeHtml().value();
 		}
 		
 		if (classMapperAnnotation.length() > 0) {

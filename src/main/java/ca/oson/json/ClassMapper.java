@@ -145,7 +145,12 @@ public class ClassMapper<T> {
 	 * Set the toString method as the default serializer.
 	 * If this is set to be true, toString method will be used for serialization
 	 */
-	private Boolean toStringAsSerializer = null;
+	public Boolean toStringAsSerializer = null;
+	
+	/*
+	 * Escape HTML characters, such as < and >
+	 */
+	public Boolean escapeHtml = null;
 	
 	
 	/*
@@ -497,5 +502,13 @@ public class ClassMapper<T> {
 	
 	public void setToStringAsSerializer(Boolean toStringAsSerializer) {
 		this.toStringAsSerializer = toStringAsSerializer;
+	}
+	
+	public Boolean getEscapeHtml() {
+		return escapeHtml;
+	}
+	
+	public void setEscapeHtml(Boolean escapeHtml) {
+		this.escapeHtml = escapeHtml;
 	}
 }

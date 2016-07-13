@@ -207,6 +207,11 @@ public class Options {
 	private boolean toStringAsSerializer = false;
 	
 	/*
+	 * Escape HTML characters, such as < and >
+	 */
+	private boolean escapeHtml = false;
+	
+	/*
 	 * Patterns of comments in Java regular expressions
 	 * User can define custom comment regex patterns
 	 * The default comments are: single-line //, 
@@ -1223,5 +1228,15 @@ public class Options {
 
 	public void setToStringAsSerializer(boolean toStringAsSerializer) {
 		this.toStringAsSerializer = toStringAsSerializer;
+	}
+
+
+	public boolean isEscapeHtml() {
+		return escapeHtml;
+	}
+
+
+	public void setEscapeHtml(boolean escapeHtml) {
+		this.escapeHtml = escapeHtml;
 	}
 }

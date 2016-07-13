@@ -215,12 +215,12 @@ public class StringUtil {
 	public static String escapeDoublequote(Object obj) {
 		return escapeDoublequote(obj.toString());
 	}
-	public static String doublequote(String str) {
+	public static String doublequote(String str, boolean escapeHtml) {
 		if (str == null) {
 			return null;
 		}
 		
-		return quote(str);
+		return quote(str, escapeHtml);
 		
 //		if (str.startsWith("\"") && str.endsWith("\"")) {
 //			return str;
@@ -232,7 +232,7 @@ public class StringUtil {
 	}
 	
 	// modified From Jettison
-	 public static String quote(String string) {
+	 public static String quote(String string, boolean escapeHtml) {
 		 int length = string.length();
          if (string == null || length == 0) {
              return "\"\"";
@@ -280,6 +280,41 @@ public class StringUtil {
                 break;
              case ',':
                  sb.append(",");
+                 break;
+             case '<':
+            	 if (escapeHtml) {
+            		 sb.append("\\u003c");
+            	 } else {
+            		 sb.append(c);
+            	 }
+                 break;
+             case '>':
+            	 if (escapeHtml) {
+            		 sb.append("\\u003e");
+            	 } else {
+            		 sb.append(c);
+            	 }
+                 break;
+             case '=':
+            	 if (escapeHtml) {
+            		 sb.append("\\u003d");
+            	 } else {
+            		 sb.append(c);
+            	 }
+                 break;
+             case '&':
+            	 if (escapeHtml) {
+            		 sb.append("\\u0026");
+            	 } else {
+            		 sb.append(c);
+            	 }
+                 break;
+             case '\'':
+            	 if (escapeHtml) {
+            		 sb.append("\\u0027");
+            	 } else {
+            		 sb.append(c);
+            	 }
                  break;
              default:
                  if (c < ' ') {

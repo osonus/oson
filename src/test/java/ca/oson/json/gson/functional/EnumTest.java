@@ -16,6 +16,7 @@
 
 package ca.oson.json.gson.functional;
 
+import ca.oson.json.annotation.FieldMapper;
 import ca.oson.json.support.MoreAsserts;
 import ca.oson.json.support.TestCaseBase;
 
@@ -170,6 +171,17 @@ public class EnumTest extends TestCaseBase {
     assertTrue(bar.contains(Roshambo.PAPER));
     //assertFalse(bar.contains(Roshambo.SCISSORS));
   }
+  
+  
+	public void testEnumCaseMappingAnother() {
+		assertEquals(GenderAll.MALE,
+				oson.fromJson("gentleman", GenderAll.class));
+		assertEquals("another", oson.toJson(GenderAll.OTHER, GenderAll.class));
+		assertEquals(GenderAll.FEMALE,
+				oson.fromJson("lady", GenderAll.class));
+		assertEquals("lady", oson.toJson(GenderAll.FEMALE, GenderAll.class));
+	}
+  
 
   public enum Roshambo {
     ROCK {
@@ -210,4 +222,17 @@ public class EnumTest extends TestCaseBase {
     @SerializedName("girl")
     FEMALE
   }
+  
+  public enum GenderAll {
+	    @SerializedName("boy")
+	    @FieldMapper(name = "gentleman")
+	    MALE,
+
+	    @SerializedName("girl")
+	    @FieldMapper(name = "lady")
+	    FEMALE,
+	    
+	    @FieldMapper(name = "another")
+	    OTHER
+	  }
 }
