@@ -8,9 +8,21 @@ import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class Tester {
+import ca.oson.json.util.StringUtil;
 
+public class Tester {
+	
+	//
 	public static void main(String[] args) {
+		String test = "LowerCamelLeadingUnderscore_Testing";
+		
+		System.err.println(StringUtil.underscore2CamelCase(test));
+		
+		test = "THIS_IS_A_TESTING";
+		System.err.println(StringUtil.underscore2CamelCase(test));
+	}
+
+	public static void main2(String[] args) {
 		// TODO Auto-generated method stub
 		Class[] types = new Class[] {Integer.class, 
 				int.class,int[].class,int[][].class,int[][][].class,

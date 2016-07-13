@@ -113,54 +113,20 @@ public class StringUtil {
 		if (idx == -1) {
 			return name;
 		}
+		
+		if (!name.matches(".*[a-z].*")) {
+			name = name.toLowerCase();
+		}
 
 		StringBuilder sb = new StringBuilder();
 		// no empty string
 		String[] parts = Arrays.asList(name.split("_")).stream().filter(str -> !str.isEmpty()).collect(Collectors.toList()).toArray(new String[0]);
-		char last, first;
-		int lastIndex;
-		int i = 1;
-		boolean redo = false;
-		for (i = 1; i < parts.length; i++) {
-			first = parts[i].charAt(0);
-			lastIndex =  parts[i-1].length() - 1;
-			if (lastIndex > -1) {
-				last = parts[i-1].charAt(lastIndex);
-				
-				if (sameCase(first, last)) {
-					if (first > 96) {// both lowercase
-						parts[i] = capitalize(parts[i]);
-					} else { // both uppercase
-						parts[i-1] = parts[i-1].toLowerCase();
-						redo = true;
-					}
-				}
-			}
-			sb.append(parts[i-1]);
+
+		sb.append(parts[0]);
+		for (int i = 1; i < parts.length; i++) {
+			sb.append(capitalize(parts[i]));
 		}
-		// just in case
-		if (redo) {
-			sb = new StringBuilder();
-			for (i = 1; i < parts.length; i++) {
-				first = parts[i].charAt(0);
-				lastIndex =  parts[i-1].length() - 1;
-				if (lastIndex > -1) {
-					last = parts[i-1].charAt(lastIndex);
-					
-					if (sameCase(first, last)) {
-						if (first > 96) {
-							parts[i] = capitalize(parts[i]);
-						} else {
-							parts[i-1] = parts[i-1].toLowerCase();
-						}
-					}
-				}
-				
-				sb.append(parts[i-1]);
-			}
-		}
-		sb.append(parts[i-1]);
-		
+
 		return sb.toString();
 	}
 
