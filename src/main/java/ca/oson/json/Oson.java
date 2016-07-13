@@ -15,9 +15,6 @@ package ca.oson.json;
 
 import java.beans.Expression;
 import java.beans.Statement;
-import java.beans.beancontext.BeanContext;
-import java.beans.beancontext.BeanContextServices;
-import java.beans.beancontext.BeanContextServicesSupport;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
@@ -31,8 +28,6 @@ import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
-import java.net.InetAddress;
-import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -41,21 +36,13 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
-import java.util.jar.Attributes;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.management.AttributeList;
-import javax.management.relation.RoleList;
-import javax.management.relation.RoleUnresolvedList;
 import javax.persistence.Column;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.print.attribute.standard.JobStateReasons;
-import javax.print.attribute.standard.PrinterStateReasons;
-import javax.script.SimpleBindings;
-import javax.swing.UIDefaults;
 import javax.validation.constraints.Size;
 
 import org.json.JSONArray;
@@ -99,56 +86,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.InstanceCreator;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.Since;
-
-//import org.springframework.web.bind.annotation.RequestParam;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 import ca.oson.json.function.*;
 import ca.oson.json.util.*;
@@ -613,7 +550,7 @@ public class Oson {
 			}
 			
 			if (dateFormat == null) {
-				dateFormat = new SimpleDateFormat(DefaultValue.simpleDateFormat);
+				dateFormat = new SimpleDateFormat(DefaultValue.simpleDateFormat());
 			}
 			
 			return dateFormat;
@@ -3564,6 +3501,38 @@ public class Oson {
 		return null;
 	}
 
+	private Date date2Date(Date currentDate, Class returnType) {
+		if (currentDate == null) {
+			return currentDate;
+		}
+		
+		Class cls = currentDate.getClass();
+
+		if (returnType.isAssignableFrom(cls)) {
+			return currentDate;
+		}
+
+		if (Date.class != returnType) {
+			return date2Date(currentDate.getTime(), returnType);
+		} else {
+			return currentDate;
+		}
+	}
+	
+	private Date date2Date(long longdatetime, Class returnType) {
+		if (java.sql.Date.class == returnType) {
+			return new java.sql.Date(longdatetime);
+			
+		} else if (java.sql.Time.class == returnType) {
+			//currentDate.getHours(), currentDate.getMinutes(), currentDate.getSeconds()
+			return new java.sql.Time(longdatetime);
+			
+		} else if (java.sql.Timestamp.class == returnType) {
+			return new java.sql.Timestamp(longdatetime);
+		} else {
+			return new Date(longdatetime);
+		}
+	}
 	
  	private <E,R> Date json2Date(FieldData objectDTO) {
  		if (objectDTO == null || !objectDTO.json2Java) {
@@ -3612,8 +3581,9 @@ public class Oson {
 							return null;
 							
 						} else if (Date.class.isAssignableFrom(returnedValue.getClass())) {
-							return (Date) returnedValue;
-								
+							
+							return date2Date((Date) returnedValue, returnType);
+
 						} else {
 							valueToProcess = String.valueOf(returnedValue);
 						}
@@ -3625,23 +3595,31 @@ public class Oson {
  				}
  				
  				if (valueToProcess != null) {
-					DateFormat format = objectDTO.getDateFormat();
-					return format.parse(valueToProcess);
+ 					valueToProcess = StringUtil.unquote(valueToProcess);
+					if (StringUtil.isNumeric(valueToProcess)) {
+						try {
+							long longdatetime = Long.parseLong(valueToProcess);
+							return date2Date(longdatetime, returnType);
+						} catch (Exception e) {
+						}
+					}
+					
+					try {
+						DateFormat format = objectDTO.getDateFormat();
+						return date2Date(format.parse(valueToProcess), returnType);
+					} catch (Exception e) {
+						return date2Date(new Date(valueToProcess), returnType);
+					}
+
  				}
  	
  			} catch (Exception ex) {
  				//ex.printStackTrace();
- 				if (StringUtil.isNumeric(valueToProcess)) {
- 					try {
- 						long longtoprocess = Long.parseLong(valueToProcess);
- 						return new Date(longtoprocess);
- 					} catch (Exception e) {}
- 				}
  			}
  		
  		}
  		
- 		return json2DateDefault(objectDTO);
+ 		return date2Date(json2DateDefault(objectDTO), returnType);
  	}
  	
  	
@@ -9822,7 +9800,7 @@ public class Oson {
 		
 		Function function = classMapper.serializer; //getSerializer(valueType);
 		if (function == null) {
-			function = ClassMapperUtil.getSerializer(valueType.getName());
+			function = DeSerializerUtil.getSerializer(valueType.getName());
 		}
 		
 		if (function != null) {
@@ -9934,7 +9912,7 @@ public class Oson {
 		
 		if (getters != null && getters.size() > 0) {
 			boolean isJsonRawValue = false;
-			String jsonValueFieldName = DefaultValue.getJsonValueFieldName(valueType.getName());
+			String jsonValueFieldName = DeSerializerUtil.getJsonValueFieldName(valueType.getName());
 			if (jsonValueFieldName == null) {
 				// get all fieldmappers for this class?
 				Set<FieldMapper> fieldMappers = getFieldMappers(valueType);
@@ -9978,6 +9956,10 @@ public class Oson {
 						if (returnType == String.class) {
 							if (isJsonRawValue) {
 								return getterValue.toString();
+								
+							} else if (StringUtil.parenthesized(getterValue.toString())) {
+								return getterValue.toString();
+								
 							} else {
 								return StringUtil.doublequote(getterValue);
 							}
@@ -11134,7 +11116,7 @@ public class Oson {
 			source = source.trim();
 			if (source.startsWith("[") && ObjectUtil.isArrayOrCollection(valueType)) {
 				List list = null;
-//				try {
+//				try { // JSONArray performs better than ObjectMapper
 //					list = new ObjectMapper().readValue(source, List.class);
 //				} catch (IOException e) {
 					JSONArray obj = new JSONArray(source);
@@ -11432,6 +11414,11 @@ public class Oson {
 		if (valueType == null) {
 			return (T)map; // or null, which is better?
 		}
+		
+		Class implClass = null;
+		if (valueType.isInterface() || Modifier.isAbstract(valueType.getModifiers())) {
+			implClass = DeSerializerUtil.implementingClass(valueType.getName());
+		}
 
 		
 		Object singleMapValue = null;
@@ -11443,11 +11430,27 @@ public class Oson {
 				singleMapValueType = singleMapValue.getClass();
 				
 				if (singleMapValueType == String.class) {
-					singleMapValue = StringUtil.unquote(singleMapValue.toString());
+					if (StringUtil.isNumeric(singleMapValue.toString())) {
+						singleMapValueType = Number.class;
+						singleMapValue = NumberUtil.getNumber(singleMapValue.toString(), singleMapValueType);
+
+					} else if (BooleanUtil.isBoolean(singleMapValue.toString())) {
+						singleMapValue = BooleanUtil.string2Boolean(singleMapValue.toString());
+						singleMapValueType = singleMapValue.getClass();
+						
+					} else {
+						singleMapValue = StringUtil.unquote(singleMapValue.toString());
+					}
 				}
 
 				try {
-					Constructor constructor = valueType.getConstructor(singleMapValueType);
+					Constructor constructor = null;
+					
+					if (implClass != null) {
+						constructor = implClass.getConstructor(singleMapValueType);
+					} else {
+						constructor = valueType.getConstructor(singleMapValueType);
+					}
 
 					if (constructor != null) {
 						constructor.setAccessible(true);
@@ -11480,6 +11483,11 @@ public class Oson {
 					//e.printStackTrace();
 				}
 			}
+		}
+		
+		
+		if (implClass != null) {
+			valueType = implClass;
 		}
 		
 
@@ -12003,7 +12011,7 @@ public class Oson {
 			
 			Function function = classMapper.deserializer; // = getDeserializer(valueType);
 			if (function == null) {
-				function = ClassMapperUtil.getDeserializer(valueType.getName());
+				function = DeSerializerUtil.getDeserializer(valueType.getName());
 			}
 			if (function != null) {
 				try {

@@ -29,6 +29,14 @@ public class BooleanUtil {
 		return null;
 	}
 	
+	public static boolean isBoolean(String str) {
+		if (str != null && (str.equals("true") || str.equals("false"))) {
+			return true;
+		}
+		
+		return false;
+	}
+	
 	public static Boolean string2Boolean(String str) {
 		if (str == null) {
 			return null;

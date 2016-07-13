@@ -77,6 +77,14 @@ public class StringUtil {
 		return "";
 	}
 	
+	public static String getPrettySpace(int indentation) {
+		if (indentation > 0) {
+			return String.valueOf(StringUtil.SPACE);
+		}
+
+		return "";
+	}
+	
 	public static String repeatSpace(int repeat) {
 		return repeatChar(SPACE, repeat);
 	}
@@ -169,6 +177,28 @@ public class StringUtil {
 		} else {
 			return name;
 		}
+	}
+	
+	public static boolean parenthesized(String str) {
+		if (str.startsWith("[") && str.endsWith("]")) {
+			return true;
+		}
+		if (str.startsWith("{") && str.endsWith("}")) {
+			return true;
+		}
+		
+		return false;
+	}
+	
+	public static boolean quoted(String str) {
+		if (str.startsWith("\"") && str.endsWith("\"")) {
+			return true;
+		}
+		if (str.startsWith("'") && str.endsWith("'")) {
+			return true;
+		}
+		
+		return false;
 	}
 
 	public static String escapeDoublequote(String str) {
@@ -266,7 +296,7 @@ public class StringUtil {
 	 
 	 
 	 public static String unquote(Object str) {
-		if (isEmpty(str)) {
+		if (str == null) {
 			return null;
 		}
 		return unquote(str.toString());

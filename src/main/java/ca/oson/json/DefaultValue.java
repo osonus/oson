@@ -6,7 +6,7 @@ import java.beans.beancontext.BeanContextServicesSupport;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -88,13 +88,18 @@ public class DefaultValue {
 	public static Long dlong = 0l;
 	public static Float dfloat = 0f;
 	public static Double ddouble = 0d;
-	public static String simpleDateFormat = "yyyy-MM-dd'T'HH:mm:ss.SS'Z'";
+	public static String simpleDateFormat = "yyyy-MM-dd'T'HH:mm:ss.SS'Z'"; // null; // 
 	public static Date date = Calendar.getInstance().getTime(); // new Date();
 	public static AtomicInteger atomicInteger = new AtomicInteger();
 	public static AtomicLong atomicLong = new AtomicLong();
 	
-
-	
+	public static String simpleDateFormat() {
+		if (simpleDateFormat == null) {
+			SimpleDateFormat dateFormat = new SimpleDateFormat();
+			simpleDateFormat = dateFormat.toLocalizedPattern();
+		}
+		return simpleDateFormat;
+	}
 	
 	public static Collection collection(Class type) {
 		if (List.class.isAssignableFrom(type)) {
@@ -265,22 +270,6 @@ public class DefaultValue {
 		date = Calendar.getInstance().getTime();
 		
 		return date;
-	}
-
-	public static String getJsonValueFieldName(String className) {
-		switch (className) {
-		case "java.net.URL": return "toString";
-		case "java.lang.StringBuilder": return "toString";
-		case "java.lang.StringBuffer": return "toString";
-		case "java.util.UUID": return "toString";
-		case "java.util.Locale": return "toString";
-
-		case "java.net.Inet4Address": return "hostAddress";
-		case "java.net.URI": return "toURL";
-
-		}
-		
-		return null;
 	}
 
 	

@@ -39,7 +39,7 @@ public class Options {
 	/*
 	 * Date formatter for all Date and its sub classes
 	 */
-	private String simpleDateFormat = DefaultValue.simpleDateFormat;
+	private String simpleDateFormat = DefaultValue.simpleDateFormat();
 	private DateFormat dateFormat = new SimpleDateFormat(simpleDateFormat);
 	
 	/*

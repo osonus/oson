@@ -9,7 +9,7 @@ import ca.oson.json.support.TestCaseBase;
 
 public class TestRunner {
 	public static void main(String[] args) {
-		//TestCaseBase.processor = JSON_PROCESSOR.GSON;//.GSON;
+		// TestCaseBase.processor = JSON_PROCESSOR.GSON; //.JACKSON;//
 		Class[] testSuites = new Class[] {NumericTestSuite.class, EnumBooleanDateTestSuite.class,
 				CharacterStringTestSuite.class, ListArrayMapTestSuite.class, UserGuideTestSuite.class,
 				AnnotationTestSuite.class, GsonTestSuite.class, ObjectTestSuite.class};
