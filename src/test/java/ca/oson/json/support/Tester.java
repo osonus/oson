@@ -17,9 +17,15 @@ public class Tester {
 		String test = "LowerCamelLeadingUnderscore_Testing";
 		
 		System.err.println(StringUtil.underscore2CamelCase(test));
+		String test2 = StringUtil.camelCase2Underscore(StringUtil.underscore2CamelCase(test));
+		System.err.println(test2);
+		
+		System.err.println(StringUtil.camelCase2Dash(StringUtil.underscore2CamelCase(test)));
 		
 		test = "THIS_IS_A_TESTING";
 		System.err.println(StringUtil.underscore2CamelCase(test));
+		
+		System.err.println(StringUtil.camelCase2Underscore(StringUtil.underscore2CamelCase(test)));
 	}
 
 	public static void main2(String[] args) {

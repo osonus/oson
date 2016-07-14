@@ -122,8 +122,11 @@ public class StringUtil {
 		// no empty string
 		String[] parts = Arrays.asList(name.split("_")).stream().filter(str -> !str.isEmpty()).collect(Collectors.toList()).toArray(new String[0]);
 
-		sb.append(parts[0]);
-		for (int i = 1; i < parts.length; i++) {
+		for (int i = 0; i < parts.length; i++) {
+			if (parts[i].length() > 1 && !parts[i].matches(".*[a-z].*")) {
+				parts[i] = parts[i].toLowerCase();
+			}
+			
 			sb.append(capitalize(parts[i]));
 		}
 
@@ -135,10 +138,10 @@ public class StringUtil {
 		if (name == null || !name.matches(".*[A-Z].*") || !name.matches(".*[a-z].*"))
 			return name;
 
-		String regex = "([a-z])([A-Z])";
+		String regex = "([a-zA-Z])([A-Z])";
 		String replacement = "$1" + delimiter + "$2";
 
-		return name.replaceAll(regex, replacement);
+		return name.replaceAll(regex, replacement).replaceAll(regex, replacement);
 	}
 
 	public static String camelCase2Underscore(String name) {
