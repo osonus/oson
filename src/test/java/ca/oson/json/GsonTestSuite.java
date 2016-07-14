@@ -31,7 +31,10 @@ import ca.oson.json.gson.functional.*;
 	ExclusionStrategyFunctionalTest.class,
 	ExposeFieldsTest.class,
 	FieldExclusionTest.class,
-	FieldNamingTest.class
+	FieldNamingTest.class,
+	InheritanceTest.class,
+	InstanceCreatorTest.class,
+	InterfaceTest.class
 	
 })
 public class GsonTestSuite {

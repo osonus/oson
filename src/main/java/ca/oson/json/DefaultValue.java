@@ -123,6 +123,18 @@ public class DefaultValue {
 			
 			return new ArrayList();
 			
+			
+		} else if (SortedSet.class.isAssignableFrom(type) || NavigableSet.class.isAssignableFrom(type)) {
+			if (type == ConcurrentSkipListSet.class) {
+				return new ConcurrentSkipListSet();
+			} else if (type == TreeSet.class) {
+				return new TreeSet();
+				
+			}
+			
+			return new TreeSet();
+			
+			
 		} else if (Set.class.isAssignableFrom(type)) {
 			if (type == HashSet.class) {
 				return new HashSet();
@@ -168,16 +180,6 @@ public class DefaultValue {
 			}
 			
 			return new PriorityQueue();
-			
-		} else if (SortedSet.class.isAssignableFrom(type) || NavigableSet.class.isAssignableFrom(type)) {
-			if (type == ConcurrentSkipListSet.class) {
-				return new ConcurrentSkipListSet();
-			} else if (type == TreeSet.class) {
-				return new TreeSet();
-				
-			}
-			
-			return new TreeSet();
 			
 		} else if (Deque.class.isAssignableFrom(type)) {
 			if (type == ArrayDeque.class) {

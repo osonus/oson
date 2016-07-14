@@ -158,6 +158,14 @@ public class ClassMapper<T> {
 	 */
 	//public String simpleDateFormat = null;
 	private DateFormat dateFormat = null;
+	 
+	
+	/*
+	 * The field or method name (removing get prefix, and camel-cased) 
+	 * that returns the serialized result of the class
+	 */
+	public String jsonValueFieldName = null;
+	
 	
 	public ClassMapper() {
 		super();
@@ -500,15 +508,26 @@ public class ClassMapper<T> {
 		return toStringAsSerializer;
 	}
 	
-	public void setToStringAsSerializer(Boolean toStringAsSerializer) {
+	public ClassMapper setToStringAsSerializer(Boolean toStringAsSerializer) {
 		this.toStringAsSerializer = toStringAsSerializer;
+		return this;
 	}
 	
 	public Boolean getEscapeHtml() {
 		return escapeHtml;
 	}
 	
-	public void setEscapeHtml(Boolean escapeHtml) {
+	public ClassMapper setEscapeHtml(Boolean escapeHtml) {
 		this.escapeHtml = escapeHtml;
+		return this;
+	}
+	
+	public String getJsonValueFieldName() {
+		return jsonValueFieldName;
+	}
+	
+	public ClassMapper setJsonValueFieldName(String jsonValueFieldName) {
+		this.jsonValueFieldName = jsonValueFieldName;
+		return this;
 	}
 }
