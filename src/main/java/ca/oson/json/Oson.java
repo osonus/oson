@@ -33,6 +33,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
@@ -6297,7 +6298,7 @@ public class Oson {
 	}
 
 
-	private <E> Boolean json2Boolean(FieldData objectDTO) {
+	private <E> Object json2Boolean(FieldData objectDTO) {
 		if (objectDTO == null || !objectDTO.json2Java) {
 			return null;
 		}
@@ -6356,7 +6357,7 @@ public class Oson {
 							valueToReturn = BooleanUtil.string2Boolean(returnedValue.toString());
 						}
 							
-						return valueToReturn;
+						// return valueToReturn;
 						
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -6365,6 +6366,10 @@ public class Oson {
 				} else {
 					valueToReturn = BooleanUtil.string2Boolean(valueToProcess);
 				}
+				
+				if (returnType == AtomicBoolean.class) {
+					return new AtomicBoolean(valueToReturn);
+				}
 
 				return valueToReturn;
 
@@ -6372,6 +6377,10 @@ public class Oson {
 				//ex.printStackTrace();
 			}
 		
+		}
+		
+		if (returnType == AtomicBoolean.class && (getDefaultType() == JSON_INCLUDE.DEFAULT || objectDTO.required)) {
+			return new AtomicBoolean();
 		}
 		
 		return json2BooleanDefault(objectDTO);
@@ -6387,13 +6396,17 @@ public class Oson {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
 
-		if (returnType != null && value != null && (returnType == boolean.class || returnType == Boolean.class)) {
+		if (returnType != null && value != null && (returnType == boolean.class || returnType == Boolean.class || returnType == AtomicBoolean.class)) {
 			Boolean valueToProcess = null;
 			String valueToReturn = null;
 			
 			if (returnType == boolean.class) {
 				// return String.valueOf((boolean)value);
 				valueToProcess = Boolean.valueOf((boolean)value);
+				
+			} else if (returnType == AtomicBoolean.class) {
+				valueToProcess = ((AtomicBoolean)value).get();
+				
 			} else {
 				valueToProcess = (Boolean)value;
 			}
@@ -8372,7 +8385,7 @@ public class Oson {
 		} else if (returnType == Character.class || returnType == char.class) {
 			return (E) json2Character(objectDTO);
 			
-		} else if (returnType == Boolean.class || returnType == boolean.class) {
+		} else if (returnType == Boolean.class || returnType == boolean.class || returnType == AtomicBoolean.class) {
 			return (E) json2Boolean(objectDTO);
 			
 		} else if (Number.class.isAssignableFrom(returnType) || returnType.isPrimitive()) {
@@ -8927,7 +8940,7 @@ public class Oson {
 				return StringUtil.doublequote(valueToReturn, isEscapeHtml());
 			}
 
-		} else if (returnType == Boolean.class || returnType == boolean.class) {
+		} else if (returnType == Boolean.class || returnType == boolean.class || returnType == AtomicBoolean.class) {
 			String returnedValue = boolean2Json(objectDTO);
 			
 			if (returnedValue != null) {
@@ -11676,7 +11689,7 @@ public class Oson {
 						cmaps.put(types[0], constructor);
 					}
 				}
-				
+
 				if (cmaps.size() > 0) {
 					Constructor constructor = null;
 
@@ -11717,6 +11730,35 @@ public class Oson {
 							}
 						}
 
+					} else if (StringUtil.isArrayOrList(singleMapValue.toString()) || singleMapValue.getClass().isArray() || Collection.class.isAssignableFrom(singleMapValue.getClass())) {
+						for (Entry<Class, Constructor> entry: cmaps.entrySet()) {
+							Class cls = entry.getKey();
+							constructor = entry.getValue();
+							
+							if (cls.isArray() || Collection.class.isAssignableFrom(cls)) {
+								Object listObject = null;
+								if (singleMapValue instanceof String) {
+									JSONArray objArray = new JSONArray(singleMapValue.toString());
+									listObject = (List)fromJsonMap(objArray);
+								} else {
+									listObject = singleMapValue;
+								}
+								
+								FieldData objectDTO = new FieldData(listObject, cls, true);
+								listObject = json2Object(objectDTO);
+								if (listObject != null) {
+									try {
+										obj = (T) constructor.newInstance(listObject);
+										if (obj != null) {
+											return obj;
+										}
+									} catch (Exception e) {}
+								}
+							}
+							
+						}
+						
+						
 					}
 					
 				
@@ -11955,6 +11997,32 @@ public class Oson {
 						Class[] parameterTypes = method.getParameterTypes();
 
 						String[] parameterNames = ObjectUtil.getParameterNames(method);
+						
+						if (parameterCount == 1 && valueType != null && singleMapValue != null && singleMapValueType != null) {
+							
+							if (ObjectUtil.isSameDataType(parameterTypes[0], singleMapValueType)) {
+								try {
+									method.setAccessible(true);
+									obj = (T)method.invoke(null, singleMapValue);
+									if (obj != null) {
+										return obj;
+									}
+
+								} catch (IllegalAccessException
+										| IllegalArgumentException | InvocationTargetException ex) {
+										//ex.printStackTrace();
+									try {
+										Statement stmt = new Statement(obj, method.getName(), new Object[]{singleMapValue});
+										stmt.execute();
+									} catch (Exception e) {
+										//e.printStackTrace();
+									}
+								}
+								
+							}
+							
+							
+						} else 	
 						if (parameterNames != null && parameterNames.length == parameterCount) {
 							for (String parameterName: ObjectUtil.getParameterNames(method)) {
 								parameterValues[i] = getParameterValue(map, valueType, parameterName, parameterTypes[i]);

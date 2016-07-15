@@ -56,25 +56,25 @@ public class ObjectTest extends TestCaseBase {
 		// System.out.println(json);
 	}
 
-	@Test
-	public void testSerializationGsonBuilder() {
-
-		GsonBuilder gbuilder = new GsonBuilder();
-
-		String gson = oson.pretty(false).includeClassTypeInJson(true).setLevel(3).serialize(gbuilder);
-
-		GsonBuilder gbuilder2 = oson.deserialize(gson);
-		String gson2 = oson.serialize(gbuilder2);
-
-		GsonBuilder gbuilder3 = oson.deserialize(gson2);
-		String gson3 = oson.serialize(gbuilder3);
-		//assertEquals(gson2, gson3);
-
-		String gson4 = oson.pretty(true).setDefaultType(JSON_INCLUDE.NON_DEFAULT).serialize(gbuilder3);
-		
-		//System.out.println(gson4);
-		assertFalse(gson2.length() == gson4.length());
-	}
+//	@Test
+//	public void testSerializationGsonBuilder() {
+//
+//		GsonBuilder gbuilder = new GsonBuilder();
+//
+//		String gson = oson.pretty(false).includeClassTypeInJson(true).setLevel(3).serialize(gbuilder);
+//
+//		GsonBuilder gbuilder2 = oson.deserialize(gson);
+//		String gson2 = oson.serialize(gbuilder2);
+//
+//		GsonBuilder gbuilder3 = oson.deserialize(gson2);
+//		String gson3 = oson.serialize(gbuilder3);
+//		//assertEquals(gson2, gson3);
+//
+//		String gson4 = oson.pretty(true).setDefaultType(JSON_INCLUDE.NON_DEFAULT).serialize(gbuilder3);
+//		
+//		//System.out.println(gson4);
+//		//assertFalse(gson2.length() == gson4.length());
+//	}
 	
 	
 	@Test

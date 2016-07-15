@@ -44,7 +44,7 @@ public class DeSerializerUtil {
 		case "java.util.Locale": return "toString";
 		case "com.google.gson.JsonElement": return "toString";
 		case "com.google.gson.JsonPrimitive": return "toString";
-		
+		case "java.util.Currency": return "toString";
 
 		case "java.net.Inet4Address": return "hostAddress";
 		case "java.net.URI": return "toURL";
@@ -133,10 +133,66 @@ public class DeSerializerUtil {
 					sb.append("[" + repeatedItem);
 					sb.append(bitSet.get(0) ? '1' : '0');
 					
-					for (int i = 1; i < bitSet.length(); i++) {
+					for (int i = 1; i < length; i++) {
 						sb.append(',');
 						sb.append(repeatedItem);
 						sb.append(bitSet.get(i) ? '1' : '0');
+					}
+					sb.append(repeated + "]");
+					
+					return sb.toString();
+				
+				} else {
+					return "";
+				}
+			};
+			break;
+			
+		case "java.util.concurrent.atomic.AtomicIntegerArray": 
+			function = (DataMapper dataMapper) -> {
+				java.util.concurrent.atomic.AtomicIntegerArray array = (java.util.concurrent.atomic.AtomicIntegerArray)dataMapper.getObj();
+				int level = dataMapper.getLevel();
+				int indentation = dataMapper.getPrettyIndentation();
+				String repeated = StringUtil.getPrettyIndentationln(level, indentation);
+				String repeatedItem = StringUtil.getPrettyIndentationln(level + 1, indentation);
+				
+				int length = array.length();
+				if (length > 0) {
+					StringBuilder sb = new StringBuilder();
+					sb.append("[" + repeatedItem);
+					sb.append(array.get(0));
+					for (int i = 1; i < length; i++) {
+						sb.append(',');
+						sb.append(repeatedItem);
+						sb.append(array.get(i));
+					}
+					sb.append(repeated + "]");
+					
+					return sb.toString();
+				
+				} else {
+					return "";
+				}
+			};
+			break;
+			
+		case "java.util.concurrent.atomic.AtomicLongArray": 
+			function = (DataMapper dataMapper) -> {
+				java.util.concurrent.atomic.AtomicLongArray array = (java.util.concurrent.atomic.AtomicLongArray)dataMapper.getObj();
+				int level = dataMapper.getLevel();
+				int indentation = dataMapper.getPrettyIndentation();
+				String repeated = StringUtil.getPrettyIndentationln(level, indentation);
+				String repeatedItem = StringUtil.getPrettyIndentationln(level + 1, indentation);
+				
+				int length = array.length();
+				if (length > 0) {
+					StringBuilder sb = new StringBuilder();
+					sb.append("[" + repeatedItem);
+					sb.append(array.get(0));
+					for (int i = 1; i < length; i++) {
+						sb.append(',');
+						sb.append(repeatedItem);
+						sb.append(array.get(i));
 					}
 					sb.append(repeated + "]");
 					

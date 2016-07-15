@@ -34,7 +34,10 @@ import ca.oson.json.gson.functional.*;
 	FieldNamingTest.class,
 	InheritanceTest.class,
 	InstanceCreatorTest.class,
-	InterfaceTest.class
+	InterfaceTest.class,
+	InternationalizationTest.class,
+	JavaUtilConcurrentAtomicTest.class,
+	JavaUtilTest.class
 	
 })
 public class GsonTestSuite {

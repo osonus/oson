@@ -3,6 +3,7 @@ package ca.oson.json.util;
 import java.io.IOException;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -202,8 +203,31 @@ public class StringUtil {
 	}
 	
 	public static boolean parenthesized(String str) {
+		if (isArrayOrList(str)) {
+			return true;
+		}
+		if (isObjectOrMap(str)) {
+			return true;
+		}
+		
+		return false;
+	}
+	
+	public static boolean isArrayOrList(String str) {
+		if (str == null) {
+			return false;
+		}
+		
 		if (str.startsWith("[") && str.endsWith("]")) {
 			return true;
+		}
+
+		return false;
+	}
+	
+	public static boolean isObjectOrMap(String str) {
+		if (str == null) {
+			return false;
 		}
 		if (str.startsWith("{") && str.endsWith("}")) {
 			return true;
@@ -243,11 +267,6 @@ public class StringUtil {
 		}
 		
 		return quote(str, escapeHtml);
-		
-//		if (str.startsWith("\"") && str.endsWith("\"")) {
-//			return str;
-//		}
-//		return "\"" + str.replaceAll("\"", "\\\\\"").replaceAll("\n", "").replaceAll("\r", "") + "\"";
 	}
 	public static String doublequote(Object obj, boolean escapeHtml) {
 		return doublequote(obj.toString(), escapeHtml);
@@ -260,9 +279,15 @@ public class StringUtil {
              return "\"\"";
          }
          
-		if (length > 1 && (string.startsWith("\"") && string.endsWith("\""))) {
-			return string;
+		if (length > 1) {
+			if (quoted(string)) {
+				return string;
+			}
+			if (parenthesized(string)) {
+				return string;
+			}
 		}
+
 
          char         c = 0;
          int          i;
@@ -385,19 +410,46 @@ public class StringUtil {
 			str = str.replaceAll(filter[0], filter[1]);
 		}
 		
-		filters = new String[][] { 
-                {"\\u003c", "<"},
-                {"\\u003e", ">"},
-                {"\\u003d", "="},
-                {"\\u0026", "&"},
-                {"\\u0027", "'"}
-                };
-		
-		for (String [] filter: filters) {
-			str = str.replaceAll(filter[0], filter[1]);
+		if (escapeHtml) {
+			filters = new String[][] { 
+	                {"\\u003c", "<"},
+	                {"\\u003e", ">"},
+	                {"\\u003d", "="},
+	                {"\\u0026", "&"},
+	                {"\\u0027", "'"}
+	                };
+			
+			for (String [] filter: filters) {
+				str = str.replaceAll(filter[0], filter[1]);
+			}
 		}
 		
+		str = unescapeJava(str);
+		
 		return str;
+	}
+
+	/* 
+	 * ssuukk
+	 */
+	public static String unescapeJava(String escaped) {
+	    if(escaped.indexOf("\\u")==-1)
+	        return escaped;
+
+	    String processed="";
+
+	    int position=escaped.indexOf("\\u");
+	    while(position!=-1) {
+	        if(position!=0)
+	            processed+=escaped.substring(0,position);
+	        String token=escaped.substring(position+2,position+6);
+	        escaped=escaped.substring(position+6);
+	        processed+=(char)Integer.parseInt(token,16);
+	        position=escaped.indexOf("\\u");
+	    }
+	    processed+=escaped;
+
+	    return processed;
 	}
 		
 	public static String unquote2(String str, boolean escapeHtml) {
