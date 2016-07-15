@@ -6120,10 +6120,17 @@ public class Oson {
 		
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
+		
+		String valueToProcess = null;
+		if (value != null) {
+			valueToProcess = value.toString().trim();
+			
+			if (valueToProcess.length() == 0) {
+				return valueToProcess;
+			}
+		}
 
-		if (value != null && value.toString().trim().length() > 0) {
-			String valueToProcess = value.toString().trim();
-
+		if (value != null) {
 			try {
 				Function function = objectDTO.getDeserializer();
 				
@@ -6183,7 +6190,6 @@ public class Oson {
 			} catch (Exception ex) {
 				//ex.printStackTrace();
 			}
-		
 		}
 		
 		return json2StringDefault(objectDTO);
@@ -6200,65 +6206,71 @@ public class Oson {
 		Object value = objectDTO.valueToProcess;
 		Class<E> returnType = objectDTO.returnType;
 
-		if (value != null && value.toString().trim().length() > 0) {
-			String valueToProcess = (String)value;
-
-			if (valueToProcess != null) {
-				try {
-					Function function = objectDTO.getSerializer();
-					if (function != null) {
-						try {
-							if (function instanceof DataMapper2JsonFunction) {
-								DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
-								return ((DataMapper2JsonFunction)function).apply(classData);
+		String valueToProcess = null;
+		
+		if (value != null) {
+			valueToProcess = value.toString().trim();
+			
+			if (valueToProcess.length() == 0) {
+				return valueToProcess;
+			}
+		}
+		
+		if (valueToProcess != null) {
+			try {
+				Function function = objectDTO.getSerializer();
+				if (function != null) {
+					try {
+						if (function instanceof DataMapper2JsonFunction) {
+							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
+							return ((DataMapper2JsonFunction)function).apply(classData);
+							
+						} else if (function instanceof String2JsonFunction) {
+							valueToProcess = ((String2JsonFunction)function).apply(valueToProcess);
+							
+						} else {
+							
+							Object returnedValue = null;
+							if (function instanceof FieldData2JsonFunction) {
+								FieldData2JsonFunction f = (FieldData2JsonFunction)function;
+								FieldData fieldData = objectDTO.clone();
+								returnedValue = f.apply(fieldData);
+							} else {
+								returnedValue = function.apply(value);
+							}
+						
+							if (returnedValue == null) {
+								return null;
 								
-							} else if (function instanceof String2JsonFunction) {
-								valueToProcess = ((String2JsonFunction)function).apply(valueToProcess);
+							} else if (returnedValue instanceof String) {
+								valueToProcess = (String)returnedValue;
 								
 							} else {
-								
-								Object returnedValue = null;
-								if (function instanceof FieldData2JsonFunction) {
-									FieldData2JsonFunction f = (FieldData2JsonFunction)function;
-									FieldData fieldData = objectDTO.clone();
-									returnedValue = f.apply(fieldData);
-								} else {
-									returnedValue = function.apply(value);
-								}
-							
-								if (returnedValue == null) {
-									return null;
-									
-								} else if (returnedValue instanceof String) {
-									valueToProcess = (String)returnedValue;
-									
-								} else {
-									objectDTO.valueToProcess = returnedValue;
-									valueToProcess = object2String(objectDTO);
-								}
-								
+								objectDTO.valueToProcess = returnedValue;
+								valueToProcess = object2String(objectDTO);
 							}
 							
-						} catch (Exception e) {}
-					}
-
-					if (valueToProcess != null) {
-						if ( isMapListArrayObject(valueToProcess) ) {
-							return valueToProcess;
 						}
 						
-						Integer length = objectDTO.getLength();
+					} catch (Exception e) {}
+				}
 
-						if (length != null && length < valueToProcess.length()) {
-							valueToProcess = valueToProcess.substring(0, length);
-						}
-						
+				if (valueToProcess != null) {
+					if ( isMapListArrayObject(valueToProcess) ) {
 						return valueToProcess;
 					}
+					
+					Integer length = objectDTO.getLength();
 
-				} catch (Exception ex) {
-					//ex.printStackTrace();
+					if (length != null && length < valueToProcess.length()) {
+						valueToProcess = valueToProcess.substring(0, length);
+					}
+					
+					return valueToProcess;
 				}
+
+			} catch (Exception ex) {
+				//ex.printStackTrace();
 			}
 		}
 		
@@ -8358,8 +8370,8 @@ public class Oson {
 	private <E> E json2Object(FieldData objectDTO) {
 		// String value, Class<E> returnType
 		Object value = objectDTO.valueToProcess;
-		
-		if (StringUtil.isEmpty(value)) {
+		//if (StringUtil.isEmpty(value)) {
+		if (value == null) {
 			return null;
 		}
 

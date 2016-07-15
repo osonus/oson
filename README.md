@@ -21,23 +21,21 @@ Just like annotation and lambda expressions make Java look like a functional lan
 ###*Usage*
 
 ```
-		Oson oson = new Oson().includeClassTypeInJson(true);
-		String gson = oson.serialize(new GsonBuilder());
-		System.out.println(gson);
-		GsonBuilder gbuilder = oson.deserialize(gson);
-		
-		String gson2 = oson.pretty().toJson(gbuilder);
-		System.err.println(gson2);
-		GsonBuilder gbuilder2 = oson.fromJson(gson2);
-		
-		String gson3 = oson.writeValueAsString(gbuilder2);
-		System.out.println(gson3);
-		
-		if (gson2.equals(gson3)) {
-			System.err.println("Successful");
-		} else {
-			System.err.println("Failed!!!");
-		}
+		Oson oson = new Oson();
+
+		String json = "[\"Hello World\",\"\"]";
+
+		Set set = oson.deserialize(json, LinkedHashSet.class);
+		assertEquals(LinkedHashSet.class, set.getClass());
+		assertEquals(json, oson.serialize(set));
+
+		set = oson.asGson().deserialize(json, LinkedHashSet.class);
+		assertEquals(LinkedHashSet.class, set.getClass());
+		assertEquals(json, oson.serialize(set));
+
+		set = oson.asJackson().deserialize(json, LinkedHashSet.class);
+		assertEquals(LinkedHashSet.class, set.getClass());
+		assertEquals(json, oson.serialize(set));
 ```
 
 ###*License*

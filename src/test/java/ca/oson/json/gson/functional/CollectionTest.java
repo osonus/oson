@@ -226,8 +226,8 @@ public class CollectionTest extends TestCaseBase {
 
   public void testCollectionOfStringsDeserialization() {
     String json = "[\"Hello\",\"World\"]";
-    Type collectionType = new TypeToken<Collection<String>>() { }.getType();
-    Collection<String> target = oson.clearAll().fromJson(json, collectionType);
+    //Type collectionType = new TypeToken<Collection<String>>() { }.getType();
+    Collection<String> target = oson.clearAll().fromJson(json);//, collectionType
 
     assertTrue(target.contains("Hello"));
     assertTrue(target.contains("World"));

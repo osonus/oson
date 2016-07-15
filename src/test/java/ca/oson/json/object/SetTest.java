@@ -1,9 +1,13 @@
 package ca.oson.json.object;
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.NavigableSet;
 import java.util.TreeSet;
-
 import java.util.Set;
+import java.util.SortedSet;
+
+import ca.oson.json.Oson;
 import ca.oson.json.support.TestCaseBase;
 
 public class SetTest extends TestCaseBase {
@@ -20,14 +24,44 @@ public class SetTest extends TestCaseBase {
 	}
 
 	public void testTreeSetDeserialize() {
-		String json = "[\"123\",\"This is a test\"]";
+		Oson oson = new Oson();
 		
-		Set set = oson.deserialize(json, TreeSet.class);
-
+		String json = "[\"Hello World\",\"\"]";
+		String expected = "[\"\",\"Hello World\"]";
+		
+		Set set = oson.deserialize(json, SortedSet.class);
 		assertEquals(TreeSet.class, set.getClass());
-
-		assertEquals("[123, This is a test]", set.toString());
+		assertEquals(expected, oson.serialize(set));
+		
+		
+		set = oson.asGson().deserialize(json, SortedSet.class);
+		assertEquals(TreeSet.class, set.getClass());
+		assertEquals(expected, oson.serialize(set));
+		
+		set = oson.asJackson().deserialize(json, SortedSet.class);
+		assertEquals(TreeSet.class, set.getClass());
+		assertEquals(expected, oson.serialize(set));
 	}
+	
+	public void testLinkedHashSetDeserialize() {
+		Oson oson = new Oson();
+		
+		String json = "[\"Hello World\",\"\"]";
+
+		Set set = oson.deserialize(json, LinkedHashSet.class);
+		assertEquals(LinkedHashSet.class, set.getClass());
+		assertEquals(json, oson.serialize(set));
+		
+		
+		set = oson.asGson().deserialize(json, LinkedHashSet.class);
+		assertEquals(LinkedHashSet.class, set.getClass());
+		assertEquals(json, oson.serialize(set));
+		
+		set = oson.asJackson().deserialize(json, LinkedHashSet.class);
+		assertEquals(LinkedHashSet.class, set.getClass());
+		assertEquals(json, oson.serialize(set));
+	}
+	
 	
 	public void testHashSetSerialize() {
 		HashSet<Object> set = new HashSet<>();
