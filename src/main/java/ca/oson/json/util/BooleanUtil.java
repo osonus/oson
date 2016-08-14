@@ -38,7 +38,7 @@ public class BooleanUtil {
 	}
 	
 	public static Boolean string2Boolean(String str) {
-		if (str == null) {
+		if (str == null || str.equalsIgnoreCase("null")) {
 			return null;
 		}
 		

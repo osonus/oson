@@ -37,7 +37,9 @@ import ca.oson.json.gson.functional.*;
 	InterfaceTest.class,
 	InternationalizationTest.class,
 	JavaUtilConcurrentAtomicTest.class,
-	JavaUtilTest.class
+	JavaUtilTest.class,
+	JsonAdapterAnnotationOnClassesTest.class,
+	JsonAdapterAnnotationOnFieldsTest.class
 	
 })
 public class GsonTestSuite {

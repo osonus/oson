@@ -16,7 +16,7 @@ Just like annotation and lambda expressions make Java look like a functional lan
 
 ###*Oson Documentation*
 
-  * Gson [user guide](https://github.com/osonus/oson/blob/master/UserGuide.md): This guide contains examples on how to use Oson in your code.
+  * Oson [user guide](https://github.com/osonus/oson/blob/master/UserGuide.md): This guide contains examples on how to use Oson in your code.
 
 ###*Usage*
 

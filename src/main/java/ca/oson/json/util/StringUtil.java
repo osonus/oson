@@ -9,6 +9,8 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.json.JSONObject;
+
 import ca.oson.json.Oson.FIELD_NAMING;
 
 public class StringUtil {
@@ -42,7 +44,7 @@ public class StringUtil {
 	
 	
 	public static <T> boolean isNull(T obj) {
-		if (obj == null) return true;
+		if (obj == null || obj.equals(JSONObject.NULL) || obj.toString().equalsIgnoreCase("null")) return true;
 		
 		if (obj instanceof Optional) {
 			Optional<T> opt = Optional.ofNullable(obj);
@@ -61,7 +63,7 @@ public class StringUtil {
 		}
 		
 		String str = obj.toString().trim();
-		return (str.length() == 0 || str.equalsIgnoreCase("null") || str.equals("\"\"") || str.equals("''") || obj.getClass().getName().equals("org.json.JSONObject$Null"));
+		return (str.length() == 0 || str.equals("\"\"") || str.equals("''") || obj.getClass().getName().equals("org.json.JSONObject$Null"));
 	}
 
 	public static boolean isEmpty(String str) {
@@ -271,6 +273,9 @@ public class StringUtil {
 	public static String doublequote(Object obj, boolean escapeHtml) {
 		return doublequote(obj.toString(), escapeHtml);
 	}
+	public static String doublequote(Object obj) {
+		return doublequote(obj, true);
+	}
 	
 	// modified From Jettison
 	 public static String quote(String string, boolean escapeHtml) {
@@ -375,6 +380,11 @@ public class StringUtil {
          sb.append('"');
          return sb.toString();
      }
+	 
+	 
+	 public static String unquote(Object str) {
+		 return unquote(str, true);
+	 }
 	 
 	 
 	 public static String unquote(Object str, boolean escapeHtml) {

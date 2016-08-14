@@ -117,9 +117,9 @@ public class ExclusionStrategyFunctionalTest extends TestCaseBase {
   }
 
   public void testExcludeTopLevelClassSerialization() {
-    Gson gson = new GsonBuilder()
-        .addSerializationExclusionStrategy(EXCLUDE_SAMPLE_OBJECT_FOR_TEST)
-        .create();
+//    Gson gson = new GsonBuilder()
+//        .addSerializationExclusionStrategy(EXCLUDE_SAMPLE_OBJECT_FOR_TEST)
+//        .create();
     assertEquals(null, oson.setIgnore(SampleObjectForTest.class, true).toJson(new SampleObjectForTest(), SampleObjectForTest.class));
   }
 

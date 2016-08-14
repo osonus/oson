@@ -86,7 +86,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.InstanceCreator;
 import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
 import com.google.gson.annotations.Since;
 
 import ca.oson.json.function.*;
@@ -7331,7 +7330,12 @@ public class Oson {
 		}
 		
 		if (!StringUtil.isEmpty(value)) {
-			Collection<E> collection = (Collection<E>) value;
+			Collection<E> collection = null;
+			try {
+				collection = (Collection<E>) value;
+			} catch (Exception e) {
+				collection = new ArrayList();
+			}
 	
 			if (collection.size() > 0) {
 				Function function = objectDTO.getDeserializer();
@@ -8212,13 +8216,15 @@ public class Oson {
 				E[] arr = (E[]) Array.newInstance(componentType, values.size());
 				int i = 0;
 				for (Object val: values) {
-					if (val != null) {
+					if (!StringUtil.isNull(val)) {
 						FieldData newFieldData = new FieldData(val, objectDTO.returnType, objectDTO.json2Java, objectDTO.level, objectDTO.set);
 						newFieldData.componentType = objectDTO.componentType;
 						newFieldData.returnType = guessComponentType(newFieldData);
 						newFieldData.fieldMapper = objectDTO.fieldMapper;
 						E object = json2Object(newFieldData);
 						arr[i++] = object;
+					} else {
+						arr[i++] = null;
 					}
 				}
 				
@@ -8370,8 +8376,7 @@ public class Oson {
 	private <E> E json2Object(FieldData objectDTO) {
 		// String value, Class<E> returnType
 		Object value = objectDTO.valueToProcess;
-		//if (StringUtil.isEmpty(value)) {
-		if (value == null) {
+		if (StringUtil.isNull(value)) {
 			return null;
 		}
 
@@ -8861,6 +8866,23 @@ public class Oson {
 		return false;
 	}
 	
+	
+	private <E> String processNullValue(int level) {
+		if (level > 0) {
+			return null;
+		}
+		
+		switch(getDefaultType()) {
+		case ALWAYS: return "null";
+		case NON_NULL: return "";
+		case NON_EMPTY: return "";
+		case NON_DEFAULT: return "";
+		case DEFAULT: return "null";
+		case NONE: return "null";
+		default: return "null";
+		}
+	}
+	
 	//, int level, Set set
 	private <E,R> String object2Json(FieldData objectDTO) {
 		E value = (E) objectDTO.valueToProcess;
@@ -8882,19 +8904,9 @@ public class Oson {
 					return obj.toString();
 				}
 				
-			} else if (level > 0) {
-				return null;
 			}
-			
-			switch(getDefaultType()) {
-			case ALWAYS: return "null";
-			case NON_NULL: return "";
-			case NON_EMPTY: return "";
-			case NON_DEFAULT: return "";
-			case DEFAULT: return "null";
-			case NONE: return "null";
-			default: return "null";
-			}
+
+			return processNullValue(level);
 		}
 		
 		// first, get the class mapper
@@ -8908,7 +8920,7 @@ public class Oson {
 
 		if (returnType == null) {
 			if (value == null) {
-				return null;
+				return processNullValue(level);
 			} else if (objectDTO.isJsonRawValue()) {
 				return value.toString();
 			} else {
@@ -8922,7 +8934,7 @@ public class Oson {
 			value = (E) string2Json(objectDTO);
 
 			if (value == null) {
-				return null;
+				return processNullValue(level);
 			}
 			
 			String str = value.toString();
@@ -8943,7 +8955,7 @@ public class Oson {
 			String valueToReturn = character2Json(objectDTO);
 
 			if (valueToReturn == null) {
-				return null;
+				return processNullValue(level);
 			}
 
 			if (objectDTO.isJsonRawValue()) {
@@ -8973,7 +8985,7 @@ public class Oson {
 				}
 			}
 			
-			return null;
+			return processNullValue(level);
 			
 			
 		} else if (Number.class.isAssignableFrom(returnType) || returnType.isPrimitive()) {
@@ -9011,7 +9023,7 @@ public class Oson {
 				returnedValue = atomicLong2Json(objectDTO);
 				
 			} else {
-				return null;
+				return processNullValue(level);
 			}
 			
 			
@@ -9027,7 +9039,7 @@ public class Oson {
 				}
 			}
 			
-			return null;
+			return processNullValue(level);
 
 		} else if (Date.class.isAssignableFrom(returnType)) {
 			String returnedValue = date2Json(objectDTO);
@@ -9044,7 +9056,7 @@ public class Oson {
 				}
 			}
 			
-			return null;
+			return processNullValue(level);
 
 		// returnType.isEnum()  || value instanceof Enum<?>
 		} else if (Enum.class.isAssignableFrom(returnType)) {
@@ -9063,7 +9075,7 @@ public class Oson {
 				}
 			}
 			
-			return null;
+			return processNullValue(level);
 			
 		} else if (Collection.class.isAssignableFrom(returnType)) {
 			return collection2Json(objectDTO);
@@ -13373,10 +13385,10 @@ public class Oson {
 			valueType = (Class<T>) source.getClass();
 		}
 
-
 		return object2Json(new FieldData(source, valueType, componentType, false));
 	}
 	
+
 	public <T> String serialize(T source, Class<T> valueType) {
 		JSON_PROCESSOR processor = getJsonProcessor();
 
