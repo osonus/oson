@@ -1656,7 +1656,7 @@ public class Oson {
 		return this;
 	}
 	public Oson setCommentPatterns() {
-		return setCommentPatterns(null);
+		return setCommentPatterns(Options.defaultPatterns);
 	}
 	public Oson setCommentPatterns(String[] commentPatterns) {
 		options.setCommentPatterns(commentPatterns);
@@ -7078,7 +7078,12 @@ public class Oson {
 		Map defaultValue = (Map)objectDTO.defaultValue;
 		
 		if (!StringUtil.isEmpty(value)) {
-			Map<String, Object> values = (Map<String, Object>)value;
+			Map<String, Object> values = null;
+			try {
+				values = (Map<String, Object>)value;
+			} catch (Exception e) {
+				values = new HashMap();
+			}
 	
 			if (values.size() > 0) {
 				Function function = objectDTO.getDeserializer();
@@ -7164,7 +7169,21 @@ public class Oson {
 							component = getDefaultValue(componentType);
 						}
 						
-						returnObj.put(entry.getKey(), component);
+						String key = entry.getKey();
+						Object keyObj = null;
+						if (StringUtil.parenthesized(key)) {
+							keyObj = getListMapObject (key);
+							FieldData newFieldData = new FieldData(keyObj, keyObj.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
+							newFieldData.returnType = guessComponentType(newFieldData);
+							newFieldData.fieldMapper = objectDTO.fieldMapper;
+							keyObj = json2Object(newFieldData);
+						}
+						
+						if (keyObj == null) {
+							returnObj.put(key, component);
+						} else {
+							returnObj.put(keyObj, component);
+						}
 					}
 					
 					return returnObj;
@@ -7180,7 +7199,7 @@ public class Oson {
 		Class<?> returnType = objectDTO.returnType;
 
 		if (value != null && ((Map) value).size() > 0) {
-			Map<String, Object> map = (Map) value;
+			Map<Object, Object> map = (Map) value;
 			Function function = objectDTO.getSerializer();
 			String valueToReturn = null;
 			
@@ -7224,7 +7243,7 @@ public class Oson {
 			String repeatedItem = getPrettyIndentationln(objectDTO.level);
 			StringBuilder sbuilder = new StringBuilder();
 			
-			Set<String> names = map.keySet();
+			Set<Object> names = map.keySet();
 			try {
 				if (getOrderByKeyAndProperties()) {//LinkedHashSet
 					names = new TreeSet(names);
@@ -7232,11 +7251,17 @@ public class Oson {
 				
 				Class lastValueType = null;
 
-				for (String name : names) {
+				for (Object name : names) {
 					Object v = map.get(name);
 
 					if (name != null) {
-						sbuilder.append(repeatedItem + "\"" + name + "\":" + pretty);
+						Class keyClass = name.getClass();
+						if (!ObjectUtil.isBasicDataType(keyClass)) {
+							FieldData newFieldData = new FieldData(name, keyClass, objectDTO.json2Java, objectDTO.level, objectDTO.set);
+							newFieldData.fieldMapper = objectDTO.fieldMapper;
+							name = object2Json(newFieldData);
+						}
+						sbuilder.append(repeatedItem + StringUtil.doublequote(name) + ":" + pretty);
 						
 						String str = null;
 						if (v != null) {

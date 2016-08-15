@@ -39,7 +39,10 @@ import ca.oson.json.gson.functional.*;
 	JavaUtilConcurrentAtomicTest.class,
 	JavaUtilTest.class,
 	JsonAdapterAnnotationOnClassesTest.class,
-	JsonAdapterAnnotationOnFieldsTest.class
+	JsonAdapterAnnotationOnFieldsTest.class,
+	JsonParserTest.class,
+	LeniencyTest.class,
+	MapAsArrayTypeAdapterTest.class
 	
 })
 public class GsonTestSuite {
