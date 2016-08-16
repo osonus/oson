@@ -7119,11 +7119,19 @@ public class Oson {
 					
 				}
 				
-			} else if (StringUtil.isNumeric(obj.toString())) {
-				if (obj.toString().contains(".")) {
-					return Double.class;
-				} else {
-					return Integer.class;
+			}
+//			else if (StringUtil.isNumeric(obj.toString())) {
+//				if (obj.toString().contains(".")) {
+//					return Double.class;
+//				} else {
+//					return Integer.class;
+//				}
+//			}
+			
+			if (type != null && type.getComponentType() != null) {
+				Class classType = type.getComponentType().getClassType();
+				if (classType != null && ObjectUtil.isSameDataType(classType, itemType)) {
+					return classType;
 				}
 			}
 			
@@ -7143,10 +7151,10 @@ public class Oson {
 			try {
 				values = (Map<String, Object>)value;
 			} catch (Exception e) {
-				values = new HashMap();
+				// values = null; // new HashMap();
 			}
 	
-			if (values.size() > 0) {
+			if (values != null && values.size() > 0) {
 				Function function = objectDTO.getDeserializer();
 
 				if (function != null) {
@@ -7187,7 +7195,7 @@ public class Oson {
 					} catch (Exception e) {}
 				}
 
-				if (values.size() > 0) {
+				if (values != null && values.size() > 0) {
 					if (returnObj == null) {
 						if (defaultValue != null) {
 							returnObj = defaultValue;
@@ -7210,7 +7218,6 @@ public class Oson {
 					
 					Class<E> componentType = guessComponentType(objectDTO); // objectDTO.getComponentType(getJsonClassType());
 					boolean isObject = ObjectUtil.isObject(componentType);
-					
 
 					for (Entry<String, Object> entry: values.entrySet()) {
 						Object obj = entry.getValue(); // obj.getClass()
@@ -7219,8 +7226,10 @@ public class Oson {
 						if (obj != null) {
 							FieldData newFieldData = new FieldData(obj, obj.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
 							newFieldData.returnType = guessComponentType(newFieldData);
-							if (isObject && ObjectUtil.isBasicDataType(newFieldData.returnType)) {
-								newFieldData.returnType = componentType;
+							if (isObject) {
+								if (ObjectUtil.isBasicDataType(newFieldData.returnType)) {
+									newFieldData.returnType = componentType;
+								}
 							}
 							newFieldData.fieldMapper = objectDTO.fieldMapper;
 							component = json2Object(newFieldData);
@@ -7235,6 +7244,15 @@ public class Oson {
 						if (StringUtil.parenthesized(key)) {
 							keyObj = getListMapObject (key);
 							FieldData newFieldData = new FieldData(keyObj, keyObj.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
+							newFieldData.field = objectDTO.field;
+							newFieldData.setter = objectDTO.setter;
+							newFieldData.enclosingtype = objectDTO.enclosingtype;
+							newFieldData.returnType = guessMapKeyType(newFieldData);
+							newFieldData.fieldMapper = objectDTO.fieldMapper;
+							keyObj = json2Object(newFieldData);
+							
+						} else {
+							FieldData newFieldData = new FieldData(key, key.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
 							newFieldData.field = objectDTO.field;
 							newFieldData.setter = objectDTO.setter;
 							newFieldData.enclosingtype = objectDTO.enclosingtype;

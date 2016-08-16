@@ -4,6 +4,7 @@ import java.beans.beancontext.BeanContext;
 import java.beans.beancontext.BeanContextServices;
 import java.beans.beancontext.BeanContextServicesSupport;
 import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.text.SimpleDateFormat;
@@ -39,6 +40,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -261,6 +263,25 @@ public class DefaultValue {
 			return new SimpleBindings();
 		} else if (type == UIDefaults.class) {
 			return new UIDefaults();
+		} else if (type == ConcurrentMap.class) {
+			return new ConcurrentHashMap();
+		}
+		
+		try {
+			return (Map) type.newInstance();
+		} catch (Exception e) {
+			//e.printStackTrace();
+			Constructor[] constructors = type.getDeclaredConstructors();//.getConstructors();
+			if (constructors != null && constructors.length > 0) {
+				Constructor constructor = constructors[0];
+				try {
+					constructor.setAccessible(true);
+					return (Map) constructor.newInstance(null);
+				} catch (Exception ex) {
+					//ex.printStackTrace();
+				}
+				
+			}
 		}
 		
 		return new HashMap();

@@ -179,7 +179,7 @@ public class ComponentType implements Type {
 		try {
 			return Class.forName(className);
 		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		return null;
 	}
