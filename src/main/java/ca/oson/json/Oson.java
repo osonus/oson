@@ -6715,6 +6715,67 @@ public class Oson {
 		return cachedComponentTypes.get(masterClass);
 	}
 	
+	
+	private <E, R> Class guessMapKeyType(FieldData newFieldData) {
+		Class returnType = newFieldData.returnType;
+		String toGenericString = null;
+		Class fieldType = null;
+		if (newFieldData.field != null) {
+			toGenericString = newFieldData.field.toGenericString();
+			fieldType = ObjectUtil.getComponentType(toGenericString);
+		}
+		if (fieldType == null && returnType != null) {
+			toGenericString = returnType.toGenericString();
+			fieldType = ObjectUtil.getComponentType(toGenericString);
+		}
+		if (fieldType == null && newFieldData.setter != null) {
+			toGenericString = newFieldData.setter.toGenericString();
+			fieldType = ObjectUtil.getComponentType(toGenericString);
+		}
+		
+		ComponentType type = getComponentType();
+		if (type == null) {
+			Class enclosingtype = newFieldData.getEnclosingtype();
+			if (enclosingtype != null) {
+				type = cachedComponentTypes(enclosingtype);
+			}
+		}
+		
+		int level = newFieldData.level;
+
+		if (fieldType != null) {
+			if (type == null) {
+				type = new ComponentType(newFieldData.returnType, fieldType);
+				type = cachedComponentTypes(type);
+				
+			} else {
+				type.add(fieldType);
+			}
+
+			if (newFieldData.returnType == Object.class) {
+				newFieldData.returnType = fieldType;
+			}
+			
+			return fieldType;
+		}
+		
+		if (type != null) {
+			ComponentType componentType = type.getComponentType();
+			while (componentType != null && componentType.getComponentType() != null && level > 1) {
+				componentType = componentType.getComponentType();
+				level--;
+			}
+			
+			if (level == 1 && componentType != null && componentType.getKeyType() != null) {
+				return componentType.getKeyType();
+			}
+			
+			return type.getKeyType();
+		}
+		
+		return guessComponentType(newFieldData);
+	}
+	
 	private <E, R> Class guessComponentType(FieldData newFieldData) {
 		boolean json2Java = newFieldData.json2Java;
 		
@@ -6863,9 +6924,9 @@ public class Oson {
 				}
 
 				if (type != null) {
-					ComponentType componentType = type.componentType;
-					while (componentType != null && componentType.componentType != null && level > 1) {
-						componentType = componentType.componentType;
+					ComponentType componentType = type.getComponentType();
+					while (componentType != null && componentType.getComponentType() != null && level > 1) {
+						componentType = componentType.getComponentType();
 						level--;
 					}
 					
@@ -7000,9 +7061,9 @@ public class Oson {
 				//  && ComponentType.class.isAssignableFrom(erasedType.getClass())
 				if (type != null) {
 					
-					ComponentType componentType = type.componentType;
-					while (componentType != null && componentType.componentType != null && level > 1) {
-						componentType = componentType.componentType;
+					ComponentType componentType = type.getComponentType();
+					while (componentType != null && componentType.getComponentType() != null && level > 1) {
+						componentType = componentType.getComponentType();
 						level--;
 					}
 					
@@ -7174,7 +7235,10 @@ public class Oson {
 						if (StringUtil.parenthesized(key)) {
 							keyObj = getListMapObject (key);
 							FieldData newFieldData = new FieldData(keyObj, keyObj.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
-							newFieldData.returnType = guessComponentType(newFieldData);
+							newFieldData.field = objectDTO.field;
+							newFieldData.setter = objectDTO.setter;
+							newFieldData.enclosingtype = objectDTO.enclosingtype;
+							newFieldData.returnType = guessMapKeyType(newFieldData);
 							newFieldData.fieldMapper = objectDTO.fieldMapper;
 							keyObj = json2Object(newFieldData);
 						}
@@ -7188,6 +7252,8 @@ public class Oson {
 					
 					return returnObj;
 				}
+			} else {
+				return values;
 			}
 		}
 		
@@ -7409,7 +7475,7 @@ public class Oson {
 					
 					if (EnumSet.class.isAssignableFrom(returnType)) {
 						ComponentType type = getComponentType();
-						Class enm = type.componentType.getClassType();
+						Class enm = type.getComponentType().getClassType();
 						if (enm.isEnum()) {
 							returnObj = (Collection<E>) EnumSet.allOf(enm);
 						}

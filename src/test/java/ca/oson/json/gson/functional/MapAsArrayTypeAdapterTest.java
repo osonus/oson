@@ -46,7 +46,7 @@ public class MapAsArrayTypeAdapterTest extends TestCaseBase {
     //{{"x":5,"y":5}:"a",{"x":8,"y":8}:"b"}
     assertEquals("{{\"x\":5,\"y\":5}:\"a\",{\"x\":8,\"y\":8}:\"b\"}", json);
     Map<Point, String> original2 = oson.<Map<Point, String>>fromJson(json, type);
-    //assertEquals(original, original2);
+    assertEquals(original, original2);
 
     // test that registering a type adapter for one map doesn't interfere with others
     Map<String, Boolean> otherMap = new LinkedHashMap<String, Boolean>();
@@ -101,13 +101,13 @@ public class MapAsArrayTypeAdapterTest extends TestCaseBase {
     Map<Point, String> original = new LinkedHashMap<Point, String>();
     original.put(new Point(6, 5), "abc");
     original.put(new Point(1, 8), "def");
-    String json = oson.useAttribute(false).toJson(original, type);
+    String json = oson.clearAll().useAttribute(false).toJson(original, type);
     //{{"x":6,"y":5}:"abc",{"x":1,"y":8}:"def"}
     assertEquals("{{\"x\":6,\"y\":5}:\"abc\",{\"x\":1,\"y\":8}:\"def\"}", json);
     Map<Point, String> original2 = oson.<Map<Point, String>>fromJson(json, type);
-    //{{x=1, y=8}=def, {x=6, y=5}=abc}
     //{(6,5)=abc, (1,8)=def}
-    //assertEquals(original, original2);
+    //{(6,5)=abc, (1,8)=def}
+    assertEquals(original, original2);
   }
 
   public void testMapWithTypeVariableSerialization() {

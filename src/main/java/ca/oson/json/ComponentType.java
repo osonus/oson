@@ -78,9 +78,10 @@ public class ComponentType implements Type {
 	// just keep for reference
 	private Type erasuredType;
 	
-	String genericLeftName = null;
-	String genericRightName = null;
-	ComponentType componentType = null;
+	private String genericLeftName = null;
+	private String genericRightName = null;
+	private ComponentType componentType = null;
+	private Class keyType = null;
 	
 	private String typeName;
 	private Class type;
@@ -222,7 +223,7 @@ public class ComponentType implements Type {
 						this.genericLeftName = componentTypeName.substring(0, idx).trim();
 						this.genericRightName = componentTypeName.substring(idx + delimiter.length()).trim();
 						this.componentType = new ComponentType(this.genericRightName);
-						
+						this.keyType = this.forName(genericLeftName);
 						return;
 					}
 				}
@@ -326,5 +327,13 @@ public class ComponentType implements Type {
 		} else {
 			return null;
 		}
+	}
+	
+	public ComponentType getComponentType() {
+		return componentType;
+	}
+
+	public Class getKeyType() {
+		return keyType;
 	}
 }
