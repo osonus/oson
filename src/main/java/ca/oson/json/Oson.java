@@ -7261,7 +7261,7 @@ public class Oson {
 							keyObj = json2Object(newFieldData);
 						}
 						
-						if (keyObj == null) {
+						if (keyObj == null) { // failed to get a correct key value, just use its key
 							returnObj.put(key, component);
 						} else {
 							returnObj.put(keyObj, component);
@@ -7282,7 +7282,8 @@ public class Oson {
 		Object value = objectDTO.valueToProcess;
 		Class<?> returnType = objectDTO.returnType;
 
-		if (value != null && ((Map) value).size() > 0) {
+		// && ((Map) value).size() > 0
+		if (value != null) {
 			Map<Object, Object> map = (Map) value;
 			Function function = objectDTO.getSerializer();
 			String valueToReturn = null;
@@ -7339,14 +7340,6 @@ public class Oson {
 					Object v = map.get(name);
 
 					if (name != null) {
-						Class keyClass = name.getClass();
-						if (!ObjectUtil.isBasicDataType(keyClass)) {
-							FieldData newFieldData = new FieldData(name, keyClass, objectDTO.json2Java, objectDTO.level, objectDTO.set);
-							newFieldData.fieldMapper = objectDTO.fieldMapper;
-							name = object2Json(newFieldData);
-						}
-						sbuilder.append(repeatedItem + StringUtil.doublequote(name) + ":" + pretty);
-						
 						String str = null;
 						if (v != null) {
 							lastValueType = v.getClass();
@@ -7355,9 +7348,21 @@ public class Oson {
 							str = object2Json(newFieldData);
 						}
 						
-						if (str == null && getDefaultType() == JSON_INCLUDE.DEFAULT) {
-							str = getDefaultValue(lastValueType).toString();
+						if (str == null) {
+							if (getDefaultType() == JSON_INCLUDE.DEFAULT) {
+								str = "null"; // getDefaultValue(lastValueType).toString();
+							} else {
+								continue;
+							}
 						}
+						
+						Class keyClass = name.getClass();
+						if (!ObjectUtil.isBasicDataType(keyClass)) {
+							FieldData newFieldData = new FieldData(name, keyClass, objectDTO.json2Java, objectDTO.level, objectDTO.set);
+							newFieldData.fieldMapper = objectDTO.fieldMapper;
+							name = object2Json(newFieldData);
+						}
+						sbuilder.append(repeatedItem + StringUtil.doublequote(name) + ":" + pretty);
 						
 						sbuilder.append(str);
 						sbuilder.append(",");
@@ -7371,7 +7376,8 @@ public class Oson {
 			String str = sbuilder.toString();
 			int size = str.length();
 			if (size == 0) {
-				return "{}";
+				return map2JsonDefault(objectDTO);
+
 			} else {
 				return "{" + str.substring(0, size - 1) + repeated + "}";
 			}
@@ -7382,11 +7388,11 @@ public class Oson {
 	
 	
 	private String map2JsonDefault(FieldData objectDTO) {
-		Map valueToReturn = json2MapDefault(objectDTO);
-		
-		if (valueToReturn == null) {
-			return null;
-		}
+//		Map valueToReturn = json2MapDefault(objectDTO);
+//		
+//		if (valueToReturn == null) {
+//			return null;
+//		}
 
 		switch (objectDTO.defaultType) {
 		case ALWAYS:
@@ -9927,10 +9933,11 @@ public class Oson {
 			return null;
 		}
 
-		int hash = ObjectUtil.hashCode(obj);
-		if (!objectDTO.goAhead(hash)) {
-			return "{}";
-		}
+		// it is possible the same object shared by multiple variables inside the same enclosing object
+//		int hash = ObjectUtil.hashCode(obj);
+//		if (!objectDTO.goAhead(hash)) {
+//			return "{}";
+//		}
 		
 		ClassMapper classMapper = objectDTO.classMapper;
 		// first build up the class-level processing rules

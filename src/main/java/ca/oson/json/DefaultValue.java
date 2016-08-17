@@ -8,6 +8,7 @@ import java.lang.reflect.Constructor;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.text.SimpleDateFormat;
+import java.util.AbstractMap;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -23,11 +24,13 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.NavigableSet;
 import java.util.PriorityQueue;
 import java.util.Properties;
 import java.util.Queue;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.Stack;
 import java.util.TreeMap;
@@ -41,6 +44,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -60,6 +64,7 @@ import javax.management.relation.RoleList;
 import javax.management.relation.RoleUnresolvedList;
 import javax.print.attribute.standard.JobStateReasons;
 import javax.print.attribute.standard.PrinterStateReasons;
+import javax.script.Bindings;
 import javax.script.SimpleBindings;
 import javax.swing.UIDefaults;
 
@@ -259,12 +264,19 @@ public class DefaultValue {
 			return new PrinterStateReasons();
 		} else if (type == Properties.class) {
 			return new Properties();
-		} else if (type == SimpleBindings.class) {
+		} else if (type == SimpleBindings.class || type == Bindings.class) {
 			return new SimpleBindings();
 		} else if (type == UIDefaults.class) {
 			return new UIDefaults();
 		} else if (type == ConcurrentMap.class) {
 			return new ConcurrentHashMap();
+		} else if (type == ConcurrentNavigableMap.class || type == NavigableMap.class) {
+			return new ConcurrentSkipListMap();
+		} else if (type == SortedMap.class) {
+			return new TreeMap();
+		} else if (type == AbstractMap.class) {
+			return new HashMap();
+			
 		}
 		
 		try {

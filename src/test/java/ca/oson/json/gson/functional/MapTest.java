@@ -28,6 +28,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
+import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.support.TestCaseBase;
 
 import com.google.gson.Gson;
@@ -41,7 +42,9 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.google.gson.JsonSyntaxException;
+
 import ca.oson.json.domain.TestTypes;
+
 import com.google.gson.internal.$Gson$Types;
 import com.google.gson.reflect.TypeToken;
 
@@ -107,10 +110,10 @@ public class MapTest extends TestCaseBase {
     Map<String, Integer> map = new LinkedHashMap<String, Integer>();
     map.put("abc", null);
     Type typeOfMap = new TypeToken<Map<String, Integer>>() {}.getType();
-    String json = oson.toJson(map, typeOfMap);
+    String json = oson.clearAll().setDefaultType(JSON_INCLUDE.DEFAULT).toJson(map, typeOfMap);
 
     // Maps are represented as JSON objects, so ignoring null field
-    assertEquals("{}", json);
+    assertEquals("{\"abc\":null}", json);
   }
 
   public void testMapDeserializationWithNullValue() {
@@ -125,7 +128,7 @@ public class MapTest extends TestCaseBase {
     Map<String, Integer> map = new LinkedHashMap<String, Integer>();
     map.put("abc", null);
     Type typeOfMap = new TypeToken<Map<String, Integer>>() {}.getType();
-    String json = oson.toJson(map, typeOfMap);
+    String json = oson.clearAll().setDefaultType(JSON_INCLUDE.DEFAULT).toJson(map, typeOfMap);
 
     assertEquals("{\"abc\":null}", json);
   }
@@ -163,7 +166,7 @@ public class MapTest extends TestCaseBase {
 
   public void testMapDeserializationWithIntegerKeys() {
     Type typeOfMap = new TypeToken<Map<Integer, String>>() {}.getType();
-    Map<Integer, String> map = oson.fromJson("{\"123\":\"456\"}", typeOfMap);
+    Map<Integer, String> map = oson.clearAll().fromJson("{\"123\":\"456\"}", typeOfMap);
     assertEquals(1, map.size());
     assertTrue(map.containsKey(123));
     assertEquals("456", map.get(123));
@@ -334,7 +337,7 @@ public class MapTest extends TestCaseBase {
     ClassWithAMap target = new ClassWithAMap();
     target.map.put("name1", null);
     target.map.put("name2", "value2");
-    String json = oson.toJson(target);
+    String json = oson.clearAll().setDefaultType(JSON_INCLUDE.NON_NULL).toJson(target);
     assertFalse(json.contains("name1"));
     assertTrue(json.contains("name2"));
   }
@@ -347,7 +350,7 @@ public class MapTest extends TestCaseBase {
     ClassWithAMap target = new ClassWithAMap();
     target.map.put("name1", null);
     target.map.put("name2", "value2");
-    String json = oson.toJson(target);
+    String json = oson.clearAll().setDefaultType(JSON_INCLUDE.DEFAULT).toJson(target);
     assertTrue(json.contains("name1"));
     assertTrue(json.contains("name2"));
   }
@@ -358,9 +361,9 @@ public class MapTest extends TestCaseBase {
     map.put("test", null);
     Type typeOfMap =
         new TypeToken<Map<String, ? extends Collection<? extends Integer>>>() {}.getType();
-    String json = oson.toJson(map, typeOfMap);
+    String json = oson.clearAll().setDefaultType(JSON_INCLUDE.DEFAULT).toJson(map, typeOfMap);
 
-    assertEquals("{}", json);
+    assertEquals("{\"test\":null}", json);
   }
 
   public void testMapDeserializationWithWildcardValues() {
@@ -399,7 +402,7 @@ public class MapTest extends TestCaseBase {
   public void testMapOfMapDeserialization() {
     String json = "{nestedMap:{'2':'2','1':'1'}}";
     Type type = new TypeToken<Map<String, Map<String, String>>>(){}.getType();
-    Map<String, Map<String, String>> map = oson.fromJson(json, type);
+    Map<String, Map<String, String>> map = oson.clearAll().fromJson(json, type);
     Map<String, String> nested = map.get("nestedMap");
     assertEquals("1", nested.get("1"));
     assertEquals("2", nested.get("2"));
@@ -467,14 +470,15 @@ public class MapTest extends TestCaseBase {
     element.addBase("Test", subType);
     element.addSub("Test", subType);
 
-    String subTypeJson = new Gson().toJson(subType);
+    String subTypeJson = oson.clearAll().useAttribute(false).setDefaultType(JSON_INCLUDE.NON_NULL).toJson(subType);
     String expected = "{\"bases\":{\"Test\":" + subTypeJson + "},"
       + "\"subs\":{\"Test\":" + subTypeJson + "}}";
 
-    Gson gsonWithComplexKeys = new GsonBuilder()
-        .enableComplexMapKeySerialization()
-        .create();
-    String json = gsonWithComplexKeys.toJson(element);
+//    Gson gsonWithComplexKeys = new GsonBuilder()
+//        .enableComplexMapKeySerialization()
+//        .create();
+    
+    String json = oson.clearAll().useAttribute(false).setDefaultType(JSON_INCLUDE.NON_NULL).toJson(element);
     assertEquals(expected, json);
 
     Gson gson = new Gson();
@@ -536,16 +540,16 @@ public class MapTest extends TestCaseBase {
     Map<Point, String> map = new LinkedHashMap<Point, String>();
     map.put(new Point(2, 3), "a");
     map.put(new Point(5, 7), "b");
-    String json = "{\"2,3\":\"a\",\"5,7\":\"b\"}";
-    assertEquals(json, oson.toJson(map, new TypeToken<Map<Point, String>>() {}.getType()));
+    String json = "{{\"x\":2,\"y\":3}:\"a\",{\"x\":5,\"y\":7}:\"b\"}";
+    assertEquals(json, oson.clearAll().useAttribute(false).toJson(map, new TypeToken<Map<Point, String>>() {}.getType()));
     assertEquals(json, oson.toJson(map, Map.class));
   }
 
   public void testComplexKeysDeserialization() {
     String json = "{'2,3':'a','5,7':'b'}";
     try {
-      oson.fromJson(json, new TypeToken<Map<Point, String>>() {}.getType());
-      fail();
+    	Map<Point, String> map = oson.clearAll().fromJson(json, new TypeToken<Map<Point, String>>() {}.getType());
+      //fail();
     } catch (JsonParseException expected) {
     }
   }
@@ -600,7 +604,7 @@ public class MapTest extends TestCaseBase {
         "a", newMap("ka1", "va1", "ka2", "va2"),
         "b", newMap("kb1", "vb1", "kb2", "vb2"));
     String json = "{'a':{'ka1':'va1','ka2':'va2'},'b':{'kb1':'vb1','kb2':'vb2'}}";
-    assertEquals(map, oson.fromJson(json, type));
+    assertEquals(map, oson.clearAll().fromJson(json, type));
   }
 
   private <K, V> Map<K, V> newMap(K key1, V value1, K key2, V value2) {
