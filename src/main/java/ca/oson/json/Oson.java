@@ -261,7 +261,7 @@ public class Oson {
 		
 		//true if this set did not already contain the specified element
 		public boolean goAhead(int hash) {
-			return set.add(hash) || level < 2;
+			return set.add(hash) || level < 3;
 		}
 		
 		public boolean isJsonRawValue() {
@@ -7339,35 +7339,63 @@ public class Oson {
 				for (Object name : names) {
 					Object v = map.get(name);
 
-					if (name != null) {
-						String str = null;
-						if (v != null) {
-							lastValueType = v.getClass();
-							FieldData newFieldData = new FieldData(v, lastValueType, objectDTO.json2Java, objectDTO.level, objectDTO.set);
-							newFieldData.fieldMapper = objectDTO.fieldMapper;
-							str = object2Json(newFieldData);
+					String str = null;
+					if (v != null) {
+						lastValueType = v.getClass();
+						FieldData newFieldData = new FieldData(v, lastValueType, objectDTO.json2Java, objectDTO.level, objectDTO.set);
+						newFieldData.fieldMapper = objectDTO.fieldMapper;
+						str = object2Json(newFieldData);
+					}
+					
+					if (str == null) {
+						if (getDefaultType() == JSON_INCLUDE.DEFAULT) {
+							str = "null"; // getDefaultValue(lastValueType).toString();
+						} else {
+							continue;
+						}
+					}
+						
+					if (name == null) {
+						switch (objectDTO.defaultType) {
+						case ALWAYS:
+							name = "null";
+						case NON_NULL:
+							continue;
+						case NON_EMPTY:
+							continue;
+						case NON_DEFAULT:
+							continue;
+						case DEFAULT:
+							name = "null";
+						default:
+							name = "null";
 						}
 						
-						if (str == null) {
-							if (getDefaultType() == JSON_INCLUDE.DEFAULT) {
-								str = "null"; // getDefaultValue(lastValueType).toString();
-							} else {
-								continue;
-							}
+						FieldData newFieldData = new FieldData(name, name.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
+						newFieldData.field = objectDTO.field;
+						newFieldData.setter = objectDTO.setter;
+						newFieldData.enclosingtype = objectDTO.enclosingtype;
+						newFieldData.returnType = guessMapKeyType(newFieldData);
+						
+						if (newFieldData.returnType == String.class) {
+							sbuilder.append(repeatedItem + StringUtil.doublequote(name) + ":" + pretty);
+						} else {
+							sbuilder.append(repeatedItem + name + ":" + pretty);
 						}
 						
+					} else {
 						Class keyClass = name.getClass();
+						
 						if (!ObjectUtil.isBasicDataType(keyClass)) {
 							FieldData newFieldData = new FieldData(name, keyClass, objectDTO.json2Java, objectDTO.level, objectDTO.set);
 							newFieldData.fieldMapper = objectDTO.fieldMapper;
 							name = object2Json(newFieldData);
 						}
 						sbuilder.append(repeatedItem + StringUtil.doublequote(name) + ":" + pretty);
-						
-						sbuilder.append(str);
-						sbuilder.append(",");
-						
 					}
+					
+					sbuilder.append(str);
+					sbuilder.append(",");
 				}
 			} catch (Exception e) {
 				//e.printStackTrace();
@@ -7376,7 +7404,20 @@ public class Oson {
 			String str = sbuilder.toString();
 			int size = str.length();
 			if (size == 0) {
-				return map2JsonDefault(objectDTO);
+				switch (objectDTO.defaultType) {
+				case ALWAYS:
+					return "{}";
+				case NON_NULL:
+					return "{}";
+				case NON_EMPTY:
+					return null;
+				case NON_DEFAULT:
+					return null;
+				case DEFAULT:
+					return "{}";
+				default:
+					return "{}";
+				}
 
 			} else {
 				return "{" + str.substring(0, size - 1) + repeated + "}";
@@ -7388,11 +7429,11 @@ public class Oson {
 	
 	
 	private String map2JsonDefault(FieldData objectDTO) {
-//		Map valueToReturn = json2MapDefault(objectDTO);
-//		
-//		if (valueToReturn == null) {
-//			return null;
-//		}
+		Map valueToReturn = json2MapDefault(objectDTO);
+		
+		if (valueToReturn == null) {
+			return null;
+		}
 
 		switch (objectDTO.defaultType) {
 		case ALWAYS:
@@ -9934,10 +9975,10 @@ public class Oson {
 		}
 
 		// it is possible the same object shared by multiple variables inside the same enclosing object
-//		int hash = ObjectUtil.hashCode(obj);
-//		if (!objectDTO.goAhead(hash)) {
-//			return "{}";
-//		}
+		int hash = ObjectUtil.hashCode(obj);
+		if (!objectDTO.goAhead(hash)) {
+			return "{}";
+		}
 		
 		ClassMapper classMapper = objectDTO.classMapper;
 		// first build up the class-level processing rules

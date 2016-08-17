@@ -67,7 +67,7 @@ public class CircularReferenceTest extends TestCaseBase {
 
     String json = oson.toJson(objA);
 
-    String expected = "{\"children\":[{}]}";
+    String expected = "{\"children\":[{\"children\":[{}]}]}";
     
     //System.err.println(json);
     assertEquals(expected, json);

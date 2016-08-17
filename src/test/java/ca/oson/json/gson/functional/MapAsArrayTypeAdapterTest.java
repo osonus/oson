@@ -42,7 +42,7 @@ public class MapAsArrayTypeAdapterTest extends TestCaseBase {
     Map<Point, String> original = new LinkedHashMap<Point, String>();
     original.put(new Point(5, 5), "a");
     original.put(new Point(8, 8), "b");
-    String json = oson.useAttribute(false).toJson(original, type);
+    String json = oson.clearAll().useAttribute(false).toJson(original, type);
     //{{"x":5,"y":5}:"a",{"x":8,"y":8}:"b"}
     assertEquals("{{\"x\":5,\"y\":5}:\"a\",{\"x\":8,\"y\":8}:\"b\"}", json);
     Map<Point, String> original2 = oson.<Map<Point, String>>fromJson(json, type);
@@ -56,7 +56,8 @@ public class MapAsArrayTypeAdapterTest extends TestCaseBase {
         oson.toJson(otherMap, Map.class));
     assertEquals("{\"t\":true,\"f\":false}",
         oson.toJson(otherMap, new TypeToken<Map<String, Boolean>>() {}.getType()));
-    assertEquals(otherMap, oson.<Object>fromJson("{\"t\":true,\"f\":false}",
+    
+    assertEquals(otherMap, oson.clearAll().<Object>fromJson("{\"t\":true,\"f\":false}",
         new TypeToken<Map<String, Boolean>>() {}.getType()));
   }
 

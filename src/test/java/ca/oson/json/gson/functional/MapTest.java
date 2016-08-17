@@ -137,7 +137,7 @@ public class MapTest extends TestCaseBase {
     Map<String, Integer> map = new LinkedHashMap<String, Integer>();
     map.put(null, 123);
     Type typeOfMap = new TypeToken<Map<String, Integer>>() {}.getType();
-    String json = oson.toJson(map, typeOfMap);
+    String json = oson.clearAll().setDefaultType(JSON_INCLUDE.DEFAULT).toJson(map, typeOfMap);
 
     assertEquals("{\"null\":123}", json);
   }
@@ -174,7 +174,7 @@ public class MapTest extends TestCaseBase {
 
   public void testMapDeserializationWithUnquotedIntegerKeys() {
     Type typeOfMap = new TypeToken<Map<Integer, String>>() {}.getType();
-    Map<Integer, String> map = oson.fromJson("{123:\"456\"}", typeOfMap);
+    Map<Integer, String> map = oson.clearAll().fromJson("{123:\"456\"}", typeOfMap);
     assertEquals(1, map.size());
     assertTrue(map.containsKey(123));
     assertEquals("456", map.get(123));
@@ -510,7 +510,8 @@ public class MapTest extends TestCaseBase {
         .enableComplexMapKeySerialization()
         .registerTypeAdapter(TestTypes.Base.class, baseTypeAdapter)
         .create();
-    String json = oson.toJson(element);
+    String json = oson.clearAll().useAttribute(false).setDefaultType(JSON_INCLUDE.NON_NULL).toJson(element);
+    expected = "{\"bases\":{\"Test\":{\"baseName\":\"Base\",\"subName\":\"Sub\"}},\"subs\":{\"Test\":{\"baseName\":\"Base\",\"subName\":\"Sub\"}}}";
     assertEquals(expected, json);
 
     gson = new GsonBuilder()
@@ -582,7 +583,7 @@ public class MapTest extends TestCaseBase {
 
   public void testMapDeserializationWithDuplicateKeys() {
     try {
-    	Map<String, Integer> map = oson.fromJson("{'a':1,'a':2}", new TypeToken<Map<String, Integer>>() {}.getType());
+    	Map<String, Integer> map = oson.clearAll().fromJson("{'a':1,'a':2}", new TypeToken<Map<String, Integer>>() {}.getType());
     	assertEquals(null, map);
       //fail();
     } catch (JsonSyntaxException expected) {
@@ -619,7 +620,7 @@ public class MapTest extends TestCaseBase {
     Map<Double, String> map = new LinkedHashMap<Double, String>();
     map.put(2.3, "a");
     JsonElement tree = new JsonParser().parse(json);
-    assertEquals(map, oson.fromJson(tree.toString(), new TypeToken<Map<Double, String>>() {}.getType()));
+    assertEquals(map, oson.clearAll().fromJson(tree.toString(), new TypeToken<Map<Double, String>>() {}.getType()));
   }
 
   static class Point {

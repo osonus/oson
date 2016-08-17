@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.support.TestCaseBase;
 import junit.framework.TestCase;
 
@@ -43,7 +44,7 @@ public final class ObjectTypeAdapterTest extends TestCaseBase {
   public void testSerializeNullValue() throws Exception {
     Map<String, Object> map = new LinkedHashMap<String, Object>();
     map.put("a", null);
-    String result = oson.toJson(map).replace('"', '\'');
+    String result = oson.clearAll().setDefaultType(JSON_INCLUDE.DEFAULT).toJson(map).replace('"', '\'');
     assertEquals("{'a':null}", result);
   }
 
