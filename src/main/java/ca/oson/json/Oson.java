@@ -10211,14 +10211,26 @@ public class Oson {
 		Map<String, Method> otherMethods = null;
 		
 		if (valueType.isInterface()) {
-			getters = getGetters(obj);
-			setters = getSetters(obj);
-			otherMethods = getOtherMethods(obj);
+			valueType = (Class<R>) obj.getClass();
+		} else if (Modifier.isAbstract( valueType.getModifiers() )) {
+			// valueType
+			
 		} else {
+//			Class objClass = obj.getClass();
+//			if (valueType.isAssignableFrom(objClass)) {
+//				valueType = objClass;
+//			}
+		}
+		
+//		if (valueType.isInterface()) {
+//			getters = getGetters(obj);
+//			setters = getSetters(obj);
+//			otherMethods = getOtherMethods(obj);
+//		} else {
 			getters = getGetters(valueType);
 			setters = getSetters(valueType);
 			otherMethods = getOtherMethods(valueType);
-		}
+//		}
 		
 		Set<Method> jsonAnyGetterMethods = new HashSet<>();
 		
@@ -10366,11 +10378,11 @@ public class Oson {
 				
 		try {
 			Field[] fields = null;
-			if (valueType.isInterface()) {
-				fields = getFields(obj);
-			} else {
+//			if (valueType.isInterface()) {
+//				fields = getFields(obj);
+//			} else {
 				fields = getFields(valueType);
-			}
+//			}
 
 			for (Field f : fields) {
 				f.setAccessible(true);
@@ -10709,6 +10721,13 @@ public class Oson {
 				
 				// field valuie
 				E value = (E) f.get(obj);// ObjectUtil.unwraponce(f.get(obj));
+				
+				if (value != null) {
+					Class vtype = value.getClass();
+					if (returnType.isAssignableFrom(vtype)) {
+						returnType = vtype;
+					}
+				}
 				
 				// value from getter
 				E getterValue = null;
