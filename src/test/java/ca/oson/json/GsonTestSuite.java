@@ -46,7 +46,9 @@ import ca.oson.json.gson.functional.*;
 	MapTest.class,
 	MoreSpecificTypeSerializationTest.class,
 	NamingPolicyTest.class,
-	NullObjectAndFieldTest.class
+	NullObjectAndFieldTest.class,
+	ObjectTest.class
+	
 })
 public class GsonTestSuite {
 

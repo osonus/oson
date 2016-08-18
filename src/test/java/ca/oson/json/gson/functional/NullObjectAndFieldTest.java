@@ -53,7 +53,7 @@ public class NullObjectAndFieldTest extends TestCaseBase {
   public void testTopLevelNullObjectSerialization() {
     Gson gson = gsonBuilder.create();
     String actual = oson.toJson(null);
-    assertEquals(null, actual);
+    assertEquals("null", actual);
 
     actual = oson.toJson(null, String.class);
     assertEquals("null", actual);

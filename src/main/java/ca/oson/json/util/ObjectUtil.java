@@ -225,6 +225,10 @@ public class ObjectUtil {
 	
 	
 	public static boolean isSameDataType(Class ftype, Class mtype) {
+		if (ftype == null || mtype == null) {
+			return false;
+		}
+		
 		if (mtype == java.lang.Integer.class) {
 			if (ftype == int.class
 					|| ftype == byte.class
@@ -667,7 +671,7 @@ public class ObjectUtil {
 
 	            @SuppressWarnings("unchecked")
 	            List<LocalVariableNode> localVariables = method.localVariables;
-	            for (int i = 0; i < argumentTypes.length; i++) {
+	            for (int i = 0; i < argumentTypes.length && i < localVariables.size() - 1; i++) {
 	                // The first local variable actually represents the "this" object
 	                parameterNames.add(localVariables.get(i + 1).name);
 	            }

@@ -6889,7 +6889,7 @@ public class Oson {
 
 			if (returnType != null) {
 				Class comptype = returnType.getComponentType();
-				if (comptype != null) {
+				if ( comptype != null && !comptype.isInterface() && !Modifier.isAbstract(comptype.getModifiers()) ) {
 					return comptype;
 				}
 			}
@@ -7073,7 +7073,7 @@ public class Oson {
 						level--;
 					}
 					
-					if (level == 1 && componentType != null && componentType.getClassType() != null) {
+					if (level <= 2 && componentType != null && componentType.getClassType() != null) {
 						return componentType.getClassType();
 					}
 					
@@ -7491,12 +7491,13 @@ public class Oson {
 			objectDTO.returnType = returnType;
 		}
 		
-		if (!StringUtil.isEmpty(value)) {
+		// isEmpty
+		if (!StringUtil.isNull(value)) {
 			Collection<E> collection = null;
 			try {
 				collection = (Collection<E>) value;
 			} catch (Exception e) {
-				collection = new ArrayList();
+				collection = DefaultValue.collection(returnType); // new ArrayList();
 			}
 	
 			if (collection.size() > 0) {
@@ -7584,6 +7585,9 @@ public class Oson {
 				}
 				
 				return returnObj;
+				
+			} else {
+				return collection;
 			}
 		}
 		
@@ -8544,6 +8548,10 @@ public class Oson {
 
 		Class<E> returnType = objectDTO.returnType;
 		if (returnType == null || returnType == Object.class) {
+			if (StringUtil.isEmpty(value)) {
+				return null;
+			}
+			
 			returnType = (Class<E>) value.getClass();
 			objectDTO.returnType = returnType;
 		}
@@ -8852,6 +8860,22 @@ public class Oson {
 			int size = str.length();
 			if (size > 0) {
 				return "[" + str.substring(0, size - 1) + repeated + "]";
+			} else {
+				switch (objectDTO.defaultType) {
+				case ALWAYS:
+					return "[]";
+				case NON_NULL:
+					return "[]";
+				case NON_EMPTY:
+					return null;
+				case NON_DEFAULT:
+					return null;
+				case DEFAULT:
+					return "[]";
+				default:
+					return "[]";
+				}
+				
 			}
 		}
 		
@@ -10810,7 +10834,7 @@ public class Oson {
 						continue;
 					}
 					
-					str = "null";
+					str = "\"\"";
 					
 				} else if (classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT && DefaultValue.isDefault(str)) {
 					continue;
@@ -11590,6 +11614,7 @@ public class Oson {
 
 		} catch (JSONException ex) {
 			ex.printStackTrace();
+			//throw ex;
 		}
 
 		return null;
@@ -12131,6 +12156,10 @@ public class Oson {
 
 					if (parameterNames != null) {
 						int length = parameterTypes.length;
+						
+						if (length > parameterNames.size()) {
+							length = parameterNames.size();
+						}
 		
 						Object[] parameterValues = new Object[length];
 						for (int i = 0; i < length; i++) {
@@ -13608,7 +13637,7 @@ public class Oson {
 	
 	public <T> String serialize(T source) {
 		if (source == null) {
-			return null;
+			return "null";
 		}
 
 		Class<T> valueType = (Class<T>) source.getClass();
