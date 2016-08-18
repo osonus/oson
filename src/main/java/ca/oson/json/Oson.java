@@ -6786,7 +6786,10 @@ public class Oson {
 			E obj = (E) newFieldData.valueToProcess;
 			
 			Class returnType = newFieldData.returnType;
-			Class itemType = obj.getClass();
+			Class itemType = null;
+			if (obj != null) {
+				itemType = obj.getClass();
+			}
 			
 			if (newFieldData.componentType != null) {
 				Class classType = newFieldData.componentType.getClassType();
@@ -6800,7 +6803,10 @@ public class Oson {
 			if (returnType != null) {
 				returnTypeName = returnType.getName();
 			}
-			String itemTypeName = itemType.getName();
+			String itemTypeName = null;
+			if (itemType != null) {
+				itemTypeName = itemType.getName();
+			}
 			
 			int returnTypeCount = 0;
 			int itemTypeCount = 0;
@@ -6889,7 +6895,7 @@ public class Oson {
 			}
 			
 
-			if ( (returnType != null && Map.class.isAssignableFrom(returnType)) || Map.class.isAssignableFrom(itemType)) {
+			if ( (returnType != null && Map.class.isAssignableFrom(returnType)) || (itemType != null && Map.class.isAssignableFrom(itemType))) {
 				String className = ((Map<String, String>)obj).get(getJsonClassType());
 				if (className != null && className.length() > 0) {
 					try {
@@ -12913,6 +12919,7 @@ public class Oson {
 				Object value = null;
 				boolean jnameFixed = false;
 				String json = fieldMapper.json;
+				int size = nameKeys.size();
 				if (json == null) {
 					if (setter != null) {
 						setters.remove(lcfieldName);
@@ -12944,7 +12951,8 @@ public class Oson {
 				fieldMapper.java = fieldName;
 				fieldMapper.json = name;
 				
-				if (value != null) {
+				// either not null, or a null value exists in the value map
+				if (value != null || size == nameKeys.size() + 1) {
 					FieldData fieldData = new FieldData(obj, f, value, returnType, true, fieldMapper, objectDTO.level, objectDTO.set);
 					fieldData.setter = setter;
 					Class fieldType = guessComponentType(fieldData);
