@@ -7073,7 +7073,7 @@ public class Oson {
 						level--;
 					}
 					
-					if (level <= 2 && componentType != null && componentType.getClassType() != null) {
+					if (level == 1 && componentType != null && componentType.getClassType() != null) {
 						return componentType.getClassType();
 					}
 					
