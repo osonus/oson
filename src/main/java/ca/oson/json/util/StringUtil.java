@@ -101,6 +101,22 @@ public class StringUtil {
 		return (new String(new char[repeat]).replace('\0', c));
 	}
 	
+	public static String repeatString(String str, int repeat) {
+		if (repeat < 1) {
+			return "";
+		}
+		
+		int length = str.length();
+		
+		StringBuffer sb = new StringBuffer(length * repeat);
+		while (repeat > 0) {
+			repeat--;
+			sb.append(str);
+		}
+		
+		return sb.toString();
+	}
+	
 	private static boolean sameCase(char first, char last) {
 		if (first < 91 && last < 91) {
 			return true;

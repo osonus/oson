@@ -251,6 +251,7 @@ public class ComponentType implements Type {
 				String newtypeName = typeName;
 				if (index > -1) {
 					String end = typeName.substring(index);
+					end = end.replaceAll(" ", "");
 					repeat = end.length()/2;
 					
 					newtypeName = typeName.substring(0, index);
@@ -262,6 +263,8 @@ public class ComponentType implements Type {
 					} else {
 						String nickname = primitiveTypeNames.get(newtypeName);
 						this.type =this.forName(StringUtil.repeatChar('[', repeat) + nickname);
+						
+						this.componentType = new ComponentType(newtypeName + StringUtil.repeatString("[]", repeat - 1));
 					}
 					
 				} else {
@@ -272,26 +275,32 @@ public class ComponentType implements Type {
 						String className = newtypeName.substring(0, idx);
 						String componentTypeName = newtypeName.substring(idx + 1, lastidx);
 
-						Class type = this.forName(className);
+						// Class type = this.forName(className);
 
 						if (repeat == 0) {
-							this.type = type;
+							this.type = this.forName(className);
+							this.componentType = new ComponentType(componentTypeName);
 
 						} else {
-							String expression = StringUtil.repeatChar('[', repeat) + "L" + type.getName() + ";";
+							String expression = StringUtil.repeatChar('[', repeat) + "L" + className + ";";
 							this.type = this.forName(expression);
+							
+							this.componentType = new ComponentType(newtypeName + StringUtil.repeatString("[]", repeat - 1));
 						}
-						
-						this.componentType = new ComponentType(componentTypeName);
 
 						
 					// without <>
 					// java.lang.String[]
 					} else {
-						this.type = this.forName(newtypeName);
+						
 						if (repeat > 0) {
-							String expression = StringUtil.repeatChar('[', repeat) + "L" + type.getName() + ";";
+							String expression = StringUtil.repeatChar('[', repeat) + "L" + newtypeName + ";";
 							this.type = this.forName(expression);
+							
+							this.componentType = new ComponentType(newtypeName + StringUtil.repeatString("[]", repeat - 1));
+							
+						} else {
+							this.type = this.forName(newtypeName);
 						}
 					}
 

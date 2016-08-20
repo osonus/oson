@@ -7107,6 +7107,7 @@ public class Oson {
 										if (cmptype.isArray() || Collection.class.isAssignableFrom(cmptype)) {
 											type.add(cmptype);
 										}
+										
 										return ctype;
 										
 									} else if (itemType.isAssignableFrom(ctype) || ctype.isAssignableFrom(itemType)) {
@@ -8372,11 +8373,16 @@ public class Oson {
 					
 					objectDTO.returnObj = returnObj;
 				}
-				objectDTO.valueToProcess = values;
 				
 				objectDTO.incrLevel();
 				
 				// Class<E> componentType = objectDTO.getComponentType(getJsonClassType());
+				for (Object val: values) {
+					if (val != null) {
+						objectDTO.valueToProcess = val;
+						break;
+					}
+				}
 				Class<E> componentType = guessComponentType(objectDTO);
 				
 				E[] arr = (E[]) Array.newInstance(componentType, values.size());

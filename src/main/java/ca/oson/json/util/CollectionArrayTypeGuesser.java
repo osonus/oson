@@ -198,6 +198,9 @@ public class CollectionArrayTypeGuesser {
 	}
 	
 	public static final Class<?> getBaseType(Object obj) {
+		if (obj == null) {
+			return null;
+		}
 		Class<?> type = obj.getClass();
 		
 		while (Collection.class.isAssignableFrom(type) || type.isArray()) {

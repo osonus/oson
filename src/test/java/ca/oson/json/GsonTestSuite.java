@@ -47,7 +47,7 @@ import ca.oson.json.gson.functional.*;
 	MoreSpecificTypeSerializationTest.class,
 	NamingPolicyTest.class,
 	NullObjectAndFieldTest.class,
-	//ObjectTest.class,
+	ObjectTest.class,
 	ParameterizedTypesTest.class
 	
 })
