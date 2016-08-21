@@ -143,6 +143,18 @@ public class FieldMapper<T, E> {
 	 * This flag takes precedence over simpleDateFormat
 	 */
 	public Boolean date2Long = null;
+	
+	
+	/*
+	 * the version number since a member has been present
+	 */
+	public Double since = null;
+	
+	/*
+	 * the version number until a member should be present.
+	 */
+	public Double until = null;
+	
 
 	/*
 	 * property specific date formatter, in case it is Date type
@@ -491,6 +503,16 @@ public class FieldMapper<T, E> {
 
 	public FieldMapper setDate2Long(Boolean date2Long) {
 		this.date2Long = date2Long;
+		return this;
+	}
+	
+	public FieldMapper setSince(Double since) {
+		this.since = since;
+		return this;
+	}
+	
+	public FieldMapper setUntil(Double until) {
+		this.until = until;
 		return this;
 	}
 	

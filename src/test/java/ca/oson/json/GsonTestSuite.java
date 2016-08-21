@@ -58,8 +58,8 @@ import ca.oson.json.gson.functional.*;
 	TypeAdapterPrecedenceTest.class,
 	TypeHierarchyAdapterTest.class,
 	TypeVariableTest.class,
-	UncategorizedTest.class
-	
+	UncategorizedTest.class,
+	VersioningTest.class
 })
 public class GsonTestSuite {
 

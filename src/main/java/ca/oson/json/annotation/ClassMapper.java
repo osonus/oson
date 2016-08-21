@@ -79,10 +79,14 @@ public @interface ClassMapper {
     BOOLEAN includeClassTypeInJson() default BOOLEAN.NONE;
 	
 	/*
-	 * ignore attributes with version number greater than the provided value
+	 * the version number since a type has been present
 	 */
-	double ignoreVersionsAfter() default 0;
+	double since() default 0;
 	
+	/*
+	 * the version number until a type should be present.
+	 */
+	double until() default 0;
 	
     /**
      * Full names of annotations to ignore, for example, 

@@ -88,6 +88,7 @@ import com.google.gson.InstanceCreator;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.annotations.Since;
+import com.google.gson.annotations.Until;
 
 import ca.oson.json.function.*;
 import ca.oson.json.util.*;
@@ -1225,24 +1226,15 @@ public class Oson {
 		return this;
 	}
 
-	private Double getIgnoreVersionsAfter() {
-		return options.getIgnoreVersionsAfter();
+	private Double getVersion() {
+		return options.getVersion();
 	}
 
-	public Oson ignoreVersionsAfter(Double ignoreVersionsAfter) {
-		options.ignoreVersionsAfter(ignoreVersionsAfter);
+	public Oson setVersion(Double version) {
+		options.setVersion(version);
 		reset();
 
 		return this;
-	}
-	
-	private boolean ignoreVersionsAfter(double ignoreVersionsAfter) {
-		Double version = getIgnoreVersionsAfter();
-		if (version == null || ignoreVersionsAfter <= version) {
-			return false;
-		}
-
-		return true;
 	}
 	
 	
@@ -1309,9 +1301,9 @@ public class Oson {
 			mapper.ignoreFieldsWithAnnotations =  getIgnoreFieldsWithAnnotations();
 		}
 		
-		if (mapper.ignoreVersionsAfter == null) {
-			mapper.ignoreVersionsAfter =  getIgnoreVersionsAfter();
-		}
+//		if (mapper.since == null) {
+//			mapper.since = getVersion();
+//		}
 		
 		if (mapper.includeFieldsWithModifiers == null) {
 			mapper.includeFieldsWithModifiers =  getIncludeFieldsWithModifiers();
@@ -2141,8 +2133,8 @@ public class Oson {
 
 		return this;
 	}
-	public <T> Oson setIgnoreVersionsAfter(Class<T> type, Double ignoreVersionsAfter) {
-		cMap(type).setIgnoreVersionsAfter(ignoreVersionsAfter);
+	public <T> Oson setVersion(Class<T> type, Double version) {
+		cMap(type).setSince(version);
 
 		return this;
 	}
@@ -2929,9 +2921,9 @@ public class Oson {
 				gsonBuilder.setExclusionStrategies(strategies.toArray(new ExclusionStrategy[size]));
 			}
 			
-			Double ignoreVersionsAfter = getIgnoreVersionsAfter();
-			if (ignoreVersionsAfter != null) {
-				gsonBuilder.setVersion(ignoreVersionsAfter);
+			Double version = getVersion();
+			if (version != null) {
+				gsonBuilder.setVersion(version);
 			}
 			
 			if (isUseGsonExpose()) {
@@ -9578,8 +9570,12 @@ public class Oson {
 			classMapper.useAttribute = classMapperAnnotation.useAttribute().value();
 		}
 		
-		if (classMapperAnnotation.ignoreVersionsAfter() > 0) {
-			classMapper.ignoreVersionsAfter = classMapperAnnotation.ignoreVersionsAfter();
+		if (classMapperAnnotation.since() > 0) {
+			classMapper.since = classMapperAnnotation.since();
+		}
+		
+		if (classMapperAnnotation.until() > 0) {
+			classMapper.until = classMapperAnnotation.until();
 		}
 		
 		String defaultValue = classMapperAnnotation.defaultValue();
@@ -9705,8 +9701,12 @@ public class Oson {
 			classMapper.ignoreFieldsWithAnnotations = javaClassMapper.ignoreFieldsWithAnnotations;
 		}
 		
-		if (javaClassMapper.ignoreVersionsAfter != null) {
-			classMapper.ignoreVersionsAfter = javaClassMapper.ignoreVersionsAfter;
+		if (javaClassMapper.since != null) {
+			classMapper.since = javaClassMapper.since;
+		}
+		
+		if (javaClassMapper.until != null) {
+			classMapper.until = javaClassMapper.until;
 		}
 		
 		if (javaClassMapper.includeFieldsWithModifiers != null) {
@@ -9813,6 +9813,14 @@ public class Oson {
 			classMapper.ignore =  fieldMapper.ignore;
 		}
 		
+		if (fieldMapper.since != null) {
+			classMapper.since =  fieldMapper.since;
+		}
+		
+		if (fieldMapper.until != null) {
+			classMapper.until =  fieldMapper.until;
+		}
+		
 		return classMapper;
 	}
 	
@@ -9891,8 +9899,12 @@ public class Oson {
 			fieldMapper.setSimpleDateFormat(simpleDateFormat);
 		}
 
-		if (fieldMapperAnnotation.ignoreVersionsAfter() > classMapper.ignoreVersionsAfter) {
-			fieldMapper.ignore = true;
+		if (fieldMapperAnnotation.since() > 0) {
+			fieldMapper.since = fieldMapperAnnotation.since();
+		}
+		
+		if (fieldMapperAnnotation.until() > 0) {
+			fieldMapper.until = fieldMapperAnnotation.until();
 		}
 		
 		if (!StringUtil.isEmpty(fieldMapperAnnotation.name())) {
@@ -10091,6 +10103,17 @@ public class Oson {
 					}
 					break;
 					
+				case "com.google.gson.annotations.Since":
+					Since since = (Since) annotation;
+					classMapper.since = since.value();
+					break;
+					
+					
+				case "com.google.gson.annotations.Until":
+					Until until = (Until) annotation;
+					classMapper.until = until.value();
+					break;
+					
 				case "com.fasterxml.jackson.annotation.JsonIgnoreProperties":
 					JsonIgnoreProperties jsonIgnoreProperties = (JsonIgnoreProperties) annotation;
 					String[] jsonnames = jsonIgnoreProperties.value();
@@ -10196,6 +10219,12 @@ public class Oson {
 		// now processing at the class level
 		
 		if (classMapper.ignore()) {
+			return null;
+		}
+		
+		if (classMapper.since != null && classMapper.since > getVersion()) {
+			return null;
+		} else if (classMapper.until != null && classMapper.until <= getVersion()) {
 			return null;
 		}
 		
@@ -10575,9 +10604,12 @@ public class Oson {
 								
 							case "com.google.gson.annotations.Since":
 								Since since = (Since) annotation;
-								if (since.value() > classMapper.ignoreVersionsAfter) {
-									fieldMapper.ignore = true;
-								}
+								fieldMapper.since = since.value();
+								break;
+								
+							case "com.google.gson.annotations.Until":
+								Until until = (Until) annotation;
+								fieldMapper.until = until.value();
 								break;
 								
 							case "com.fasterxml.jackson.annotation.JsonInclude":
@@ -10731,6 +10763,17 @@ public class Oson {
 					continue;
 				}
 				
+				if (fieldMapper.since != null && fieldMapper.since > getVersion()) {
+					if (getter != null) {
+						getters.remove(lcfieldName);
+					}
+					continue;
+				} else if (fieldMapper.until != null && fieldMapper.until <= getVersion()) {
+					if (getter != null) {
+						getters.remove(lcfieldName);
+					}
+					continue;
+				}
 				
 				// handling name now
 				boolean jnameFixed = false;
@@ -10989,12 +11032,15 @@ public class Oson {
 									exposed.add(lcfieldName);
 								}
 								break;
-								
+
 							case "com.google.gson.annotations.Since":
 								Since since = (Since) annotation;
-								if (since.value() > classMapper.ignoreVersionsAfter) {
-									fieldMapper.ignore = true;
-								}
+								fieldMapper.since = since.value();
+								break;
+								
+							case "com.google.gson.annotations.Until":
+								Until until = (Until) annotation;
+								fieldMapper.until = until.value();
 								break;
 								
 							case "com.fasterxml.jackson.annotation.JsonInclude":
@@ -11134,6 +11180,19 @@ public class Oson {
 				}
 				
 				if (fieldMapper.useAttribute != null && !fieldMapper.useAttribute) {
+					continue;
+				}
+				
+
+				if (fieldMapper.since != null && fieldMapper.since > getVersion()) {
+					if (getter != null) {
+						getters.remove(lcfieldName);
+					}
+					continue;
+				} else if (fieldMapper.until != null && fieldMapper.until <= getVersion()) {
+					if (getter != null) {
+						getters.remove(lcfieldName);
+					}
 					continue;
 				}
 
@@ -12501,6 +12560,17 @@ public class Oson {
 						}
 						break;
 
+					case "com.google.gson.annotations.Since":
+						Since since = (Since) annotation;
+						classMapper.since = since.value();
+						break;
+						
+					case "com.google.gson.annotations.Until":
+						Until until = (Until) annotation;
+						classMapper.until = until.value();
+						break;
+						
+						
 					case "com.fasterxml.jackson.annotation.JsonIgnoreProperties":
 						JsonIgnoreProperties jsonIgnoreProperties = (JsonIgnoreProperties) annotation;
 						String[] jsonnames = jsonIgnoreProperties.value();
@@ -12609,6 +12679,12 @@ public class Oson {
 			// now processing at the class level
 			
 			if (classMapper.ignore()) {
+				return null;
+			}
+			
+			if (classMapper.since != null && classMapper.since > getVersion()) {
+				return null;
+			} else if (classMapper.until != null && classMapper.until <= getVersion()) {
 				return null;
 			}
 			
@@ -12823,12 +12899,15 @@ public class Oson {
 								}
 								exposexists = true;
 								break;
-								
+
 							case "com.google.gson.annotations.Since":
 								Since since = (Since) annotation;
-								if (since.value() > classMapper.ignoreVersionsAfter) {
-									fieldMapper.ignore = true;
-								}
+								fieldMapper.since = since.value();
+								break;
+								
+							case "com.google.gson.annotations.Until":
+								Until until = (Until) annotation;
+								fieldMapper.until = until.value();
 								break;
 
 							case "com.google.gson.annotations.SerializedName":
@@ -12993,6 +13072,18 @@ public class Oson {
 					continue;
 				}
 				
+
+				if (fieldMapper.since != null && fieldMapper.since > getVersion()) {
+					if (setter != null) {
+						setters.remove(lcfieldName);
+					}
+					continue;
+				} else if (fieldMapper.until != null && fieldMapper.until <= getVersion()) {
+					if (setter != null) {
+						setters.remove(lcfieldName);
+					}
+					continue;
+				}
 
 				// get value for name in map
 				Object value = null;
@@ -13211,12 +13302,15 @@ public class Oson {
 									fieldMapper.ignore = true;
 								}
 								break;
-								
+
 							case "com.google.gson.annotations.Since":
 								Since since = (Since) annotation;
-								if (since.value() > classMapper.ignoreVersionsAfter) {
-									fieldMapper.ignore = true;
-								}
+								fieldMapper.since = since.value();
+								break;
+								
+							case "com.google.gson.annotations.Until":
+								Until until = (Until) annotation;
+								fieldMapper.until = until.value();
 								break;
 								
 							case "com.fasterxml.jackson.annotation.JsonInclude":
@@ -13352,6 +13446,16 @@ public class Oson {
 					continue;
 				}
 
+
+				if (fieldMapper.since != null && fieldMapper.since > getVersion()) {
+					nameKeys.remove(name);
+					nameKeys.remove(fieldMapper.json);
+					continue;
+				} else if (fieldMapper.until != null && fieldMapper.until <= getVersion()) {
+					nameKeys.remove(name);
+					nameKeys.remove(fieldMapper.json);
+					continue;
+				}
 				
 				// get value for name in map
 				Object value = null;

@@ -102,7 +102,7 @@ public class Options {
 	/*
 	 * As the name goes, ignore any versioned attributes bigger than this double value
 	 */
-	private Double ignoreVersionsAfter = 10000d; // max allowed
+	private Double version = 10000d; // max allowed
 	
 	/*
 	 * Ignore any fields with any of the annotations set here
@@ -913,12 +913,12 @@ public class Options {
 		this.fieldNaming = fieldNaming;
 	}
 
-	public Double getIgnoreVersionsAfter() {
-		return ignoreVersionsAfter;
+	public Double getVersion() {
+		return version;
 	}
 
-	public void ignoreVersionsAfter(Double ignoreVersionsAfter) {
-		this.ignoreVersionsAfter = ignoreVersionsAfter;
+	public void setVersion(Double version) {
+		this.version = version;
 	}
 
 	/*

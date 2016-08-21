@@ -113,9 +113,14 @@ public @interface FieldMapper {
 	
 	
 	/*
-	 * This is the version to ignore
+	 * the version number since a member has been present
 	 */
-	double ignoreVersionsAfter() default 0;
+	double since() default 0;
+	
+	/*
+	 * the version number until a member should be present.
+	 */
+	double until() default 0;
 	
 	/*
 	 * method with this value set to true will get all properties not specified earlier.

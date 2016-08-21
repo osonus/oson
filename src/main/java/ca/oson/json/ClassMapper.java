@@ -86,9 +86,14 @@ public class ClassMapper<T> {
 	public Boolean includeClassTypeInJson = null;
 	
 	/*
-	 * Ignore any field or attribute with a version greater than the specified value
+	 * the version number since a type has been present
 	 */
-	public Double ignoreVersionsAfter;
+	public Double since = null;
+	
+	/*
+	 * the version number until a type should be present.
+	 */
+	public Double until = null;
 	
 	/*
 	 * Ignore any class, field, or attribute in this set of annotations
@@ -435,10 +440,15 @@ public class ClassMapper<T> {
 		this.includeClassTypeInJson = includeClassTypeInJson;
 		return this;
 	}
-	public ClassMapper setIgnoreVersionsAfter(Double ignoreVersionsAfter) {
-		this.ignoreVersionsAfter = ignoreVersionsAfter;
+	public ClassMapper setSince(Double since) {
+		this.since = since;
 		return this;
 	}
+	public ClassMapper setUntil(Double until) {
+		this.until = until;
+		return this;
+	}
+	
 	public ClassMapper setIgnoreFieldsWithAnnotations(
 			Set<Class> ignoreFieldsWithAnnotations) {
 		this.ignoreFieldsWithAnnotations = ignoreFieldsWithAnnotations;
