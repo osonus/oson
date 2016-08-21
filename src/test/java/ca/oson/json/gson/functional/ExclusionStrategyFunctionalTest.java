@@ -120,7 +120,7 @@ public class ExclusionStrategyFunctionalTest extends TestCaseBase {
 //    Gson gson = new GsonBuilder()
 //        .addSerializationExclusionStrategy(EXCLUDE_SAMPLE_OBJECT_FOR_TEST)
 //        .create();
-    assertEquals(null, oson.setIgnore(SampleObjectForTest.class, true).toJson(new SampleObjectForTest(), SampleObjectForTest.class));
+    assertEquals("null", oson.setIgnore(SampleObjectForTest.class, true).toJson(new SampleObjectForTest(), SampleObjectForTest.class));
   }
 
   public void testExcludeTopLevelClassSerializationDoesNotImpactDeserialization() {

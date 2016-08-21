@@ -57,8 +57,9 @@ public class CircularReferenceTest extends TestCaseBase {
     ClassOverridingEquals objA = new ClassOverridingEquals();
     objA.ref = objA;
 
-    String json = oson.toJson(objA);
-    assertFalse(json.contains("ref")); // self-reference is ignored
+    String json = oson.useAttribute(false).toJson(objA);
+    //{"ref":{}}
+    assertTrue(json.contains("ref"));
   }
 
   public void testSelfReferenceArrayFieldSerialization() throws Exception {
@@ -67,7 +68,7 @@ public class CircularReferenceTest extends TestCaseBase {
 
     String json = oson.toJson(objA);
 
-    String expected = "{\"children\":[{\"children\":[{}]}]}";
+    String expected = "{\"children\":[{}]}";
     
     //System.err.println(json);
     assertEquals(expected, json);
@@ -79,7 +80,7 @@ public class CircularReferenceTest extends TestCaseBase {
 
     String json = oson.toJson(obj);
 
-    String expected = "{}";
+    String expected = "{\"child\":{}}";
     
     //System.err.println(json);
     assertEquals(expected, json);

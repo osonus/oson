@@ -55,6 +55,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.jar.Attributes;
@@ -68,6 +69,8 @@ import javax.script.Bindings;
 import javax.script.SimpleBindings;
 import javax.swing.UIDefaults;
 
+import ca.oson.json.util.BooleanUtil;
+import ca.oson.json.util.NumberUtil;
 import ca.oson.json.util.StringUtil;
 
 /*
@@ -356,7 +359,6 @@ public class DefaultValue {
 		return null;
 	}
 	
-
 	public static boolean isDefault(Object obj) {
 		if (StringUtil.isEmpty(obj)) {
 			return true;
@@ -364,7 +366,19 @@ public class DefaultValue {
 		
 		Class type = obj.getClass();
 		
-		if (obj instanceof String) {
+		return isDefault(obj, type);
+	}
+
+	public static boolean isDefault(Object obj, Class type) {
+		if (StringUtil.isEmpty(obj)) {
+			return true;
+		}
+		
+		if (type == null) {
+			type = obj.getClass();
+		}
+
+		if (type == String.class) {
 			String str = obj.toString().trim();
 			return (str.equals("[]") || str.equals("{}"));
 			
@@ -393,42 +407,46 @@ public class DefaultValue {
 			
 			return false;
 
-		} else if (obj instanceof Character || type == char.class) {
+		} else if (type == Character.class || type == char.class) {
 			return DefaultValue.character.equals(obj);
 			
-		} else if (Number.class.isAssignableFrom(obj.getClass()) || obj.getClass().isPrimitive()) {
+		} else if (type == Boolean.class || type == boolean.class || type == AtomicBoolean.class) {
+			return (DefaultValue.bool == BooleanUtil.string2Boolean(obj.toString()));
+			
+		} else if (Number.class.isAssignableFrom(type) || type.isPrimitive()) {
+			obj = NumberUtil.getNumber(obj, type);
 
-			if (obj instanceof Integer || type == int.class) {
+			if (type == Integer.class || type == int.class) {
 				return DefaultValue.integer.equals(obj);
 				
-			} else if (obj instanceof BigInteger) {
+			} else if (type == BigInteger.class) {
 				return DefaultValue.bigInteger.equals(obj);
 				
-			} else if (obj instanceof BigDecimal) {
+			} else if (type == BigDecimal.class) {
 				return DefaultValue.bigDecimal.equals(obj);
 				
-			} else if (obj instanceof Short || type == short.class) {
+			} else if (type == Short.class || type == short.class) {
 				return DefaultValue.dshort.equals(obj);
 				
-			} else if (obj instanceof Byte || type == byte.class) {
+			} else if (type == Byte.class || type == byte.class) {
 				return DefaultValue.dbyte.equals(obj);
 				
-			} else if (obj instanceof Long || type == long.class) {
+			} else if (type == Long.class || type == long.class) {
 				return DefaultValue.dlong.equals(obj);
 				
-			} else if (obj instanceof Float || type == float.class) {
+			} else if (type == Float.class || type == float.class) {
 				return DefaultValue.dfloat.equals(obj);
 				
-			} else if (obj instanceof AtomicInteger) {
+			} else if (type == AtomicInteger.class) {
 				return (DefaultValue.atomicInteger.intValue() == ((AtomicInteger)obj).intValue());
 				
-			} else if (obj instanceof AtomicLong) {
+			} else if (type == AtomicLong.class) {
 				return (DefaultValue.atomicLong.longValue() == ((AtomicLong)obj).longValue());
 				
-			} else if (obj instanceof Double || type == double.class) {
+			} else if (type == Double.class || type == double.class) {
 				return DefaultValue.ddouble.equals(obj);
 				
-			} else if (obj instanceof Short) {
+			} else if (type == Short.class || type == short.class) {
 				return DefaultValue.dshort.equals(obj);
 			} else {
 			}

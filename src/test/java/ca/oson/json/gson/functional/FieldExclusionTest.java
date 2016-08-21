@@ -58,7 +58,7 @@ public class FieldExclusionTest extends TestCaseBase {
     Gson gson = new GsonBuilder().disableInnerClassSerialization().create();
     Outer.Inner target = outer.new Inner(VALUE);
     String result = oson.setIgnore(Outer.Inner.class, true).toJson(target);
-    assertEquals(null, result);
+    assertEquals("null", result);
   }
 
   public void testDefaultNestedStaticClassIncluded() throws Exception {

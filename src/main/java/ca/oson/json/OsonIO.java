@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.io.PrintWriter;
 import java.io.Writer;
@@ -125,20 +126,10 @@ public class OsonIO extends Oson {
 	}
 	public <T> T readValue(InputStream is, Class<T> valueType) {
 	    try {
-			InputStreamReader rdr = new InputStreamReader(is, DEFAULT_ENCODING);
-
-	        StringBuilder contents = new StringBuilder();
-	        char[] buffer = new char[4096];
-
-	        int bytesRead = -1;
-			while ((bytesRead = rdr.read(buffer)) != -1) {
-				contents.append(new String(buffer, 0, bytesRead));
-			}
+	    	Reader reader = new InputStreamReader(is);
 	        
-	        return readValue(contents.toString(), valueType);
+	        return readValue(reader, valueType);
 	        
-	    } catch (IOException e) {
-	    	e.printStackTrace();
 	    } finally {
 	        try {
 	            is.close();
@@ -146,7 +137,22 @@ public class OsonIO extends Oson {
 	            // log error in closing the file
 	        }
 	    }
-	    
+	}
+	public <T> T readValue(Reader reader, Type valueType) {
+		try {
+	        StringBuilder contents = new StringBuilder();
+	        char[] buffer = new char[4096];
+
+	        int bytesRead = -1;
+			while ((bytesRead = reader.read(buffer)) != -1) {
+				contents.append(new String(buffer, 0, bytesRead));
+			}
+			return readValue(contents.toString(), valueType);
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 		return null;
 	}
 	public <T> T readValue(InputStream is, Type type) {

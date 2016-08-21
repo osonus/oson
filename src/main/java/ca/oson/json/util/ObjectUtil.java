@@ -846,11 +846,16 @@ public class ObjectUtil {
 	    return oldValue;
 	}
 
-	public static int hashCode(Object obj) {
+	public static int hashCode(Object obj, Class valueType) {
 		int hash = 7;
 
 		try {
-			hash = obj.hashCode();
+			if (obj == null) {
+				hash = valueType.hashCode();
+			} else {
+				hash = obj.hashCode();
+			}
+			
 		} catch (Exception ex) {
 			// *
 			String str = obj.toString();

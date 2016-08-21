@@ -50,11 +50,11 @@ public class BooleanUtil {
 			return false;
 		}
 		
-		try {
-			return Boolean.parseBoolean(str);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
+//		try {
+//			return Boolean.parseBoolean(str);
+//		} catch (Exception ex) {
+//			ex.printStackTrace();
+//		}
 	
 		return null;
 	}

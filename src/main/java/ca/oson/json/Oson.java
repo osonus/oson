@@ -86,6 +86,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.InstanceCreator;
 import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.google.gson.annotations.Since;
 
 import ca.oson.json.function.*;
@@ -261,7 +262,7 @@ public class Oson {
 		
 		//true if this set did not already contain the specified element
 		public boolean goAhead(int hash) {
-			return set.add(hash) || level < 3;
+			return set.add(hash); // || level < 2;
 		}
 		
 		public boolean isJsonRawValue() {
@@ -6349,7 +6350,7 @@ public class Oson {
 						}
 						
 						if (returnedValue == null) {
-							return null;
+							return json2BooleanDefault(objectDTO);
 							
 						} else if (returnedValue instanceof Boolean || returnedValue.getClass() == boolean.class) {
 							valueToReturn = (Boolean) returnedValue;
@@ -6380,6 +6381,10 @@ public class Oson {
 				
 				if (returnType == AtomicBoolean.class) {
 					return new AtomicBoolean(valueToReturn);
+				}
+				
+				if (valueToReturn == null) {
+					return json2BooleanDefault(objectDTO);
 				}
 
 				return valueToReturn;
@@ -7347,7 +7352,7 @@ public class Oson {
 					Object v = map.get(name);
 
 					String str = null;
-					if (v != null) {
+					if (!StringUtil.isNull(v)) {
 						lastValueType = v.getClass();
 						FieldData newFieldData = new FieldData(v, lastValueType, objectDTO.json2Java, objectDTO.level, objectDTO.set);
 						newFieldData.fieldMapper = objectDTO.fieldMapper;
@@ -9182,6 +9187,11 @@ public class Oson {
 			
 		} else if (Number.class.isAssignableFrom(returnType) || returnType.isPrimitive()) {
 			
+			if (returnType == Number.class && value != null) {
+				returnType = (Class<R>) value.getClass();
+				objectDTO.returnType = returnType;
+			}
+			
 			String returnedValue = null;
 			
 			if (returnType == Integer.class || returnType == int.class) {
@@ -9213,6 +9223,9 @@ public class Oson {
 				
 			} else if (returnType == AtomicLong.class) {
 				returnedValue = atomicLong2Json(objectDTO);
+				
+			} else if (value != null) {
+				returnedValue = double2Json(objectDTO);
 				
 			} else {
 				return processNullValue(level);
@@ -9522,7 +9535,8 @@ public class Oson {
 			String name = field.getName().toLowerCase();
 			Class ftype = field.getType();
 			String fname = ftype.getName();
-			if (!set.contains(name) && !name.startsWith("this$") && ftype != Class.class && ftype != valueType
+			// && ftype != valueType
+			if (!set.contains(name) && !name.startsWith("this$") && ftype != Class.class
 					&& ftype != Field.class && ftype != Field[].class && ftype != sun.reflect.ReflectionFactory.class
 					// && ftype != ClassLoader.class
 					&& !fname.startsWith("java.security.") && !fname.startsWith("[Ljava.security.") && !fname.startsWith("java.lang.Class$")
@@ -10011,7 +10025,7 @@ public class Oson {
 		}
 
 		// it is possible the same object shared by multiple variables inside the same enclosing object
-		int hash = ObjectUtil.hashCode(obj);
+		int hash = ObjectUtil.hashCode(obj, valueType);
 		if (!objectDTO.goAhead(hash)) {
 			return "{}";
 		}
@@ -10842,7 +10856,7 @@ public class Oson {
 					
 					str = "\"\"";
 					
-				} else if (classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT && DefaultValue.isDefault(str)) {
+				} else if (classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT && DefaultValue.isDefault(str, returnType)) {
 					continue;
 				}
 
@@ -11662,7 +11676,8 @@ public class Oson {
 		if (value != null && Map.class.isAssignableFrom(value.getClass())) {
 			map = (Map)value;
 		}
-		
+
+		//boolean checkResult = false;
 		if (map == null) {
 			if (classMapper == null) {
 				return null;
@@ -11670,8 +11685,13 @@ public class Oson {
 			
 			map = new HashMap();
 			if (value != null) {
+				if (value.toString().endsWith(":")) {
+					return null;
+				}
+				
 				map.put(valueType.getName(), value);
 			}
+			//checkResult = true;
 		}
 
 		T obj = null;
@@ -11691,8 +11711,20 @@ public class Oson {
 				fieldData.returnObj = obj;
 			}
 			
-			
 			return deserialize2Object(fieldData);
+
+//			T t = deserialize2Object(fieldData);
+//			if (checkResult) {
+//				String source = this.useAttribute(false).setDefaultType(JSON_INCLUDE.NON_DEFAULT).serialize(t);
+////				source = source.replaceAll("[^a-zA-Z0-9]", "");
+////				value = (value+"").replaceAll("[^a-zA-Z0-9]", "");
+////				if (!source.contains(value+"")) {
+//				if (DefaultValue.isDefault(source)) {
+//					return null;
+//				}
+//			}
+//			return t;
+			
 		} else {
 			return null;
 		}
@@ -12798,6 +12830,18 @@ public class Oson {
 									fieldMapper.ignore = true;
 								}
 								break;
+
+							case "com.google.gson.annotations.SerializedName":
+								SerializedName serializedName = (SerializedName) annotation;
+								String[] alternates = serializedName.alternate();
+								
+								if (alternates != null && alternates.length > 0) {
+									for (String alternate: alternates) {
+										names.add(alternate);
+									}
+								}
+								break;
+								
 								
 							case "com.fasterxml.jackson.annotation.JsonInclude":
 								if (fieldMapper.defaultType == JSON_INCLUDE.NONE) {
@@ -12972,8 +13016,10 @@ public class Oson {
 						if (!name.equals(jsoname) && !StringUtil.isEmpty(jsoname)) {
 							name = jsoname;
 							value = getMapValue(map, name, nameKeys);
-							jnameFixed = true;
-							break;
+							if (value != null) {
+								jnameFixed = true;
+								break;
+							}
 						}
 					}
 				}
@@ -13638,7 +13684,11 @@ public class Oson {
 			valueType = (Class<T>) source.getClass();
 		}
 
-		return object2Json(new FieldData(source, valueType, false));
+		String value = object2Json(new FieldData(source, valueType, false));
+		if (value == null) {
+			return "null";
+		}
+		return value;
 	}
 	
 	public <T> String serialize(T source) {
