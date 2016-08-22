@@ -59,7 +59,8 @@ import ca.oson.json.gson.functional.*;
 	TypeHierarchyAdapterTest.class,
 	TypeVariableTest.class,
 	UncategorizedTest.class,
-	VersioningTest.class
+	VersioningTest.class,
+	GsonTest.class
 })
 public class GsonTestSuite {
 

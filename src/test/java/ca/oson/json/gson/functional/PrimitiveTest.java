@@ -16,6 +16,8 @@
 
 package ca.oson.json.gson.functional;
 
+import ca.oson.json.ClassMapper;
+import ca.oson.json.Oson;
 import ca.oson.json.support.TestCaseBase;
 
 import com.google.gson.Gson;
@@ -162,10 +164,6 @@ public class PrimitiveTest extends TestCaseBase {
     assertEquals(1L, actual.longValue());
   }
 
-  public void testPrimitiveDoubleAutoboxedSerialization() {
-    assertEquals("-122.08234335", oson.toJson(-122.08234335));
-    assertEquals("122.08112002", oson.toJson(new Double(122.08112002)));
-  }
 
   public void testPrimitiveDoubleAutoboxedDeserialization() {
     double actual = oson.fromJson("-122.08858585", double.class);

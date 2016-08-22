@@ -3125,7 +3125,7 @@ public class Oson {
 			String valueToReturn = null;
 			
 			if (returnType == double.class) {
-				valueToProcess = Double.valueOf((double)value);
+				valueToProcess = Double.valueOf((Double)value);
 			} else {
 				valueToProcess = (Double)value;
 			}
@@ -3408,7 +3408,7 @@ public class Oson {
 			String valueToReturn = null;
 			
 			if (returnType == float.class) {
-				valueToProcess = Float.valueOf((float)value);
+				valueToProcess = Float.valueOf((Float)value);
 			} else {
 				valueToProcess = (Float)value;
 			}
@@ -4852,7 +4852,7 @@ public class Oson {
 			Long valueToProcess = null;
 			
 			if (returnType == long.class) {
-				valueToProcess = Long.valueOf((long)value);
+				valueToProcess = Long.valueOf((Long)value);
 			} else {
 				valueToProcess = (Long)value;
 			}

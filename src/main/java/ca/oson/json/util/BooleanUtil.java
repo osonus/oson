@@ -11,16 +11,13 @@ public class BooleanUtil {
 			Class cls = obj.getClass();
 			
 			if (cls == boolean.class || cls == Boolean.class) {
-				return (boolean)obj;
+				return (Boolean)obj;
 				
 			} else if (cls == String.class) {
 				return string2Boolean((String)obj);
 				
 			} else if (cls == Character.class || cls == char.class) {
-				return char2Boolean((char)obj);
-			
-			} else if (cls == Character.class || cls == char.class) {
-				return char2Boolean((char)obj);
+				return char2Boolean((Character)obj);
 				
 			}
 		
