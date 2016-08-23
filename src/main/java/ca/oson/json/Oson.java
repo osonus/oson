@@ -3607,7 +3607,7 @@ public class Oson {
  							return ((Json2DateFunction)function).apply(valueToProcess);
  							
  						} else if (function instanceof Long2DateFunction) {
- 							long longtoprocess = Long.parseLong(valueToProcess);
+ 							long longtoprocess = Long.parseLong(NumberUtil.removeTrailingDecimalZeros(valueToProcess));
  							return ((Long2DateFunction)function).apply(longtoprocess);
  						
  						} else {
@@ -3639,7 +3639,7 @@ public class Oson {
  					valueToProcess = StringUtil.unquote(valueToProcess, isEscapeHtml());
 					if (StringUtil.isNumeric(valueToProcess)) {
 						try {
-							long longdatetime = Long.parseLong(valueToProcess);
+							long longdatetime = Long.parseLong(NumberUtil.removeTrailingDecimalZeros(valueToProcess));
 							return date2Date(longdatetime, returnType);
 						} catch (Exception e) {
 						}
@@ -4368,7 +4368,7 @@ public class Oson {
 							if (returnedValue instanceof AtomicInteger) {
 								valueToReturn = (AtomicInteger) returnedValue;
 							} else if (returnedValue instanceof String) {
-								valueToReturn = new AtomicInteger(Integer.parseInt((String) returnedValue));
+								valueToReturn = new AtomicInteger(Integer.parseInt(NumberUtil.removeTrailingDecimalZeros(returnedValue)));
 								
 							} else if (returnedValue instanceof Integer) {
 								valueToReturn = new AtomicInteger((Integer) returnedValue);
@@ -4408,7 +4408,7 @@ public class Oson {
 							valueToReturn = new AtomicInteger((int)((Date) returnedValue).getTime());
 							
 						} else {
-							valueToReturn = new AtomicInteger(Integer.parseInt(returnedValue.toString()));
+							valueToReturn = new AtomicInteger(Integer.parseInt(NumberUtil.removeTrailingDecimalZeros(returnedValue)));
 						}
 						
 						return valueToReturn; 
@@ -4419,7 +4419,7 @@ public class Oson {
 					}
 					
 				} else {
-					valueToReturn = new AtomicInteger(Integer.parseInt(valueToProcess));
+					valueToReturn = new AtomicInteger(Integer.parseInt(NumberUtil.removeTrailingDecimalZeros(valueToProcess)));
 				}
 				
 				if (valueToReturn != null) {
@@ -4463,7 +4463,7 @@ public class Oson {
 				valueToProcess = (AtomicInteger)value;
 			} else {
 				try {
-					valueToProcess = new AtomicInteger(Integer.parseInt(value.toString().trim()));
+					valueToProcess = new AtomicInteger(Integer.parseInt(NumberUtil.removeTrailingDecimalZeros(value)));
 				} catch (Exception ex) {}
 			}
 			
@@ -4628,7 +4628,7 @@ public class Oson {
 							if (returnedValue instanceof AtomicLong) {
 								valueToReturn = (AtomicLong) returnedValue;
 							} else if (returnedValue instanceof String) {
-								valueToReturn = new AtomicLong(Long.parseLong((String) returnedValue));
+								valueToReturn = new AtomicLong(Long.parseLong(NumberUtil.removeTrailingDecimalZeros(returnedValue)));
 								
 							} else if (returnedValue instanceof Integer) {
 								valueToReturn = new AtomicLong((Integer) returnedValue);
@@ -4668,7 +4668,7 @@ public class Oson {
 							valueToReturn = new AtomicLong(((Date) returnedValue).getTime());
 							
 						} else {
-							valueToReturn = new AtomicLong(Long.parseLong(returnedValue.toString()));
+							valueToReturn = new AtomicLong(Long.parseLong(NumberUtil.removeTrailingDecimalZeros(returnedValue)));
 						}
 
 						return valueToReturn;
@@ -4678,7 +4678,7 @@ public class Oson {
 					}
 					
 				} else {
-					valueToReturn = new AtomicLong(Long.parseLong(valueToProcess));
+					valueToReturn = new AtomicLong(Long.parseLong(NumberUtil.removeTrailingDecimalZeros(valueToProcess)));
 				}
 				
 				if (valueToReturn != null) {
@@ -4722,7 +4722,7 @@ public class Oson {
 				valueToProcess = (AtomicLong)value;
 			} else {
 				try {
-					valueToProcess = new AtomicLong(Long.parseLong(value.toString().trim()));
+					valueToProcess = new AtomicLong(Long.parseLong(NumberUtil.removeTrailingDecimalZeros(value)));
 				} catch (Exception ex) {}
 			}
 			
@@ -4972,7 +4972,7 @@ public class Oson {
 								valueToReturn = (Long) returnedValue;
 								
 							} else if (returnedValue instanceof String) {
-								valueToReturn = Long.parseLong((String) returnedValue);
+								valueToReturn = Long.parseLong(NumberUtil.removeTrailingDecimalZeros(returnedValue));
 							//  byte, double, float, int, long, and short. 
 							} else if (returnedValue instanceof Integer) {
 								valueToReturn = ((Integer) returnedValue).longValue();
@@ -5012,7 +5012,7 @@ public class Oson {
 							valueToReturn = ((Date) returnedValue).getTime();
 							
 						} else {
-							valueToReturn = Long.parseLong(returnedValue.toString());
+							valueToReturn = Long.parseLong(NumberUtil.removeTrailingDecimalZeros(returnedValue));
 						}
 						
 						return valueToReturn;
@@ -5022,7 +5022,7 @@ public class Oson {
 					}
 					
 				} else {
-					valueToReturn = Long.parseLong(valueToProcess);
+					valueToReturn = Long.parseLong(NumberUtil.removeTrailingDecimalZeros(valueToProcess));
 				}
 				
 				if (valueToReturn != null) {
@@ -5136,7 +5136,7 @@ public class Oson {
 							if (returnedValue instanceof Integer) {
 								valueToReturn = (Integer) returnedValue;
 							} else if (returnedValue instanceof String) {
-								valueToReturn = Integer.parseInt((String) returnedValue);
+								valueToReturn = Integer.parseInt(NumberUtil.removeTrailingDecimalZeros(returnedValue));
 							//  byte, double, float, int, long, and short. 
 							} else if (returnedValue instanceof Long) {
 								valueToReturn = ((Long) returnedValue).intValue();
@@ -5176,7 +5176,7 @@ public class Oson {
 							valueToReturn = (int) ((Date) returnedValue).getTime();
 							
 						} else {
-							valueToReturn = Integer.parseInt(returnedValue.toString());
+							valueToReturn = Integer.parseInt(NumberUtil.removeTrailingDecimalZeros(returnedValue));
 						}
 							
 						return (R) valueToReturn;
@@ -5186,7 +5186,7 @@ public class Oson {
 					}
 					
 				} else {
-					valueToReturn = Integer.parseInt(valueToProcess);
+					valueToReturn = Integer.parseInt(NumberUtil.removeTrailingDecimalZeros(valueToProcess));
 				}
 				
 				if (valueToReturn != null) {
@@ -5204,7 +5204,7 @@ public class Oson {
 				}
 	
 			} catch (Exception ex) {
-				//ex.printStackTrace();
+				ex.printStackTrace();
 			}
 		
 		}
@@ -5378,7 +5378,7 @@ public class Oson {
 							if (returnedValue instanceof Byte) {
 								valueToReturn = (Byte) returnedValue;
 							} else if (returnedValue instanceof String) {
-								valueToReturn = Byte.parseByte((String) returnedValue);
+								valueToReturn = Byte.parseByte(NumberUtil.removeTrailingDecimalZeros(returnedValue));
 								
 							} else if (returnedValue instanceof Integer) {
 								valueToReturn = ((Integer) returnedValue).byteValue();
@@ -5419,7 +5419,7 @@ public class Oson {
 							valueToReturn = (byte) ((Date) returnedValue).getTime();
 							
 						} else {
-							valueToReturn = Byte.parseByte(returnedValue.toString());
+							valueToReturn = Byte.parseByte(NumberUtil.removeTrailingDecimalZeros(returnedValue));
 						}
 							
 						return valueToReturn;
@@ -5429,7 +5429,7 @@ public class Oson {
 					}
 					
 				} else {
-					long longValue = Long.parseLong(valueToProcess);
+					long longValue = Long.parseLong(NumberUtil.removeTrailingDecimalZeros(valueToProcess));
 					
 					if (longValue > Byte.MAX_VALUE) {
 						valueToReturn = Byte.MAX_VALUE;
@@ -5686,7 +5686,7 @@ public class Oson {
 							valueToReturn = long2Character(longvalue, min, max);
 
 						} else {
-							long longvalue = Long.parseLong(returnedValue.toString());
+							long longvalue = Long.parseLong(NumberUtil.removeTrailingDecimalZeros(returnedValue));
 							
 							valueToReturn = long2Character(longvalue, min, max);
 						}
@@ -5702,7 +5702,7 @@ public class Oson {
 						return valueToProcess.charAt(0);
 						
 					} else {
-						long longvalue = Long.parseLong(valueToProcess);
+						long longvalue = Long.parseLong(NumberUtil.removeTrailingDecimalZeros(valueToProcess));
 						
 						valueToReturn = long2Character(longvalue, min, max);
 					}
@@ -5886,7 +5886,7 @@ public class Oson {
 							if (returnedValue instanceof Short) {
 								valueToReturn = (Short) returnedValue;
 							} else if (returnedValue instanceof String) {
-								valueToReturn = Short.parseShort((String) returnedValue);
+								valueToReturn = Short.parseShort(NumberUtil.removeTrailingDecimalZeros(returnedValue));
 								
 							} else if (returnedValue instanceof Integer) {
 								valueToReturn = ((Integer) returnedValue).shortValue();
@@ -5926,7 +5926,7 @@ public class Oson {
 							valueToReturn = (short) ((Date) returnedValue).getTime();
 							
 						} else {
-							valueToReturn = Short.parseShort(returnedValue.toString());
+							valueToReturn = Short.parseShort(NumberUtil.removeTrailingDecimalZeros(returnedValue));
 						}
 							
 						return valueToReturn;
@@ -5936,7 +5936,7 @@ public class Oson {
 					}
 					
 				} else {
-					long longValue = Long.parseLong(valueToProcess);
+					long longValue = Long.parseLong(NumberUtil.removeTrailingDecimalZeros(valueToProcess));
 					
 					if (longValue > Short.MAX_VALUE) {
 						valueToReturn = Short.MAX_VALUE;
@@ -11692,7 +11692,7 @@ public class Oson {
 			}
 
 		} catch (JSONException ex) {
-			ex.printStackTrace();
+			//ex.printStackTrace();
 			//throw ex;
 		}
 

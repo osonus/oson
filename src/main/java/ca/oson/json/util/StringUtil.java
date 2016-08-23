@@ -452,7 +452,7 @@ public class StringUtil {
 		
 		str = unescapeJava(str);
 		
-		return str;
+		return str.trim();
 	}
 
 	/* 

@@ -423,13 +423,6 @@ public class PrimitiveTest extends TestCaseBase {
     }
   }
 
-  public void testFloatInfinitySerialization() {
-    Gson gson = new GsonBuilder().serializeSpecialFloatingPointValues().create();
-    float infinity = Float.POSITIVE_INFINITY;
-    assertEquals("Infinity", oson.toJson(infinity));
-    assertEquals("Infinity", oson.toJson(Float.POSITIVE_INFINITY));
-  }
-
   public void testFloatInfinityDeserialization() {
     assertTrue(Float.isInfinite(gson.fromJson("Infinity", Float.class)));
     assertTrue(Float.isInfinite(gson.fromJson("Infinity", float.class)));
@@ -445,13 +438,6 @@ public class PrimitiveTest extends TestCaseBase {
       assertEquals("null", oson.toJson(negativeInfinity));
 
       assertEquals("null", oson.toJson(Double.NEGATIVE_INFINITY));
-  }
-
-  public void testNegativeInfinitySerialization() {
-    Gson gson = new GsonBuilder().serializeSpecialFloatingPointValues().create();
-    double negativeInfinity = Double.NEGATIVE_INFINITY;
-    assertEquals("-Infinity", oson.toJson(negativeInfinity));
-    assertEquals("-Infinity", oson.toJson(Double.NEGATIVE_INFINITY));
   }
 
   public void testNegativeInfinityDeserialization() {
@@ -482,15 +468,7 @@ public class PrimitiveTest extends TestCaseBase {
 	  assertEquals(null, oson.fromJson("-Infinity", BigDecimal.class));
   }
 
-  public void testLongAsStringSerialization() throws Exception {
-    gson = new GsonBuilder().setLongSerializationPolicy(LongSerializationPolicy.STRING).create();
-    String result = oson.toJson(15L);
-    assertEquals("\"15\"", result);
 
-    // Test with an integer and ensure its still a number
-    result = oson.toJson(2);
-    assertEquals("2", result);
-  }
 
   public void testLongAsStringDeserialization() throws Exception {
     long value = oson.fromJson("\"15\"", long.class);
@@ -616,12 +594,7 @@ public class PrimitiveTest extends TestCaseBase {
 //    } catch (JsonSyntaxException expected) {}
   }
 
-  public void testDeserializeJsonObjectAsBigDecimal() {
-    try {
-      oson.fromJson("{'a':1}", BigDecimal.class);
-      fail();
-    } catch (JsonSyntaxException expected) {}
-  }
+
 
   public void testDeserializeJsonArrayAsBigInteger() {
 	  assertNull(oson.fromJson("[1,2,3,4]", BigInteger.class));
@@ -648,9 +621,6 @@ public class PrimitiveTest extends TestCaseBase {
     } catch (JsonSyntaxException expected) {}
   }
 
-  public void testDeserializingDecimalPointValueZeroSucceeds() {
-    assertEquals(1, (int) oson.fromJson("1.0", Integer.class));
-  }
 
   public void testDeserializingNonZeroDecimalPointValuesAsIntegerFails() {
     try {
@@ -724,9 +694,5 @@ public class PrimitiveTest extends TestCaseBase {
     assertEquals("12121211243123245845384534687435634558945453489543985435", actual.toPlainString());
   }
 
-  public void testStringsAsBooleans() {
-    String json = "['true', 'false', 'TRUE', 'yes', '1']";
-    assertEquals(Arrays.asList(true, false, true, false, false),
-        oson.<List<Boolean>>fromJson(json, new TypeToken<List<Boolean>>() {}.getType()));
-  }
+
 }
