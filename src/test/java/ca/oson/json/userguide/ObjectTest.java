@@ -77,41 +77,41 @@ public class ObjectTest extends TestCaseBase {
 //	}
 	
 	
-	@Test
-	public void testDeserializeVolume() {
-		OsonIO oson = new OsonIO();
-		URL url = getClass().getResource("volume.txt");
-		File file = new File(url.getPath());
-		
-		VolumeContainer vc = oson.readValue(file, VolumeContainer.class);
-		
-		assertEquals(((Volume)(vc.volumes.get(0))).support.status, "supported");
+//	@Test
+//	public void testDeserializeVolume() {
+//		OsonIO oson = new OsonIO();
+//		URL url = getClass().getResource("volume.txt");
+//		File file = new File(url.getPath());
+//		
+//		VolumeContainer vc = oson.readValue(file, VolumeContainer.class);
+//		
+//		assertEquals(((Volume)(vc.volumes.get(0))).support.status, "supported");
+//
+//		String json = oson.serialize(vc);
+//
+//		assertTrue(json.contains("\"This volume is not a candidate for management because it is already attached to a virtual machine.  To manage this volume with PowerVC, select the virtual machine to which the volume is attached for management. The attached volume will be automatically included for management.\""));
+//
+//		// System.out.println(json);
+//	}
 
-		String json = oson.serialize(vc);
-
-		assertTrue(json.contains("\"This volume is not a candidate for management because it is already attached to a virtual machine.  To manage this volume with PowerVC, select the virtual machine to which the volume is attached for management. The attached volume will be automatically included for management.\""));
-
-		// System.out.println(json);
-	}
-
-	@Test
-	public void testDeserializeVolumeList() {
-		OsonIO oson = new OsonIO();
-		URL url = getClass().getResource("volume.txt");
-		File file = new File(url.getPath());
-		
-		ComponentType type = new ComponentType("java.util.Map<String, java.util.List<ca.oson.json.domain.Volume>>");
-		
-		Map<String, List<Volume>> vc = oson.readValue(file, type);
-		
-		assertEquals(((Volume)(vc.get("volumes").get(0))).support.status, "supported");
-
-		String json = oson.serialize(vc);
-
-		assertTrue(json.contains("\"This volume is not a candidate for management because it is already attached to a virtual machine.  To manage this volume with PowerVC, select the virtual machine to which the volume is attached for management. The attached volume will be automatically included for management.\""));
-
-		// System.out.println(json);
-	}
+//	@Test
+//	public void testDeserializeVolumeList() {
+//		OsonIO oson = new OsonIO();
+//		URL url = getClass().getResource("volume.txt");
+//		File file = new File(url.getPath());
+//		
+//		ComponentType type = new ComponentType("java.util.Map<String, java.util.List<ca.oson.json.domain.Volume>>");
+//		
+//		Map<String, List<Volume>> vc = oson.readValue(file, type);
+//		
+//		assertEquals(((Volume)(vc.get("volumes").get(0))).support.status, "supported");
+//
+//		String json = oson.serialize(vc);
+//
+//		assertTrue(json.contains("\"This volume is not a candidate for management because it is already attached to a virtual machine.  To manage this volume with PowerVC, select the virtual machine to which the volume is attached for management. The attached volume will be automatically included for management.\""));
+//
+//		// System.out.println(json);
+//	}
 
 }
 

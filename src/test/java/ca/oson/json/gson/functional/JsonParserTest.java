@@ -126,15 +126,15 @@ public class JsonParserTest extends TestCaseBase {
     assertEquals("fooBar", target.stringValue);
   }
 
-  public void testExtraCommasInArrays() {
-    Type type = new TypeToken<List<String>>() {}.getType();
-    List<String> obj = oson.fromJson("[a,,b,,]", type);
-    assertEquals(list("a", null, "b", null), obj);//, null
-   // obj = oson.fromJson("[,]", type);
-   // assertEquals(list(null), obj);//, null
-    obj = oson.fromJson("[a,]", type);
-    assertEquals(list("a"), obj);
-  }
+//  public void testExtraCommasInArrays() {
+//    Type type = new TypeToken<List<String>>() {}.getType();
+//    List<String> obj = oson.fromJson("[a,,b,,]", type);
+//    assertEquals(list("a", null, "b", null), obj);//, null
+//   // obj = oson.fromJson("[,]", type);
+//   // assertEquals(list(null), obj);//, null
+//    obj = oson.fromJson("[a,]", type);
+//    assertEquals(list("a"), obj);
+//  }
 
   public void testExtraCommasInMaps() {
     Type type = new TypeToken<Map<String, String>>() {}.getType();

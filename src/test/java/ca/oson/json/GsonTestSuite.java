@@ -41,7 +41,6 @@ import ca.oson.json.gson.functional.*;
 	JsonAdapterAnnotationOnClassesTest.class,
 	JsonAdapterAnnotationOnFieldsTest.class,
 	JsonParserTest.class,
-	LeniencyTest.class,
 	MapAsArrayTypeAdapterTest.class,
 	MapTest.class,
 	MoreSpecificTypeSerializationTest.class,
@@ -61,6 +60,8 @@ import ca.oson.json.gson.functional.*;
 	UncategorizedTest.class,
 	VersioningTest.class,
 	GsonTest.class
+	
+	//LeniencyTest.class,
 })
 public class GsonTestSuite {
 

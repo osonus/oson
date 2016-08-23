@@ -10,8 +10,8 @@ import ca.oson.json.charstring.StringTest;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
 	CharacterTest.class,
-	StringTest.class,
-	AsciiTest.class
+	StringTest.class
+	//,AsciiTest.class
 })
 public class CharacterStringTestSuite {
 

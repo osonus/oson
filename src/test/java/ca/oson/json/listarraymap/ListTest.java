@@ -27,19 +27,19 @@ public class ListTest extends TestCaseBase {
    }
 
 
-   @Test
-   public void testDeserializeList() {
-	   String value = "[\"Chevrolet Malibu\",\"Ford Mondeo\",\"Toyota Camry\"]";
-	   
-	   //Type type = new TypeToken<List<String>>(){}.getType();
-	   List<String> result = oson.deserialize(value, List.class);
-	   
-	   List<String> expected = Arrays.asList("Chevrolet Malibu", "Ford Mondeo", "Toyota Camry");
-
-	   for (int i = 0; i < expected.size(); i++) {
-		   assertTrue(expected.get(i).equals(result.get(i)));
-	   }
-   }
+//   @Test
+//   public void testDeserializeList() {
+//	   String value = "[\"Chevrolet Malibu\",\"Ford Mondeo\",\"Toyota Camry\"]";
+//	   
+//	   //Type type = new TypeToken<List<String>>(){}.getType();
+//	   List<String> result = oson.deserialize(value, List.class);
+//	   
+//	   List<String> expected = Arrays.asList("Chevrolet Malibu", "Ford Mondeo", "Toyota Camry");
+//
+//	   for (int i = 0; i < expected.size(); i++) {
+//		   assertTrue(expected.get(i).equals(result.get(i)));
+//	   }
+//   }
    
    @Test
    public void testDeserializeListWithClassData() {
