@@ -91,7 +91,7 @@ public @interface ClassMapper {
     /**
      * Full names of annotations to ignore, for example, 
      * to exclude field using annotation of type ca.oson.json.Oson.ClassMapper, you can specify
-     * @ClassMapper(ignoreFieldsWithAnnotations = { "ca.oson.json.Oson" })
+     * \@ClassMapper(ignoreFieldsWithAnnotations = { "ca.oson.json.Oson" })
      */
     public String[] ignoreFieldsWithAnnotations() default { };
     

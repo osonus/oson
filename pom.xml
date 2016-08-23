@@ -7,7 +7,8 @@
 
   <name>Oson</name>
   <description>Java object to Json converter, to serialize Java object to Json string, and deserialize Json string to Java Object</description>
-
+  <url>https://github.com/osonus/oson</url>
+	
   <licenses>
     <license>
       <name>Apache License, Version 2.0</name>
@@ -17,22 +18,58 @@
   </licenses>
 
   <scm>
-    <url>https://svn.apache.org/viewvc/maven</url>
+    <url>https://github.com/osonus/oson.git</url>
   </scm>
 
   <build>
     <sourceDirectory>src</sourceDirectory>
-    <plugins>
-      <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.3</version>
-        <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
-        </configuration>
-      </plugin>
-    </plugins>
+	<plugins>
+		<plugin>
+			<artifactId>maven-compiler-plugin</artifactId>
+			<version>3.3</version>
+			<configuration>
+				<source>1.8</source>
+				<target>1.8</target>
+			</configuration>
+		</plugin>
+		<plugin>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-source-plugin</artifactId>
+			<executions>
+				<execution>
+					<id>attach-sources</id>
+					<goals>
+						<goal>jar</goal>
+					</goals>
+				</execution>
+			</executions>
+		</plugin>
+		<plugin>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-javadoc-plugin</artifactId>
+			<configuration>
+		        <charset>UTF-8</charset>
+		        <docencoding>UTF-8</docencoding>
+		        <docfilessubdirs>true</docfilessubdirs>
+				<sourcepath>${basedir}/src/main/java/;${basedir}/src/test/java/</sourcepath>
+				<links>
+					<link>http://docs.oracle.com/javase/6/docs/api/</link>
+				</links>
+				<includePackageNames>ca.oson.json</includePackageNames>
+				<excludePackageNames>ca.oson.json.gson:ca.oson.json.gson.functional</excludePackageNames>
+			</configuration>
+			<executions>
+				<execution>
+					<id>attach-javadocs</id>
+					<goals>
+						<goal>jar</goal>
+					</goals>
+				</execution>
+			</executions>
+		</plugin>
+	</plugins>
   </build>
+  
   <dependencies>
   	<dependency>
   		<groupId>javax.enterprise</groupId>

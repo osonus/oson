@@ -98,7 +98,7 @@ import ca.oson.json.util.*;
  * Convert java object to and from Json String
  * 
  * @author	David Ruifang He
- * @Date	June 15, 2016
+ * Date	June 15, 2016
  */
 public class Oson {
 	private static final String mixin = "MixIn";

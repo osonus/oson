@@ -23,7 +23,7 @@ import java.util.function.Consumer;
  * Provide basic IO support to Oson Java/Json data mapping
  * 
  * @author	David Ruifang He
- * @Date	June 15, 2016
+ * Date	June 15, 2016
  */
 public class OsonIO extends Oson {
 	static final String DEFAULT_ENCODING = "utf-8";

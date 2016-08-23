@@ -631,9 +631,9 @@ public class ObjectUtil {
 	 * This method relies on the constructor's class loader to locate the
 	 * bytecode resource that defined its class.
 	 *
-	 * @param constructor
-	 * @return
-	 * @throws IOException
+	 * @param constructor the constructor to get a list of parameter names
+	 * @return a list of parameter names
+	 * @throws IOException io exception to throw
 	 */
 	public static List<String> getParameterNames(Constructor<?> constructor) throws IOException {
 	    Class<?> declaringClass = constructor.getDeclaringClass();
@@ -821,6 +821,9 @@ public class ObjectUtil {
 	 * Changes the annotation value for the given key of the given annotation to newValue and returns
 	 * the previous value.
 	 * @author: Balder
+	 * @param annotation the annotation to change its value
+	 * @param key the key in the value map
+	 * @param newValue the new value to change to
 	 */
 	@SuppressWarnings("unchecked")
 	public static Object changeAnnotationValue(Annotation annotation, String key, Object newValue){
