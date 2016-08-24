@@ -35,13 +35,13 @@
 
 ## <a name="TOC-Overview"></a>Overview
 
-There are three aspects of transformation in the conversion between Java objects and JSON documents: attribute name, attribute value, and output formats. How to control these transformation processes are the main focus of this library. In order to provide a fine-tuned way of conversion, it is designed to support 3 level of configuration: global, class, and field levels. There are two strategies to implement these configuration: Java code oriented and annotation oriented one.
+There are three aspects of transformation in the conversion between Java objects and JSON documents: attribute name, attribute value, and output structures. How to control these transformation processes are the main focus of this library. In order to provide a fine-tuned way of conversion, it is designed to support 3 level of configuration: global, class, and field levels. There are two strategies to implement these configurations: Java code oriented and annotation oriented one.
 
-Here are four general rules applied during a conversion process:
+Four general rules are applied during a conversion process:
 
 1. Lower level configurations inherit from higher level ones, if missing
 2. Lower level configurations override higher level ones, if exist
-3. Java code configuration override annotations
+3. Java code configurations override annotations
 4. Oson annotation override annotations from other sources
 
 
@@ -53,7 +53,7 @@ Here are four general rules applied during a conversion process:
   * Allow 3 level control of name and value conversions: global, class-level, and field level
   * Allow these conversions to be either annotation-oriented, or Java oriented, or both
   * Allow well-formatted JSON output: any indentation, any depth, as far as object linkage goes, without redundancy
-  * Function of lambda expressions is added to the serialization and deserialization processes, allowing limitless value transformation, with an ease of mind
+  * Functions of lambda expressions are added to the serialization and deserialization processes, allowing limitless value transformation, with an ease of mind
 
 
 ## <a name="TOC-Oson-Example-and-Test"></a>Oson Examples and Tests
@@ -84,61 +84,9 @@ public class HelloWorldTest {
 }
 ```
 
-More than 200 test cases have been created during the one month's off-work hour developing processes, starting June 03, 2016, and much more to come to test various features thouroughly.
+More than 800 test cases have been created and run.
 
 These testing cases can be found at [github.com](https://github.com/osonus/oson/tree/master/src/test/java/ca/oson/json), and run by [TestRunner.java](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/TestRunner.java)
-
-Here is another example of 2 test cases: [PrimitivesTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/userguide/PrimitivesTest.java)
-
-```java
-package ca.oson.json.userguide;
-
-import org.junit.Test;
-
-import ca.oson.json.support.TestCaseBase;
-
-public class PrimitivesTest extends TestCaseBase {
-
-	   @Test
-	   public void testSerializationPrimitives() {
-		   assertEquals("1", oson.serialize(1));
-		   
-		   assertEquals("abcd", oson.serialize("abcd"));
-		   
-		   assertEquals("10", oson.serialize(new Long(10)));
-
-		   assertEquals("10", oson.serialize(new Long(10)));
-		   
-		   int[] values = { 1 };
-		   
-		   assertEquals("[1]", oson.serialize(values));
-	   }
-	
-	
-	   @Test
-	   public void testDeserializationPrimitives() {
-		   int one = oson.deserialize("1", int.class);
-		   assertEquals(1, one);
-		   
-		   Integer two = oson.deserialize("2", Integer.class);
-		   assertEquals(new Integer(2), two);
-
-		   Long three = oson.deserialize("3", Long.class);
-		   assertEquals(new Long(3), three);
-
-		   Boolean four = oson.deserialize("false", Boolean.class);
-		   assertFalse(four);
-
-		   String str = oson.deserialize("\"abc\"", String.class);
-		   assertEquals("abc", str);
-
-		   String[] anotherStr = oson.deserialize("[\"abc\"]", String[].class);
-		   
-		   assertEquals("abc", anotherStr[0]);
-	   }
-	   
-}
-```
 
 
 ## <a name="TOC-General-Conversion-Rules"></a>General Conversion Rules
@@ -151,21 +99,21 @@ The first two general rules specify how to apply the 3 level configurations in O
 This means that a setting in the global level will propagate into class-level, and the class-level settings go in turn to the field level.
 It also means that a class-level setting will override the global settings, and a local one will replace the class level.
 
-The second two general rules specify how to put these previous rules into practice by using either a Java code based configuration, or annotation based configuration, or both, at global, class and field levels.
+The second two general rules specify how to put these previous rules into practice by using either Java code based configurations, or annotation based configurations, or both, at global, class and field levels.
 
 In order to achieve these features, two Java classes and two Annotation classes are used, with similar names and patterns:
 
 2 Java classes:
 
-  * ca.oson.json.Oson.ClassMapper
-  * ca.oson.json.Oson.FieldMapper
-
-2 Annotation classes:
-
   * ca.oson.json.ClassMapper
   * ca.oson.json.FieldMapper
 
-The Java classes have slightly more features than their corresponding annotation classes, owing to the fact that annotation can only support primitive types and Enum, not even null value. These classes contain more features than all configuration abilities from external sources, including com.fasterxml.jackson, com.google.gson, org.codehaus.jackson, javax.persistence, and javax.validation. To simulate the null default concept in annotation, NONE enum entry is introduced to various enums, including the BOOOLEAN enum, which has 3 values: BOOOLEAN.TRUE, BOOOLEAN.FALSE, BOOOLEAN.NONE, corresponding to true, false, and null in Boolean Java type. This way, the value false can be used to override previous true value. For example, if a field in ignored in external Java classes, and we cannot change its source code, yet we can easily set ignore to be false using FieldMapper class.
+2 Annotation classes:
+
+  * ca.oson.json.annotation.ClassMapper
+  * ca.oson.json.annotation.FieldMapper
+
+The Java classes have slightly more features than their corresponding annotation classes, owing to the fact that annotation can only support primitive types and Enum. These classes combine features from external sources, including com.fasterxml.jackson, org.codehaus.jackson, com.google.gson, javax.persistence, and javax.validation. To simulate the null default concept in annotation, NONE enum entry is introduced to various enums, including the BOOOLEAN enum, which has 3 values: BOOOLEAN.TRUE, BOOOLEAN.FALSE, BOOOLEAN.NONE, corresponding to true, false, and null in Boolean Java type. This way, the value false can be used to override previous true value. For example, if a field is ignored in external Java classes, and we cannot change its source code, yet we can easily set ignore to be false using FieldMapper class.
 
 The class and property level overriding rules are:
 
