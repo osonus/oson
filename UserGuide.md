@@ -2,35 +2,24 @@
 
 1. [Overview](#TOC-Overview)
 2. [Goals for Oson](#TOC-Goals-for-Oson)
-3. [Examples and Tests](#TOC-Oson-Example-and-Test)
-4. [General Conversion Rules](#TOC-General-Conversion-Rules)
-5. [How to convert Java object to Json document](#TOC-How-To-Convert-Java-Object-To-Json-Document)
+3. [Using Oson](#TOC-Using-Oson)
+  * [Using Oson with Maven](#TOC-Oson-With-Maven)
+  * [Interface to Gson and ObjectMapper](#TOC-Interface-To-Gson-And-ObjectMapper)
+  * [Examples and Tests](#TOC-Oson-Example-and-Test)
+  * [General Conversion Rules](#TOC-General-Conversion-Rules)
+4. [How to convert Java object to Json document](#TOC-How-To-Convert-Java-Object-To-Json-Document)
   * [Java Configuration](#TOC-Serialize-Java-Configuration)
     * [Global Options](#TOC-Global-Options)
     * [Class Mappers](#TOC-Class-Mappers)
     * [Field Mappers](#TOC-Field-Mappers)
   * [Annotation](#TOC-Serialize-Annotation)
   * [Lambda Expression](#TOC-Serialize-Lambda-Expression)
-6. [How to convert Json document to Java object](#TOC-How-To-Convert-Json-Document-Java-Object)
+5. [How to convert Json document to Java object](#TOC-How-To-Convert-Json-Document-Java-Object)
   * [How to Create Initial Java Object](#TOC-Deserialize-How-To-Create-Initial-Java-Object)
     * [Implement InstanceCreator](#TOC-Implement-InstanceCreator)
     * [Use Default Object](#TOC-Use-Default-Object)
     * [Use Constructor Annotation](#TOC-Use-Constructor-Annotation)
   * [Lambda Expression](#TOC-Deserialize-Lambda-Expression)
-7. [How to filter out information](#TOC-How-To-Filter-Out-Information)
-  * [Java Configuration](#TOC-Filter-Java-Configuration)
-  * [Annotation](#TOC-Filter-Annotation)
-  * [Lambda Expression](#TOC-Filter-Lambda-Expression)
-8. [How to Change Attribute Name](#TOC-How-To-Change-Attribute-Name)
-  * [Java Configuration](#TOC-Name-Java-Configuration)
-  * [Annotation](#TOC-Name-Annotation)
-  * [Lambda Expression](#TOC-Name-Lambda-Expression)
-9. [How to Change Attribute Value](#TOC-How-To-Change-Attribute-Value)
-  * [Java Configuration](#TOC-Value-Java-Configuration)
-  * [Annotation](#TOC-Value-Annotation)
-  * [Lambda Expression](#TOC-Value-Lambda-Expression)
-10. [How to Format Json Document](#TOC-How-To-Format-Json-Document)
-  * [Java Configuration](#TOC-Value-Java-Configuration)
 
 
 ## <a name="TOC-Overview"></a>Overview
@@ -56,9 +45,42 @@ Four general rules are applied during a conversion process:
   * Functions of lambda expressions are added to the serialization and deserialization processes, allowing limitless value transformation, with an ease of mind
 
 
-## <a name="TOC-Oson-Example-and-Test"></a>Oson Examples and Tests
+## <a name="TOC-Using-Oson"></a>Using Oson
 
-A hello-world example:
+The primary class to use is [`Oson`](oson/src/main/java/ca/oson/json/Oson.java) which you can just create by calling `new Oson()`. There is also a supplemental class [`OsonIO`](oson/src/main/java/ca/oson/json/OsonIO.java) available that can be used to create an Oson instance with various IO abilities.
+
+The same instance keeps state and type information, you can call clear() on the instance to clear statement data, call clearAll() to drops all cached data, with the same effect of creating a new instance.
+
+
+### <a name="TOC-Oson-With-Maven"></a>Using Oson with Maven
+
+To use Oson with Maven2/3, you can use the Oson version available in Maven Central by adding the following dependency:
+
+```xml
+<dependencies>
+	<!-- https://mvnrepository.com/artifact/ca.oson.json/oson -->
+	<dependency>
+	    <groupId>ca.oson.json</groupId>
+	    <artifactId>oson</artifactId>
+	    <version>1.0.0</version>
+	</dependency>
+</dependencies>
+```
+
+### <a name="TOC-Interface-To-Gson-And-ObjectMapper"></a>Interface to Gson and ObjectMapper
+
+An Oson instance can be turned into a Gson object by calling asGson(), an ObjectMapper by calling asJackson(), and back to Oson again by asOson().
+
+Or it can be (re)configured by setJsonProcessor, with either JSON_PROCESSOR.GSON, JSON_PROCESSOR.JACKSON, or JSON_PROCESSOR.OSON as parameter at any time.
+
+To serialize into a String, you can call serialize, toJson, or writeValueAsString method, with (T source), or (T source, Type type) as parameter(s), where T is any Java type.
+
+To deserialize the String back to a Java object, you can call deserialize, fromJson, or readValue method, with (String source), (String source, Class<T> valueType), (String source, T obj), or (String source, Type type) as parameters.
+
+
+### <a name="TOC-Oson-Example-and-Test"></a>Oson Examples and Tests
+
+A [`hello-world`](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/userguide/HelloWorldTest.java) example:
 
 ```java
 package ca.oson.json.userguide;
@@ -78,7 +100,33 @@ public class HelloWorldTest {
 		if (one == result) {
 			System.out.println("Hello world, awesome!");
 		} else {
-			System.err.println("What a day!");
+			System.err.println("What a day, awful!");
+		}
+		
+		
+		oson.asGson();
+		
+		json = oson.toJson(one);
+		
+		result = oson.fromJson(json, int.class);
+		
+		if (one == result) {
+			System.out.println("Hello world, Gson!");
+		} else {
+			System.err.println("What a day, Gson!");
+		}
+		
+		
+		oson.asJackson();
+		
+		json = oson.writeValueAsString(one);
+		
+		result = oson.readValue(json, int.class);
+		
+		if (one == result) {
+			System.out.println("Hello world, Jackson!");
+		} else {
+			System.err.println("What a day, Jackson!");
 		}
 	}
 }
@@ -89,7 +137,7 @@ More than 800 test cases have been created and run.
 These testing cases can be found at [github.com](https://github.com/osonus/oson/tree/master/src/test/java/ca/oson/json), and run by [TestRunner.java](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/TestRunner.java)
 
 
-## <a name="TOC-General-Conversion-Rules"></a>General Conversion Rules
+### <a name="TOC-General-Conversion-Rules"></a>General Conversion Rules
 
 The first two general rules specify how to apply the 3 level configurations in Oson: global, class-level, and field or attribute level.
 
@@ -175,14 +223,6 @@ This global level configuration forms a basis for further action. Two test class
 
 [ScaleTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/numeric/ScaleTest.java)
 [PrecisionScaleTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/numeric/PrecisionScaleTest.java)
-
-Json becomes popular, for 3 main reasons:
-
-1. Javascript is the Web page language, and all its objects are in Json format: name-value pairs;
-2. Easy to use, at least easier than XML;
-3. Some major NoSQL databases use Json as their document types.
-
-We will focus on how to do 4 things: filter out information, change name, change value, and change Json Document formatting, in a top-down approach.
 
 
 ## <a name="TOC-How-To-Convert-Java-Object-To-Json-Document"></a>How to convert Java object to Json document

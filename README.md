@@ -18,6 +18,20 @@ Just like annotation and lambda expressions make Java look like a functional lan
 
   * Oson [user guide](https://github.com/osonus/oson/blob/master/UserGuide.md): This guide contains examples on how to use Oson in your code.
 
+###*Using Oson with Maven*
+To use Oson with Maven2/3, you can use the Oson version available in Maven Central by adding the following dependency:
+
+```xml
+<dependencies>
+	<!-- https://mvnrepository.com/artifact/ca.oson.json/oson -->
+	<dependency>
+	    <groupId>ca.oson.json</groupId>
+	    <artifactId>oson</artifactId>
+	    <version>1.0.0</version>
+	</dependency>
+</dependencies>
+```
+
 ###*Usage*
 
 ```
