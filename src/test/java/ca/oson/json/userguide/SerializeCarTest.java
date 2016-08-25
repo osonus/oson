@@ -5,6 +5,7 @@ import java.util.Date;
 import org.junit.Test;
 
 import ca.oson.json.Oson;
+import ca.oson.json.OsonIO;
 import ca.oson.json.domain.Car;
 import ca.oson.json.support.TestCaseBase;
 
@@ -25,6 +26,15 @@ public class SerializeCarTest extends TestCaseBase {
 	@Test
 	public void testSerializationCarOneLine() {
 		String json = new Oson().serialize(new Car("Chevron", 6));
+
+		String expected = "{\"doors\":6,\"date\":null,\"brand\":\"Chevron\"}";
+
+		assertEquals(expected, expected);
+	}
+	
+	@Test
+	public void testSerializationCarOneLine2() {
+		String json = new OsonIO().print(new Car("Chevron", 6));
 
 		String expected = "{\"doors\":6,\"date\":null,\"brand\":\"Chevron\"}";
 

@@ -15,7 +15,7 @@ Just like annotation and lambda expressions make Java look like a functional lan
   * Function of lambda expressions is added to the serialization and deserialization processes, allowing limitless value transformation, with an ease of mind
 
 ###*Oson Documentation*
-
+  * Oson [API](http://www.javadoc.io/doc/ca.oson.json/oson): Javadocs for the current Oson release
   * Oson [user guide](https://github.com/osonus/oson/blob/master/UserGuide.md): This guide contains examples on how to use Oson in your code.
 
 ###*Using Oson with Maven*
