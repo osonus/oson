@@ -252,6 +252,7 @@ You can configure how to keep the states of a Java object in a text string:
 13. Output attributes in certain order
 14. Print out certain indentation
 15. Output values only to certain levels
+16. Keep class type meta data
 
 Here is a simple example of serializing a Car object:
 
