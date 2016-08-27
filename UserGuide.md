@@ -14,6 +14,9 @@
     * [Field Mappers](#TOC-Field-Mappers)
   * [Annotation](#TOC-Serialize-Annotation)
   * [Lambda Expression](#TOC-Serialize-Lambda-Expression)
+  * [Class Type](#TOC-Serialize-Class-Type)
+  * [Use Fields or Getters](#TOC-Serialize-Use-Fields-Or-Getters)
+  * [Use a Single Method](#TOC-Serialize-Use-Single-Method)
 5. [How to convert Json document to Java object](#TOC-How-To-Convert-Json-Document-Java-Object)
   * [How to Create Initial Java Object](#TOC-Deserialize-How-To-Create-Initial-Java-Object)
     * [Implement InstanceCreator](#TOC-Implement-InstanceCreator)
@@ -472,6 +475,85 @@ Take BigInteger as an example. You can see that the the first one is targeted di
 		   assertEquals(expected, result);
 	   }
 ```
+
+
+### <a name="TOC-Serialize-Class-Type"></a>Class Type
+
+As an OO language, a Java object can be assigned to its current type, or any of its supper class or interface. Java object can also be output to Json text as any of its parent, with defined subset of data.
+
+In the following case, Dog is a pet, a pet is an animal, and an animal is a Eukaryote. The same object is converted to a subset of data, based on its class type definition. An interface type does not keep its own state, so it makes sense to just output the original state of the object.
+
+```java
+	@Test
+	public void testSerializeClassType() {
+	    Dog dog = new Dog("I am a dog", BREED.GERMAN_SHEPHERD);
+	    dog.setWeight(12.5);
+	    
+	    String expectedDog = "{\"owner\":null,\"bread\":\"GERMAN_SHEPHERD\",\"birthDate\":null,\"name\":\"I am a dog\",\"weight\":12.5,\"age\":1}";
+	    String expectedPet = "{\"owner\":null,\"weight\":12.5,\"age\":1}";
+	    String expectedAnimal = "{\"weight\":12.5,\"age\":1}";
+
+	    assertEquals(expectedDog, oson.serialize(dog));
+	    assertEquals(expectedPet, oson.serialize(dog, Pet.class));
+	    assertEquals(expectedAnimal, oson.serialize(dog, Animal.class));
+	    assertEquals(expectedDog, oson.serialize(dog, Eukaryote.class));
+	}
+```
+
+
+### <a name="TOC-Serialize-Use-Fields-Or-Getters"></a>Use Fields or Getters
+
+By default, Oson will try to use both fields and get methods to retrieve values at its best efforts. It can be configured to use either fields or use getters to retrieve values.
+
+In the following example, we can see these settings in action:  term \"age\":1 is gone, when methods (in the name of attributes) are not used; the json becomes empty when both fields and methods are not used.
+
+```java
+	public void testSerializeUseFieldsOnly() {
+		Dog dog = new Dog("I am a dog", BREED.GERMAN_SHEPHERD);
+		dog.setWeight(12.5);
+
+		oson.useAttribute(false);
+		String expected = "{\"owner\":null,\"bread\":\"GERMAN_SHEPHERD\",\"birthDate\":null,\"name\":\"I am a dog\",\"weight\":12.5}";
+		assertEquals(expected, oson.serialize(dog));
+		
+		oson.useField(false);
+		expected = "{}";
+		assertEquals(expected, oson.serialize(dog));
+	}
+```
+
+
+### <a name="TOC-Serialize-Use-Single-Method"></a>Use a Single Method
+
+There is a case to use a single method of a class to get the Json output. The following example first uses setJsonValueFieldName of ClassMapper for Dog class to set the toJsonMessage to be the method to return the Json output. Then uses setToStringAsSerializer to set toString() method of Dog class to do the same thing.
+
+This call oson.setToStringAsSerializer(true) will make toString() method be the one responsible for creating Json outputs for all Java objects during serialization.
+
+These Java code settings overwrites the annotation setting: @FieldMapper(ignore = BOOLEAN.TRUE).
+
+```java
+	public void testSerializeASingleMethod() {
+		Dog dog = new Dog("I am a dog", BREED.GERMAN_SHEPHERD);
+		dog.setWeight(12.5);
+		
+		oson.clear().setClassMappers(new ClassMapper(Dog.class).setJsonValueFieldName("toJsonMessage"));
+
+		String expected = "{\"name\":\"Json\"}";
+		assertEquals(expected, oson.serialize(dog));
+
+		
+		oson.clear().setToStringAsSerializer(Dog.class, true);
+		// oson.setToStringAsSerializer(true);
+
+		expected = "{\"name\":\"Shepherd\"}";
+		assertEquals(expected, oson.serialize(dog));
+	}
+```
+
+You can achieve the same effect by using annotation: Add @FieldMapper(jsonValue = BOOLEAN.TRUE) to a method.
+
+
+
 
 
 ## <a name="TOC-How-To-Convert-Json-Document-Java-Object"></a>How to convert Json document to Java object

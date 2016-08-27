@@ -96,8 +96,8 @@ public class DefaultValue {
 	public static Short dshort = 0;
 	public static Byte dbyte = 0;
 	public static Long dlong = 0l;
-	public static Float dfloat = 0f;
-	public static Double ddouble = 0d;
+	public static Float dfloat = 0.0f;
+	public static Double ddouble = 0.0d;
 	public static String simpleDateFormat = "yyyy-MM-dd'T'HH:mm:ss.SS'Z'"; // null; // 
 	public static Date date = Calendar.getInstance().getTime(); // new Date();
 	public static AtomicInteger atomicInteger = new AtomicInteger();

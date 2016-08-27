@@ -37,7 +37,7 @@ public @interface ClassMapper {
 	BOOLEAN serialize() default BOOLEAN.BOTH;
 	
 	/*
-	 * Defautl value for a certain type, for now only String is allowed
+	 * Default value for a certain type, for now only String is allowed, so it is not really used.
 	 */
 	String defaultValue() default "";
 	

@@ -9447,6 +9447,7 @@ public class Oson {
 		boolean notSetGetOnly = !getSetGetOnly();
 		boolean completed = false;
 		Class classType = valueType;
+		int depth = 0;
 		while (!completed && classType != null && classType != Object.class) {
 			//for (Method method: stream.collect(Collectors.toList())) {
 			for (Method method: classType.getDeclaredMethods()) {
@@ -9477,10 +9478,11 @@ public class Oson {
 				}
 			}
 		
-			if (getters.size() > 0 || setters.size() > 0) {
+			if (depth > 1 && (getters.size() > 0 || setters.size() > 0)) {
 				completed = true;
 			} else {
 				classType = classType.getSuperclass();
+				depth++;
 			}
 		}
 		
