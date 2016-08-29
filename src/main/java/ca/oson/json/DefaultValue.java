@@ -163,70 +163,50 @@ public class DefaultValue {
 			return new HashSet();
 			
 		} else if (Queue.class.isAssignableFrom(type)) {
-			if (type == PriorityQueue.class) {
+			
+			if (Deque.class.isAssignableFrom(type)) {
+				if (type == ArrayDeque.class) {
+					return new ArrayDeque();
+				} else if (type == ConcurrentLinkedDeque.class) {
+					return new ConcurrentLinkedDeque();
+				} else if (type == LinkedBlockingDeque.class) {
+					return new LinkedBlockingDeque();
+				} else if (BlockingDeque.class.isAssignableFrom(type)) {
+					return new LinkedBlockingDeque();
+//				} else if (type == LinkedList.class) {
+//					return new LinkedList();
+				} else {
+					return new ArrayDeque();
+				}
+				
+			} else if (BlockingQueue.class.isAssignableFrom(type)) {
+				if (type == ArrayBlockingQueue.class) {
+					return new ArrayBlockingQueue(0);
+				} else if (type == DelayQueue.class) {
+					return new DelayQueue();
+				} else if (type == LinkedBlockingQueue.class) {
+					return new LinkedBlockingQueue();
+				} else if (type == LinkedTransferQueue.class) {
+					return new LinkedTransferQueue();
+				} else if (type == PriorityBlockingQueue.class) {
+					return new PriorityBlockingQueue();
+				} else if (type == SynchronousQueue.class) {
+					return new SynchronousQueue();
+				} else {
+					return new LinkedBlockingQueue();
+				}
+				
+			} else if (type == PriorityQueue.class) {
 				return new PriorityQueue();
-			} else if (type == LinkedBlockingDeque.class) {
-				return new LinkedBlockingDeque();
-			} else if (type == ArrayBlockingQueue.class) {
-				return new ArrayBlockingQueue(0);
-			} else if (type == DelayQueue.class) {
-				return new DelayQueue();
-			} else if (type == LinkedBlockingQueue.class) {
-				return new LinkedBlockingQueue();
-			} else if (type == LinkedTransferQueue.class) {
-				return new LinkedTransferQueue();
-			} else if (type == PriorityBlockingQueue.class) {
-				return new PriorityBlockingQueue();
-			} else if (type == SynchronousQueue.class) {
-				return new SynchronousQueue();
-			} else if (type == ArrayDeque.class) {
-				return new ArrayDeque();
-			} else if (type == ConcurrentLinkedDeque.class) {
-				return new ConcurrentLinkedDeque();
+
 			} else if (type == ConcurrentLinkedQueue.class) {
 				return new ConcurrentLinkedQueue();
-			} else if (type == LinkedList.class) {
-				return new LinkedList();
+				
+//			} else if (type == LinkedList.class) {
+//				return new LinkedList();
 			}
 			
 			return new PriorityQueue();
-			
-		} else if (Deque.class.isAssignableFrom(type)) {
-			if (type == ArrayDeque.class) {
-				return new ArrayDeque();
-			} else if (type == ConcurrentLinkedDeque.class) {
-				return new ConcurrentLinkedDeque();
-			} else if (type == LinkedBlockingDeque.class) {
-				return new LinkedBlockingDeque();
-			} else if (type == LinkedList.class) {
-				return new LinkedList();
-			}
-			
-			return new ArrayDeque();
-			
-		} else if (BlockingQueue.class.isAssignableFrom(type)) {
-			if (type == ArrayBlockingQueue.class) {
-				return new ArrayBlockingQueue(0);
-			} else if (type == DelayQueue.class) {
-				return new DelayQueue();
-			} else if (type == LinkedBlockingDeque.class) {
-				return new LinkedBlockingDeque();
-			} else if (type == LinkedBlockingQueue.class) {
-				return new LinkedBlockingQueue();
-			} else if (type == LinkedTransferQueue.class) {
-				return new LinkedTransferQueue();
-			} else if (type == PriorityBlockingQueue.class) {
-				return new PriorityBlockingQueue();
-			} else if (type == SynchronousQueue.class) {
-				return new SynchronousQueue();
-				
-			}
-			
-			return new LinkedBlockingDeque();
-			
-		} else if (BlockingDeque.class.isAssignableFrom(type)) {
-			
-			return new LinkedBlockingDeque();
 			
 		} else if (BeanContextServices.class.isAssignableFrom(type)) {
 			
