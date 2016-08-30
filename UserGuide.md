@@ -233,22 +233,22 @@ This global level configuration forms a basis for further action. Two test class
 
 Use one of the three public methods to convert a Java object to a Json document: serialize, toJson, writeValueAsString.
 
-oson or oson.asOson() is the default behavior, but it is easy to use Gson and Jackson's version: oson.asGson(), oson.asJackson(), will use these two popular Json-Java processors.
+oson or oson.asOson() is the default behavior, but it is easy to use Gson and Jackson's version: oson.asGson(), oson.asJackson(), will use these two popular Json-Java processors. Use oson.setPrintErrorUseOsonInFailure(true) to make it use oson's own feature if either gson or jackson fails and throws exception.
 
 Customization can be done using Java classes and annotations.
 
-A Java object have variables with values, and methods that act on these values. Ideally to serialize an object is to keep its states, so it will become the same object again when deserialized from its saved states in Json format.
+A Java object has variables with values, and methods that act on these values. Ideally to serialize an object is to keep its state, so it will become the same object again when deserialized from its saved states in Json format.
 
-You can configure how to keep the states of a Java object in a text string:
+You can configure how to keep the state of a Java object in a text string of Json format:
 
 1. Keep attributes-values of the original object, or a subset by providing a second class type parameter
 2. Use fields or use getters to retrieve values
-3. Use a single method to retrieve the seriazed text
+3. Use a single Json method to retrieve the seriazed text
 4. Use toString method to retrieve the seriazed text
-5. Change the name of attribute to output
-6. Change the value to output
-7. Do not quote string value for some particular attribute(s)
-8. Ignore some attributes
+5. Ignore or Show certain attributes
+6. Change the name of attribute to output
+7. Change the value to output
+8. Do not quote string value for some particular attribute(s)
 9. Change some values for some attribute, or some types
 10. Do not output null values
 11. Do not output empty values
@@ -327,8 +327,36 @@ They have the same effect, and follows the overwriting rule: configuration for t
 
 #### <a name="TOC-Field-Mappers"></a>**Field Mappers**
 
-FieldMapper class control the field level configuration. Its annotation partner has similar features, excluding ones requiring Object abilities, such as serializer and deserializer:
+ClassMapper settings of an object forms the basis to create FieldMapper settings of a particular fields or methods of a class.
 
+FieldMapper class control the field level configuration. Its annotation partner has similar features, excluding ones requiring Object abilities, such as serializer and deserializer features.
+
+Take the the name field of [Dog class](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/domain/Dog.java) as an example, its FieldMapper can be created as new FieldMapper("name", Dog.class), then it can be used to configure how the name field is going to be serialized and deserialized. Here is a list of configurations that makes sense: oson.setFieldMappers(new FieldMapper("name", Dog.class).setJson("Dog Name").setLength(6).setJsonRawValue(true).setJsonValue(true)). The following are a few example test cases: 
+
+```java
+	public void testSerializeFieldMapper() {
+		FieldMapper fieldMapper = new FieldMapper("name", Dog.class).setIgnore(true);
+		
+		assertTrue(oson.serialize(dog).contains("\"name\":\"I am a dog\""));
+		
+		assertFalse(oson.setFieldMappers(fieldMapper).serialize(dog).contains("\"name\":\"I am a dog\""));
+		
+		fieldMapper.setIgnore(false).setLength(6);
+		
+		assertTrue(oson.serialize(dog).contains("\"name\":\"I am a\""));
+
+		fieldMapper.setJsonValue(true);
+		assertEquals("\"I am a\"", oson.serialize(dog));
+		
+		fieldMapper.setJsonRawValue(true);
+		assertEquals("I am a", oson.serialize(dog));
+		
+		dog.setName("doggie");
+		String2JsonFunction serializer = (String p) -> "My " + p;
+		fieldMapper.setSerializer(serializer);
+		assertEquals("My dog", oson.serialize(dog));
+	}
+```
 
 
 ### <a name="TOC-Serialize-Annotation"></a>Annotation
@@ -337,9 +365,14 @@ Annotations can be used to set how to name an attribute, change a value, etc. An
 
 When faced with so many annotations, from different sources, and one processor only chooses to use its own set of annotations, a decision is made to implement a different Json-Java processor, which will support most of them, and also provide its own set of annotations: only two of them: one is class level, and anothe one is field level. Both of these annotations try to deliver the same amount of information as its counterpart class, with the same name, just slightly different class path.
 
-For now, ClassMapper annotation holds 20 attributes, and FieldMapper annotation holds 21 attributes. The should cover most of existing annotations used in Java-Json conversion libaries, and with some extra ones used in JPA framework.
+For now, ClassMapper annotation holds 23 attributes, and FieldMapper annotation holds 23 attributes. They should cover most of existing annotations used in Java-Json conversion libaries, and with some extra ones used in JPA framework.
 
-As described in the overwriting rules, Oson annotations will hide annotations from external sources, and Java configurations will overwrite annotation configurations, and the final effect can also be inherited in an object-oriented way.
+As described in the above overwriting rules, Oson annotations will hide annotations from external sources, and Java configurations will overwrite annotation configurations, and the final effect can also be inherited in an object-oriented way.
+
+The serialize attribute of both ClassMapper and FieldMapper annotations can be set to enable them to be used in either serialization (BOOLEAN.TRUE), or deserialization (BOOLEAN.FALSE), or both (BOOLEAN.BOTH), or neither (BOOLEAN.NONE).
+
+Annotations can be disabled in Oson by using oson.setAnnotationSupport(false).
+
 
 
 ### <a name="TOC-Serialize-Lambda-Expression"></a>Lambda Expression
@@ -548,7 +581,7 @@ These Java code settings overwrites the annotation setting: @FieldMapper(ignore 
 	}
 ```
 
-You can achieve the same effect by using annotation: Add @FieldMapper(jsonValue = BOOLEAN.TRUE) to a method.
+You can achieve the same effect by using annotation: Add @FieldMapper(jsonValue = BOOLEAN.TRUE) to a method. 
 
 
 ### <a name="TOC-Serialize-Change-Attribute-Names"></a>Change Attribute Names
@@ -637,6 +670,11 @@ These tests confirm the following points:
   * Oson FieldMapper name value overwrites name values of annotations from external sources
   * Each field or method in Oson has a Java name, and a Json name. If Json name is different from Java name, then this Json name will be used in its Json output
   * If Json name is set to empty string or null, this attribite is ignored
+
+
+### <a name="TOC-Serialize-Change-Attribute-Values"></a>Change Attribute Values
+
+There are various ways you can change attribute values to output to Json. 
 
 
 

@@ -8,11 +8,13 @@ import ca.oson.json.ClassMapper;
 import ca.oson.json.FieldMapper;
 import ca.oson.json.Oson.BOOLEAN;
 import ca.oson.json.Oson.FIELD_NAMING;
+import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.domain.Animal;
 import ca.oson.json.domain.Dog;
 import ca.oson.json.domain.Dog.BREED;
 import ca.oson.json.domain.Eukaryote;
 import ca.oson.json.domain.Pet;
+import ca.oson.json.function.String2JsonFunction;
 import ca.oson.json.support.TestCaseBase;
 
 public class DogTest extends TestCaseBase {
@@ -116,4 +118,28 @@ public class DogTest extends TestCaseBase {
 		assertFalse(oson.serialize(dog).contains("\"Oson name overwrites names from external sources\":"));
 	}
 	
+	
+	@Test
+	public void testSerializeFieldMapper() {
+		FieldMapper fieldMapper = new FieldMapper("name", Dog.class).setIgnore(true);
+		
+		assertTrue(oson.serialize(dog).contains("\"name\":\"I am a dog\""));
+		
+		assertFalse(oson.setFieldMappers(fieldMapper).serialize(dog).contains("\"name\":\"I am a dog\""));
+		
+		fieldMapper.setIgnore(false).setLength(6);
+		
+		assertTrue(oson.serialize(dog).contains("\"name\":\"I am a\""));
+
+		fieldMapper.setJsonValue(true);
+		assertEquals("\"I am a\"", oson.serialize(dog));
+		
+		fieldMapper.setJsonRawValue(true);
+		assertEquals("I am a", oson.serialize(dog));
+		
+		dog.setName("doggie");
+		String2JsonFunction serializer = (String p) -> "My " + p;
+		fieldMapper.setSerializer(serializer);
+		assertEquals("My dog", oson.serialize(dog));
+	}
 }

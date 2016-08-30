@@ -10372,18 +10372,18 @@ public class Oson {
 		//if (getters != null && getters.size() > 0) {
 			boolean isJsonRawValue = false;
 			String jsonValueFieldName = DeSerializerUtil.getJsonValueFieldName(valueType.getName());
-			if (jsonValueFieldName == null) {
-				// get all fieldmappers for this class?
-				Set<FieldMapper> fieldMappers = getFieldMappers(valueType);
-				// looking for the method
-				for (FieldMapper fieldMapper: fieldMappers) {
-					if (fieldMapper.jsonValue != null && fieldMapper.jsonValue) {
-						jsonValueFieldName = fieldMapper.java;
-						isJsonRawValue = fieldMapper.isJsonRawValue();
-						break;
-					}
-				}
-			}
+//			if (jsonValueFieldName == null) {
+//				// get all fieldmappers for this class?
+//				Set<FieldMapper> fieldMappers = getFieldMappers(valueType);
+//				// looking for the method
+//				for (FieldMapper fieldMapper: fieldMappers) {
+//					if (fieldMapper.jsonValue != null && fieldMapper.jsonValue) {
+//						jsonValueFieldName = fieldMapper.java;
+//						isJsonRawValue = fieldMapper.isJsonRawValue();
+//						break;
+//					}
+//				}
+//			}
 			if (jsonValueFieldName == null) {
 				jsonValueFieldName = classMapper.getJsonValueFieldName();
 			}
@@ -10878,21 +10878,21 @@ public class Oson {
 				}
 
 
-				if (fieldMapper.jsonValue != null && fieldMapper.jsonValue) {
-					if (value != null) {
-						if (fieldMapper.isJsonRawValue()) {
-							return value.toString();
-						} else {
-							return StringUtil.doublequote(value, isEscapeHtml());
-						}
-					}
-				}
-				
 				String str;
 
 				FieldData fieldData = new FieldData(obj, f, value, returnType, false, fieldMapper, objectDTO.level, objectDTO.set);
 
 				str = object2Json(fieldData);
+				
+				
+				if (fieldMapper.jsonValue != null && fieldMapper.jsonValue) {
+					if (fieldMapper.isJsonRawValue()) {
+						return StringUtil.unquote(str, isEscapeHtml());
+					} else {
+						return StringUtil.doublequote(str, isEscapeHtml());
+					}
+				}
+				
 
 				if (StringUtil.isNull(str)) {
 					if (classMapper.defaultType == JSON_INCLUDE.NON_NULL 
