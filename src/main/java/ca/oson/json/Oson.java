@@ -9975,9 +9975,10 @@ public class Oson {
 			fieldMapper.enumType = javaFieldMapper.enumType;
 		}
 		
-		fieldMapper.java = javaFieldMapper.java;
-
-		fieldMapper.json = javaFieldMapper.json;
+		if (javaFieldMapper.java != null && !javaFieldMapper.java.equals(javaFieldMapper.json)) {
+			fieldMapper.java = javaFieldMapper.java;
+			fieldMapper.json = javaFieldMapper.json;
+		}
 		
 		if (javaFieldMapper.length != null) {
 			fieldMapper.length = javaFieldMapper.length;
@@ -10199,6 +10200,10 @@ public class Oson {
 						classMapper.useAttribute = false;
 					}
 					
+					break;
+					
+				case "org.junit.Ignore":
+					classMapper.ignore = true;
 					break;
 				}
 			}
@@ -10535,8 +10540,10 @@ public class Oson {
 					
 					// field and getter should be treated the same way, if allowed in the class level
 					// might not be 100% correct, as the useAttribute as not be applied from annotations yet
-					if (getter != null && ((javaFieldMapper == null || javaFieldMapper.useAttribute == null) && (fieldMapper.useAttribute == null || fieldMapper.useAttribute))
-							|| (javaFieldMapper != null && javaFieldMapper.useAttribute != null && javaFieldMapper.useAttribute) ) {
+					//  && ((javaFieldMapper == null || javaFieldMapper.useAttribute == null) && (fieldMapper.useAttribute == null || fieldMapper.useAttribute))
+					// || (javaFieldMapper != null && javaFieldMapper.useAttribute != null && javaFieldMapper.useAttribute) 
+					// annotations might apply to method only, not the field, so need to get them, regardless using attribute or not
+					if (getter != null) {
 						annotations = Stream
 								.concat(Arrays.stream(annotations),
 										Arrays.stream(getter.getDeclaredAnnotations()))
@@ -10656,6 +10663,10 @@ public class Oson {
 							case "com.fasterxml.jackson.annotation.JsonValue":
 							case "org.codehaus.jackson.annotate.JsonValue":
 								fieldMapper.jsonValue = true;
+								break;
+								
+							case "org.junit.Ignore":
+								fieldMapper.ignore = true;
 								break;
 								
 							case "javax.persistence.Enumerated":
@@ -11116,6 +11127,10 @@ public class Oson {
 								if (jsonProperty.defaultValue() != null && jsonProperty.defaultValue().length() > 0) {
 									fieldMapper.defaultValue = jsonProperty.defaultValue();
 								}
+								break;
+								
+							case "org.junit.Ignore":
+								fieldMapper.ignore = true;
 								break;
 								
 							case "javax.validation.constraints.Size":
@@ -12662,6 +12677,10 @@ public class Oson {
 						}
 						
 						break;
+						
+					case "org.junit.Ignore":
+						classMapper.ignore = true;
+						break;
 					}
 				}
 				
@@ -12961,6 +12980,10 @@ public class Oson {
 								if (((org.codehaus.jackson.annotate.JsonRawValue) annotation).value()) {
 									fieldMapper.jsonRawValue = true;
 								}
+								break;
+								
+							case "org.junit.Ignore":
+								fieldMapper.ignore = true;
 								break;
 								
 							case "javax.persistence.Enumerated":
@@ -13352,6 +13375,10 @@ public class Oson {
 								if (((org.codehaus.jackson.annotate.JsonRawValue) annotation).value()) {
 									fieldMapper.jsonRawValue = true;
 								}
+								break;
+								
+							case "org.junit.Ignore":
+								fieldMapper.ignore = true;
 								break;
 								
 							case "javax.persistence.Enumerated":

@@ -2,6 +2,8 @@ package ca.oson.json.domain;
 
 import java.util.Date;
 
+import org.junit.Ignore;
+
 import ca.oson.json.Oson.BOOLEAN;
 import ca.oson.json.annotation.ClassMapper;
 import ca.oson.json.annotation.FieldMapper;
@@ -11,6 +13,22 @@ public class Dog extends Pet {
 	private String name;
 	private BREED bread;
 	private Date birthDate;
+	
+	private String someField_name;
+	
+	@com.fasterxml.jackson.annotation.JsonProperty("Jackson name")
+	@FieldMapper(ignore = BOOLEAN.TRUE)
+	private String mySpecial_field_name;
+
+	@com.fasterxml.jackson.annotation.JsonProperty("Jackson json property name")
+	@FieldMapper(ignore = BOOLEAN.TRUE, name="Oson name overwrites names from external sources")
+	@com.google.gson.annotations.SerializedName("Gson name")
+	@javax.persistence.Column(name="Column name")
+	@com.google.inject.name.Named("google inject name")
+	@javax.inject.Named("inject name")
+	@org.codehaus.jackson.annotate.JsonProperty("jackson codehaus name")
+	private String special_field_name;
+	
 	
 	public static enum BREED {
 		LABRADOR_RETRIEVER,
@@ -70,5 +88,14 @@ public class Dog extends Pet {
 	// @FieldMapper(jsonValue = BOOLEAN.TRUE)
 	public String toJsonMessage() {
 		return "{\"name\":\"Json\"}";
+	}
+
+	@Ignore
+	public String getSomeField_name() {
+		return someField_name;
+	}
+
+	public void setSomeField_name(String someField_name) {
+		this.someField_name = someField_name;
 	}
 }

@@ -798,8 +798,8 @@ public class ObjectUtil {
 		case "javax.persistence.Column":
 			return ((Column) annotation).name();
 			
-		case "com.fasterxml.jackson.databind.util.Named":
-			return ((com.fasterxml.jackson.databind.util.Named)annotation).getName();
+//		case "com.fasterxml.jackson.databind.util.Named":
+//			return ((com.fasterxml.jackson.databind.util.Named)annotation).getName();
 			
 		case "com.google.inject.name.Named":
 			return ((com.google.inject.name.Named) annotation).value();
@@ -807,8 +807,8 @@ public class ObjectUtil {
 		case "javax.inject.Named":
 			return ((javax.inject.Named)annotation).value();
 			
-		case "org.codehaus.jackson.map.util.Named":
-			return ((org.codehaus.jackson.map.util.Named)annotation).getName();
+//		case "org.codehaus.jackson.map.util.Named":
+//			return ((org.codehaus.jackson.map.util.Named)annotation).getName();
 			
 		case "org.codehaus.jackson.annotate.JsonProperty":
 			return ((org.codehaus.jackson.annotate.JsonProperty) annotation).value();

@@ -16,7 +16,8 @@
   * [Lambda Expression](#TOC-Serialize-Lambda-Expression)
   * [Class Type](#TOC-Serialize-Class-Type)
   * [Use Fields or Getters](#TOC-Serialize-Use-Fields-Or-Getters)
-  * [Use a Single Method](#TOC-Serialize-Use-Single-Method)
+  * [Use a Json serializer Method](#TOC-Serialize-Use-Json-Serializer-Method)
+  * [Change Attribute Names](#TOC-Serialize-Change-Attribute-Names)
 5. [How to convert Json document to Java object](#TOC-How-To-Convert-Json-Document-Java-Object)
   * [How to Create Initial Java Object](#TOC-Deserialize-How-To-Create-Initial-Java-Object)
     * [Implement InstanceCreator](#TOC-Implement-InstanceCreator)
@@ -523,7 +524,7 @@ In the following example, we can see these settings in action:  term \"age\":1 i
 ```
 
 
-### <a name="TOC-Serialize-Use-Single-Method"></a>Use a Single Method
+### <a name="TOC-Serialize-Use-Json-Serializer-Method"></a>Use a Json serializer Method
 
 There is a case to use a single method of a class to get the Json output. The following example first uses setJsonValueFieldName of ClassMapper for Dog class to set the toJsonMessage to be the method to return the Json output. Then uses setToStringAsSerializer to set toString() method of Dog class to do the same thing.
 
@@ -533,9 +534,6 @@ These Java code settings overwrites the annotation setting: @FieldMapper(ignore 
 
 ```java
 	public void testSerializeASingleMethod() {
-		Dog dog = new Dog("I am a dog", BREED.GERMAN_SHEPHERD);
-		dog.setWeight(12.5);
-		
 		oson.clear().setClassMappers(new ClassMapper(Dog.class).setJsonValueFieldName("toJsonMessage"));
 
 		String expected = "{\"name\":\"Json\"}";
@@ -552,6 +550,93 @@ These Java code settings overwrites the annotation setting: @FieldMapper(ignore 
 
 You can achieve the same effect by using annotation: Add @FieldMapper(jsonValue = BOOLEAN.TRUE) to a method.
 
+
+### <a name="TOC-Serialize-Change-Attribute-Names"></a>Change Attribute Names
+
+Use FIELD_NAMING enum to configure how to output attribute names.
+
+The default behavior, FIELD_NAMING.FIELD, is to keep original Java field, getter names (removing 'get', lowercase the first letter), and non get method names.
+
+You can change this default naming convention by calling setFieldNaming(FIELD_NAMING fieldNaming) on oson object, as demonstrated in the following test case:
+
+```java
+	public void testSerializeSetFieldNaming() {
+		oson.clear().setFieldMappers(new FieldMapper("someField_name", Dog.class).setIgnore(false)).setFieldNaming(FIELD_NAMING.CAMELCASE);
+		assertTrue(oson.serialize(dog).contains("\"someFieldName\":"));
+		
+		assertTrue(oson.setFieldNaming(FIELD_NAMING.UPPER_CAMELCASE).serialize(dog).contains("\"SomeFieldName\":"));
+		
+		assertTrue(oson.setFieldNaming(FIELD_NAMING.UNDERSCORE_CAMELCASE).serialize(dog).contains("\"some_Field_Name\":"));
+		
+		assertTrue(oson.setFieldNaming(FIELD_NAMING.UNDERSCORE_UPPER_CAMELCASE).serialize(dog).contains("\"Some_Field_Name\":"));
+		
+		assertTrue(oson.setFieldNaming(FIELD_NAMING.UNDERSCORE_LOWER).serialize(dog).contains("\"some_field_name\":"));
+		
+		assertTrue(oson.setFieldNaming(FIELD_NAMING.UNDERSCORE_UPPER).serialize(dog).contains("\"SOME_FIELD_NAME\":"));
+		
+		assertTrue(oson.setFieldNaming(FIELD_NAMING.SPACE_CAMELCASE).serialize(dog).contains("\"some Field Name\":"));
+		
+		assertTrue(oson.setFieldNaming(FIELD_NAMING.SPACE_UPPER_CAMELCASE).serialize(dog).contains("\"Some Field Name\":"));
+		
+		assertTrue(oson.setFieldNaming(FIELD_NAMING.SPACE_LOWER).serialize(dog).contains("\"some field name\":"));
+		
+		assertTrue(oson.setFieldNaming(FIELD_NAMING.SPACE_UPPER).serialize(dog).contains("\"SOME FIELD NAME\":"));
+		
+		assertTrue(oson.setFieldNaming(FIELD_NAMING.DASH_CAMELCASE).serialize(dog).contains("\"some-Field-Name\":"));
+		
+		assertTrue(oson.setFieldNaming(FIELD_NAMING.DASH_UPPER_CAMELCASE).serialize(dog).contains("\"Some-Field-Name\":"));
+		
+		assertTrue(oson.setFieldNaming(FIELD_NAMING.DASH_LOWER).serialize(dog).contains("\"some-field-name\":"));
+		
+		assertTrue(oson.setFieldNaming(FIELD_NAMING.DASH_UPPER).serialize(dog).contains("\"SOME-FIELD-NAME\":"));
+	}
+```
+
+You can use annotation to achieve the same effect per field.
+
+Here is one code section from Dog class:
+```java
+	@com.fasterxml.jackson.annotation.JsonProperty("Jackson name")
+	@FieldMapper(ignore = BOOLEAN.TRUE)
+	private String mySpecial_field_name;
+
+	@com.fasterxml.jackson.annotation.JsonProperty("Jackson json property name")
+	@FieldMapper(ignore = BOOLEAN.TRUE, name="Oson name overwrites names from external sources")
+	@com.google.gson.annotations.SerializedName("Gson name")
+	@javax.persistence.Column(name="Column name")
+	@com.google.inject.name.Named("google inject name")
+	@javax.inject.Named("inject name")
+	@org.codehaus.jackson.annotate.JsonProperty("jackson codehaus name")
+	private String special_field_name;
+```
+
+Here is a test case to check related field names:
+
+```java
+	public void testSerializeChangeAttributeName() {
+		FieldMapper fieldMapper = new FieldMapper("special_field_name", Dog.class).setIgnore(false);
+		oson.clear().setFieldMappers(new FieldMapper("mySpecial_field_name", Dog.class).setIgnore(false))
+			.setFieldMappers(fieldMapper);
+
+		assertTrue(oson.serialize(dog).contains("\"Jackson name\":"));
+
+		assertTrue(oson.serialize(dog).contains("\"Oson name overwrites names from external sources\":"));
+		
+		fieldMapper.json = "Java name";
+		oson.setFieldMappers(fieldMapper);
+		assertTrue(oson.serialize(dog).contains("\"Java name\":"));
+		
+		fieldMapper.json = "";
+		oson.setFieldMappers(fieldMapper);
+		assertFalse(oson.serialize(dog).contains("\"Oson name overwrites names from external sources\":"));
+	}
+```
+
+These tests confirm the following points:
+  * annotaton and Java code configuration can be used to overwrite the global level naming settings
+  * Oson FieldMapper name value overwrites name values of annotations from external sources
+  * Each field or method in Oson has a Java name, and a Json name. If Json name is different from Java name, then this Json name will be used in its Json output
+  * If Json name is set to empty string or null, this attribite is ignored
 
 
 
