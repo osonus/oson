@@ -285,8 +285,7 @@ public class DefaultValue {
 		return new Object[0];
 	}
 	public static Date getDate() {
-		date = Calendar.getInstance().getTime();
-		
+		// date = Calendar.getInstance().getTime();
 		return date;
 	}
 
@@ -330,6 +329,9 @@ public class DefaultValue {
 			
 		} else if (type == Double.class || type == double.class) {
 			return DefaultValue.ddouble;
+			
+		} else if (type == Short.class) {
+			return DefaultValue.dshort;
 			
 		} else if (type == Short.class) {
 			return DefaultValue.dshort;

@@ -6355,7 +6355,7 @@ public class Oson {
 						} else if (returnedValue instanceof String) {
 							valueToReturn = BooleanUtil.string2Boolean((String)returnedValue);
 							
-						} else if (DefaultValue.isDefault(returnedValue)) {
+						} else if (DefaultValue.isDefault(returnedValue, returnedValue.getClass())) {
 							valueToReturn = false;
 						} else {
 							valueToReturn = BooleanUtil.string2Boolean(returnedValue.toString());
@@ -9086,17 +9086,17 @@ public class Oson {
 		}
 		
 		int level  = objectDTO.level;
-		if (value == null) {
-			if ((returnType != null && returnType.isPrimitive())  || objectDTO.required()) {
-				Object obj = DefaultValue.getSystemDefault(returnType);
-				if (obj != null) {
-					return obj.toString();
-				}
-				
-			}
-
-			return processNullValue(level);
-		}
+//		if (value == null) {
+//			if ((returnType != null && returnType.isPrimitive())  || objectDTO.required()) {
+//				Object obj = DefaultValue.getSystemDefault(returnType);
+//				if (obj != null) {
+//					return obj.toString();
+//				}
+//				
+//			}
+//
+//			return processNullValue(level);
+//		}
 		
 		// first, get the class mapper
 		//if (objectDTO.mapper == null && objectDTO.classMapper == null) {
@@ -10869,7 +10869,7 @@ public class Oson {
 					if (getterValue.equals(value) || StringUtil.isEmpty(value)) {
 						value = getterValue;
 						
-					} else if (DefaultValue.isDefault(value) && !DefaultValue.isDefault(getterValue)) {
+					} else if (DefaultValue.isDefault(value, returnType) && !DefaultValue.isDefault(getterValue, returnType)) {
 						value = getterValue;
 					}
 //					else if (getterValue.toString().length() > value.toString().length()) {
@@ -11316,7 +11316,7 @@ public class Oson {
 					
 					str = "null";
 					
-				} else if (classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT && DefaultValue.isDefault(str)) {
+				} else if (classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT && DefaultValue.isDefault(str, returnType)) {
 					continue;
 				}
 
@@ -11444,7 +11444,7 @@ public class Oson {
 									
 									str = "null";
 									
-								} else if (DefaultValue.isDefault(str)) {
+								} else if (DefaultValue.isDefault(str, value.getClass())) {
 									if (classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
 										continue;
 									}
@@ -13169,7 +13169,7 @@ public class Oson {
 							continue;
 						}
 						
-					} else if (DefaultValue.isDefault(value)) {
+					} else if (DefaultValue.isDefault(value, returnType)) {
 						if (classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
 							continue;
 						}
@@ -13540,7 +13540,7 @@ public class Oson {
 							continue;
 						}
 						
-					} else if (DefaultValue.isDefault(value)) {
+					} else if (DefaultValue.isDefault(value, returnType)) {
 						if (classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
 							continue;
 						}

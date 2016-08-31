@@ -674,10 +674,20 @@ These tests confirm the following points:
 
 ### <a name="TOC-Serialize-Change-Attribute-Values"></a>Change Attribute Values
 
-There are various ways you can change attribute values to output to Json. 
+There are various aspects and ways you can change attribute values to output to Json.
 
+#### <a name="TOC-Serialize-Null-Empty-Default-Values"></a>**Null, Empty, Default Values**
 
+The coarse level of control comes with oson.setDefaultType(JSON_INCLUDE defaultType), where enum JSON_INCLUDE can be ALWAYS, NON_NULL, NON_EMPTY, NON_DEFAULT, DEFAULT, and NONE.
+  * The default is NONE, similar to ALWAYS for now, showing all values.
+  * NON_NULL: do not output attributes with null values
+  * NON_EMPTY: do not output empty values, such as "" String
+  * NON_DEFAULT: do not output DEFAULT Java values, such as 0 for Integer
+  * DEFAULT: use default values when they are null, empty when they are either required, or of primitive types
 
+```java
+
+```
 
 ## <a name="TOC-How-To-Convert-Json-Document-Java-Object"></a>How to convert Json document to Java object
  

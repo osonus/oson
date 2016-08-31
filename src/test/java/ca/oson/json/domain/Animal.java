@@ -1,14 +1,14 @@
 package ca.oson.json.domain;
 
 public abstract class Animal implements Eukaryote {
-	protected double weight;
+	protected Double weight;
 
 	
 	public int getAge() {
 		return 1;
 	}
 
-	public void setWeight(double weight) {
+	public void setWeight(Double weight) {
 		this.weight = weight;
 	}
 	
