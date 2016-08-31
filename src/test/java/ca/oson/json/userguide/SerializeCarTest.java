@@ -34,7 +34,7 @@ public class SerializeCarTest extends TestCaseBase {
 	
 	@Test
 	public void testSerializationCarOneLine2() {
-		String json = new OsonIO().print(new Car("Chevron", 6));
+		String json = new OsonIO().serialize(new Car("Chevron", 6));
 
 		String expected = "{\"doors\":6,\"date\":null,\"brand\":\"Chevron\"}";
 

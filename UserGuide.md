@@ -18,6 +18,11 @@
   * [Use Fields or Getters](#TOC-Serialize-Use-Fields-Or-Getters)
   * [Use a Json serializer Method](#TOC-Serialize-Use-Json-Serializer-Method)
   * [Change Attribute Names](#TOC-Serialize-Change-Attribute-Names)
+  * [Change Attribute Values](#TOC-Serialize-Change-Attribute-Values)
+    * [Null, Empty, Default Values](#TOC-Serialize-Null-Empty-Default-Values)
+    * [Raw Values](#TOC-Serialize-Raw-Values)
+    * [Property Orders](#TOC-Serialize-Property-Orders)
+  
 5. [How to convert Json document to Java object](#TOC-How-To-Convert-Json-Document-Java-Object)
   * [How to Create Initial Java Object](#TOC-Deserialize-How-To-Create-Initial-Java-Object)
     * [Implement InstanceCreator](#TOC-Implement-InstanceCreator)
@@ -685,10 +690,115 @@ The coarse level of control comes with oson.setDefaultType(JSON_INCLUDE defaultT
   * NON_DEFAULT: do not output DEFAULT Java values, such as 0 for Integer
   * DEFAULT: use default values when they are null, empty when they are either required, or of primitive types
 
-```java
+These settings are used in the following test cases:
 
+```java
+	public void testSerializeNullEmptyDefaultValues() {
+	    String expectedNonNull = "{\"bread\":\"GERMAN_SHEPHERD\",\"name\":\"\",\"weight\":0,\"age\":1}";
+	    String expectedNonEmpty = "{\"bread\":\"GERMAN_SHEPHERD\",\"weight\":0,\"age\":1}";
+	    String expectedNonDefault = "{\"bread\":\"GERMAN_SHEPHERD\",\"age\":1}";
+	    String expectedNonDefault2 = "{\"bread\":\"GERMAN_SHEPHERD\"}";
+	    String expectedNonDefault3 = "{\"bread\":\"GERMAN_SHEPHERD\"}";
+	    String expectedDefault = "{\"bread\":\"GERMAN_SHEPHERD\",\"age\":1}";
+		
+		dog.setName("");
+		dog.setWeight(0.0);
+		
+		oson.clear().setDefaultType(JSON_INCLUDE.NON_NULL);
+	    assertEquals(expectedNonNull, oson.serialize(dog));
+
+		oson.setDefaultType(JSON_INCLUDE.NON_EMPTY);
+	    assertEquals(expectedNonEmpty, oson.serialize(dog));
+
+		oson.setDefaultType(JSON_INCLUDE.NON_DEFAULT);
+	    assertEquals(expectedNonDefault, oson.serialize(dog));
+	    
+	    Integer integer = DefaultValue.integer;
+	    DefaultValue.integer = 1;
+
+	    assertEquals(expectedNonDefault2, oson.serialize(dog));
+
+	    
+	    oson.clear().setDefaultType(JSON_INCLUDE.DEFAULT);
+	    
+	    dog.setWeight(null);
+	    DefaultValue.date = null;
+	    
+	    Double ddouble = DefaultValue.ddouble;
+
+	    assertEquals("{\"owner\":null,\"bread\":\"GERMAN_SHEPHERD\",\"birthDate\":null,\"name\":\"\",\"weight\":0.0,\"age\":1}", oson.serialize(dog));
+
+	    DefaultValue.ddouble = 1.0;
+	    assertEquals("{\"owner\":null,\"bread\":\"GERMAN_SHEPHERD\",\"birthDate\":null,\"name\":\"\",\"weight\":1.0,\"age\":1}", oson.serialize(dog));
+
+	    String format = "yyyy-MM-dd";
+	    oson.setDateFormat(format);
+	    Date date = oson.deserialize("2011-01-18", Date.class);
+	    
+	    FieldMapper fieldMapper = new FieldMapper("birthDate", Dog.class).setRequired(true);
+	    oson.setFieldMappers(fieldMapper);
+
+	    DefaultValue.date = date;
+	    assertEquals("{\"owner\":null,\"bread\":\"GERMAN_SHEPHERD\",\"birthDate\":\"2011-01-18\",\"name\":\"\",\"weight\":1.0,\"age\":1}", oson.serialize(dog));
+
+	    date = oson.deserialize("2011-01-19", Date.class);
+	    ClassMapper classMapper = new ClassMapper(Date.class).setDefaultValue(date);
+	    oson.setClassMappers(classMapper);
+	    assertEquals("{\"owner\":null,\"bread\":\"GERMAN_SHEPHERD\",\"birthDate\":\"2011-01-19\",\"name\":\"\",\"weight\":1.0,\"age\":1}", oson.serialize(dog));
+
+	    date = oson.deserialize("2011-01-20", Date.class);
+	    fieldMapper.setDefaultValue(date);
+	    assertEquals("{\"owner\":null,\"bread\":\"GERMAN_SHEPHERD\",\"birthDate\":\"2011-01-20\",\"name\":\"\",\"weight\":1.0,\"age\":1}", oson.serialize(dog));
+	}
 ```
 
+You can notice the following interesting behaviors regarding JSON_INCLUDE.NON_DEFAULT and JSON_INCLUDE.DEFAULT settings:
+  * Some Java types can have default values, such as numberic types use 0 as default. Oson allows you to set arbutary values to be default for certain data types
+  * When an attribute is required, primitive, or oson.setDefaultType(JSON_INCLUDE.DEFAULT), any null values will be turned into default value
+  * Default values can be set globally, for a type, or for an attribute specifically. Take Date field (birthDate) as example, it will take the default values in the sequence of field, type, to global levell
+  * When oson.setDefaultType(JSON_INCLUDE.NON_DEFAULT), any attribute with default value will be ignored
+  
+  
+#### <a name="TOC-Serialize-Raw-Values"></a>**Raw Values**
+
+String, char, Character, enum String, or Date text values need to be (double-)quoted in Json output.
+
+Top level variables are not quoted, as it makes sense to serialize a String back to a String, without any quotes.
+
+These text values can be configured not to be double-quoted, using:
+  * set jsonRawValue of FieldMapper Java class to be true
+  * set jsonRawValue of FieldMapper annotation to be true
+  * use com.fasterxml.jackson.annotation.JsonRawValue annotation for an attribute
+  * use org.codehaus.jackson.annotate.JsonRawValue annotation for an attribute
+
+
+#### <a name="TOC-Serialize-Property-Orders"></a>**Property Orders**
+
+Json properties of a class can be outputed using a hard-coded list of specified order, and can also be sorted by attribute names or map keys naturally.
+
+```java
+	public void testSerializeOrderedPerson() {
+		OrderedPerson obj = new OrderedPerson();
+		String expected = "{\"firstName\":null,\"lastName\":null,\"addressList\":null,\"age\":0,\"birthDate\":null,\"title\":null}";
+		assertEquals(expected, oson.serialize(obj));
+		
+		String[] propertyOrders = new String[] {"title", "birthDate"};
+		
+		ClassMapper classMapper = new ClassMapper(OrderedPerson.class)
+			.setOrderByKeyAndProperties(false)
+			.setPropertyOrders(propertyOrders);
+		String json = oson.setClassMappers(OrderedPerson.class, classMapper).serialize(obj);
+		expected = "{\"title\":null,\"birthDate\":null,\"addressList\":null,\"firstName\":null,\"age\":0,\"lastName\":null}";
+		assertEquals(expected, json);
+	}
+```
+
+From the above test cases, we can conclude that Json properties of a class can be outputed:
+  * following the ordered list set by propertyOrders value of annotation class ClassMapper
+  * then ordered by orderByKeyAndProperties BOOLEAN value of annotation class ClassMapper
+  * these annotation values are overriden by same name settings of ClassMapper Java class
+
+  
 ## <a name="TOC-How-To-Convert-Json-Document-Java-Object"></a>How to convert Json document to Java object
  
 It is a little bit more complex to convert Json document to Java object. The main reason is that we need figure out which Java object types to map the data inside the Json string to. There are only two ways to handle this hard task:

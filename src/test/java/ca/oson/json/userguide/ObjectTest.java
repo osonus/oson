@@ -11,9 +11,11 @@ import org.junit.Test;
 
 import com.google.gson.GsonBuilder;
 
+import ca.oson.json.ClassMapper;
 import ca.oson.json.ComponentType;
 import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.OsonIO;
+import ca.oson.json.domain.OrderedPerson;
 import ca.oson.json.domain.Support;
 import ca.oson.json.domain.Volume;
 import ca.oson.json.domain.VolumeContainer;
@@ -21,6 +23,24 @@ import ca.oson.json.support.TestCaseBase;
 
 
 public class ObjectTest extends TestCaseBase {
+	
+	
+	@Test
+	public void testSerializeOrderedPerson() {
+		OrderedPerson obj = new OrderedPerson();
+		String expected = "{\"firstName\":null,\"lastName\":null,\"addressList\":null,\"age\":0,\"birthDate\":null,\"title\":null}";
+		assertEquals(expected, oson.serialize(obj));
+		
+		String[] propertyOrders = new String[] {"title", "birthDate"};
+		
+		ClassMapper classMapper = new ClassMapper(OrderedPerson.class)
+			.setOrderByKeyAndProperties(false)
+			.setPropertyOrders(propertyOrders);
+		String json = oson.setClassMappers(OrderedPerson.class, classMapper).serialize(obj);
+		expected = "{\"title\":null,\"birthDate\":null,\"addressList\":null,\"firstName\":null,\"age\":0,\"lastName\":null}";
+		assertEquals(expected, json);
+	}
+	
 
 	@Test
 	public void testSerializationObject() {

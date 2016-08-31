@@ -325,7 +325,7 @@ public class PrecisionScaleTest extends TestCaseBase {
 		
 		String expected51 = "12.3";
 		String expected30 = "12";
-		String expectedDecimal = "{\"valueDouble\":12.35,\"valueBigDecimal\":12.35,\"value\":12}";
+		String expectedDecimal = "{\"valueDouble\":12.34568,\"valueBigDecimal\":12.34568,\"value\":12}";
 
 		oson.clear().setPrecision(5).setScale(1);
 		oson.setClassMappers(new ClassMapper[] {
@@ -342,7 +342,7 @@ public class PrecisionScaleTest extends TestCaseBase {
 
 		json = oson.serialize(decimal);
 		
-		//System.err.println(json);
+		// System.err.println(json);
 		
 		assertEquals(expectedDecimal, json);
 	}
@@ -358,7 +358,7 @@ public class PrecisionScaleTest extends TestCaseBase {
 		
 		String expected51 = "12.3";
 		String expected30 = "12";
-		String expectedDecimal = "{\"valueDouble\":12.35,\"valueBigDecimal\":12.35,\"value\":12.3}";
+		String expectedDecimal = "{\"valueDouble\":12.34568,\"valueBigDecimal\":12.34568,\"value\":12.3}";
 
 		oson.clear().setPrecision(5).setScale(1);
 		oson.setClassMappers(new ClassMapper[] {
@@ -374,9 +374,8 @@ public class PrecisionScaleTest extends TestCaseBase {
 		assertEquals(expected51, json);
 
 		json = oson.serialize(decimal);
-		// System.err.println(json);
+		//System.err.println(json);
 		assertEquals(expectedDecimal, json);
-
 	}
 	
 	
@@ -390,7 +389,8 @@ public class PrecisionScaleTest extends TestCaseBase {
 		
 		String expected51 = "12.3";
 		String expected30 = "12";
-		String expectedDecimal = "{\"valueDouble\":12.35,\"valueBigDecimal\":12.35,\"newFloatFieldName\":12.345700}";
+		String expectedDecimal = "{\"valueDouble\":12.34568,\"valueBigDecimal\":12.34568,\"newFloatFieldName\":12.345700}"; 
+		// "{\"valueDouble\":12.35,\"valueBigDecimal\":12.35,\"newFloatFieldName\":12.345700}";
 
 		oson.clear().setPrecision(5).setScale(1);
 		oson.setClassMappers(new ClassMapper[] {

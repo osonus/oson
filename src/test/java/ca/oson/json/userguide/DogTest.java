@@ -175,6 +175,7 @@ public class DogTest extends TestCaseBase {
 
 	    assertEquals(expectedNonDefault2, oson.serialize(dog));
 
+	    
 	    oson.clear().setDefaultType(JSON_INCLUDE.DEFAULT);
 	    
 	    dog.setWeight(null);
@@ -187,25 +188,25 @@ public class DogTest extends TestCaseBase {
 	    DefaultValue.ddouble = 1.0;
 	    assertEquals("{\"owner\":null,\"bread\":\"GERMAN_SHEPHERD\",\"birthDate\":null,\"name\":\"\",\"weight\":1.0,\"age\":1}", oson.serialize(dog));
 
-	    
-	    FieldMapper fieldMapper = new FieldMapper("birthDate", Dog.class).setRequired(true);
 	    String format = "yyyy-MM-dd";
-	    oson.setFieldMappers(fieldMapper);
 	    oson.setDateFormat(format);
 	    Date date = oson.deserialize("2011-01-18", Date.class);
+	    
+	    FieldMapper fieldMapper = new FieldMapper("birthDate", Dog.class).setRequired(true);
+	    oson.setFieldMappers(fieldMapper);
 
-	    fieldMapper.defaultValue = date;
+	    DefaultValue.date = date;
 	    assertEquals("{\"owner\":null,\"bread\":\"GERMAN_SHEPHERD\",\"birthDate\":\"2011-01-18\",\"name\":\"\",\"weight\":1.0,\"age\":1}", oson.serialize(dog));
 
-//	    date = oson.deserialize("2011-01-19", Date.class);
-//	    ClassMapper classMapper = new ClassMapper(Date.class).setDefaultValue(date);
-//	    oson.setClassMappers(Date.class, classMapper);
-//	    
-//	    assertEquals("{\"owner\":null,\"bread\":\"GERMAN_SHEPHERD\",\"birthDate\":\"2011-01-19\",\"name\":\"\",\"weight\":1.0,\"age\":1}", oson.serialize(dog));
+	    date = oson.deserialize("2011-01-19", Date.class);
+	    ClassMapper classMapper = new ClassMapper(Date.class).setDefaultValue(date);
+	    oson.setClassMappers(classMapper);
+	    assertEquals("{\"owner\":null,\"bread\":\"GERMAN_SHEPHERD\",\"birthDate\":\"2011-01-19\",\"name\":\"\",\"weight\":1.0,\"age\":1}", oson.serialize(dog));
 
 	    date = oson.deserialize("2011-01-20", Date.class);
 	    fieldMapper.setDefaultValue(date);
 	    assertEquals("{\"owner\":null,\"bread\":\"GERMAN_SHEPHERD\",\"birthDate\":\"2011-01-20\",\"name\":\"\",\"weight\":1.0,\"age\":1}", oson.serialize(dog));
-
 	}
+	
+	
 }

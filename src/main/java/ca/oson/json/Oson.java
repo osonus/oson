@@ -9756,6 +9756,10 @@ public class Oson {
 			classMapper.setToStringAsSerializer(javaClassMapper.isToStringAsSerializer());
 		}
 		
+		if (javaClassMapper.jsonValueFieldName != null) {
+			classMapper.jsonValueFieldName = javaClassMapper.jsonValueFieldName;
+		}
+		
 		return classMapper;
 	}
 	
@@ -10047,14 +10051,15 @@ public class Oson {
 		
 		ClassMapper classMapper = objectDTO.classMapper;
 		// first build up the class-level processing rules
-		if (classMapper == null) {
+		// || (objectDTO.level == 0 && objectDTO.fieldMapper == null)
+		//if (classMapper == null) {
 			// 1. Create a blank class mapper instance
 			classMapper = new ClassMapper(valueType);
 			
 			// 2. Globalize it
 			classMapper = globalize(classMapper);
 			objectDTO.classMapper = classMapper;
-		}
+		//}
 		
 		if (objectDTO.fieldMapper != null && isInheritMapping()) {
 			classMapper = overwriteBy (classMapper, objectDTO.fieldMapper);
@@ -12530,14 +12535,14 @@ public class Oson {
 		
 		
 		ClassMapper classMapper = objectDTO.classMapper;
-		if (classMapper == null) {
+		//if (classMapper == null) {
 			// 1. Create a blank class mapper instance
 			classMapper = new ClassMapper(valueType);
 		
 			// 2. Globalize it
 			classMapper = globalize(classMapper);
 			objectDTO.classMapper = classMapper;
-		}
+		//}
 
 		if (objectDTO.fieldMapper != null && isInheritMapping()) {
 			classMapper = overwriteBy (classMapper, objectDTO.fieldMapper);
