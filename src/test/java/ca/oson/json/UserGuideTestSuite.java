@@ -6,6 +6,7 @@ import org.junit.runners.Suite;
 import ca.oson.json.userguide.ArrayTest;
 import ca.oson.json.userguide.BascicDateTypeTest;
 import ca.oson.json.userguide.ClassMapperConfigurationTest;
+import ca.oson.json.userguide.ClassMapperTest;
 import ca.oson.json.userguide.CollectionsTest;
 import ca.oson.json.userguide.ConfigInheritanceTest;
 import ca.oson.json.userguide.DeserializeFunctionTest;
@@ -29,7 +30,8 @@ import ca.oson.json.userguide.SerializeCarTest;
 	OptionalTest.class,
 	ClassMapperConfigurationTest.class,
 	BascicDateTypeTest.class,
-	DogTest.class
+	DogTest.class,
+	ClassMapperTest.class
 })
 public class UserGuideTestSuite {
 

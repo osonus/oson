@@ -9587,7 +9587,12 @@ public class Oson {
 		
 		String[] ignoreFieldsWithAnnotations = classMapperAnnotation.ignoreFieldsWithAnnotations();
 		if (ignoreFieldsWithAnnotations != null && ignoreFieldsWithAnnotations.length > 0) {
-			classMapper.ignoreFieldsWithAnnotations = new HashSet(Arrays.asList(ignoreFieldsWithAnnotations));
+			Set set = new HashSet();
+			for (String ignoreFieldsWithAnnotation: ignoreFieldsWithAnnotations) {
+				set.add(ComponentType.forName(ignoreFieldsWithAnnotation));
+			}
+			
+			classMapper.ignoreFieldsWithAnnotations = set;
 		}
 		
 		String[] jsonIgnoreProps = classMapperAnnotation.jsonIgnoreProperties();
@@ -10796,7 +10801,7 @@ public class Oson {
 				// handling name now
 				boolean jnameFixed = false;
 				String json = fieldMapper.json;
-				if (json == null) {
+				if (StringUtil.isEmpty(json)) {
 					if (getter != null) {
 						getters.remove(lcfieldName);
 					}
@@ -11221,7 +11226,7 @@ public class Oson {
 				// handling name now
 				boolean jnameFixed = false;
 				String json = fieldMapper.json;
-				if (json == null) {
+				if (StringUtil.isEmpty(json)) {
 					if (getter != null) {
 						getters.remove(lcfieldName);
 					}

@@ -29,7 +29,7 @@ public class ObjectTest extends TestCaseBase {
 	public void testSerializeOrderedPerson() {
 		OrderedPerson obj = new OrderedPerson();
 		String expected = "{\"firstName\":null,\"lastName\":null,\"addressList\":null,\"age\":0,\"birthDate\":null,\"title\":null}";
-		assertEquals(expected, oson.serialize(obj));
+		assertEquals(expected, oson.clear().serialize(obj));
 		
 		String[] propertyOrders = new String[] {"title", "birthDate"};
 		

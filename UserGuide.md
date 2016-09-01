@@ -18,6 +18,7 @@
   * [Use Fields or Getters](#TOC-Serialize-Use-Fields-Or-Getters)
   * [Use a Json serializer Method](#TOC-Serialize-Use-Json-Serializer-Method)
   * [Change Attribute Names](#TOC-Serialize-Change-Attribute-Names)
+  * [Ignore or Show](#TOC-Serialize-Ignore-Or-Show)
   * [Change Attribute Values](#TOC-Serialize-Change-Attribute-Values)
     * [Null, Empty, Default Values](#TOC-Serialize-Null-Empty-Default-Values)
     * [Raw Values](#TOC-Serialize-Raw-Values)
@@ -561,6 +562,8 @@ In the following example, we can see these settings in action:  term \"age\":1 i
 	}
 ```
 
+The fieldVisibility(), setterVisibility(), and getterVisibility() values of annotations com.fasterxml.jackson.annotation.JsonAutoDetect and org.codehaus.jackson.annotate.JsonAutoDetect are processed into useField and useAttribute.
+
 
 ### <a name="TOC-Serialize-Use-Json-Serializer-Method"></a>Use a Json serializer Method
 
@@ -677,6 +680,50 @@ These tests confirm the following points:
   * If Json name is set to empty string or null, this attribite is ignored
 
 
+### <a name="TOC-Serialize-Ignore-Or-Show"></a>Ignore or Show
+
+You can configure Oson and target Java classes to ignore or show types, attributes in various ways.
+
+For custom class types, the following choices are available:
+  * by default, transient and volatile attributes are ignored, unless using includeFieldsWithModifier(s) to modify this behavior
+  * oson.includeFieldsWithModifier(MODIFIER includeFieldsWithModifier), where MODIFIER is an enum list of Public, Protected, Package, Private, Abstract, Final, Interface, Native, Static, Strict, Synchronized, Transient, Volatile, Synthetic, All, None. oson.includeFieldsWithModifiers takes Set or array of MODIFIER
+  * oson.ignoreClassWithAnnotation(Class ignoreClassWithAnnotation) ignores a class with the specified annotation type. ignoreClassWithAnnotations takes Set or array of Annotation subclasses
+  * oson.ignoreFieldsWithAnnotation(s) do the same thing for an attribute
+  * oson.includeFieldsWithModifier(s) do the opposite for an attribute
+  * use ca.oson.json.ClassMapper for a class type, as shown in [testSerializeIgnore() of ClassMapperTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/userguide/ClassMapperTest.java). You can ignore basic Java types, such as String, using ClassMapper, then all String fields will be ignored, unless overwritten by more specific configurations
+    * method setIgnore to set to true or false
+    * method setIncludeFieldsWithModifiers to include a set of MODIFIERs
+    * method setJsonIgnoreProperties to set a set of properties to ignore
+    * method setIgnoreFieldsWithAnnotations to ignore fields with certain annotations
+    * since and until values to set version controls. The version is specified using oson.setVersion for a particular custom class
+  * use ca.oson.json.annotation.ClassMapper
+    * attribute ignore to be BOOLEAN.TRUE to a custom Java class
+    * ignoreFieldsWithAnnotations to be a list of annotation full class names, used in any one of its fields or methods of the target class
+    * includeFieldsWithModifiers to include any fields with specified MODIFIERs
+    * jsonIgnoreProperties to ignore list of attribute names (get or set methods with out the first 3 letters, lower case the following initial letter)
+    * since and until values to set version controls
+  * use ca.oson.json.FieldMapper to specify an attribute. No matter what way you create this configuration object, you need to specify three values: enclosing class type, Java field name, and Json name to convert to or from
+    * If Json name is set to null or empty, this field will be ignored
+    * setIgnore(true) to ignore this attribute
+    * since and until values to set version controls. Version numbers should fall inbetween since (inclusive) and until (exclusive) to be included. Version rules will process from top to lower levels
+  * use ca.oson.json.annotation.FieldMapper
+    * set ignore value to BOOLEAN.TRUE for a particular attribute
+    * use since and/or until for version control
+  * annotation com.google.gson.annotations.Since and com.google.gson.annotations.Until for both class type and attributes
+  * com.fasterxml.jackson.annotation.JsonIgnoreProperties and org.codehaus.jackson.annotate.JsonIgnoreProperties for ignore attributes or properties, specified in class type level
+  * annotation org.junit.Ignore for type and attributes
+  * the followings are for attributes only: com.fasterxml.jackson.annotation.JsonIgnore, and org.codehaus.jackson.annotate.JsonIgnore
+  * javax.persistence.Transient
+  * not allowGetters() of com.fasterxml.jackson.annotation.JsonIgnoreProperties
+  * com.google.gson.annotations.Since and/or com.google.gson.annotations.Until
+  * com.fasterxml.jackson.annotation.JsonProperty
+  * com.google.gson.annotations.Expose, which is handled in a slightly different way: once some attributes use Expose, other ones that are not Expose-annotated will be excluded
+
+The settings of default type (JSON_INCLUDE), useField, and useAttribute can all be used to filter out information.
+
+The features will be combined in logical ways: following top-down, coarse to fine-grained, global level through class level to attribute levels, external to Oson overriding rules.
+
+
 ### <a name="TOC-Serialize-Change-Attribute-Values"></a>Change Attribute Values
 
 There are various aspects and ways you can change attribute values to output to Json.
@@ -758,6 +805,9 @@ You can notice the following interesting behaviors regarding JSON_INCLUDE.NON_DE
   * Default values can be set globally, for a type, or for an attribute specifically. Take Date field (birthDate) as example, it will take the default values in the sequence of field, type, to global levell
   * When oson.setDefaultType(JSON_INCLUDE.NON_DEFAULT), any attribute with default value will be ignored
   
+Annotation com.fasterxml.jackson.annotation.JsonInclude is translated into a value of JSON_INCLUDE defaultType in Oson.
+
+
   
 #### <a name="TOC-Serialize-Raw-Values"></a>**Raw Values**
 
