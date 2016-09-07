@@ -724,7 +724,7 @@ public class Oson {
 	public Oson asOson() {
 		return setJsonProcessor(JSON_PROCESSOR.OSON);
 	}
-	
+
 	private FIELD_NAMING getFieldNaming() {
 		return options.getFieldNaming();
 	}
@@ -2251,7 +2251,7 @@ public class Oson {
 		return this;
 	}
 	
-	private ObjectMapper getJackson() {
+	public ObjectMapper getJackson() {
 		if (jackson == null) {
 			jackson = new ObjectMapper();
 			prefixProcessing();
@@ -2749,7 +2749,7 @@ public class Oson {
 	}
 
 	
-	private Gson getGson() {
+	public Gson getGson() {
 		if (gson == null) {
 			GsonBuilder gsonBuilder = new GsonBuilder();
 
@@ -9587,17 +9587,22 @@ public class Oson {
 		
 		String[] ignoreFieldsWithAnnotations = classMapperAnnotation.ignoreFieldsWithAnnotations();
 		if (ignoreFieldsWithAnnotations != null && ignoreFieldsWithAnnotations.length > 0) {
-			Set set = new HashSet();
-			for (String ignoreFieldsWithAnnotation: ignoreFieldsWithAnnotations) {
-				set.add(ComponentType.forName(ignoreFieldsWithAnnotation));
+			if (classMapper.ignoreFieldsWithAnnotations == null) {
+				classMapper.ignoreFieldsWithAnnotations = new HashSet();
 			}
-			
-			classMapper.ignoreFieldsWithAnnotations = set;
+			for (String ignoreFieldsWithAnnotation: ignoreFieldsWithAnnotations) {
+				classMapper.ignoreFieldsWithAnnotations.add(ComponentType.forName(ignoreFieldsWithAnnotation));
+			}
 		}
 		
 		String[] jsonIgnoreProps = classMapperAnnotation.jsonIgnoreProperties();
 		if (jsonIgnoreProps != null && jsonIgnoreProps.length > 0) {
-			classMapper.jsonIgnoreProperties = new HashSet(Arrays.asList(ignoreFieldsWithAnnotations));
+			if (classMapper.jsonIgnoreProperties == null) {
+				classMapper.jsonIgnoreProperties = new HashSet();
+			}
+			for (String jsonIgnoreProp: jsonIgnoreProps) {
+				classMapper.jsonIgnoreProperties.add(jsonIgnoreProp);
+			}
 		}
 
 		String simpleDateFormat = classMapperAnnotation.simpleDateFormat();
@@ -10486,12 +10491,6 @@ public class Oson {
 				String name = f.getName();
 				String fieldName = name;
 				String lcfieldName = fieldName.toLowerCase();
-
-				// in the ignored list
-				if (ObjectUtil.inSet(name, classMapper.jsonIgnoreProperties)) {
-					getters.remove(lcfieldName);
-					continue;
-				}
 				
 				if (ignoreModifiers(f.getModifiers(), classMapper.includeFieldsWithModifiers)) {
 					continue;
@@ -10609,6 +10608,9 @@ public class Oson {
 								JsonIgnoreProperties jsonIgnoreProperties = (JsonIgnoreProperties) annotation;
 								if (!jsonIgnoreProperties.allowGetters()) {
 									fieldMapper.ignore = true;
+								} else {
+									fieldMapper.ignore = false;
+									classMapper.jsonIgnoreProperties.remove(name);
 								}
 								break;
 								
@@ -10772,6 +10774,12 @@ public class Oson {
 					continue;
 				}
 
+				// in the ignored list
+				if (ObjectUtil.inSet(name, classMapper.jsonIgnoreProperties)) {
+					getters.remove(lcfieldName);
+					continue;
+				}
+				
 				if (fieldMapper.jsonAnyGetter != null && fieldMapper.jsonAnyGetter && getter != null) {
 					getters.remove(lcfieldName);
 					jsonAnyGetterMethods.add(getter);
@@ -10797,6 +10805,9 @@ public class Oson {
 					}
 					continue;
 				}
+				
+				
+				//jsonIgnoreProperties
 				
 				// handling name now
 				boolean jnameFixed = false;
@@ -10958,11 +10969,6 @@ public class Oson {
 				// just use field name, even it might not be a field
 				String fieldName = name;
 				
-				// in the ignored list
-				if (ObjectUtil.inSet(name, classMapper.jsonIgnoreProperties)) {
-					continue;
-				}
-				
 				if (processedNameSet.contains(name) || fieldNames.containsKey(lcfieldName)) {
 					continue;
 				}
@@ -11044,6 +11050,9 @@ public class Oson {
 								JsonIgnoreProperties jsonIgnoreProperties = (JsonIgnoreProperties) annotation;
 								if (!jsonIgnoreProperties.allowGetters()) {
 									fieldMapper.ignore = true;
+								} else {
+									fieldMapper.ignore = false;
+									classMapper.jsonIgnoreProperties.remove(name);
 								}
 								break;
 								
@@ -11198,6 +11207,11 @@ public class Oson {
 				}
 				
 				if (fieldMapper.ignore != null && fieldMapper.ignore) {
+					continue;
+				}
+				
+				// in the ignored list
+				if (ObjectUtil.inSet(name, classMapper.jsonIgnoreProperties)) {
 					continue;
 				}
 
@@ -12804,13 +12818,6 @@ public class Oson {
 				}
 				
 				f.setAccessible(true);
-
-				// in the ignored list
-				if (ObjectUtil.inSet(name, classMapper.jsonIgnoreProperties)) {
-					setters.remove(lcfieldName);
-					nameKeys.remove(name);
-					continue;
-				}
 				
 				// getter and setter methods
 				
@@ -12920,6 +12927,9 @@ public class Oson {
 								JsonIgnoreProperties jsonIgnoreProperties = (JsonIgnoreProperties) annotation;
 								if (!jsonIgnoreProperties.allowSetters()) {
 									fieldMapper.ignore = true;
+								} else {
+									fieldMapper.ignore = false;
+									classMapper.jsonIgnoreProperties.remove(name);
 								}
 								break;
 								
@@ -13092,6 +13102,13 @@ public class Oson {
 					}
 					continue;
 				}
+				
+				// in the ignored list
+				if (ObjectUtil.inSet(name, classMapper.jsonIgnoreProperties)) {
+					setters.remove(lcfieldName);
+					nameKeys.remove(name);
+					continue;
+				}
 
 				if (fieldMapper.jsonAnySetter != null && fieldMapper.jsonAnySetter && setter != null) {
 					setters.remove(lcfieldName);
@@ -13227,12 +13244,6 @@ public class Oson {
 				
 				// just use field name, even it might not be a field
 				String fieldName = name;
-
-				// in the ignored list
-				if (ObjectUtil.inSet(name, classMapper.jsonIgnoreProperties)) {
-					nameKeys.remove(name);
-					continue;
-				}
 				
 				if (ignoreModifiers(setter.getModifiers(), classMapper.includeFieldsWithModifiers)) {
 					nameKeys.remove(name);
@@ -13328,6 +13339,9 @@ public class Oson {
 								JsonIgnoreProperties jsonIgnoreProperties = (JsonIgnoreProperties) annotation;
 								if (!jsonIgnoreProperties.allowSetters()) {
 									fieldMapper.ignore = true;
+								} else {
+									fieldMapper.ignore = false;
+									classMapper.jsonIgnoreProperties.remove(name);
 								}
 								break;
 								
@@ -13470,6 +13484,12 @@ public class Oson {
 				if (fieldMapper.ignore != null && fieldMapper.ignore) {
 					nameKeys.remove(name);
 					nameKeys.remove(fieldMapper.json);
+					continue;
+				}
+				
+				// in the ignored list
+				if (ObjectUtil.inSet(name, classMapper.jsonIgnoreProperties)) {
+					nameKeys.remove(name);
 					continue;
 				}
 				

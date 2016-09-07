@@ -18,7 +18,7 @@
   * [Use Fields or Getters](#TOC-Serialize-Use-Fields-Or-Getters)
   * [Use a Json serializer Method](#TOC-Serialize-Use-Json-Serializer-Method)
   * [Change Attribute Names](#TOC-Serialize-Change-Attribute-Names)
-  * [Ignore or Show](#TOC-Serialize-Ignore-Or-Show)
+  * [Ignore or Include](#TOC-Serialize-Ignore-Or-Include)
   * [Change Attribute Values](#TOC-Serialize-Change-Attribute-Values)
     * [Null, Empty, Default Values](#TOC-Serialize-Null-Empty-Default-Values)
     * [Raw Values](#TOC-Serialize-Raw-Values)
@@ -251,7 +251,7 @@ You can configure how to keep the state of a Java object in a text string of Jso
 2. Use fields or use getters to retrieve values
 3. Use a single Json method to retrieve the seriazed text
 4. Use toString method to retrieve the seriazed text
-5. Ignore or Show certain attributes
+5. Ignore or Include certain attributes
 6. Change the name of attribute to output
 7. Change the value to output
 8. Do not quote string value for some particular attribute(s)
@@ -680,9 +680,9 @@ These tests confirm the following points:
   * If Json name is set to empty string or null, this attribite is ignored
 
 
-### <a name="TOC-Serialize-Ignore-Or-Show"></a>Ignore or Show
+### <a name="TOC-Serialize-Ignore-Or-Include"></a>Ignore or Include
 
-You can configure Oson and target Java classes to ignore or show types, attributes in various ways.
+You can configure Oson and target Java classes to ignore or include types, attributes in various ways.
 
 For custom class types, the following choices are available:
   * by default, transient and volatile attributes are ignored, unless using includeFieldsWithModifier(s) to modify this behavior

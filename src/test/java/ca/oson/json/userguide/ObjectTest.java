@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.Test;
 
@@ -13,8 +14,11 @@ import com.google.gson.GsonBuilder;
 
 import ca.oson.json.ClassMapper;
 import ca.oson.json.ComponentType;
+import ca.oson.json.FieldMapper;
 import ca.oson.json.Oson.JSON_INCLUDE;
+import ca.oson.json.Oson.MODIFIER;
 import ca.oson.json.OsonIO;
+import ca.oson.json.domain.IgnoreObject;
 import ca.oson.json.domain.OrderedPerson;
 import ca.oson.json.domain.Support;
 import ca.oson.json.domain.Volume;
@@ -23,6 +27,48 @@ import ca.oson.json.support.TestCaseBase;
 
 
 public class ObjectTest extends TestCaseBase {
+	@Test
+	public void testSerializeIgnoreObject() {
+		oson.clear();
+		IgnoreObject obj = new IgnoreObject();
+		
+		String expected = "{}";
+
+		oson.setVersion(1.5);
+		
+		String json = oson.serialize(obj);
+
+		assertEquals(expected, json);
+		
+		oson.setAnnotationSupport(false);
+		oson.includeFieldsWithModifiers(new MODIFIER[] {MODIFIER.Transient, MODIFIER.Volatile});
+		
+		expected = "{\"addressList\":null,\"fvalue\":null,\"firstName\":null,\"aint\":null,\"ch\":null,\"intValue\":null,\"byte\":16,\"shortValue\":0,\"longValue\":null,\"myInt\":12,\"age\":0,\"lastName\":null}";
+		json = oson.serialize(obj);
+		assertEquals(expected, json);
+		
+		oson.setAnnotationSupport(true);
+		Set<MODIFIER> includeFieldsWithModifiers = null;
+		oson.includeFieldsWithModifiers(includeFieldsWithModifiers);
+
+		oson.setFieldMappers(new FieldMapper[] {
+				new FieldMapper("lastName", null, IgnoreObject.class),
+				new FieldMapper("addressList", IgnoreObject.class).setIgnore(false),
+				new FieldMapper("age", IgnoreObject.class).setSince(1.0),
+				new FieldMapper("firstName", IgnoreObject.class).setUntil(1.0),
+				new FieldMapper("addressList", IgnoreObject.class).setIgnore(false),
+				new FieldMapper("fvalue", IgnoreObject.class).setIgnore(false),
+				new FieldMapper("ch", IgnoreObject.class).setIgnore(false),
+				new FieldMapper("longValue", IgnoreObject.class).setIgnore(false),
+				new FieldMapper("shortValue", IgnoreObject.class).setIgnore(false),
+				new FieldMapper("aint", IgnoreObject.class).setIgnore(false),
+				new FieldMapper("intValue", IgnoreObject.class).setIgnore(false),
+				new FieldMapper("byte", IgnoreObject.class).setIgnore(false),
+				new FieldMapper("myInt", IgnoreObject.class).setIgnore(false)
+		});
+		
+		oson.print(obj);
+	}
 	
 	
 	@Test

@@ -1047,9 +1047,13 @@ public class Options {
 	}
 	
 	public void setFieldMappers(FieldMapper[] fieldMappers) {
+		
 		if (fieldMappers == null) {
 			this.fieldMappers = null;
 		} else {
+			if (this.fieldMappers == null) {
+				this.fieldMappers = new HashSet<>();
+			}
 			for (FieldMapper fieldMapper: fieldMappers) {
 				if (fieldMapper.isValid() && !this.fieldMappers.contains(fieldMapper)) {
 					setFieldMappers(fieldMapper);
