@@ -424,7 +424,7 @@ the second accepts another data type: [FieldData](https://github.com/osonus/oson
 the third one accepts an Object, and return Object
 the last one uses a specific type parameter, such as Integer, to use the specific function Integer2JsonFunction, and returns String
 
-Date type will get one more function: Date2LongFunction, in addition to Date2JsonFunction.
+Date type gets one more function: Date2LongFunction, in addition to Date2JsonFunction.
 
 Take BigInteger as an example. You can see that the the first one is targeted directly for the current data type. The second one provides lots of contextual information to a user, do as the user wants in order to return a appropriate String. The last one is so flexible as to allow a user to return any thing as pleased, in third example, the function returns a Car object, from a simple BigInteger.
 
@@ -725,7 +725,7 @@ Some example use cases are provided in [testSerializeIgnoreObject() of ObjectTes
 
 The settings of default type (JSON_INCLUDE), useField, and useAttribute can all be used to filter out information.
 
-The features will be combined in logical ways: following top-down, coarse to fine-grained, global level through class level to attribute levels, external to Oson overriding rules.
+The features are combined in logical ways: following top-down, coarse to fine-grained, global level through class level to attribute levels, external to Oson overriding rules.
 
 
 ### <a name="TOC-Serialize-Change-Attribute-Values"></a>Change Attribute Values

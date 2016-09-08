@@ -3,6 +3,7 @@ package ca.oson.json.userguide;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,10 +17,12 @@ import ca.oson.json.ClassMapper;
 import ca.oson.json.ComponentType;
 import ca.oson.json.FieldMapper;
 import ca.oson.json.Oson.JSON_INCLUDE;
+import ca.oson.json.Oson.JSON_PROCESSOR;
 import ca.oson.json.Oson.MODIFIER;
 import ca.oson.json.OsonIO;
 import ca.oson.json.domain.IgnoreObject;
 import ca.oson.json.domain.OrderedPerson;
+import ca.oson.json.domain.RawValues;
 import ca.oson.json.domain.Support;
 import ca.oson.json.domain.Volume;
 import ca.oson.json.domain.VolumeContainer;
@@ -81,6 +84,25 @@ public class ObjectTest extends TestCaseBase {
 		expected = "{}";
 		json = oson.serialize(obj);
 		assertEquals(expected, json);
+	}
+	
+	
+	@Test
+	public void testSerializeRawValues() {
+		String svalue = "String value";
+		char cvalue = 'c';
+		Character chvalue = 'h';
+
+		oson.setDateFormat("yyyy-MM-dd");
+		Date dvalue = oson.deserialize("2016-09-07", Date.class);
+		JSON_PROCESSOR jvalue = JSON_PROCESSOR.GSON;
+		
+		RawValues obj = new RawValues(svalue, cvalue, chvalue, dvalue, jvalue);
+		
+		String expected = "{\"chvalue\":h,\"cvalue\":c,\"svalue\":String value,\"jvalue\":GSON,\"dvalue\":2016-09-07}";
+		String json = oson.serialize(obj);
+		assertEquals(expected, json);
+		
 	}
 	
 	
