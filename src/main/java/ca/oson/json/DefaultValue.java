@@ -378,7 +378,7 @@ public class DefaultValue {
 			
 			return true;
 			
-		} else if (Map.class.isAssignableFrom(type)) {
+		} else if (Map.class.isAssignableFrom(type) && obj != null && Map.class.isAssignableFrom(obj.getClass())) {
 			Map map = (Map)obj;
 			return (map.size() == 0);
 			

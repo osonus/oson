@@ -34,40 +34,53 @@ public class ObjectTest extends TestCaseBase {
 		
 		String expected = "{}";
 
+		// ignore by annotation
 		oson.setVersion(1.5);
-		
 		String json = oson.serialize(obj);
+		assertEquals(expected, json);
+		
+		// show all
+		oson.setAnnotationSupport(false);
+		oson.includeFieldsWithModifiers(new MODIFIER[] {MODIFIER.Transient, MODIFIER.Volatile, MODIFIER.Private, MODIFIER.Public});
+		expected = "{\"addressList\":null,\"firstName\":null,\"birthDate\":null,\"aint\":null,\"ch\":null,\"intValue\":null,\"byte\":16,\"shortValue\":0,\"longValue\":null,\"title\":null,\"lastName\":null,\"fvalue\":null,\"myInt\":12,\"age\":0}";
+		json = oson.serialize(obj);
 
 		assertEquals(expected, json);
-		
-		oson.setAnnotationSupport(false);
-		oson.includeFieldsWithModifiers(new MODIFIER[] {MODIFIER.Transient, MODIFIER.Volatile});
-		
-		expected = "{\"addressList\":null,\"fvalue\":null,\"firstName\":null,\"aint\":null,\"ch\":null,\"intValue\":null,\"byte\":16,\"shortValue\":0,\"longValue\":null,\"myInt\":12,\"age\":0,\"lastName\":null}";
+
+		// ignore by version, fieldmapper java configuration overwrites class level configuration and annotation
+		oson.setAnnotationSupport(true);
+		oson.setFieldMappers(new FieldMapper[] {
+				new FieldMapper("age", IgnoreObject.class).setSince(1.0),
+				new FieldMapper("firstName", IgnoreObject.class).setUntil(1.51)
+		});
+		expected = "{\"firstName\":null,\"birthDate\":null,\"title\":null,\"age\":0}";
 		json = oson.serialize(obj);
 		assertEquals(expected, json);
-		
-		oson.setAnnotationSupport(true);
+
+		// ignore them again, using java configuration
+		oson.setAnnotationSupport(false);
 		Set<MODIFIER> includeFieldsWithModifiers = null;
 		oson.includeFieldsWithModifiers(includeFieldsWithModifiers);
 
 		oson.setFieldMappers(new FieldMapper[] {
 				new FieldMapper("lastName", null, IgnoreObject.class),
-				new FieldMapper("addressList", IgnoreObject.class).setIgnore(false),
-				new FieldMapper("age", IgnoreObject.class).setSince(1.0),
-				new FieldMapper("firstName", IgnoreObject.class).setUntil(1.0),
-				new FieldMapper("addressList", IgnoreObject.class).setIgnore(false),
-				new FieldMapper("fvalue", IgnoreObject.class).setIgnore(false),
-				new FieldMapper("ch", IgnoreObject.class).setIgnore(false),
-				new FieldMapper("longValue", IgnoreObject.class).setIgnore(false),
-				new FieldMapper("shortValue", IgnoreObject.class).setIgnore(false),
-				new FieldMapper("aint", IgnoreObject.class).setIgnore(false),
-				new FieldMapper("intValue", IgnoreObject.class).setIgnore(false),
-				new FieldMapper("byte", IgnoreObject.class).setIgnore(false),
-				new FieldMapper("myInt", IgnoreObject.class).setIgnore(false)
+				new FieldMapper("addressList", IgnoreObject.class).setIgnore(true),
+				new FieldMapper("age", null, IgnoreObject.class),
+				new FieldMapper("firstName", null, IgnoreObject.class),
+				new FieldMapper("addressList", IgnoreObject.class).setIgnore(true),
+				new FieldMapper("fvalue", IgnoreObject.class).setIgnore(true),
+				new FieldMapper("ch", IgnoreObject.class).setIgnore(true),
+				new FieldMapper("longValue", IgnoreObject.class).setIgnore(true),
+				new FieldMapper("shortValue", IgnoreObject.class).setIgnore(true),
+				new FieldMapper("aint", IgnoreObject.class).setIgnore(true),
+				new FieldMapper("intValue", IgnoreObject.class).setIgnore(true),
+				new FieldMapper("byte", IgnoreObject.class).setIgnore(true),
+				new FieldMapper("myInt", IgnoreObject.class).setIgnore(true)
 		});
 		
-		oson.print(obj);
+		expected = "{}";
+		json = oson.serialize(obj);
+		assertEquals(expected, json);
 	}
 	
 	

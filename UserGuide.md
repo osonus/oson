@@ -387,7 +387,7 @@ Lambda expression is one of the most powerful featuers in Java programming langu
 
 Lambda expression as a single functional interface is perfect to act as a serializer and deserializer. It gives the true powerful of transformation into Oson processor. Basically, it allows you to do everything, or almost anything you want, to have full access to contextual data, to return types of Java data you want. This only feature makes Oson as the one you like to use, as a Json-Java processor.
 
-To serialize a class object, you can provide a serializer using lambda expression. All Oson serializer and deserializer interfaces are @FunctionalInterface, and they still support overloading, the reason behind this is that Java provides an nice feature: default method in an interface. Here is an extract, out of the total 41 interfaces:
+To serialize a class object, you can provide a serializer using lambda expression. All Oson serializer and deserializer interfaces are @FunctionalInterface, and they still support overloading, the reason behind this is that Java provides an nice feature: default method in an interface. Here is an extract, out of the total 43 interfaces:
 
 ```java
 	public static interface OsonFunction extends Function {
@@ -398,33 +398,33 @@ To serialize a class object, you can provide a serializer using lambda expressio
 	}
 	
 	@FunctionalInterface
-	public static interface Integer2JsonFunction extends OsonFunction {
-		public String apply(Integer t);
-	}
-	
-	@FunctionalInterface
-	public static interface Json2IntegerFunction extends OsonFunction {
-		public Integer apply(String t);
-	}
-	
-	...
-	
-	@FunctionalInterface
-	public static interface DataMapper2JsonFunction extends OsonFunction {
+	public interface DataMapper2JsonFunction extends OsonFunction {
 		public String apply(DataMapper classData);
 	}
 	
 	@FunctionalInterface
-	public static interface Json2DataMapperFunction extends OsonFunction {
-		public Object apply(DataMapper classData);
+	public interface FieldData2JsonFunction extends OsonFunction {
+		public Object apply(FieldData fieldData);
+	}
+	
+	@FunctionalInterface
+	public interface Date2JsonFunction extends OsonFunction {
+		public String apply(Date t);
+	}
+	
+	@FunctionalInterface
+	public interface Date2LongFunction extends OsonFunction {
+		public Long apply(Date t);
 	}
 ```
 
-All data types have at least 3 overloading versions of functions:
+All data types have 3 overloading versions of functions and 1 specific version:
+the first accepts [DataMapper](https://github.com/osonus/oson/blob/master/src/main/java/ca/oson/json/DataMapper.java) paramter, which provides sufficient data most of the time
+the second accepts another data type: [FieldData](https://github.com/osonus/oson/blob/master/src/main/java/ca/oson/json/FieldMapper.java), which holds more data than DataMapper class
+the third one accepts an Object, and return Object
+the last one uses a specific type parameter, such as Integer, to use the specific function Integer2JsonFunction, and returns String
 
-one accepting DataMapper parameter, and returns String
-the second accepts a specific data type, and returns String
-the last one accepts an Object, and return Object
+Date type will get one more function: Date2LongFunction, in addition to Date2JsonFunction.
 
 Take BigInteger as an example. You can see that the the first one is targeted directly for the current data type. The second one provides lots of contextual information to a user, do as the user wants in order to return a appropriate String. The last one is so flexible as to allow a user to return any thing as pleased, in third example, the function returns a Car object, from a simple BigInteger.
 
@@ -515,6 +515,8 @@ Take BigInteger as an example. You can see that the the first one is targeted di
 		   assertEquals(expected, result);
 	   }
 ```
+
+These functions are easy to use: specify the data type you want in the lambda expression, and you will get what you ask for.
 
 
 ### <a name="TOC-Serialize-Class-Type"></a>Class Type
@@ -718,6 +720,8 @@ For custom class types, the following choices are available:
   * com.google.gson.annotations.Since and/or com.google.gson.annotations.Until
   * com.fasterxml.jackson.annotation.JsonProperty
   * com.google.gson.annotations.Expose, which is handled in a slightly different way: once some attributes use Expose, other ones that are not Expose-annotated will be excluded
+
+Some example use cases are provided in [testSerializeIgnoreObject() of ObjectTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/userguide/ObjectTest.java).
 
 The settings of default type (JSON_INCLUDE), useField, and useAttribute can all be used to filter out information.
 

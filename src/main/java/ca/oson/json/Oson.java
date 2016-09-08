@@ -7288,7 +7288,10 @@ public class Oson {
 
 		// && ((Map) value).size() > 0
 		if (value != null) {
-			Map<Object, Object> map = (Map) value;
+			Map<Object, Object> map = null;
+			try {
+				map = (Map) value;
+			} catch (Exception ex) {}
 			Function function = objectDTO.getSerializer();
 			String valueToReturn = null;
 			
@@ -7331,75 +7334,78 @@ public class Oson {
 			objectDTO.incrLevel();
 			String repeatedItem = getPrettyIndentationln(objectDTO.level);
 			StringBuilder sbuilder = new StringBuilder();
-			
-			Set<Object> names = map.keySet();
+
 			try {
-				if (getOrderByKeyAndProperties()) {//LinkedHashSet
-					names = new TreeSet(names);
-				}
-				
-				Class lastValueType = null;
-
-				for (Object name : names) {
-					Object v = map.get(name);
-
-					String str = null;
-					if (!StringUtil.isNull(v)) {
-						lastValueType = v.getClass();
-						FieldData newFieldData = new FieldData(v, lastValueType, objectDTO.json2Java, objectDTO.level, objectDTO.set);
-						newFieldData.fieldMapper = objectDTO.fieldMapper;
-						str = object2Json(newFieldData);
+				if (map != null) {
+					Set<Object> names = map.keySet();
+					
+					if (getOrderByKeyAndProperties()) {//LinkedHashSet
+						names = new TreeSet(names);
 					}
 					
-					if (str == null) {
-						if (getDefaultType() == JSON_INCLUDE.DEFAULT) {
-							str = "null"; // getDefaultValue(lastValueType).toString();
-						} else {
-							continue;
-						}
-					}
-						
-					if (name == null) {
-						switch (objectDTO.defaultType) {
-						case ALWAYS:
-							name = "null";
-						case NON_NULL:
-							continue;
-						case NON_EMPTY:
-							continue;
-						case NON_DEFAULT:
-							continue;
-						case DEFAULT:
-							name = "null";
-						default:
-							name = "null";
-						}
-						
-						FieldData newFieldData = new FieldData(name, name.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
-						newFieldData.field = objectDTO.field;
-						newFieldData.setter = objectDTO.setter;
-						newFieldData.enclosingtype = objectDTO.enclosingtype;
-						newFieldData.returnType = guessMapKeyType(newFieldData);
-						
-						if (newFieldData.returnType == String.class) {
-							sbuilder.append(repeatedItem + StringUtil.doublequote(name) + ":" + pretty);
-						} else {
-							sbuilder.append(repeatedItem + name + ":" + pretty);
-						}
-						
-					} else {
-						Class keyClass = name.getClass();
-						
-						if (!ObjectUtil.isBasicDataType(keyClass)) {
-							FieldData newFieldData = new FieldData(name, keyClass, objectDTO.json2Java, objectDTO.level, objectDTO.set);
+					Class lastValueType = null;
+	
+					for (Object name : names) {
+						Object v = map.get(name);
+	
+						String str = null;
+						if (!StringUtil.isNull(v)) {
+							lastValueType = v.getClass();
+							FieldData newFieldData = new FieldData(v, lastValueType, objectDTO.json2Java, objectDTO.level, objectDTO.set);
 							newFieldData.fieldMapper = objectDTO.fieldMapper;
-							name = object2Json(newFieldData);
+							str = object2Json(newFieldData);
 						}
-						sbuilder.append(repeatedItem + StringUtil.doublequote(name) + ":" + pretty);
+						
+						if (str == null) {
+							if (getDefaultType() == JSON_INCLUDE.DEFAULT) {
+								str = "null"; // getDefaultValue(lastValueType).toString();
+							} else {
+								continue;
+							}
+						}
+							
+						if (name == null) {
+							switch (objectDTO.defaultType) {
+							case ALWAYS:
+								name = "null";
+							case NON_NULL:
+								continue;
+							case NON_EMPTY:
+								continue;
+							case NON_DEFAULT:
+								continue;
+							case DEFAULT:
+								name = "null";
+							default:
+								name = "null";
+							}
+							
+							FieldData newFieldData = new FieldData(name, name.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
+							newFieldData.field = objectDTO.field;
+							newFieldData.setter = objectDTO.setter;
+							newFieldData.enclosingtype = objectDTO.enclosingtype;
+							newFieldData.returnType = guessMapKeyType(newFieldData);
+							
+							if (newFieldData.returnType == String.class) {
+								sbuilder.append(repeatedItem + StringUtil.doublequote(name) + ":" + pretty);
+							} else {
+								sbuilder.append(repeatedItem + name + ":" + pretty);
+							}
+							
+						} else {
+							Class keyClass = name.getClass();
+							
+							if (!ObjectUtil.isBasicDataType(keyClass)) {
+								FieldData newFieldData = new FieldData(name, keyClass, objectDTO.json2Java, objectDTO.level, objectDTO.set);
+								newFieldData.fieldMapper = objectDTO.fieldMapper;
+								name = object2Json(newFieldData);
+							}
+							sbuilder.append(repeatedItem + StringUtil.doublequote(name) + ":" + pretty);
+						}
+						
+						sbuilder.append(str);
+						sbuilder.append(",");
 					}
-					
-					sbuilder.append(str);
-					sbuilder.append(",");
 				}
 			} catch (Exception e) {
 				//e.printStackTrace();
@@ -10022,6 +10028,14 @@ public class Oson {
 			fieldMapper.setDateFormat(javaFieldMapper.getDateFormat());
 		}
 		
+		if (javaFieldMapper.since != null) {
+			fieldMapper.since = javaFieldMapper.since;
+		}
+		
+		if (javaFieldMapper.until != null) {
+			fieldMapper.until = javaFieldMapper.until;
+		}
+		
 		return fieldMapper;
 	}
 	
@@ -10491,10 +10505,6 @@ public class Oson {
 				String name = f.getName();
 				String fieldName = name;
 				String lcfieldName = fieldName.toLowerCase();
-				
-				if (ignoreModifiers(f.getModifiers(), classMapper.includeFieldsWithModifiers)) {
-					continue;
-				}
 
 				if (Modifier.isFinal(f.getModifiers()) && Modifier.isStatic(f.getModifiers())) {
 					getters.remove(lcfieldName);
@@ -10847,7 +10857,10 @@ public class Oson {
 				
 				
 				// field valuie
-				E value = (E) f.get(obj);// ObjectUtil.unwraponce(f.get(obj));
+				E value = null;
+				try {
+					value = (E) f.get(obj);// ObjectUtil.unwraponce(f.get(obj));
+				} catch (Exception e) {}
 				
 				if (value != null) {
 					Class vtype = value.getClass();
@@ -11279,7 +11292,7 @@ public class Oson {
 
 				try {
 					value = (E) getter.invoke(obj, null);
-				} catch (InvocationTargetException e) {
+				} catch (Exception e) {
 					// e.printStackTrace();
 					try {
 						Expression expr = new Expression(obj, getter.getName(), new Object[0]);
