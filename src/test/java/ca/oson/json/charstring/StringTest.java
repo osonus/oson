@@ -1,10 +1,16 @@
 package ca.oson.json.charstring;
 
+import java.text.DateFormat;
+import java.util.List;
+import java.util.Locale;
+
 import org.junit.Test;
 
 import ca.oson.json.support.TestCaseBase;
 import ca.oson.json.ClassMapper;
+import ca.oson.json.FieldMapper;
 import ca.oson.json.domain.Car;
+import ca.oson.json.domain.DateTime;
 
 public class StringTest extends TestCaseBase {
 	
@@ -50,4 +56,40 @@ public class StringTest extends TestCaseBase {
 
 		   assertTrue((result.length() == length));
 	   }
+	   
+	   @Test
+	   public void testSerializeStringClass() {
+		   StringClass obj = new StringClass();
+		   
+		   obj.value = "This is a test of length of String.";
+
+		   String json = oson.serialize(obj);
+		   String expected = "{\"value\":\"This\"}";
+		   assertEquals(expected, json);
+		   
+		   oson.setAnnotationSupport(false);
+		   expected = "{\"value\":\"This is a test of length of String.\"}";
+		   json = oson.serialize(obj);
+		   assertEquals(expected, json);
+		   
+		   oson.setLength(14);
+		   expected = "{\"value\":\"This is a test\"}";
+		   json = oson.serialize(obj);
+		   assertEquals(expected, json);
+		   
+		   oson.setAnnotationSupport(true)
+		   		.setFieldMappers(new FieldMapper[] {
+					new FieldMapper("value", StringClass.class).setLength(9)
+			});
+		   expected = "{\"value\":\"This is a\"}";
+		   json = oson.serialize(obj);
+		   assertEquals(expected, json);
+	   }
+}
+
+@ca.oson.json.annotation.ClassMapper(length=10)
+class StringClass {
+	@ca.oson.json.annotation.FieldMapper(length=4)
+	public String value;
+	
 }

@@ -758,7 +758,12 @@ public class Oson {
 	private DateFormat getDateFormat() {
 		return options.getDateFormat();
 	}
+	public <T> Oson setDateFormat(Class<T> type, String simpleDateFormat) {
+		cMap(type).setSimpleDateFormat(simpleDateFormat);
+		reset();
 
+		return this;
+	}
 	public Oson setDateFormat(String simpleDateFormat) {
 		if (simpleDateFormat != null) {
 			options.setSimpleDateFormat(simpleDateFormat);
@@ -779,8 +784,21 @@ public class Oson {
 
 		return this;
 	}
+	public <T> Oson setDateFormat(Class<T> type, int style) {
+		cMap(type).setDateFormat(DateFormat.getDateInstance(style));
+		reset();
+
+		return this;
+	}
+	
 	public Oson setDateFormat(int style, Locale locale) {
 		options.setDateFormat(DateFormat.getDateInstance(style, locale));
+		reset();
+
+		return this;
+	}
+	public <T> Oson setDateFormat(Class<T> type, int style, Locale locale) {
+		cMap(type).setDateFormat(DateFormat.getDateInstance(style, locale));
 		reset();
 
 		return this;
@@ -791,13 +809,24 @@ public class Oson {
 
 		return this;
 	}
+	public <T> Oson setDateFormat(Class<T> type, int dateStyle, int timeStyle) {
+		cMap(type).setDateFormat(DateFormat.getDateTimeInstance(dateStyle, timeStyle));
+		reset();
+
+		return this;
+	}
 	public Oson setDateFormat(int dateStyle, int timeStyle, Locale locale) {
 		options.setDateFormat(DateFormat.getDateTimeInstance(dateStyle, timeStyle, locale));
 		reset();
 
 		return this;
 	}
-	
+	public <T> Oson setDateFormat(Class<T> type, int dateStyle, int timeStyle, Locale locale) {
+		cMap(type).setDateFormat(DateFormat.getDateTimeInstance(dateStyle, timeStyle, locale));
+		reset();
+
+		return this;
+	}
 	
 	
 	private boolean getPrettyPrinting() {
@@ -1595,6 +1624,12 @@ public class Oson {
 
 		return this;
 	}
+	public <T> Oson setScale(Class<T> type, Integer scale) {
+		cMap(type).setScale(scale);
+
+		return this;
+	}
+	
 
 	private Long getMin() {
 		return options.getMin();
@@ -1605,7 +1640,7 @@ public class Oson {
 
 		return this;
 	}
-
+	
 	private Long getMax() {
 		return options.getMax();
 	}

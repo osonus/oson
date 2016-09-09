@@ -24,7 +24,10 @@
     * [Raw Values](#TOC-Serialize-Raw-Values)
     * [Property Orders](#TOC-Serialize-Property-Orders)
     * [Serialize Date](#TOC-Serialize-Date)
-  
+    * [Serialize Number](#TOC-Serialize-Number)
+    * [Serialize Enum](#TOC-Serialize-Enum)
+    * [Serialize String](#TOC-Serialize-String)
+
 5. [How to convert Json document to Java object](#TOC-How-To-Convert-Json-Document-Java-Object)
   * [How to Create Initial Java Object](#TOC-Deserialize-How-To-Create-Initial-Java-Object)
     * [Implement InstanceCreator](#TOC-Implement-InstanceCreator)
@@ -907,15 +910,50 @@ Date gets some extra configuration options in Oson: it can be either converted t
 
 These global level settings can be overwritten by class level and field level settings, in the following order:
   * ca.oson.json.annotation.ClassMapper has two values for this purpose: date2Long and simpleDateFormat
-  * ca.oson.json.ClassMapper java configuration: setDate2Long(Boolean date2Long), setDateFormat(DateFormat dateFormat), setSimpleDateFormat(String simpleDateFormat), setDateFormat(int style), setDateFormat(int style, Locale locale), setDateFormat(int dateStyle, int timeStyle), setDateFormat(int dateStyle, int timeStyle, Locale locale). These configurations can be achieved through oson.setDateFormat() directly
+  * ca.oson.json.ClassMapper java configuration: setDate2Long(Boolean date2Long), setDateFormat(DateFormat dateFormat), setSimpleDateFormat(String simpleDateFormat), setDateFormat(int style), setDateFormat(int style, Locale locale), setDateFormat(int dateStyle, int timeStyle), setDateFormat(int dateStyle, int timeStyle, Locale locale). These configurations can be achieved through oson.setDateFormat(Class<T> type, DateFormat dateFormat), and other similar methods directly
   * ca.oson.json.annotation.FieldMapper: date2Long and simpleDateFormat
   * ca.oson.json.FieldMapper: setDate2Long(Boolean date2Long), setDateFormat(DateFormat dateFormat), setSimpleDateFormat(String simpleDateFormat), setDateFormat(int style), setDateFormat(int style, Locale locale), setDateFormat(int dateStyle, int timeStyle), setDateFormat(int dateStyle, int timeStyle, Locale locale)
 
 These features are tested in [testSerializeDateTime() of ObjectTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/userguide/ObjectTest.java).
 
 
+#### <a name="TOC-Serialize-Number"></a>**Serialize Number**
 
-  
+There are two types of numbers: ones without decimal points, and ones with decimal points. The first ones include Integer, int, Long, long, Byte, byte, Short, short, BigInteger, AtomicInteger, AtomicLong. The second ones include Double, double, Float, float, BigDecimal. There are 4 things to configure: min, max, precision, and scale. The scale setting only applies to numbers with decimal points. Method oson.setRoundingMode(RoundingMode roundingMode) is used to set the rounding mode of precision and scale.
+
+The overwriting sequences are as follows:
+  * global settings: oson.setMin(Long min), setMax(Long max), setPrecision(Integer precision), setScale(Integer scale). 
+  * annotation class ClassMapper: min, max, precision, and scale
+  * Java class ClassMapper: setMin(Long min), setMax(Long max), setPrecision(Integer precision), setScale(Integer scale). Similar methods can be applied to oson object, with class type as the first parameter: setMin(Class<T> type, Long min), etc
+  * annotation class FieldMapper: min, max, precision, and scale
+  * Java class FieldMapper: setMin(Long min), setMax(Long max), setPrecision(Integer precision), setScale(Integer scale)
+
+Various test cases can be found at package [ca.oson.json.numeric](https://github.com/osonus/oson/tree/master/src/test/java/ca/oson/json/numeric).
+
+
+#### <a name="TOC-Serialize-Enum"></a>**Serialize Enum**
+
+An enum value can  be serialized to a String text, or an ordinal int value, in the following overwriting sequence:
+  * oson.setEnumType(EnumType enumType)
+  * annotation class ClassMapper: enumType
+  * Java class ClassMapper: setEnumType(EnumType enumType), or applies directly to oson.setEnumType(Class<T> type, EnumType enumType)
+  * annotation class FieldMapper: enumType
+  * Java class FieldMapper: setEnumType(EnumType enumType)
+
+
+#### <a name="TOC-Serialize-String"></a>**Serialize String**
+
+A length attribute is used to limit the length of the serialized output of String text, in the following overwriting sequence:
+  * oson.setLength(Integer length)
+  * annotation class ClassMapper: length
+  * Java class ClassMapper: setLength(Integer length), or applies directly to oson.setLength(Class<T> type, Integer length)
+  * annotation class FieldMapper: length
+  * Java class FieldMapper: setLength(Integer length)
+
+Some examples are given in [StringTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/charstring/StringTest.java)
+
+
+
 ## <a name="TOC-How-To-Convert-Json-Document-Java-Object"></a>How to convert Json document to Java object
  
 It is a little bit more complex to convert Json document to Java object. The main reason is that we need figure out which Java object types to map the data inside the Json string to. There are only two ways to handle this hard task:

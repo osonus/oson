@@ -3,10 +3,12 @@ package ca.oson.json.userguide;
 import java.io.File;
 import java.net.URL;
 import java.sql.Timestamp;
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -126,7 +128,7 @@ public class ObjectTest extends TestCaseBase {
 	
 	@Test
 	public void testSerializeDateTime() {
-		oson.setDate2Long(false);
+		oson.clear().setDate2Long(false);
 		oson.setDateFormat("yyyy-MM-dd HH:mm:ss");
 		Date myDate = oson.deserialize("2015-08-13 05:10:00", Date.class);
 		java.sql.Date sqlDate = oson.deserialize("2013-05-28 03:06:00", java.sql.Date.class);
@@ -141,7 +143,36 @@ public class ObjectTest extends TestCaseBase {
 		String json = oson.serialize(obj);
 		assertEquals(expected, json);
 		
+		// field mapper java configuration overwrites upper level ones
+//		oson.clear().setFieldMappers(new FieldMapper[] {
+//				new FieldMapper("myDate", DateTime.class).setDate2Long(true),
+//				new FieldMapper("sqlDate", DateTime.class).setDateFormat(DateFormat.FULL),
+//				new FieldMapper("myTime", DateTime.class).setDateFormat(DateFormat.LONG)
+//		});
+//		expected = "{\"myDate\":1439467800000,\"myTime\":\"September 8, 2016\",\"sqlDate\":\"Tuesday, May 28, 2013\"}";
+//		json = oson.print(obj);
+//		assertEquals(expected, json);
 		
+		// date and time part
+//		oson.setFieldMappers(new FieldMapper[] {
+//				new FieldMapper("myDate", DateTime.class).setDate2Long(false).setDateFormat(DateFormat.LONG),
+//				new FieldMapper("sqlDate", DateTime.class).setDateFormat(DateFormat.SHORT, DateFormat.MEDIUM),
+//				new FieldMapper("myTime", DateTime.class).setDateFormat(DateFormat.LONG, DateFormat.LONG),
+//		});
+//		expected = "{\"myDate\":\"August 13, 2015\",\"myTime\":\"September 8, 2016 4:16:00 PDT AM\",\"sqlDate\":\"28/05/13 3:06:00 AM\"}";
+//		json = oson.serialize(obj);
+//		assertEquals(expected, json);
+		
+		
+		// apply locale
+		oson.setFieldMappers(new FieldMapper[] {
+				new FieldMapper("myDate", DateTime.class).setDate2Long(false).setDateFormat(DateFormat.LONG, Locale.UK),
+				new FieldMapper("sqlDate", DateTime.class).setDateFormat(DateFormat.SHORT, DateFormat.MEDIUM, Locale.GERMAN),
+				new FieldMapper("myTime", DateTime.class).setDateFormat(DateFormat.LONG, DateFormat.LONG, Locale.ITALIAN),
+		});
+		expected = "{\"myDate\":\"13 August 2015\",\"myTime\":\"8 settembre 2016 4.16.00 PDT\",\"sqlDate\":\"28.05.13 03:06:00\"}";
+		json = oson.serialize(obj);
+		assertEquals(expected, json);
 	}
 	
 	
