@@ -23,6 +23,7 @@
     * [Null, Empty, Default Values](#TOC-Serialize-Null-Empty-Default-Values)
     * [Raw Values](#TOC-Serialize-Raw-Values)
     * [Property Orders](#TOC-Serialize-Property-Orders)
+    * [Serialize Date](#TOC-Serialize-Date)
   
 5. [How to convert Json document to Java object](#TOC-How-To-Convert-Json-Document-Java-Object)
   * [How to Create Initial Java Object](#TOC-Deserialize-How-To-Create-Initial-Java-Object)
@@ -239,7 +240,7 @@ This global level configuration forms a basis for further action. Two test class
 
 Use one of the three public methods to convert a Java object to a Json document: serialize, toJson, writeValueAsString.
 
-oson or oson.asOson() is the default behavior, but it is easy to use Gson and Jackson's version: oson.asGson(), oson.asJackson(), will use these two popular Json-Java processors. Use oson.setPrintErrorUseOsonInFailure(true) to make it use oson's own feature if either gson or jackson fails and throws exception.
+oson or oson.asOson() is the default behavior, but it is easy to use Gson and Jackson's version: oson.asGson(), oson.asJackson(), will use these two popular Json-Java processors. Use oson.setPrintErrorUseOsonInFailure(true) to make it use oson's own feature if either gson or jackson fails and throws exception. The ObjectMapper and Gson objects are revealed by calling oson.getJackson() and oson.getGson(), then you can configure and use them as you normally do for Json-Java conversion.
 
 Customization can be done using Java classes and annotations.
 
@@ -542,6 +543,8 @@ In the following case, Dog is a pet, a pet is an animal, and an animal is a Euka
 	}
 ```
 
+This is the typical inheritance/polymorphism behavior in Java. There is another kind of inheritance: A class can have other class types as its attributes, such as a Pet has Person as its owner. In this case, Pet is the enclosing class for Person, and the settings in Pet can be configured to be inherited by enlosed Person objects, using this configuration method: oson.setInheritMapping(true).
+
 
 ### <a name="TOC-Serialize-Use-Fields-Or-Getters"></a>Use Fields or Getters
 
@@ -565,6 +568,8 @@ In the following example, we can see these settings in action:  term \"age\":1 i
 ```
 
 The fieldVisibility(), setterVisibility(), and getterVisibility() values of annotations com.fasterxml.jackson.annotation.JsonAutoDetect and org.codehaus.jackson.annotate.JsonAutoDetect are processed into useField and useAttribute.
+
+In a general sense, any Java method that takes no arguments and returns some value is considered to be a get method, and any method that takes one argument is considered to be a set method, excluding constructors. Oson allows you to specify if you are only interested in the ones that start with either "get" or "set", by calling oson.setGetOnly(true), which defaults to false.
 
 
 ### <a name="TOC-Serialize-Use-Json-Serializer-Method"></a>Use a Json serializer Method
@@ -719,7 +724,7 @@ For custom class types, the following choices are available:
   * not allowGetters() of com.fasterxml.jackson.annotation.JsonIgnoreProperties
   * com.google.gson.annotations.Since and/or com.google.gson.annotations.Until
   * com.fasterxml.jackson.annotation.JsonProperty
-  * com.google.gson.annotations.Expose, which is handled in a slightly different way: once some attributes use Expose, other ones that are not Expose-annotated will be excluded
+  * com.google.gson.annotations.Expose, which is handled in a slightly different way: once some attributes use Expose, other ones that are not Expose-annotated will be excluded. To enable Gson's Expose annotation, you need to call oson.useGsonExpose(true) specifically, and its behavior can also be overwritten by Oson's field level configuration
 
 Some example use cases are provided in [testSerializeIgnoreObject() of ObjectTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/userguide/ObjectTest.java).
 
@@ -812,7 +817,6 @@ You can notice the following interesting behaviors regarding JSON_INCLUDE.NON_DE
 Annotation com.fasterxml.jackson.annotation.JsonInclude is translated into a value of JSON_INCLUDE defaultType in Oson.
 
 
-  
 #### <a name="TOC-Serialize-Raw-Values"></a>**Raw Values**
 
 String, char, Character, enum String, or Date text values need to be (double-)quoted in Json output.
@@ -824,6 +828,8 @@ These text values can be configured not to be double-quoted, using:
   * set jsonRawValue of FieldMapper annotation to be true
   * use com.fasterxml.jackson.annotation.JsonRawValue annotation for an attribute
   * use org.codehaus.jackson.annotate.JsonRawValue annotation for an attribute
+
+These features are tested in [testSerializeRawValues() of ObjectTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/userguide/ObjectTest.java).
 
 
 #### <a name="TOC-Serialize-Property-Orders"></a>**Property Orders**
@@ -851,6 +857,63 @@ From the above test cases, we can conclude that Json properties of a class can b
   * following the ordered list set by propertyOrders value of annotation class ClassMapper
   * then ordered by orderByKeyAndProperties BOOLEAN value of annotation class ClassMapper
   * these annotation values are overriden by same name settings of ClassMapper Java class
+
+
+#### <a name="TOC-Serialize-Date"></a>**Serialize Date**
+
+Date gets some extra configuration options in Oson: it can be either converted to Long number, or to a custom-formated String text; For the text formatting, it involves date, time, and locale components.
+  * first, use oson.setDate2Long(Boolean date2Long) to decide if a date is converted to Long number, or a text string
+  * to format a date string, use one of the following methods, which are parts of the Java language features
+```java
+	public Oson setDateFormat(String simpleDateFormat) {
+		if (simpleDateFormat != null) {
+			options.setSimpleDateFormat(simpleDateFormat);
+			reset();
+		}
+
+		return this;
+	}
+	public Oson setDateFormat(DateFormat dateFormat) {
+		options.setDateFormat(dateFormat);
+		reset();
+
+		return this;
+	}
+	public Oson setDateFormat(int style) {
+		options.setDateFormat(DateFormat.getDateInstance(style));
+		reset();
+
+		return this;
+	}
+	public Oson setDateFormat(int style, Locale locale) {
+		options.setDateFormat(DateFormat.getDateInstance(style, locale));
+		reset();
+
+		return this;
+	}
+	public Oson setDateFormat(int dateStyle, int timeStyle) {
+		options.setDateFormat(DateFormat.getDateTimeInstance(dateStyle, timeStyle));
+		reset();
+
+		return this;
+	}
+	public Oson setDateFormat(int dateStyle, int timeStyle, Locale locale) {
+		options.setDateFormat(DateFormat.getDateTimeInstance(dateStyle, timeStyle, locale));
+		reset();
+
+		return this;
+	}
+```
+
+These global level settings can be overwritten by class level and field level settings, in the following order:
+  * ca.oson.json.annotation.ClassMapper has two values for this purpose: date2Long and simpleDateFormat
+  * ca.oson.json.ClassMapper java configuration: setDate2Long(Boolean date2Long), setDateFormat(DateFormat dateFormat), setSimpleDateFormat(String simpleDateFormat), setDateFormat(int style), setDateFormat(int style, Locale locale), setDateFormat(int dateStyle, int timeStyle), setDateFormat(int dateStyle, int timeStyle, Locale locale). These configurations can be achieved through oson.setDateFormat() directly
+  * ca.oson.json.annotation.FieldMapper: date2Long and simpleDateFormat
+  * ca.oson.json.FieldMapper: setDate2Long(Boolean date2Long), setDateFormat(DateFormat dateFormat), setSimpleDateFormat(String simpleDateFormat), setDateFormat(int style), setDateFormat(int style, Locale locale), setDateFormat(int dateStyle, int timeStyle), setDateFormat(int dateStyle, int timeStyle, Locale locale)
+
+These features are tested in [testSerializeDateTime() of ObjectTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/userguide/ObjectTest.java).
+
+
 
   
 ## <a name="TOC-How-To-Convert-Json-Document-Java-Object"></a>How to convert Json document to Java object

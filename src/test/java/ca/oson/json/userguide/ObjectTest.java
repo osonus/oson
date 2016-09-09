@@ -2,6 +2,7 @@ package ca.oson.json.userguide;
 
 import java.io.File;
 import java.net.URL;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -20,6 +21,7 @@ import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.Oson.JSON_PROCESSOR;
 import ca.oson.json.Oson.MODIFIER;
 import ca.oson.json.OsonIO;
+import ca.oson.json.domain.DateTime;
 import ca.oson.json.domain.IgnoreObject;
 import ca.oson.json.domain.OrderedPerson;
 import ca.oson.json.domain.RawValues;
@@ -98,12 +100,50 @@ public class ObjectTest extends TestCaseBase {
 		JSON_PROCESSOR jvalue = JSON_PROCESSOR.GSON;
 		
 		RawValues obj = new RawValues(svalue, cvalue, chvalue, dvalue, jvalue);
-		
+		// annotation in work
 		String expected = "{\"chvalue\":h,\"cvalue\":c,\"svalue\":String value,\"jvalue\":GSON,\"dvalue\":2016-09-07}";
 		String json = oson.serialize(obj);
 		assertEquals(expected, json);
 		
+		// disable annotation
+		oson.setAnnotationSupport(false);
+		expected = "{\"chvalue\":\"h\",\"cvalue\":\"c\",\"svalue\":\"String value\",\"jvalue\":\"GSON\",\"dvalue\":\"2016-09-07\"}";
+		json = oson.serialize(obj);
+		assertEquals(expected, json);
+		
+		// put back annotation, and use Java configuration to overwrite annotations
+		oson.setAnnotationSupport(true);
+		oson.setFieldMappers(new FieldMapper[] {
+				new FieldMapper("chvalue", RawValues.class).setJsonRawValue(false),
+				new FieldMapper("svalue", RawValues.class).setJsonRawValue(false)
+		});
+		
+		expected = "{\"chvalue\":\"h\",\"cvalue\":c,\"svalue\":\"String value\",\"jvalue\":GSON,\"dvalue\":2016-09-07}";
+		json = oson.serialize(obj);
+		assertEquals(expected, json);
 	}
+	
+	
+	@Test
+	public void testSerializeDateTime() {
+		oson.setDate2Long(false);
+		oson.setDateFormat("yyyy-MM-dd HH:mm:ss");
+		Date myDate = oson.deserialize("2015-08-13 05:10:00", Date.class);
+		java.sql.Date sqlDate = oson.deserialize("2013-05-28 03:06:00", java.sql.Date.class);
+		Timestamp myTime = oson.deserialize("2016-09-08 04:16:00", Timestamp.class);
+				
+		DateTime obj = new DateTime(myDate, sqlDate, myTime);
+		
+		oson.setSimpleDateFormat(DateTime.class, "yyyy/MM/dd HH:mm:ss");
+		
+		String expected = "{\"myDate\":\"2015/08/13 05:10:00\",\"myTime\":\"2016-09-08 04:16:00.000\",\"sqlDate\":\"2013/05/28\"}";
+		
+		String json = oson.serialize(obj);
+		assertEquals(expected, json);
+		
+		
+	}
+	
 	
 	
 	@Test

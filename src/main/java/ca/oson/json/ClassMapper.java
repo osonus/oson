@@ -405,7 +405,7 @@ public class ClassMapper<T> {
 		}
 		return this;
 	}
-	public ClassMapper ClassMapper(int style) {
+	public ClassMapper setDateFormat(int style) {
 		this.setDateFormat(DateFormat.getDateInstance(style));
 
 		return this;

@@ -430,7 +430,7 @@ public class FieldMapper<T, E> {
 		}
 		return this;
 	}
-	public FieldMapper ClassMapper(int style) {
+	public FieldMapper setDateFormat(int style) {
 		this.setDateFormat(DateFormat.getDateInstance(style));
 
 		return this;
