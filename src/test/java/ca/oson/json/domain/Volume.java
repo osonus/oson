@@ -3,8 +3,8 @@ package ca.oson.json.domain;
 import java.util.List;
 
 public class Volume {
-	private String status;
-	private Boolean managed;
+	public String status;
+	public Boolean managed;
 	private String name;
 	public Support support;
 	private String storage_pool;

@@ -891,6 +891,12 @@ public class Oson {
 		return options.getIndentation();
 	}
 
+	/**
+	 * This method is used to configure the Json output during serialization.
+	 * A default value of 2 is used if not specified otherwise for pretty printing.
+	 * @param indentation The indented spaces, with a value range of 0 to 100
+	 * @return Oson object, allowing this method to be chained up as a builder method
+	 */
 	public Oson setIndentation(int indentation) {
 		if (indentation != getIndentation() && indentation >= 0) {
 			options.setIndentation(indentation);
@@ -1559,6 +1565,16 @@ public class Oson {
 		return options.getLevel();
 	}
 
+	/**
+	 * This method is used to control the depth of attribute processing. 
+	 * A Java class can hold attributes of Classes which can hold instance variables
+	 * of other classes. This level setting will limit the depth of processing during
+	 * serialization and de-serialization. A MAX_LEVEL constant is set to 100, so no more
+	 * than 100 levels of depth is allowed. This can certain prevents endless processing
+	 * loop in case other measures fail.
+	 * @param level The depth of Json-Java processing, with a value range of 0 to 100
+	 * @return Oson object, allowing this method to be chained up as a builder method
+	 */
 	public Oson setLevel(int level) {
 		options.setLevel(level);
 		
@@ -9194,7 +9210,7 @@ public class Oson {
 				return StringUtil.doublequote(valueToReturn, isEscapeHtml());
 			}
 
-		} else if (returnType == Boolean.class || returnType == boolean.class || returnType == AtomicBoolean.class) {
+		} else if (BooleanUtil.isBoolean(returnType) && (value == null || BooleanUtil.isBoolean(value.getClass()))) {
 			String returnedValue = boolean2Json(objectDTO);
 			
 			if (returnedValue != null) {
@@ -13225,6 +13241,7 @@ public class Oson {
 				
 				// either not null, or a null value exists in the value map
 				if (value != null || size == nameKeys.size() + 1) {
+					Object oldValue = value;
 					FieldData fieldData = new FieldData(obj, f, value, returnType, true, fieldMapper, objectDTO.level, objectDTO.set);
 					fieldData.setter = setter;
 					Class fieldType = guessComponentType(fieldData);
@@ -13251,7 +13268,12 @@ public class Oson {
 					}
 
 					try {
-						f.set(obj, value);
+						if (value == null && oldValue != null && oldValue.equals(f.get(obj)+"")) {
+							// keep original value
+							
+						} else {
+							f.set(obj, value);
+						}
 
 					} catch (IllegalAccessException
 							| IllegalArgumentException ex) {

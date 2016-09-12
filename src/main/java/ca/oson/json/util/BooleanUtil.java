@@ -1,5 +1,7 @@
 package ca.oson.json.util;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class BooleanUtil {
 	
 	public static <E> Boolean object2Boolean (E obj) {
@@ -32,6 +34,9 @@ public class BooleanUtil {
 		}
 		
 		return false;
+	}
+	public static boolean isBoolean(Class returnType) {
+		return (returnType == Boolean.class || returnType == boolean.class || returnType == AtomicBoolean.class);
 	}
 	
 	public static Boolean string2Boolean(String str) {

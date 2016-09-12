@@ -11,6 +11,7 @@ import ca.oson.json.userguide.CollectionsTest;
 import ca.oson.json.userguide.ConfigInheritanceTest;
 import ca.oson.json.userguide.DeserializeFunctionTest;
 import ca.oson.json.userguide.DogTest;
+import ca.oson.json.userguide.IndentationTest;
 import ca.oson.json.userguide.NewInstanceTest;
 import ca.oson.json.userguide.ObjectTest;
 import ca.oson.json.userguide.OptionalTest;
@@ -31,7 +32,8 @@ import ca.oson.json.userguide.SerializeCarTest;
 	ClassMapperConfigurationTest.class,
 	BascicDateTypeTest.class,
 	DogTest.class,
-	ClassMapperTest.class
+	ClassMapperTest.class,
+	IndentationTest.class
 })
 public class UserGuideTestSuite {
 

@@ -144,24 +144,25 @@ public class ObjectTest extends TestCaseBase {
 		assertEquals(expected, json);
 		
 		// field mapper java configuration overwrites upper level ones
-//		oson.clear().setFieldMappers(new FieldMapper[] {
-//				new FieldMapper("myDate", DateTime.class).setDate2Long(true),
-//				new FieldMapper("sqlDate", DateTime.class).setDateFormat(DateFormat.FULL),
-//				new FieldMapper("myTime", DateTime.class).setDateFormat(DateFormat.LONG)
-//		});
-//		expected = "{\"myDate\":1439467800000,\"myTime\":\"September 8, 2016\",\"sqlDate\":\"Tuesday, May 28, 2013\"}";
-//		json = oson.print(obj);
-//		assertEquals(expected, json);
+		Locale.setDefault(Locale.CANADA);
+		oson.clear().setFieldMappers(new FieldMapper[] {
+				new FieldMapper("myDate", DateTime.class).setDate2Long(true),
+				new FieldMapper("sqlDate", DateTime.class).setDateFormat(DateFormat.FULL),
+				new FieldMapper("myTime", DateTime.class).setDateFormat(DateFormat.LONG)
+		});
+		expected = "{\"myDate\":1439467800000,\"myTime\":\"September 8, 2016\",\"sqlDate\":\"Tuesday, May 28, 2013\"}";
+		json = oson.print(obj);
+		assertEquals(expected, json);
 		
 		// date and time part
-//		oson.setFieldMappers(new FieldMapper[] {
-//				new FieldMapper("myDate", DateTime.class).setDate2Long(false).setDateFormat(DateFormat.LONG),
-//				new FieldMapper("sqlDate", DateTime.class).setDateFormat(DateFormat.SHORT, DateFormat.MEDIUM),
-//				new FieldMapper("myTime", DateTime.class).setDateFormat(DateFormat.LONG, DateFormat.LONG),
-//		});
-//		expected = "{\"myDate\":\"August 13, 2015\",\"myTime\":\"September 8, 2016 4:16:00 PDT AM\",\"sqlDate\":\"28/05/13 3:06:00 AM\"}";
-//		json = oson.serialize(obj);
-//		assertEquals(expected, json);
+		oson.setFieldMappers(new FieldMapper[] {
+				new FieldMapper("myDate", DateTime.class).setDate2Long(false).setDateFormat(DateFormat.LONG),
+				new FieldMapper("sqlDate", DateTime.class).setDateFormat(DateFormat.SHORT, DateFormat.MEDIUM),
+				new FieldMapper("myTime", DateTime.class).setDateFormat(DateFormat.LONG, DateFormat.LONG),
+		});
+		expected = "{\"myDate\":\"August 13, 2015\",\"myTime\":\"September 8, 2016 4:16:00 PDT AM\",\"sqlDate\":\"28/05/13 3:06:00 AM\"}";
+		json = oson.serialize(obj);
+		assertEquals(expected, json);
 		
 		
 		// apply locale
@@ -227,26 +228,6 @@ public class ObjectTest extends TestCaseBase {
 
 		// System.out.println(json);
 	}
-
-//	@Test
-//	public void testSerializationGsonBuilder() {
-//
-//		GsonBuilder gbuilder = new GsonBuilder();
-//
-//		String gson = oson.pretty(false).includeClassTypeInJson(true).setLevel(3).serialize(gbuilder);
-//
-//		GsonBuilder gbuilder2 = oson.deserialize(gson);
-//		String gson2 = oson.serialize(gbuilder2);
-//
-//		GsonBuilder gbuilder3 = oson.deserialize(gson2);
-//		String gson3 = oson.serialize(gbuilder3);
-//		//assertEquals(gson2, gson3);
-//
-//		String gson4 = oson.pretty(true).setDefaultType(JSON_INCLUDE.NON_DEFAULT).serialize(gbuilder3);
-//		
-//		//System.out.println(gson4);
-//		//assertFalse(gson2.length() == gson4.length());
-//	}
 	
 	
 //	@Test

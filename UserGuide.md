@@ -27,7 +27,7 @@
     * [Serialize Number](#TOC-Serialize-Number)
     * [Serialize Enum](#TOC-Serialize-Enum)
     * [Serialize String](#TOC-Serialize-String)
-
+  * [Format Json](#TOC-Serialize-Format-Json)
 5. [How to convert Json document to Java object](#TOC-How-To-Convert-Json-Document-Java-Object)
   * [How to Create Initial Java Object](#TOC-Deserialize-How-To-Create-Initial-Java-Object)
     * [Implement InstanceCreator](#TOC-Implement-InstanceCreator)
@@ -522,6 +522,8 @@ Take BigInteger as an example. You can see that the the first one is targeted di
 
 These functions are easy to use: specify the data type you want in the lambda expression, and you will get what you ask for.
 
+setClassMappers can be shortened to ser.
+
 
 ### <a name="TOC-Serialize-Class-Type"></a>Class Type
 
@@ -817,6 +819,13 @@ You can notice the following interesting behaviors regarding JSON_INCLUDE.NON_DE
   * Default values can be set globally, for a type, or for an attribute specifically. Take Date field (birthDate) as example, it will take the default values in the sequence of field, type, to global levell
   * When oson.setDefaultType(JSON_INCLUDE.NON_DEFAULT), any attribute with default value will be ignored
   
+A required attribute is defined as follows, and Oson setting overwriting external sources:
+  * required value of com.fasterxml.jackson.annotation.JsonProperty
+  * not nullable of javax.persistence.Column annotation
+  * javax.validation.constraints.NotNull value
+  * required value of ca.oson.json.annotation.FieldMapper
+  * ca.oson.json.FieldMapper.setRequired(boolean required)
+
 Annotation com.fasterxml.jackson.annotation.JsonInclude is translated into a value of JSON_INCLUDE defaultType in Oson.
 
 
@@ -953,10 +962,22 @@ A length attribute is used to limit the length of the serialized output of Strin
 Some examples are given in [StringTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/charstring/StringTest.java)
 
 
+### <a name="TOC-Serialize-Format-Json"></a>Format Json
+
+Json ignores white spaces outside of its key-value pairs, but you can configure Oson to format Json output for a better viewing effect.
+
+There are three settings you can change in this regards:
+  * oson.setIndentation(int indentation), where indentation has a range of 0 to 100. 0 means no indentation. If this method is not called, a default value of 2 is used for pretty method
+  * oson.setLevel(int level), where level is the depth of Json-Java processing during serialization and de-serialization process. A MAX_LEVEL constant is set to 100, so no more than 100 levels of depth is allowed
+  * StringUtil.SPACE default to ' ', a single white space. It can be replaced to any other character, even it is not reasonable to do in most cases
+  * to enable indentation, call oson.pretty(), oson.pretty(Boolean prettyPrinting), or oson.prettyPrinting(Boolean prettyPrinting), with prettyPrinting to be true
+
+These features are tested in [IndentationTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/userguide/IndentationTest.java).
+
 
 ## <a name="TOC-How-To-Convert-Json-Document-Java-Object"></a>How to convert Json document to Java object
  
-It is a little bit more complex to convert Json document to Java object. The main reason is that we need figure out which Java object types to map the data inside the Json string to. There are only two ways to handle this hard task:
+Deserialization is to restore a Java object from its saved/serialized Json text state or data. It is a little bit more complicated to convert Json document back to Java object. The main reason is that we need figure out to which Java object types to map the data inside the Json string. There are only two ways to handle this task:
 
 1. Pass in type information to the Json processor
 2. Embed the type information inside the Json document
@@ -986,10 +1007,12 @@ One of this implementation is ca.oson.json.ComponentType, which accepts one or m
 		
 		public ComponentType(Type type)
 		
+		public ComponentType(Class type)
+		
 		public ComponentType(Class type, Class... componentTypes)
 ```
 
-The third constructor accepts a variable array of component types, which can be used to guess data types in complex data structures, such as array, collection, and map, including array, collection and map themselves. Oson has a sophisticated guessing algorithm to match Json input data to Java classes. It bases its matching criteria on the depth of data structures, field name and types, etc, to calculate a percentage float points, to decide the winner of a piece of data. Inside one load of processing, it accumulates its knowledge about the data types, and uses this component store as the knowledge basis for analysis. For most of the time, you only need to provide a top level user-defined class type.
+The last constructor accepts a variable array of component types, which can be used to guess data types in complex data structures, such as array, collection, and map, including array, collection and map themselves. Oson has a sophisticated guessing algorithm to match Json input data to Java classes. It bases its matching criteria on the depth of data structures, field name and types, etc, to calculate a percentage float points, to decide the winner of a piece of data. Inside one load of processing, it accumulates its knowledge about the data types, and uses this component store as the knowledge basis for analysis. For most of the time, you only need to provide a top level user-defined class type.
 
 Inside the [CollectionsTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/userguide/CollectionsTest.java) test cases, you can find various approaches to solve this issue. Pick one to show here:
 
@@ -1128,21 +1151,21 @@ Inside the [CollectionsTest](https://github.com/osonus/oson/blob/master/src/test
 	}
 ```
 
-Inside this test case, we create a list of data, with 9 different types: Customer, Event, Car, int[][][], Boolean[], HashMap, ArrayList, and Integer, String. We only need to pass in the class types of self-defined classes, and complex data structure, into the variable array of ComponentType class, which implements the Type interface. The Oson library uses this information to figure out these data types correctly. The main reason to pass in such data types as List, Array, or Map is to confirm that we do use them inside the Json document, and it is not a mistake, as normally people would not do such a crazy thing, unless inside a actual class, which would have no problem to process. After Oson has serialized and deserialized this data structure successfully, it might have convinced you that it can handle very complex data structures.
+Inside this test case, we create a list of data, with 9 different types: Customer, Event, Car, int[][][], Boolean[], HashMap, ArrayList, and Integer, String. We only need to pass in the class types of self-defined classes, and complex data structure, into the variable array of ComponentType class, which implements the Type interface. The Oson library uses this information to figure out these data types correctly. The main reason to pass in such data types as List, Array, or Map is to confirm that we do use them inside the Json document, and it is not a mistake, as normally people would not do such a crazy thing, unless inside a actual class, which would have no problem to process.
+
 
 ### <a name="TOC-Deserialize-How-To-Create-Initial-Java-Object"></a>How to Create Initial Java Object
 
 The same as the serialization process, we can provide configuration information to the tool to help it deserialize data into a target Java object correctly. In addition to the challenge to figure out the class types of some complex data structures, we still need to figure out a way to create its initial object from the Type in Java. Only after we have this initial object, we can then copy data from Json document into this initial object. It is not always easy to handle this task.
 
-We are multiple ways you can help:
+Oson creates Java object at its best efforts. A compiler might include type information inside bytecode, and Oson uses this to get parameter names. In case parameter names inside constructors get erased, we need to provide name support by annotations.
+
+If Oson is not able to construct a Java object, you can use one of the following ways to achieve this effect:
 
 1. Provide a com.google.gson.InstanceCreator implementation using ClassMapper
 2. Provide a default object directly using ClassMapper configuration
 3. Provide constructor annotations
 
-If all of these are not met, the tool will try tens of other ways to create a new instance, or fails in the end.
-
-I tried to create a case where Oson cannot initiate a class by itself, but in these cases it can do it without particular help, one main reason is that the compiler I used must have included type information inside bytecode, so it causes no issue to get parameter names from it. In case parameter names inside constructors get erased, we do need to provide name support by annotations.
 
 #### <a name="TOC-Implement-InstanceCreator"></a>**Implement InstanceCreator**
 
@@ -1229,10 +1252,28 @@ If curious, you can see how it works by using any IDE in debug mode.
 
 ### <a name="TOC-Deserialize-Lambda-Expression"></a>How to Use Lambda Expression to Deserialize Java Object
 
-To deserialize a class object, you can provide a deserializer using lambda expression. Here is interface you use:
-oson.setDeserializer(Class<T> type, Function deserializer), or oson.setDeserializer(Class<T> type, Json2DataMapperFunction deserializer). The two versions are overloading each other.
+To deserialize a class object, you can provide a deserializer using lambda expression. Here are list of 20 interfaces you use:
 
-If you provide a specific parameter, it will use it, which is Json2DataMapperFunction. Otherwise, it will use the generic one, which is java.util.function.Function. Here is the rule for handling a deserializer: if it returns an object of expected (which is Class<T> type), it will use this object as the deserialized product and return it. If the deserializer returns a null, then Oson uses this as your intention to ignore this class and returns null. Any other cases, Oson will continue its normal routine, which is to continue the deserialization process.
+```java
+@FunctionalInterface
+public interface Json2DataMapperFunction extends OsonFunction {
+	public Object apply(DataMapper classData);
+}
+
+@FunctionalInterface
+public interface Json2FieldDataFunction extends OsonFunction {
+	public Object apply(FieldData fieldData);
+}
+
+@FunctionalInterface
+public interface Json2DateFunction extends OsonFunction {
+	public Date apply(String t);
+}
+```
+
+There are four types of deserializer for any specific data type. You can use oson.setDeserializer, or its shortened name, des, to specify a Function for a class type: oson.setDeserializer(Class<T> type, Function deserializer), or oson.des(Class<T> type, Json2DataMapperFunction deserializer), or oson.des(Class<T> type, Json2FieldDataFunction deserializer).
+
+If you provide a specific parameter, it will use it. Otherwise, it will use the generic one, which is java.util.function.Function. Here is the rule for handling a deserializer: if it returns an object of expected (which is Class<T> type), it will use this object as the deserialized product and return it. If the deserializer returns a null, then Oson uses this as your intention to ignore this class and returns null. Any other cases, Oson will continue its normal routine, which is to continue the deserialization process.
 
 Here is an example of lambda expression as a deserializer:
 
@@ -1268,17 +1309,7 @@ Here is an example of lambda expression as a deserializer:
 	   }
 ```
 
-The DataMapper parameter to function Json2DataMapperFunction provides lots of detailed information to help you build your own version of deserializer.
-
-
-## <a name="TOC-How-To-Filter-Out-Information"></a>How to filter out information
-
-Json-Java converter is all about data exchange, and filtering is one major aspect of this conversion process. You can choose what to show, based on various criteria.
-
-### <a name="TOC-Filter-Java-Configuration"></a>Java Configuration
-
-1. 
-
+Both DataMapper and FieldData parameters provide lots of detailed information to help you build your own version of deserializer.
 
 
 

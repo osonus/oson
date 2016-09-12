@@ -14,7 +14,10 @@ import org.json.JSONObject;
 import ca.oson.json.Oson.FIELD_NAMING;
 
 public class StringUtil {
-	public static final char SPACE = ' ';
+	/*
+	 * The white space character for Json indentation
+	 */
+	public static char SPACE = ' ';
 	
 	public static String applyPatterns(String content, Pattern[] patterns) {
 		if (patterns == null || patterns.length == 0) {
