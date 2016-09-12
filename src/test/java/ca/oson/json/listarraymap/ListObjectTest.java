@@ -36,14 +36,15 @@ public class ListObjectTest extends TestCaseBase {
 	   @Test
 	   public void testSerializeListOfObjectsAttributesOrdered() {
 		   List<Car> value = Arrays.asList(new Car("Chevrolet Malibu", 6), new Car("Ford Mondeo", 2), new Car("Toyota Camry", 4));
-		   String expected = "[{\"brand\":\"Chevrolet Malibu\",\"doors\":6,\"year\":2016},{\"brand\":\"Ford Mondeo\",\"doors\":2,\"year\":2016},{\"brand\":\"Toyota Camry\",\"doors\":4,\"year\":2016}]";
+		   String expected = "[{\"brand\":\"Chevrolet Malibu\",\"doors\":6,\"year\":2016,\"years\":null},{\"brand\":\"Ford Mondeo\",\"doors\":2,\"year\":2016,\"years\":null},{\"brand\":\"Toyota Camry\",\"doors\":4,\"year\":2016,\"years\":null}]";
 		   
 		   String result = oson.sort().serialize(value);
 		   
 //		   System.out.println("testSerializeListOfObjectsAttributesOrdered:");
 //		   System.out.println(result);
 
-		   assertTrue(result.contains("\"brand\":\"Chevrolet Malibu\""));
+//		   assertTrue(result.contains("\"brand\":\"Chevrolet Malibu\""));
+		   assertEquals(expected, result);
 	   }
 	   
 	   @Test

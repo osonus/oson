@@ -7273,9 +7273,17 @@ public class Oson {
 					
 					Class<E> componentType = guessComponentType(objectDTO); // objectDTO.getComponentType(getJsonClassType());
 					boolean isObject = ObjectUtil.isObject(componentType);
+					
+					Collection<String> keys = values.keySet();
+					// || getOrderByKeyAndProperties()
+					if (objectDTO.classMapper.orderByKeyAndProperties) {
+						keys = new TreeSet(keys);
+					}
 
-					for (Entry<String, Object> entry: values.entrySet()) {
-						Object obj = entry.getValue(); // obj.getClass()
+					//for (Entry<String, Object> entry: values.entrySet()) {
+					// Object obj = entry.getValue(); // obj.getClass()
+					for (String key: keys) {
+						Object obj = values.get(key); // entry.getValue(); // obj.getClass()
 						
 						Object component = null;
 						if (obj != null) {
@@ -7294,7 +7302,7 @@ public class Oson {
 							component = getDefaultValue(componentType);
 						}
 						
-						String key = entry.getKey();
+						//String key = entry.getKey();
 						Object keyObj = null;
 						if (StringUtil.parenthesized(key)) {
 							keyObj = getListMapObject (key);
@@ -7390,7 +7398,8 @@ public class Oson {
 				if (map != null) {
 					Set<Object> names = map.keySet();
 					
-					if (getOrderByKeyAndProperties()) {//LinkedHashSet
+					if (objectDTO.classMapper.orderByKeyAndProperties) {
+					// if (getOrderByKeyAndProperties()) {//LinkedHashSet
 						names = new TreeSet(names);
 					}
 					
@@ -7637,6 +7646,15 @@ public class Oson {
 						newFieldData.fieldMapper = objectDTO.fieldMapper;
 						returnObj.add(json2Object(newFieldData));
 					}
+				}
+				
+				if (objectDTO.classMapper.orderByKeyAndProperties) {
+					try {
+						if (!List.class.isAssignableFrom(returnObj.getClass())) {
+							returnObj = new ArrayList(returnObj);
+						}
+						Collections.sort((List)returnObj);
+					} catch (Exception ex) {}
 				}
 				
 				return returnObj;
@@ -8440,6 +8458,7 @@ public class Oson {
 				Class<E> componentType = guessComponentType(objectDTO);
 				
 				E[] arr = (E[]) Array.newInstance(componentType, values.size());
+				
 				int i = 0;
 				for (Object val: values) {
 					if (!StringUtil.isNull(val)) {
@@ -8452,6 +8471,12 @@ public class Oson {
 					} else {
 						arr[i++] = null;
 					}
+				}
+				
+				if (objectDTO.classMapper.orderByKeyAndProperties) {
+					try {
+						Arrays.sort(arr);
+					} catch (Exception ex) {}
 				}
 				
 				return arr;
@@ -8519,6 +8544,10 @@ public class Oson {
 			String repeatedItem = getPrettyIndentationln(objectDTO.level);
 			StringBuilder sbuilder = new StringBuilder();
 			Class ctype = objectDTO.getComponentType(getJsonClassType());
+			
+			if (objectDTO.classMapper.orderByKeyAndProperties) {
+				Arrays.sort((Object[])value);
+			}
 			
 			for (int i = 0; i < size; i++) {
 				Object componentValue = Array.get(value, i);
@@ -8707,25 +8736,33 @@ public class Oson {
 			if (componentType == null) componentType = (Class<E>) Object.class;
 
 			if (componentType.isPrimitive()) {
+				E arr = null;
 				if (componentType == int.class) {
-					return (E)json2ArrayInt(objectDTO);
+					arr = (E)json2ArrayInt(objectDTO);
+					
 				} else if (componentType == byte.class) {
-					return (E)json2ArrayByte(objectDTO);
+					arr = (E)json2ArrayByte(objectDTO);
 				} else if (componentType == char.class) {
-					return (E)json2ArrayChar(objectDTO);
+					arr = (E)json2ArrayChar(objectDTO);
 				} else if (componentType == float.class) {
-					return (E)json2ArrayFloat(objectDTO);
+					arr = (E)json2ArrayFloat(objectDTO);
 				} else if (componentType == double.class) {
-					return (E)json2ArrayDouble(objectDTO);
+					arr = (E)json2ArrayDouble(objectDTO);
 				} else if (componentType == long.class) {
-					return (E)json2ArrayLong(objectDTO);
+					arr = (E)json2ArrayLong(objectDTO);
 				} else if (componentType == short.class) {
-					return (E)json2ArrayShort(objectDTO);
+					arr = (E)json2ArrayShort(objectDTO);
 				} else if (componentType == boolean.class) {
-					return (E)json2ArrayBoolean(objectDTO);
+					arr = (E)json2ArrayBoolean(objectDTO);
 				} else {
-					return null;
+					// return null;
 				}
+				
+				if (arr != null && objectDTO.classMapper.orderByKeyAndProperties) {
+					Arrays.sort((E[])arr);
+				}
+
+				return arr;
 
 			} else if (Collection.class.isAssignableFrom(returnType)) {
 				return (E) json2Collection(objectDTO);
@@ -8896,8 +8933,15 @@ public class Oson {
 			String repeatedItem = getPrettyIndentationln(objectDTO.level);
 			StringBuilder sbuilder = new StringBuilder();
 			Class ctype = objectDTO.getComponentType(getJsonClassType());
+
+			if (objectDTO.classMapper.orderByKeyAndProperties) {
+				try {
+					Collections.sort(new ArrayList(collection));
+				} catch (Exception ex) {}
+			}
 			
 			try {
+					
 				for (Object s : collection) {
 					String str = null;
 					if (s != null) {
