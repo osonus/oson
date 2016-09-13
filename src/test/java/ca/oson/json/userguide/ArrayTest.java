@@ -2,6 +2,8 @@ package ca.oson.json.userguide;
 
 import org.junit.Test;
 
+import ca.oson.json.OsonAssert;
+import ca.oson.json.OsonAssert.MODE;
 import ca.oson.json.support.TestCaseBase;
 
 public class ArrayTest extends TestCaseBase {
@@ -17,6 +19,43 @@ public class ArrayTest extends TestCaseBase {
 
 		assertEquals(expected, json);
 	}
+	
+	@Test
+	public void testArraySort() {
+		int[] ints = {5, 2, 3, 4, 1};
+		String expected = "[1,2,3,4,5]";
+		
+		oson.sort();
+		
+		assertEquals(expected, oson.serialize(ints));
+	}
+	
+	@Test
+	public void testValueEquals() {
+		int[] ints = {1, 2, 3, 4, 5};
+		int[] ints2 = {5, 2, 3, 4, 1};
+
+		OsonAssert.assertEquals(ints, ints2, MODE.VALUE);
+	}
+	
+	@Test
+	public void testArraySort2() {
+		int[][] ints = {{2, 1}, {4, 3}, {5, 6}};
+		String expected = "[[1,2],[3,4],[5,6]]";
+		
+		oson.sort();
+		
+		assertEquals(expected, oson.serialize(ints));
+	}
+	
+	@Test
+	public void testValueEquals2() {
+		int[][] ints = {{1, 2}, {3, 4}, {5, 6}};
+		int[][] ints2 = {{2, 1}, {4, 3}, {5, 6}};
+
+		OsonAssert.assertEquals(ints, ints2, MODE.VALUE);
+	}
+	
 	
 	@Test
 	public void testSerializationArrayIntMultidimentional() {

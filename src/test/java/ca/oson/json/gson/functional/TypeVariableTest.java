@@ -15,6 +15,8 @@
  */
 package ca.oson.json.gson.functional;
 
+import ca.oson.json.OsonAssert;
+import ca.oson.json.OsonAssert.MODE;
 import ca.oson.json.support.TestCaseBase;
 
 import com.google.gson.Gson;
@@ -59,11 +61,10 @@ public class TypeVariableTest extends TestCaseBase {
     original.map.put("f", Arrays.asList(6, 7));
     Type type = new TypeToken<Foo<String, Integer>>() {}.getType();
     String json = oson.toJson(original, type);
-//    assertEquals("{\"someSField\":\"e\",\"someTField\":5,\"map\":{\"f\":[6,7]},\"redField\":false}",
-//        json);
-    
-    assertEquals("{\"someSField\":\"e\",\"redField\":false,\"someTField\":5,\"map\":{\"f\":[6,7]}}",
-            json);
+    OsonAssert.assertEquals("{\"someSField\":\"e\",\"someTField\":5,\"map\":{\"f\":[6,7]},\"redField\":false}", json, MODE.SORTED);
+
+//    assertEquals("{\"someSField\":\"e\",\"redField\":false,\"someTField\":5,\"map\":{\"f\":[6,7]}}",
+//            json);
     assertEquals(original, oson.<Foo<String, Integer>>fromJson(json, type));
   }
 

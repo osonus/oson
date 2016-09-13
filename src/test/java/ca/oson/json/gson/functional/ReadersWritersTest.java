@@ -15,13 +15,17 @@
  */
 package ca.oson.json.gson.functional;
 
+import ca.oson.json.OsonAssert;
 import ca.oson.json.support.TestCaseBase;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonStreamParser;
 import com.google.gson.JsonSyntaxException;
+
+import ca.oson.json.OsonAssert.MODE;
 import ca.oson.json.domain.TestTypes.BagOfPrimitives;
+
 import com.google.gson.reflect.TypeToken;
 
 import java.util.Map;
@@ -57,6 +61,7 @@ public class ReadersWritersTest extends TestCaseBase {
     oson.useAttribute(false);
     oson.writeValue(writer, src);
     //assertEquals(src.getExpectedJson(), writer.toString());
+    OsonAssert.assertEquals(src.getExpectedJson(), writer.toString(), MODE.SORTED);
   }
 
   public void testReaderForDeserialization() throws Exception {

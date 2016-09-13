@@ -15,14 +15,16 @@
  */
 package ca.oson.json.gson.functional;
 
+import ca.oson.json.OsonAssert;
+import ca.oson.json.OsonAssert.MODE;
 import ca.oson.json.support.TestCaseBase;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Since;
 import com.google.gson.annotations.Until;
-import ca.oson.json.domain.TestTypes.BagOfPrimitives;
 
+import ca.oson.json.domain.TestTypes.BagOfPrimitives;
 import junit.framework.TestCase;
 
 /**
@@ -97,11 +99,11 @@ public class VersioningTest extends TestCaseBase {
     assertNull(version1_2);
   }
 
-//  public void testVersionedGsonWithUnversionedClassesSerialization() {
-//    Gson gson = builder.setVersion(1.0).create();
-//    BagOfPrimitives target = new BagOfPrimitives(10, 20, false, "stringValue");
-//    assertEquals(target.getExpectedJson(), oson.useAttribute(false).setVersion(1.0).toJson(target));
-//  }
+  public void testVersionedGsonWithUnversionedClassesSerialization() {
+    Gson gson = builder.setVersion(1.0).create();
+    BagOfPrimitives target = new BagOfPrimitives(10, 20, false, "stringValue");
+    OsonAssert.assertEquals(target.getExpectedJson(), oson.useAttribute(false).setVersion(1.0).toJson(target), MODE.SORTED);
+  }
 
   public void testVersionedGsonWithUnversionedClassesDeserialization() {
     Gson gson = builder.setVersion(1.0).create();

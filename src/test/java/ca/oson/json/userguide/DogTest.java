@@ -14,7 +14,10 @@ import ca.oson.json.FieldMapper;
 import ca.oson.json.Oson.BOOLEAN;
 import ca.oson.json.Oson.FIELD_NAMING;
 import ca.oson.json.Oson.JSON_INCLUDE;
+import ca.oson.json.OsonAssert;
+import ca.oson.json.OsonAssert.MODE;
 import ca.oson.json.domain.Animal;
+import ca.oson.json.domain.Car;
 import ca.oson.json.domain.Dog;
 import ca.oson.json.domain.Dog.BREED;
 import ca.oson.json.domain.Eukaryote;
@@ -42,6 +45,16 @@ public class DogTest extends TestCaseBase {
 	    assertEquals(expectedPet, oson.serialize(dog, Pet.class));
 	    assertEquals(expectedAnimal, oson.serialize(dog, Animal.class));
 	    assertEquals(expectedDog, oson.serialize(dog, Eukaryote.class));
+	    
+	    Dog dog = oson.deserialize(expectedDog, Dog.class);
+	    Animal animal = oson.deserialize(expectedAnimal, Dog.class);
+	    Pet pet = oson.deserialize(expectedPet, Dog.class);
+	    
+	    OsonAssert.assertEquals(pet, dog, MODE.SUBSET);
+	    OsonAssert.assertEquals(animal, pet, MODE.SUBSET);
+	    
+	    OsonAssert.assertEquals(expectedPet, expectedDog, MODE.SUBSET);
+	    OsonAssert.assertEquals(expectedAnimal, expectedPet, MODE.SUBSET);
 	}
 	
 	

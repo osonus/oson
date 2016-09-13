@@ -8542,12 +8542,9 @@ public class Oson {
 			String repeated = getPrettyIndentationln(objectDTO.level);
 			objectDTO.incrLevel();
 			String repeatedItem = getPrettyIndentationln(objectDTO.level);
-			StringBuilder sbuilder = new StringBuilder();
 			Class ctype = objectDTO.getComponentType(getJsonClassType());
-			
-			if (objectDTO.classMapper.orderByKeyAndProperties) {
-				Arrays.sort((Object[])value);
-			}
+
+			List<String> list = new ArrayList<>();
 			
 			for (int i = 0; i < size; i++) {
 				Object componentValue = Array.get(value, i);
@@ -8563,7 +8560,16 @@ public class Oson {
 						|| getDefaultType() == JSON_INCLUDE.DEFAULT) ) {
 					str = getDefaultValue(ctype).toString();
 				}
-
+				
+				list.add(str);
+			}
+			
+			if (objectDTO.classMapper.orderByKeyAndProperties) {
+				Collections.sort(list);
+			}
+			
+			StringBuilder sbuilder = new StringBuilder();
+			for (String str: list) {
 				sbuilder.append(repeatedItem + str + ",");
 			}
 
