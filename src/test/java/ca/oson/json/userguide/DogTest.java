@@ -164,8 +164,8 @@ public class DogTest extends TestCaseBase {
 	
 	@Test
 	public void testSerializeNullEmptyDefaultValues() {
-	    String expectedNonNull = "{\"bread\":\"GERMAN_SHEPHERD\",\"name\":\"\",\"weight\":0,\"age\":1}";
-	    String expectedNonEmpty = "{\"bread\":\"GERMAN_SHEPHERD\",\"weight\":0,\"age\":1}";
+	    String expectedNonNull = "{\"bread\":\"GERMAN_SHEPHERD\",\"name\":\"\",\"weight\":0.0,\"age\":1}";
+	    String expectedNonEmpty = "{\"bread\":\"GERMAN_SHEPHERD\",\"weight\":0.0,\"age\":1}";
 	    String expectedNonDefault = "{\"bread\":\"GERMAN_SHEPHERD\",\"age\":1}";
 	    String expectedNonDefault2 = "{\"bread\":\"GERMAN_SHEPHERD\"}";
 	    String expectedNonDefault3 = "{\"bread\":\"GERMAN_SHEPHERD\"}";

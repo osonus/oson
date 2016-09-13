@@ -10,10 +10,52 @@ public class NumberUtil {
 
 	public static String removeTrailingDecimalZeros(Object value) {
 		String str = value.toString().trim();
-		return str.replaceFirst("\\.0*$", "");
+		str = str.replaceFirst("\\.0*$", "");
+		
+		return str.replaceFirst("^(.*\\.[0-9]*[1-9])0*$", "$1");
+	}
+	
+	public static boolean isFloatingNumber(Number number) {
+		switch (number.getClass().getName()) {
+		case "java.lang.Integer": return false;
+		case "int": return false;
+		case "java.lang.Long": return false;
+		case "long": return false;
+		case "java.lang.Byte": return false;
+		case "byte": return false;
+		case "java.lang.Double": return true;
+		case "double": return true;
+		case "java.lang.Short": return false;
+		case "short": return false;
+		case "java.lang.Float": return true;
+		case "float": return true;
+		case "java.math.BigDecimal": return true;
+		case "java.math.BigInteger": return false;
+		case "java.util.concurrent.atomic.AtomicInteger": return false;
+		case "java.util.concurrent.atomic.AtomicLong": return false;
+		case "java.lang.Number": return true;
+		default: return true;
+		}
+	}
+	
+	public static String toPlainString(Number number, boolean appendingFloatingZero) {
+		String str = toPlainString(number);
+
+		if (appendingFloatingZero) {
+			int idx = str.indexOf(".");
+			if (idx == -1 && isFloatingNumber(number)) {
+				return str + ".0";
+			}
+		}
+		
+		return str;
 	}
 	
 	public static String toPlainString(Number number) {
+//		if (number == null) {
+//			return null;
+//		}
+		
 		if (number instanceof BigDecimal) {
 			return ((BigDecimal)number).toPlainString();
 		}
@@ -21,7 +63,39 @@ public class NumberUtil {
 			return ((BigInteger)number).toString();
 		}
 		
-		return new BigDecimal(number.doubleValue()).toPlainString();
+		if (isFloatingNumber(number)) {
+			double value = number.doubleValue();
+
+			String str = new BigDecimal(value).toPlainString();
+			int idx = str.indexOf(".");
+			if (idx > -1) {
+				str = str.replaceFirst("^(.*\\.[0-9]*[1-9])0{5,}[0-9]*$", "$1");
+				str = str.replaceFirst("\\.?0*$", "");
+				
+				String str2 = str.replaceFirst("^(.*\\.[0-9]*[0-8])9{5,}[0-9]*$", "$1");
+				if (!str2.equals(str)) {
+					String last = str2.substring(str2.length()-1);
+					str = str2.substring(0, str2.length()-1) + (Integer.parseInt(last) + 1);
+				}
+			}
+			
+//			String str2 = value + "";
+//			idx = str2.indexOf("E");
+//			if (idx > -1) {
+//				str2 = str2.substring(0, idx);
+//			}
+//			if (!str.equals(str2)) {
+//				idx = str.indexOf(".");
+//				int idx2 = str2.indexOf(".");
+//				if (str.length() - idx > str2.length() - idx2) {
+//					System.err.println(str + ":" + str2);
+//				}
+//			}
+			
+			return str;
+		}
+		
+		return number.longValue()+"";
 	}
 	
 	
@@ -109,25 +183,25 @@ public class NumberUtil {
 				}
 			}
 			
-			String str = StringUtil.unquote(number, true);
+			String str = removeTrailingDecimalZeros(StringUtil.unquote(number, true));
 			
 			switch (valueType.getName()) {
-			case "java.lang.Integer": return Integer.parseInt(removeTrailingDecimalZeros(str));
-			case "int": return Integer.parseInt(removeTrailingDecimalZeros(str));
-			case "java.lang.Long": return Long.parseLong(removeTrailingDecimalZeros(str));
-			case "long": return Long.parseLong(removeTrailingDecimalZeros(str));
-			case "java.lang.Byte": return Byte.parseByte(removeTrailingDecimalZeros(str));
-			case "byte": return Byte.parseByte(removeTrailingDecimalZeros(str));
+			case "java.lang.Integer": return Integer.parseInt(str);
+			case "int": return Integer.parseInt(str);
+			case "java.lang.Long": return Long.parseLong(str);
+			case "long": return Long.parseLong(str);
+			case "java.lang.Byte": return Byte.parseByte(str);
+			case "byte": return Byte.parseByte(str);
 			case "java.lang.Double": return Double.parseDouble(str);
 			case "double": return Double.parseDouble(str);
-			case "java.lang.Short": return Short.parseShort(removeTrailingDecimalZeros(str));
-			case "short": return Short.parseShort(removeTrailingDecimalZeros(str));
+			case "java.lang.Short": return Short.parseShort(str);
+			case "short": return Short.parseShort(str);
 			case "java.lang.Float": return Float.parseFloat(str);
 			case "float": return Float.parseFloat(str);
 			case "java.math.BigDecimal": return new BigDecimal(str);
 			case "java.math.BigInteger": return new BigInteger(str);
-			case "java.util.concurrent.atomic.AtomicInteger": return new AtomicInteger(Integer.parseInt(removeTrailingDecimalZeros(str)));
-			case "java.util.concurrent.atomic.AtomicLong": return new AtomicLong(Integer.parseInt(removeTrailingDecimalZeros(str)));
+			case "java.util.concurrent.atomic.AtomicInteger": return new AtomicInteger(Integer.parseInt(str));
+			case "java.util.concurrent.atomic.AtomicLong": return new AtomicLong(Integer.parseInt(str));
 			case "java.lang.Number": return Double.parseDouble(str);
 			default: return Double.parseDouble(str);
 			}

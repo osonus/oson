@@ -1664,6 +1664,17 @@ public class Oson {
 		return this;
 	}
 	
+	
+	public boolean isAppendingFloatingZero() {
+		return options.isAppendingFloatingZero();
+	}
+
+	public Oson setAppendingFloatingZero(boolean appendingFloatingZero) {
+		options.setAppendingFloatingZero(appendingFloatingZero);
+
+		return this;
+	}
+	
 
 	private Long getMin() {
 		return options.getMin();
@@ -3286,7 +3297,7 @@ public class Oson {
 							return NumberUtil.toPlainString(b);
 						}
 						
-						return NumberUtil.toPlainString(valueToProcess);
+						return NumberUtil.toPlainString(valueToProcess, isAppendingFloatingZero());
 					}
 
 				} catch (Exception ex) {
@@ -3569,7 +3580,7 @@ public class Oson {
 							return NumberUtil.toPlainString(b);
 						}
 						
-						return NumberUtil.toPlainString(valueToProcess);
+						return NumberUtil.toPlainString(valueToProcess, isAppendingFloatingZero());
 					}
 
 				} catch (Exception ex) {
@@ -11845,17 +11856,17 @@ public class Oson {
 			} else if (source.startsWith("{") && ObjectUtil.isMapOrObject(valueType)) {
 
 				Map<String, Object> map = null;
-				try {
+//				try {
 					JSONObject obj = new JSONObject(source);
 					map = (Map)fromJsonMap(obj);
 					
-				} catch (Exception e1) {
-					try {
-						map = getJackson().readValue(source, Map.class);
-					} catch(Exception ex) {
-						map = new HashMap<>();
-					}
-				}
+//				} catch (Exception e1) {
+//					try {
+//						map = getJackson().readValue(source, Map.class);
+//					} catch(Exception ex) {
+//						map = new HashMap<>();
+//					}
+//				}
 				
 				if (valueType == null) {
 					String className = (String) map.get(getJsonClassType());

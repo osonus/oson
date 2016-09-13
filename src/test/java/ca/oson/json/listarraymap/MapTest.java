@@ -21,7 +21,7 @@ public class MapTest extends TestCaseBase {
 
 		   String expected = "{\"Wyoming\":1541,\"Alabama\":1529,\"Arizona\":1222}";
 		   
-		   String result = oson.serialize(value);
+		   String result = oson.setAppendingFloatingZero(false).serialize(value);
 
 		   assertEquals(expected, result);
 	   }
@@ -35,7 +35,7 @@ public class MapTest extends TestCaseBase {
 
 		   String expected = "{\"Alabama\":1529,\"Arizona\":1222,\"Wyoming\":1541}";
 		   
-		   String result = oson.sort().serialize(value);
+		   String result = oson.setAppendingFloatingZero(false).sort().serialize(value);
 
 		   assertEquals(expected, result);
 	   }

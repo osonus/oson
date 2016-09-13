@@ -87,7 +87,7 @@ public class ParameterizedTypesTest extends TestCaseBase {
         
     ClassMapper classMapper = new ClassMapper(Double.class);
     classMapper.setPrecision(2);
-    String json = oson.useAttribute(false).setDefaultType(JSON_INCLUDE.NON_NULL).setClassMappers(classMapper).toJson(src, typeOfSrc);
+    String json = oson.setAppendingFloatingZero(false).useAttribute(false).setDefaultType(JSON_INCLUDE.NON_NULL).setClassMappers(classMapper).toJson(src, typeOfSrc);
     String expected = "{\"a\":10,\"b\":1.0,\"c\":2.1,\"d\":\"abc\","
         + "\"e\":{\"longValue\":0,\"intValue\":0,\"booleanValue\":false,\"stringValue\":\"\"}}";
     expected = "{\"a\":10,\"b\":1,\"c\":2.1,\"d\":\"abc\",\"e\":{\"intValue\":0,\"stringValue\":\"\",\"longValue\":0,\"booleanValue\":false}}";

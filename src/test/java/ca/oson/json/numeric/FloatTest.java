@@ -13,7 +13,7 @@ public class FloatTest extends TestCaseNumeric {
 	   @Test
 	   public void testSerializeFloat() {
 		   Float value = 7899990f;
-		   String expected = "7899990";
+		   String expected = "7899990.0";
 		   
 		   String result = oson.serialize(value);
 		   
@@ -86,7 +86,7 @@ public class FloatTest extends TestCaseNumeric {
 	   public void testSerializeFloatWithFunctionAtomicInteger() {
 		   // a minimum value of -128 and a maximum value of 127 (inclusive)
 		   float value = 12789f;
-		   String expected = "12789";
+		   String expected = "12789.0";
 		   
 		   oson.setClassMappers(new ClassMapper(Float.class)
 		   	.setSerializer((Object p) -> new AtomicInteger(Integer.parseInt(p.toString()))));
@@ -113,7 +113,7 @@ public class FloatTest extends TestCaseNumeric {
 	   public void testSerializeFloatWithMin() {
 		   Float value = 1f;
 		   Long min = 10009l;
-		   String expected = "10009";
+		   String expected = "10009.0";
 		   
 		   oson.setClassMappers(new ClassMapper(Float.class).setMin(min));
 		   
@@ -126,7 +126,7 @@ public class FloatTest extends TestCaseNumeric {
 	   public void testSerializeFloatWithMax() {
 		   Float value = 1009999f;
 		   Long max = 300l;
-		   String expected = "300";
+		   String expected = "300.0";
 		   
 		   oson.setClassMappers(new ClassMapper(Float.class).setMax(max));
 		   

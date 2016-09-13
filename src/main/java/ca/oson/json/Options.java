@@ -177,6 +177,11 @@ public class Options {
 	private Integer scale = null;
 	
 	/*
+	 * append trailing .0 to float, double values or not
+	 */
+	private boolean appendingFloatingZero = true;
+	
+	/*
 	 * Minimum value a number can be, if required, or use default setting
 	 */
 	private Long min = null;
@@ -1257,5 +1262,15 @@ public class Options {
 
 	public void setOrderArrayAndList(Boolean orderArrayAndList) {
 		this.orderArrayAndList = orderArrayAndList;
+	}
+
+
+	public boolean isAppendingFloatingZero() {
+		return appendingFloatingZero;
+	}
+
+
+	public void setAppendingFloatingZero(boolean appendingFloatingZero) {
+		this.appendingFloatingZero = appendingFloatingZero;
 	}
 }

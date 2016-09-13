@@ -49,7 +49,7 @@ public class ExposeFieldsTest extends TestCaseBase {
 
   public void testNullExposeFieldSerialization() throws Exception {
     ClassWithExposedFields object = new ClassWithExposedFields(null, 1);
-    String json = oson.toJson(object);
+    String json = oson.setAppendingFloatingZero(false).toJson(object);
 
     assertEquals(object.getExpectedJson(), json);
   }
@@ -60,7 +60,7 @@ public class ExposeFieldsTest extends TestCaseBase {
     ClassWithExposedFields object3 = new ClassWithExposedFields(2, 2);
     ClassWithExposedFields[] objects = { object1, object2, object3 };
 
-    String json = oson.toJson(objects);
+    String json = oson.setAppendingFloatingZero(false).toJson(objects);
     String expected = new StringBuilder()
         .append('[').append(object1.getExpectedJson()).append(',')
         .append(object2.getExpectedJson()).append(',')
@@ -72,7 +72,7 @@ public class ExposeFieldsTest extends TestCaseBase {
 
   public void testExposeAnnotationSerialization() throws Exception {
     ClassWithExposedFields target = new ClassWithExposedFields(1, 2);
-    assertEquals(target.getExpectedJson(), oson.toJson(target));
+    assertEquals(target.getExpectedJson(), oson.setAppendingFloatingZero(false).toJson(target));
   }
 
   public void testExposeAnnotationDeserialization() throws Exception {

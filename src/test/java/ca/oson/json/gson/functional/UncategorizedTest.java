@@ -62,7 +62,7 @@ public class UncategorizedTest extends TestCaseBase {
 
       v = oson.fromJson("{adfasdf1112,,,\":}", BagOfPrimitives.class);
       String json = oson.setDefaultType(JSON_INCLUDE.NON_DEFAULT).useAttribute(false).serialize(v);
-      assertEquals("{}", json);
+      assertTrue(DefaultValue.isDefault(json));
   }
 
   public void testObjectEqualButNotSameSerialization() throws Exception {

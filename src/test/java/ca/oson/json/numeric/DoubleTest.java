@@ -13,7 +13,7 @@ public class DoubleTest extends TestCaseNumeric {
 	   @Test
 	   public void testSerializeDouble() {
 		   Double value = 7899990d;
-		   String expected = "7899990";
+		   String expected = "7899990.0";
 		   
 		   String result = oson.serialize(value);
 		   
@@ -85,7 +85,7 @@ public class DoubleTest extends TestCaseNumeric {
 	   @Test
 	   public void testSerializeDoubleWithFunctionAtomicInteger() {
 		   double value = 12789d;
-		   String expected = "12789";
+		   String expected = "12789.0";
 		   
 		   oson.setClassMappers(new ClassMapper(Double.class)
 		   	.setSerializer((Object p) -> new AtomicInteger(Integer.parseInt(p.toString()))));
@@ -112,7 +112,7 @@ public class DoubleTest extends TestCaseNumeric {
 	   public void testSerializeDoubleWithMin() {
 		   Double value = 1d;
 		   Long min = 10009l;
-		   String expected = "10009";
+		   String expected = "10009.0";
 		   
 		   oson.setClassMappers(new ClassMapper(Double.class).setMin(min));
 		   
@@ -125,7 +125,7 @@ public class DoubleTest extends TestCaseNumeric {
 	   public void testSerializeDoubleWithMax() {
 		   Double value = 1009999d;
 		   Long max = 300l;
-		   String expected = "300";
+		   String expected = "300.0";
 		   
 		   oson.setClassMappers(new ClassMapper(Double.class).setMax(max));
 		   
