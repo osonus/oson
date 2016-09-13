@@ -28,8 +28,10 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
+import ca.oson.json.DefaultValue;
 import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.support.TestCaseBase;
+import ca.oson.json.util.StringUtil;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -586,7 +588,7 @@ public class MapTest extends TestCaseBase {
   public void testMapDeserializationWithDuplicateKeys() {
     try {
     	Map<String, Integer> map = oson.clearAll().fromJson("{'a':1,'a':2}", new TypeToken<Map<String, Integer>>() {}.getType());
-    	assertEquals(null, map);
+    	assertTrue(DefaultValue.isDefault(map));
       //fail();
     } catch (JsonSyntaxException expected) {
     }

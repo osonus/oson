@@ -16,6 +16,7 @@
 package ca.oson.json.gson.functional;
 
 import ca.oson.json.DataMapper;
+import ca.oson.json.DefaultValue;
 import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.support.TestCaseBase;
 
@@ -60,7 +61,8 @@ public class UncategorizedTest extends TestCaseBase {
     assertNull(v);
 
       v = oson.fromJson("{adfasdf1112,,,\":}", BagOfPrimitives.class);
-      assertNull(v);
+      String json = oson.setDefaultType(JSON_INCLUDE.NON_DEFAULT).useAttribute(false).serialize(v);
+      assertEquals("{}", json);
   }
 
   public void testObjectEqualButNotSameSerialization() throws Exception {

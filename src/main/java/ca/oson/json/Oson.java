@@ -1200,7 +1200,20 @@ public class Oson {
 		return true;
 	}
 	
+	private Boolean getOrderArrayAndList() {
+		return options.getOrderArrayAndList();
+	}
 
+
+	public Oson setOrderArrayAndList(Boolean orderArrayAndList) {
+		if (orderArrayAndList != null) {
+			options.setOrderArrayAndList(orderArrayAndList);
+		}
+
+		return this;
+	}
+	
+	
 	private Boolean getOrderByKeyAndProperties() {
 		return options.getOrderByKeyAndProperties();
 	}
@@ -1214,8 +1227,9 @@ public class Oson {
 		return this;
 	}
 	
-	public Oson sort(boolean orderByKeyAndProperties) {
-		return orderByKeyAndProperties(true);
+	public Oson sort(boolean order) {
+		setOrderArrayAndList(order);
+		return orderByKeyAndProperties(order);
 	}
 	public Oson sort() {
 		return sort(true);
@@ -1322,6 +1336,10 @@ public class Oson {
 		
 		if (mapper.orderByKeyAndProperties == null) {
 			mapper.orderByKeyAndProperties =  getOrderByKeyAndProperties();
+		}
+		
+		if (mapper.orderArrayAndList == null) {
+			mapper.orderArrayAndList =  getOrderArrayAndList();
 		}
 		
 		if (mapper.useAttribute == null) {
@@ -2173,6 +2191,13 @@ public class Oson {
 
 		return this;
 	}
+	
+	public <T> Oson setOrderArrayAndList(Class<T> type, Boolean orderArrayAndList) {
+		cMap(type).setOrderArrayAndList(orderArrayAndList);
+
+		return this;
+	}
+	
 
 	public <T> Oson setPropertyOrders(Class<T> type, String[] propertyOrders) {
 		cMap(type).setPropertyOrders(propertyOrders);
@@ -2981,6 +3006,9 @@ public class Oson {
 				gsonBuilder.excludeFieldsWithoutExposeAnnotation();
 			}
 			
+			if (!DefaultValue.isDefault(getPatterns())) {
+				gsonBuilder.setLenient();
+			}
 			
 			gson = gsonBuilder.create();
 		}
@@ -7648,7 +7676,7 @@ public class Oson {
 					}
 				}
 				
-				if (objectDTO.classMapper.orderByKeyAndProperties) {
+				if (objectDTO.classMapper.orderArrayAndList) {
 					try {
 						if (!List.class.isAssignableFrom(returnObj.getClass())) {
 							returnObj = new ArrayList(returnObj);
@@ -8473,7 +8501,7 @@ public class Oson {
 					}
 				}
 				
-				if (objectDTO.classMapper.orderByKeyAndProperties) {
+				if (objectDTO.classMapper.orderArrayAndList) {
 					try {
 						Arrays.sort(arr);
 					} catch (Exception ex) {}
@@ -8564,7 +8592,7 @@ public class Oson {
 				list.add(str);
 			}
 			
-			if (objectDTO.classMapper.orderByKeyAndProperties) {
+			if (objectDTO.classMapper.orderArrayAndList) {
 				Collections.sort(list);
 			}
 			
@@ -8764,7 +8792,7 @@ public class Oson {
 					// return null;
 				}
 				
-				if (arr != null && objectDTO.classMapper.orderByKeyAndProperties) {
+				if (arr != null && objectDTO.classMapper.orderArrayAndList) {
 					Arrays.sort((E[])arr);
 				}
 
@@ -8940,13 +8968,8 @@ public class Oson {
 			StringBuilder sbuilder = new StringBuilder();
 			Class ctype = objectDTO.getComponentType(getJsonClassType());
 
-			if (objectDTO.classMapper.orderByKeyAndProperties) {
-				try {
-					Collections.sort(new ArrayList(collection));
-				} catch (Exception ex) {}
-			}
-			
 			try {
+				List<String> list = new ArrayList<>();
 					
 				for (Object s : collection) {
 					String str = null;
@@ -8962,8 +8985,17 @@ public class Oson {
 						str = getDefaultValue(ctype).toString();
 					}
 					
+					list.add(str);
+				}
+				
+				if (objectDTO.classMapper.orderArrayAndList) {
+					Collections.sort(list);
+				}
+				
+				for (String str: list) {
 					sbuilder.append(repeatedItem + str + ",");
 				}
+				
 			} catch (Exception ex) {}
 		
 			String str = sbuilder.toString();
@@ -9670,6 +9702,10 @@ public class Oson {
 		if (classMapperAnnotation.orderByKeyAndProperties() != BOOLEAN.NONE) {
 			classMapper.orderByKeyAndProperties = classMapperAnnotation.orderByKeyAndProperties().value();
 		}
+		
+		if (classMapperAnnotation.orderArrayAndList() != BOOLEAN.NONE) {
+			classMapper.orderArrayAndList = classMapperAnnotation.orderArrayAndList().value();
+		}
 
 		if (classMapperAnnotation.useField() != BOOLEAN.NONE) {
 			classMapper.useField = classMapperAnnotation.useField().value();
@@ -9786,6 +9822,10 @@ public class Oson {
 		
 		if (javaClassMapper.orderByKeyAndProperties != null) {
 			classMapper.orderByKeyAndProperties = javaClassMapper.orderByKeyAndProperties;
+		}
+		
+		if (javaClassMapper.orderArrayAndList != null) {
+			classMapper.orderArrayAndList = javaClassMapper.orderArrayAndList;
 		}
 		
 		if (javaClassMapper.useAttribute != null) {
@@ -11805,12 +11845,17 @@ public class Oson {
 			} else if (source.startsWith("{") && ObjectUtil.isMapOrObject(valueType)) {
 
 				Map<String, Object> map = null;
-//				try {
-//					map = new ObjectMapper().readValue(source, Map.class);
-//				} catch (IOException e1) {
+				try {
 					JSONObject obj = new JSONObject(source);
 					map = (Map)fromJsonMap(obj);
-//				}
+					
+				} catch (Exception e1) {
+					try {
+						map = getJackson().readValue(source, Map.class);
+					} catch(Exception ex) {
+						map = new HashMap<>();
+					}
+				}
 				
 				if (valueType == null) {
 					String className = (String) map.get(getJsonClassType());

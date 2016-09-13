@@ -16,10 +16,13 @@
 
 package ca.oson.json.gson.functional;
 
+import ca.oson.json.OsonAssert;
+import ca.oson.json.OsonAssert.MODE;
 import ca.oson.json.support.TestCaseBase;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
 import ca.oson.json.domain.TestTypes.BagOfPrimitives;
 
 import java.util.ArrayList;
@@ -70,7 +73,7 @@ public class EscapingTest extends TestCaseBase {
 //    assertTrue(jsonRepresentation.contains("\\\""));
 //
 //    BagOfPrimitives expectedObject = oson.clearAll().fromJson(jsonRepresentation, BagOfPrimitives.class);
-//    assertEquals(objWithPrimitives.getExpectedJson(), expectedObject.getExpectedJson());
+//    OsonAssert.assertEquals(objWithPrimitives.getExpectedJson(), expectedObject.getExpectedJson(), MODE.SORTED);
 //  }
   
   public void testGsonAcceptsEscapedAndNonEscapedJsonDeserialization() throws Exception {

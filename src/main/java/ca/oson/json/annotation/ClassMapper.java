@@ -67,6 +67,11 @@ public @interface ClassMapper {
 	 */
 	BOOLEAN orderByKeyAndProperties() default BOOLEAN.NONE;
 	
+	/*
+	 * During serialization and deserialization, order array and list values naturally if true
+	 */
+	BOOLEAN orderArrayAndList() default BOOLEAN.NONE;
+	
     /**
      * Specific ordered list of properties.
      */

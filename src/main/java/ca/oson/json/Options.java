@@ -88,6 +88,11 @@ public class Options {
 	private Boolean orderByKeyAndProperties = false;
 	
 	/*
+	 * sort arrays and lists by nature order or not
+	 */
+	private Boolean orderArrayAndList = false;
+	
+	/*
 	 * Include class name as metadata in the Json output or not
 	 */
 	private Boolean includeClassTypeInJson = false;
@@ -1242,5 +1247,15 @@ public class Options {
 
 	public void setEscapeHtml(boolean escapeHtml) {
 		this.escapeHtml = escapeHtml;
+	}
+
+
+	public Boolean getOrderArrayAndList() {
+		return orderArrayAndList;
+	}
+
+
+	public void setOrderArrayAndList(Boolean orderArrayAndList) {
+		this.orderArrayAndList = orderArrayAndList;
 	}
 }

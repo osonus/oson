@@ -17,6 +17,8 @@
 package ca.oson.json.gson.functional;
 
 import ca.oson.json.Oson.JSON_INCLUDE;
+import ca.oson.json.OsonAssert;
+import ca.oson.json.OsonAssert.MODE;
 import ca.oson.json.support.TestCaseBase;
 
 import com.google.gson.Gson;
@@ -94,11 +96,11 @@ public class ObjectTest extends TestCaseBase {
     assertEquals(20, target.longValue);
   }
 
-//  public void testBagOfPrimitivesSerialization() throws Exception {
-//    BagOfPrimitives target = new BagOfPrimitives(10, 20, false, "stringValue");
-//    // ordering issue, works
-//    assertEquals(target.getExpectedJson(), oson.useAttribute(false).toJson(target));
-//  }
+  public void testBagOfPrimitivesSerialization() throws Exception {
+    BagOfPrimitives target = new BagOfPrimitives(10, 20, false, "stringValue");
+    // ordering issue, works
+    OsonAssert.assertEquals(target.getExpectedJson(), oson.useAttribute(false).toJson(target), MODE.SORTED);
+  }
 
   public void testBagOfPrimitivesDeserialization() throws Exception {
     BagOfPrimitives src = new BagOfPrimitives(10, 20, false, "stringValue");
@@ -107,10 +109,10 @@ public class ObjectTest extends TestCaseBase {
     assertEquals(json, target.getExpectedJson());
   }
 
-//  public void testBagOfPrimitiveWrappersSerialization() throws Exception {
-//    BagOfPrimitiveWrappers target = new BagOfPrimitiveWrappers(10L, 20, false);
-//    assertEquals(target.getExpectedJson(), oson.useAttribute(false).toJson(target));
-//  }
+  public void testBagOfPrimitiveWrappersSerialization() throws Exception {
+    BagOfPrimitiveWrappers target = new BagOfPrimitiveWrappers(10L, 20, false);
+    OsonAssert.assertEquals(target.getExpectedJson(), oson.useAttribute(false).toJson(target), MODE.SORTED);
+  }
 
   public void testBagOfPrimitiveWrappersDeserialization() throws Exception {
     BagOfPrimitiveWrappers target = new BagOfPrimitiveWrappers(10L, 20, false);
@@ -153,7 +155,7 @@ public class ObjectTest extends TestCaseBase {
   public void testNestedSerialization() throws Exception {
     Nested target = new Nested(new BagOfPrimitives(10, 20, false, "stringValue"),
        new BagOfPrimitives(30, 40, true, "stringValue"));
-    //assertEquals(target.getExpectedJson(), oson.clear().useAttribute(false).toJson(target));
+    OsonAssert.assertEquals(target.getExpectedJson(), oson.clear().useAttribute(false).toJson(target), MODE.SORTED);
   }
 
   public void testNestedDeserialization() throws Exception {
@@ -186,11 +188,11 @@ public class ObjectTest extends TestCaseBase {
     assertNull(object);
   }
 
-//  public void testNullFieldsSerialization() throws Exception {
-//    Nested target = new Nested(new BagOfPrimitives(10, 20, false, "stringValue"), null);
-//    // ordering attribute differently
-//    assertEquals(target.getExpectedJson(), oson.useAttribute(false).setDefaultType(JSON_INCLUDE.NON_NULL).toJson(target));
-//  }
+  public void testNullFieldsSerialization() throws Exception {
+    Nested target = new Nested(new BagOfPrimitives(10, 20, false, "stringValue"), null);
+    // ordering attribute differently
+    OsonAssert.assertEquals(target.getExpectedJson(), oson.useAttribute(false).setDefaultType(JSON_INCLUDE.NON_NULL).toJson(target), MODE.SORTED);
+  }
 
   public void testNullFieldsDeserialization() throws Exception {
     String json = "{\"primitive1\":{\"longValue\":10,\"intValue\":20,\"booleanValue\":false"
@@ -199,10 +201,10 @@ public class ObjectTest extends TestCaseBase {
     assertEquals(json, target.getExpectedJson());
   }
 
-//  public void testArrayOfObjectsSerialization() throws Exception {
-//    ArrayOfObjects target = new ArrayOfObjects();
-//    assertEquals(target.getExpectedJson(), oson.toJson(target));
-//  }
+  public void testArrayOfObjectsSerialization() throws Exception {
+    ArrayOfObjects target = new ArrayOfObjects();
+    OsonAssert.assertEquals(target.getExpectedJson(), oson.useAttribute(false).toJson(target), MODE.SORTED);
+  }
 
   public void testArrayOfObjectsDeserialization() throws Exception {
     String json = new ArrayOfObjects().getExpectedJson();
@@ -213,7 +215,7 @@ public class ObjectTest extends TestCaseBase {
   public void testArrayOfArraysSerialization() throws Exception {
     ArrayOfArrays target = new ArrayOfArrays();
     // different ordering
-    //assertEquals(target.getExpectedJson(), oson.useAttribute(false).toJson(target));
+    OsonAssert.assertEquals(target.getExpectedJson(), oson.useAttribute(false).toJson(target), MODE.SORTED);
   }
 
   public void testArrayOfArraysDeserialization() throws Exception {

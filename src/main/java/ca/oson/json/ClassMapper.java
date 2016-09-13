@@ -76,6 +76,11 @@ public class ClassMapper<T> {
 	public Boolean orderByKeyAndProperties = null;
 	
 	/*
+	 * sort arrays and lists by nature order or not
+	 */
+	public Boolean orderArrayAndList = null;
+	
+	/*
 	 * Set a Json output using hard-coded list of properties in the specified order
 	 */
 	public String[] propertyOrders = null;
@@ -539,5 +544,11 @@ public class ClassMapper<T> {
 	public ClassMapper setJsonValueFieldName(String jsonValueFieldName) {
 		this.jsonValueFieldName = jsonValueFieldName;
 		return this;
+	}
+	public Boolean getOrderArrayAndList() {
+		return orderArrayAndList;
+	}
+	public void setOrderArrayAndList(Boolean orderArrayAndList) {
+		this.orderArrayAndList = orderArrayAndList;
 	}
 }
