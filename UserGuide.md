@@ -34,6 +34,7 @@
     * [Use Default Object](#TOC-Use-Default-Object)
     * [Use Constructor Annotation](#TOC-Use-Constructor-Annotation)
   * [Lambda Expression](#TOC-Deserialize-Lambda-Expression)
+6. [Oson Assert](#TOC-Oson-Assert)
 
 
 ## <a name="TOC-Overview"></a>Overview
@@ -76,7 +77,7 @@ To use Oson with Maven2/3, you can use the Oson version available in Maven Centr
 	<dependency>
 	    <groupId>ca.oson.json</groupId>
 	    <artifactId>oson</artifactId>
-	    <version>1.0.1</version>
+	    <version>1.0.4</version>
 	</dependency>
 </dependencies>
 ```
@@ -1325,8 +1326,45 @@ Here is an example of lambda expression as a deserializer:
 Both DataMapper and FieldData parameters provide lots of detailed information to help you build your own version of deserializer.
 
 
+## <a name="TOC-Oson-Assert"></a>Oson Assert
 
+Junit is used in the testing of Oson functions. To facilitate the comparison of Json text and Java objects, Oson Assert is developed to extend the abilities of the generic Assert class (This feature is suggested by Ravikumar S). A Mode enum is used to specify different comparison scenarios. The purpose is to link two different Json data and Java objects up in 7 specific ways.
 
+  * EXACT Match
 
+Exact match does not necessary mean that the two Json strings or Java objects are equals to each other, but they are truly eqaul to each other after Oson transformation.
 
+The basic transformation is defined as follows:
+  * if either input parameters are String, first serialize the other parameter to String text
+  * then deserialize these String parameters to List and Map object structures
+  * compare two objects, by determining their class types, and serializing these two objects to two Json strings
 
+To be qualified as being EXACT, these class types should be the same, and these Json strings should also be the same.
+
+Numeric values with appending 0's after decimal points are considered to be the same if their values are the same.
+
+  * NAMING Match
+
+Any Json strings or Java objects are considered to be the same if the only differences are attribute names and these names are caused by the application of different Oson.FIELD_NAMING enum value.
+
+  * KEY_SORT Match
+
+In addition to NAMING differences, if the other differences are ordering of object attribute names and map keys, these Json strings or Java objects are considered to be the same.
+
+  * LIST_SORT Match
+
+In addition to NAMING differences, if the other differences are ordering of array and list values, these Json strings or Java objects are considered to be the same.
+
+  * SORTED Match
+
+In addition to NAMING differences, if the other differences are ordering of object attribute names and map keys, and the ordering of array and list values, these Json strings or Java objects are considered to be the same.
+
+  * SUBSET Match
+
+Checks the existence of parent-child relationship, and/or one data sets is a subset of the other, regardless of ordering.
+
+  * VALUE Match
+
+Checks the matches of values only, regardless of ordering and attribute names or map keys.
+
+Use cases can be found in [AssertTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/asserts/AssertTest.java).

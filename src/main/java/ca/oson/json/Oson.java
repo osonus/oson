@@ -1205,7 +1205,7 @@ public class Oson {
 	}
 
 
-	public Oson setOrderArrayAndList(Boolean orderArrayAndList) {
+	public Oson orderArrayAndList(Boolean orderArrayAndList) {
 		if (orderArrayAndList != null) {
 			options.setOrderArrayAndList(orderArrayAndList);
 		}
@@ -1218,7 +1218,7 @@ public class Oson {
 		return options.getOrderByKeyAndProperties();
 	}
 
-	private Oson orderByKeyAndProperties(Boolean orderByKeyAndProperties) {
+	public Oson orderByKeyAndProperties(Boolean orderByKeyAndProperties) {
 		if (orderByKeyAndProperties != null) {
 			options.setOrderByKeyAndProperties(orderByKeyAndProperties);
 			reset();
@@ -1228,7 +1228,7 @@ public class Oson {
 	}
 	
 	public Oson sort(boolean order) {
-		setOrderArrayAndList(order);
+		orderArrayAndList(order);
 		return orderByKeyAndProperties(order);
 	}
 	public Oson sort() {
@@ -11737,12 +11737,17 @@ public class Oson {
 	////////////////////////////////////////////////////////////////////////////////
 
 
+	static Object fromJsonMap(Object obj) {
+		FIELD_NAMING naming = FIELD_NAMING.FIELD;
+		return fromJsonMap(obj, naming);
+	}
+
 	/*
 	 * Rely on JSONObject to parse original json text
 	 * more confortable to work with map and list
 	 * instead of JSONObject and JSONArray
 	 */
-	static Object fromJsonMap(Object obj) {
+	static Object fromJsonMap(Object obj, FIELD_NAMING naming) {
 		if (obj instanceof JSONArray) {
 			JSONArray jobj = (JSONArray) obj; // .getJSONArray(key);
 
@@ -11769,10 +11774,16 @@ public class Oson {
 			try {
 				while (keys.hasNext()) {
 					String key = (String) keys.next();
+					String keyName = key;
+					if (naming != FIELD_NAMING.FIELD) {
+						keyName = StringUtil.formatName(key, naming);
+					}
+					
 					if (!jobj.isNull(key)) {
-						map.put(key, fromJsonMap(jobj.get(key)));
+						
+						map.put(keyName, fromJsonMap(jobj.get(key)));
 					} else {
-						map.put(key, null);
+						map.put(keyName, null);
 					}
 				}
 			} catch (JSONException ex) {
@@ -11832,7 +11843,11 @@ public class Oson {
 		
 		return fromJsonMap(obj);
 	}
-	
+	public static Object getListMapObject (String source, FIELD_NAMING naming) {
+		JSONObject obj = new JSONObject(source);
+		
+		return fromJsonMap(obj, naming);
+	}
 
 	<T> T fromJsonMap(String source, Class<T> valueType, T object, boolean started) {
 		if (source == null) {

@@ -11,12 +11,17 @@ import junit.framework.Assert;
 
 import org.json.JSONObject;
 
+import ca.oson.json.Oson.FIELD_NAMING;
+
 public class OsonAssert extends Assert {
 	public static enum MODE {
 		EXACT, // exact match
-		SORTED, // unordered match: class attributes, Map keys, and List and Array values are sorted
-		VALUE, // ignore name: type and values matches, but ignore attribute names
-		SUBSET // parent-child relationship, one is a subset of the other
+		NAMING, // any of the Oson.FIELD_NAMING is considered to be equivalent
+		KEY_SORT, // unordered match, with NAMING: sorted by class attributes, Map keys
+		LIST_SORT, // unordered match, with NAMING: sorted by list and array values
+		SORTED, // unordered match, with NAMING: using both KEY_SORT and LIST_SORT
+		SUBSET, // parent-child relationship, one is a subset of the other
+		VALUE // ignore name: type and values matches, but ignore attribute names, ignore case
 	};
 	
 	private static Oson oson = null;
@@ -35,6 +40,17 @@ public class OsonAssert extends Assert {
 		case EXACT:
 			break;
 			
+		case NAMING:
+			break;
+			
+		case KEY_SORT:
+			oson.orderByKeyAndProperties(true);
+			break;
+			
+		case LIST_SORT:
+			oson.orderArrayAndList(true);
+			break;
+			
 		case SORTED:
 			oson.sort();
 			break;
@@ -43,7 +59,9 @@ public class OsonAssert extends Assert {
 			oson.sort();
 			break;
 			
-			
+		case VALUE:
+			oson.sort();
+			break;
 		}
 	}
 	
@@ -132,7 +150,7 @@ public class OsonAssert extends Assert {
 			return;
 		}
 		
-		if (aJson.equals(bJson)) {
+		if (aJson.equalsIgnoreCase(bJson)) {
 			return;
 		}
 		
@@ -211,20 +229,31 @@ public class OsonAssert extends Assert {
 			
 			if (!expectedJson.equals(actualJson)) {
 				assertEquals("Not the same Json string", expectedJson, actualJson);
-				
+
 				return;
 			}
 			
 			break;
 			
+		case NAMING:
+		case KEY_SORT:
+		case LIST_SORT:	
 		case SORTED:
 			if (expectedType != actualType) {
 				assertEquals("Not the same class type", expectedType, actualType);
 				return;
 			}
-		
+			
 			if (!expectedJson.equals(actualJson)) {
-				assertEquals("Not the same Json string", expectedJson, actualJson);
+				Object expectedObj = Oson.getListMapObject (expectedJson, FIELD_NAMING.UNDERSCORE_UPPER);
+				Object actualObj = Oson.getListMapObject (actualJson, FIELD_NAMING.UNDERSCORE_UPPER);
+				
+				expectedJson = oson.serialize(expectedObj);
+				actualJson = oson.serialize(actualObj);
+				
+				if (!expectedJson.equals(actualJson)) {
+					assertEquals("Not the same Json string", expectedJson, actualJson);
+				}
 				
 				return;
 			}
