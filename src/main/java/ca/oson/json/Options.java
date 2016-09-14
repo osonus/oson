@@ -177,7 +177,7 @@ public class Options {
 	private Integer scale = null;
 	
 	/*
-	 * append trailing .0 to float, double values or not
+	 * append or remove trailing 0 to float, double values
 	 */
 	private boolean appendingFloatingZero = true;
 	

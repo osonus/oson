@@ -22,7 +22,7 @@
   * [Change Attribute Values](#TOC-Serialize-Change-Attribute-Values)
     * [Null, Empty, Default Values](#TOC-Serialize-Null-Empty-Default-Values)
     * [Raw Values](#TOC-Serialize-Raw-Values)
-    * [Property Orders](#TOC-Serialize-Property-Orders)
+    * [Sorting](#TOC-Serialize-Sorting)
     * [Serialize Date](#TOC-Serialize-Date)
     * [Serialize Number](#TOC-Serialize-Number)
     * [Serialize Enum](#TOC-Serialize-Enum)
@@ -844,9 +844,13 @@ These text values can be configured not to be double-quoted, using:
 These features are tested in [testSerializeRawValues() of ObjectTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/userguide/ObjectTest.java).
 
 
-#### <a name="TOC-Serialize-Property-Orders"></a>**Property Orders**
+#### <a name="TOC-Serialize-Sorting"></a>**Sorting**
 
-Json properties of a class can be outputed using a hard-coded list of specified order, and can also be sorted by attribute names or map keys naturally.
+There are two types of ordering: 
+  * ordering attributes, and map keys
+  * ordering array and list values
+
+In the first case, Json properties of a class can be outputed using a hard-coded list of specified order, using setPropertyOrders, and can also be sorted by attribute names or map keys naturally, using setOrderByKeyAndProperties with a boolean flag.
 
 ```java
 	public void testSerializeOrderedPerson() {
@@ -868,7 +872,14 @@ Json properties of a class can be outputed using a hard-coded list of specified 
 From the above test cases, we can conclude that Json properties of a class can be outputed:
   * following the ordered list set by propertyOrders value of annotation class ClassMapper
   * then ordered by orderByKeyAndProperties BOOLEAN value of annotation class ClassMapper
-  * these annotation values are overriden by same name settings of ClassMapper Java class
+  * these annotation values are overwritten by same name settings of ClassMapper Java class
+
+To order array and list values, a similar configuration process can be applied:
+  * at the global level, oson.setOrderArrayAndList(Boolean orderArrayAndList)
+  * then use orderArrayAndList BOOLEAN value of annotation class ClassMapper
+  * overwrite this by the same name settings of ClassMapper Java class
+
+You can use a single method to apply both types of ordering: oson.sort(), which calls oson.sort(true), which calls both oson.setOrderByKeyAndProperties and oson.setOrderArrayAndList.
 
 
 #### <a name="TOC-Serialize-Date"></a>**Serialize Date**
@@ -936,6 +947,8 @@ The overwriting sequences are as follows:
   * Java class ClassMapper: setMin(Long min), setMax(Long max), setPrecision(Integer precision), setScale(Integer scale). Similar methods can be applied to oson object, with class type as the first parameter: setMin(Class<T> type, Long min), etc
   * annotation class FieldMapper: min, max, precision, and scale
   * Java class FieldMapper: setMin(Long min), setMax(Long max), setPrecision(Integer precision), setScale(Integer scale)
+
+For decimal values, there is a setting to enable the appending or removing trailing 0's to the end of a whole value: oson.setAppendingFloatingZero(boolean appendingFloatingZero).
 
 Various test cases can be found at package [ca.oson.json.numeric](https://github.com/osonus/oson/tree/master/src/test/java/ca/oson/json/numeric).
 

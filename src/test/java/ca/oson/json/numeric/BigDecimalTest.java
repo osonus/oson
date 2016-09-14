@@ -15,7 +15,7 @@ public class BigDecimalTest extends TestCaseBase {
 		   BigDecimal value = new BigDecimal(5);
 		   String expected = "5";
 		   
-		   String result = oson.serialize(value);
+		   String result = oson.setAppendingFloatingZero(false).serialize(value);
 		   
 		   assertEquals(expected, result);
 	   }
@@ -24,9 +24,9 @@ public class BigDecimalTest extends TestCaseBase {
 	   @Test
 	   public void testDeserializeBigDecimal() {
 		   BigDecimal value = new BigDecimal(5);
-		   String text = oson.serialize(value);
+		   String text = oson.setAppendingFloatingZero(false).serialize(value);
 		   
-		   BigDecimal result = oson.deserialize(text, BigDecimal.class);
+		   BigDecimal result = oson.setAppendingFloatingZero(false).deserialize(text, BigDecimal.class);
 		   
 		   assertEquals(value, result);
 	   }
@@ -176,7 +176,7 @@ public class BigDecimalTest extends TestCaseBase {
 		   
 		   oson.setClassMappers(new ClassMapper(BigDecimal.class).setMin(min));
 		   
-		   String result = oson.serialize(value);
+		   String result = oson.setAppendingFloatingZero(false).serialize(value);
 
 		   assertEquals(expected, result);
 	   }
@@ -189,7 +189,7 @@ public class BigDecimalTest extends TestCaseBase {
 		   
 		   oson.setClassMappers(new ClassMapper(BigDecimal.class).setMax(max));
 		   
-		   String result = oson.serialize(value);
+		   String result = oson.setAppendingFloatingZero(false).serialize(value);
 
 		   assertEquals(expected, result);
 	   }
@@ -229,7 +229,7 @@ public class BigDecimalTest extends TestCaseBase {
 		   
 		   oson.setClassMappers(new ClassMapper(BigDecimal.class).setPrecision(precision));
 		   
-		   String result = oson.serialize(value);
+		   String result = oson.setAppendingFloatingZero(false).serialize(value);
 
 		   assertEquals(expected, result);
 	   }

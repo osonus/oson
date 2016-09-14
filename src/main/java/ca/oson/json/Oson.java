@@ -3278,26 +3278,32 @@ public class Oson {
 						Integer precision = objectDTO.getPrecision();
 						Integer scale = objectDTO.getScale();
 						
+						String result = null;
+						
 						if (precision != null) {
 							if (scale != null) {
 								valueToProcess = (double) NumberUtil.setPrecision(valueToProcess, precision, getRoundingMode());
 								BigDecimal b = new BigDecimal(valueToProcess);
 								
 								b = b.setScale(scale, getRoundingMode());
-								return NumberUtil.toPlainString(b);
+								
+								result = NumberUtil.toPlainString(b);
 								
 							} else {
-								return NumberUtil.precision2Json(valueToProcess, precision, getRoundingMode());
+								result = NumberUtil.precision2Json(valueToProcess, precision, getRoundingMode());
 							}
 						
 						} else if (scale != null) {
 							BigDecimal b = new BigDecimal(valueToProcess);
 							
 							b = b.setScale(scale, getRoundingMode());
-							return NumberUtil.toPlainString(b);
+							result = NumberUtil.toPlainString(b);
+							
+						} else {
+							result = NumberUtil.toPlainString(valueToProcess);
 						}
 						
-						return NumberUtil.toPlainString(valueToProcess, isAppendingFloatingZero());
+						return NumberUtil.appendingFloatingZero(result, isAppendingFloatingZero());
 					}
 
 				} catch (Exception ex) {
@@ -3561,26 +3567,30 @@ public class Oson {
 						Integer precision = objectDTO.getPrecision();
 						Integer scale = objectDTO.getScale();
 						
+						String result = null;
+						
 						if (precision != null) {
 							if (scale != null) {
 								valueToProcess = (float) NumberUtil.setPrecision(valueToProcess, precision, getRoundingMode());
 								BigDecimal b = new BigDecimal(valueToProcess);
 								
 								b = b.setScale(scale, getRoundingMode());
-								return NumberUtil.toPlainString(b);
+								result = NumberUtil.toPlainString(b);
 								
 							} else {
-								return NumberUtil.precision2Json(valueToProcess, precision, getRoundingMode());
+								result = NumberUtil.precision2Json(valueToProcess, precision, getRoundingMode());
 							}
 						
 						} else if (scale != null) {
 							BigDecimal b = new BigDecimal(valueToProcess);
 							
 							b = b.setScale(scale, getRoundingMode());
-							return NumberUtil.toPlainString(b);
+							result = NumberUtil.toPlainString(b);
+						} else {
+							result = NumberUtil.toPlainString(valueToProcess);
 						}
 						
-						return NumberUtil.toPlainString(valueToProcess, isAppendingFloatingZero());
+						return NumberUtil.appendingFloatingZero(result, isAppendingFloatingZero());
 					}
 
 				} catch (Exception ex) {
@@ -4093,7 +4103,7 @@ public class Oson {
 							valueToProcess = valueToProcess.setScale(scale, getRoundingMode());
 						}
 
-						return NumberUtil.toPlainString(valueToProcess);
+						return NumberUtil.appendingFloatingZero(NumberUtil.toPlainString(valueToProcess), this.isAppendingFloatingZero());
 					}
 
 				} catch (Exception ex) {
@@ -9117,7 +9127,7 @@ public class Oson {
 			return returnedValue + "";
 			
 		} else if (Number.class.isAssignableFrom(type)) {
-			return NumberUtil.toPlainString((Number)returnedValue);
+			return NumberUtil.toPlainString((Number)returnedValue, this.isAppendingFloatingZero());
 			
 		} else if (Enum.class.isAssignableFrom(type)) {
 			return enum2Json(objectDTO);

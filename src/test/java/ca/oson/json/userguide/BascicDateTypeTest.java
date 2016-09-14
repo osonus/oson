@@ -71,7 +71,7 @@ public class BascicDateTypeTest extends TestCaseBase {
 		datetype.dfloat = 89.345f;
 		
 
-		String json = oson.setEnumType(EnumType.ORDINAL).setDate2Long(true).serialize(datetype);
+		String json = oson.setAppendingFloatingZero(false).setEnumType(EnumType.ORDINAL).setDate2Long(true).serialize(datetype);
 
 		Map<String, Object> map = (Map<String, Object>)oson.getListMapObject(json);
 		

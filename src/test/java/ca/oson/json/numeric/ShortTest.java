@@ -88,7 +88,7 @@ public class ShortTest extends TestCaseNumeric {
 		   oson.setClassMappers(new ClassMapper(Short.class)
 		   	.setSerializer((Object p) -> new java.math.BigDecimal(p.toString())));
 		   
-		   String result = oson.serialize(value);
+		   String result = oson.setAppendingFloatingZero(false).serialize(value);
 
 		   assertEquals(expected, result);
 	   }

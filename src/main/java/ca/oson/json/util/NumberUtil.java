@@ -38,14 +38,25 @@ public class NumberUtil {
 		}
 	}
 	
-	public static String toPlainString(Number number, boolean appendingFloatingZero) {
-		String str = toPlainString(number);
-
+	public static String appendingFloatingZero(String str, boolean appendingFloatingZero) {
 		if (appendingFloatingZero) {
 			int idx = str.indexOf(".");
-			if (idx == -1 && isFloatingNumber(number)) {
+			if (idx == -1) {
 				return str + ".0";
 			}
+			
+			return str;
+			
+		} else {
+			return removeTrailingDecimalZeros(str);
+		}
+	}
+	
+	public static String toPlainString(Number number, boolean appendingFloatingZero) {
+		String str = toPlainString(number);
+		
+		if (isFloatingNumber(number)) {
+			return appendingFloatingZero(str, appendingFloatingZero);
 		}
 		
 		return str;
@@ -67,30 +78,23 @@ public class NumberUtil {
 			double value = number.doubleValue();
 
 			String str = new BigDecimal(value).toPlainString();
-			int idx = str.indexOf(".");
+			String str2 = value + "";
+			int idx = str2.indexOf("E");
+			if (idx == -1 && (str.startsWith(str2) || str2.startsWith(str))) {
+				return str2;
+			}
+
+			idx = str.indexOf(".");
 			if (idx > -1) {
 				str = str.replaceFirst("^(.*\\.[0-9]*[1-9])0{5,}[0-9]*$", "$1");
 				str = str.replaceFirst("\\.?0*$", "");
 				
-				String str2 = str.replaceFirst("^(.*\\.[0-9]*[0-8])9{5,}[0-9]*$", "$1");
+				str2 = str.replaceFirst("^(.*\\.[0-9]*[0-8])9{5,}[0-9]*$", "$1");
 				if (!str2.equals(str)) {
 					String last = str2.substring(str2.length()-1);
 					str = str2.substring(0, str2.length()-1) + (Integer.parseInt(last) + 1);
 				}
 			}
-			
-//			String str2 = value + "";
-//			idx = str2.indexOf("E");
-//			if (idx > -1) {
-//				str2 = str2.substring(0, idx);
-//			}
-//			if (!str.equals(str2)) {
-//				idx = str.indexOf(".");
-//				int idx2 = str2.indexOf(".");
-//				if (str.length() - idx > str2.length() - idx2) {
-//					System.err.println(str + ":" + str2);
-//				}
-//			}
 			
 			return str;
 		}
