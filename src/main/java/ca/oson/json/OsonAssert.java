@@ -1,15 +1,12 @@
 package ca.oson.json;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-
 import junit.framework.Assert;
 
-import ca.oson.json.JSONObject;
+import org.json.JSONObject;
 
 import ca.oson.json.Oson.FIELD_NAMING;
 
