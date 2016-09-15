@@ -9,7 +9,7 @@ import java.util.Map.Entry;
 
 import junit.framework.Assert;
 
-import org.json.JSONObject;
+import ca.oson.json.JSONObject;
 
 import ca.oson.json.Oson.FIELD_NAMING;
 
@@ -29,6 +29,7 @@ public class OsonAssert extends Assert {
 		if (oson == null) {
 			oson = new Oson();
 		}
+		
 		
 		return oson;
 	}

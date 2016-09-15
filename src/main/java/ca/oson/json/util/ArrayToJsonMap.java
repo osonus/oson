@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.json.JSONArray;
-import org.json.JSONObject;
+import ca.oson.json.JSONObject;
 
 public class ArrayToJsonMap {
 	public static Map<String, Object> array2Map(Object[] array) {

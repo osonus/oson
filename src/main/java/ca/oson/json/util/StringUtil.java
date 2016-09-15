@@ -9,7 +9,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.json.JSONObject;
+import ca.oson.json.JSONObject;
 
 import ca.oson.json.Oson.FIELD_NAMING;
 

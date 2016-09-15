@@ -39,11 +39,14 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javassist.ClassPool;
 import javassist.CtClass;
+import javassist.CtConstructor;
 import javassist.CtField;
 import javassist.CtMethod;
 import javassist.bytecode.AnnotationsAttribute;
 import javassist.bytecode.ClassFile;
+import javassist.bytecode.CodeAttribute;
 import javassist.bytecode.ConstPool;
+import javassist.bytecode.LineNumberAttribute;
 import javassist.bytecode.annotation.AnnotationMemberValue;
 import javassist.bytecode.annotation.ArrayMemberValue;
 import javassist.bytecode.annotation.BooleanMemberValue;
@@ -60,6 +63,7 @@ import javassist.bytecode.annotation.StringMemberValue;
 
 import javax.persistence.Column;
 
+import org.json.JSONObject;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
@@ -910,5 +914,61 @@ public class ObjectUtil {
 		}
 
 		return names.contains(name);
+	}
+	
+	public static JSONObject getJSONObject(String source) {
+		try {
+			int lineNumberToReplace = 157;
+			
+			ClassPool classPool = ClassPool.getDefault();
+			CtClass ctClass = classPool.get("org.json.JSONObject");
+			
+			if (ctClass.isFrozen() || ctClass.isModified()) {
+				if (source == null) {
+					return new JSONObject();
+				} else {
+					return new JSONObject(source);
+				}
+			}
+			
+			ctClass.stopPruning(true);
+			CtConstructor declaredConstructor = ctClass.getDeclaredConstructor(new CtClass[] {}); 
+			
+			CodeAttribute codeAttribute = declaredConstructor.getMethodInfo().getCodeAttribute();
+			
+			LineNumberAttribute lineNumberAttribute = (LineNumberAttribute)codeAttribute.getAttribute(LineNumberAttribute.tag);
+
+			// Index in bytecode array where the instruction starts
+		    int startPc = lineNumberAttribute.toStartPc(lineNumberToReplace);
+
+		    // Index in the bytecode array where the following instruction starts
+		    int endPc = lineNumberAttribute.toStartPc(lineNumberToReplace+1);
+
+		    // Let's now get the bytecode array
+		    byte[] code = codeAttribute.getCode();
+		    for (int i = startPc; i < endPc; i++) {
+		      // change byte to a no operation code
+		       code[i] = CodeAttribute.NOP;
+		    }
+		    
+		    declaredConstructor.insertAt(lineNumberToReplace, true, "$0.map = new java.util.LinkedHashMap();");
+
+			ctClass.writeFile();
+		    
+			if (source == null) {
+				return (JSONObject) ctClass.toClass().getConstructor().newInstance();
+			} else {
+				return (JSONObject) ctClass.toClass().getConstructor(String.class).newInstance(source);
+			}
+
+		} catch (Exception e) {
+			//e.printStackTrace();
+		}
+
+		if (source == null) {
+			return new JSONObject();
+		} else {
+			return new JSONObject(source);
+		}
 	}
 }

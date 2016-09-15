@@ -11839,12 +11839,12 @@ public class Oson {
 	
 	// used to test data types only
 	public static Object getListMapObject (String source) {
-		JSONObject obj = new JSONObject(source);
+		JSONObject obj = ObjectUtil.getJSONObject(source);
 		
 		return fromJsonMap(obj);
 	}
 	public static Object getListMapObject (String source, FIELD_NAMING naming) {
-		JSONObject obj = new JSONObject(source);
+		JSONObject obj = ObjectUtil.getJSONObject(source);
 		
 		return fromJsonMap(obj, naming);
 	}
@@ -11882,7 +11882,7 @@ public class Oson {
 
 				Map<String, Object> map = null;
 //				try {
-					JSONObject obj = new JSONObject(source);
+					JSONObject obj = ObjectUtil.getJSONObject(source);
 					map = (Map)fromJsonMap(obj);
 					
 //				} catch (Exception e1) {

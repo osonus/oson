@@ -33,7 +33,7 @@ public class IndentationTest extends TestCaseBase {
 
 		String gson4 = oson.pretty(true).includeClassTypeInJson(false).serialize(gbuilder3);
 		
-		System.out.println(gson4);
+		//System.out.println(gson4);
 	}
 	
 	

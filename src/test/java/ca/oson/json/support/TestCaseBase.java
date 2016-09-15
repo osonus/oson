@@ -4,6 +4,7 @@ import org.junit.Before;
 
 import ca.oson.json.Oson.JSON_PROCESSOR;
 import ca.oson.json.OsonIO;
+import ca.oson.json.util.ObjectUtil;
 import junit.framework.TestCase;
 
 public abstract class TestCaseBase extends TestCase {
@@ -12,6 +13,7 @@ public abstract class TestCaseBase extends TestCase {
 	
    @Before 
    protected void setUp() {
+	   ObjectUtil.getJSONObject(null);
 	   oson = new OsonIO();
 	   oson.setJsonProcessor(processor).setPrintErrorUseOsonInFailure(true);
    }
