@@ -644,25 +644,31 @@ public class Oson {
 
 
 	public Oson() {
+		ObjectUtil.getJSONObject(null);
 	}
 
 	public Oson(JSONObject json) {
+		this();
 		configure(json);
 	}
 
 	public Oson(String json) {
+		this();
 		configure(json);
 	}
 
 	public Oson(Object[] array) {
+		this();
 		configure(array);
 	}
 
 	public Oson(Map<String, Object> map) {
+		this();
 		configure(map);
 	}
 
 	public Oson(Options options) {
+		this();
 		configure(options);
 	}
 
