@@ -27,7 +27,7 @@ To use Oson with Maven2/3, you can use the Oson version available in Maven Centr
 	<dependency>
 	    <groupId>ca.oson.json</groupId>
 	    <artifactId>oson</artifactId>
-	    <version>1.0.5</version>
+	    <version>1.0.6</version>
 	</dependency>
 </dependencies>
 ```

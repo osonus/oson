@@ -34,6 +34,8 @@ public class OsonAssert extends Assert {
 	private static void setUpOson(MODE mode) {
 		oson().clear();
 		
+		oson.setAppendingFloatingZero(false);
+		
 		switch (mode) {
 		case EXACT:
 			break;

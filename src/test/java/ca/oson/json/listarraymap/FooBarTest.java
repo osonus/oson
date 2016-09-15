@@ -28,7 +28,7 @@ public class FooBarTest extends TestCaseBase {
 		   Map<Foo, Bar> map2 = oson.deserialize(json, map.getClass());
 		   
 		   Type targetType = new TypeToken<Map<Foo, Bar>>() {}.getType();
-		   Map<Foo, Bar> map3 = oson.deserialize(json, map.getClass());
+		   Map<Foo, Bar> map3 = oson.deserialize(json, targetType);
 		   
 		   ComponentType ctype = new ComponentType(map.getClass());
 		   Map<Foo, Bar> map4 = oson.deserialize(json, ctype);
@@ -37,6 +37,8 @@ public class FooBarTest extends TestCaseBase {
 		   assertEquals(expected, oson.serialize(map2));
 		   assertEquals(expected, oson.serialize(map3));
 		   assertEquals(expected, oson.serialize(map4));
+
+		   // System.err.println(oson.pretty().serialize(map));
 	   }
 }
 

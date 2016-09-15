@@ -1,11 +1,14 @@
 package ca.oson.json.listarraymap;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.junit.Test;
 
 import ca.oson.json.Oson.JSON_INCLUDE;
+import ca.oson.json.OsonAssert;
+import ca.oson.json.OsonAssert.MODE;
 import ca.oson.json.domain.Car;
 import ca.oson.json.support.TestCaseBase;
 import ca.oson.json.ComponentType;
@@ -79,11 +82,9 @@ public class MapTest extends TestCaseBase {
 		   String value = "{\"Wyoming\":1541,\"Alabama\":1529,\"Arizona\":1222}";
 		   
 		   // new ComponentType("Map<String, Double>")
-		   Map<String, Number> result = oson.deserialize(value, Map.class);
+		   Map<String, Number> result = oson.deserialize(value, expected.getClass());
 
-		   for (String key: expected.keySet()) {
-			   assertTrue(expected.get(key).intValue() == result.get(key).intValue());
-		   }
+		   OsonAssert.assertEquals(expected, result, MODE.EXACT);
 	   }
 	   
 	   @Test

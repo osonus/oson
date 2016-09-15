@@ -40,7 +40,7 @@ public class OsonMerge {
 		
 	}
 
-	private Config config = new Config();
+	private Config config;
 	
 	public OsonMerge() {
 		this(new Config());
