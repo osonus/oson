@@ -151,7 +151,7 @@ public class ObjectTest extends TestCaseBase {
 				new FieldMapper("myTime", DateTime.class).setDateFormat(DateFormat.LONG)
 		});
 		expected = "{\"myDate\":1439467800000,\"myTime\":\"September 8, 2016\",\"sqlDate\":\"Tuesday, May 28, 2013\"}";
-		json = oson.print(obj);
+		json = oson.serialize(obj);
 		assertEquals(expected, json);
 		
 		// date and time part

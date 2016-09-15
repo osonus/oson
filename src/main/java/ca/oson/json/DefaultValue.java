@@ -279,7 +279,8 @@ public class DefaultValue {
 			}
 		}
 		
-		return new HashMap();
+		// keep insertion order
+		return new LinkedHashMap();
 	}
 	public static Object[] array() {
 		return new Object[0];
