@@ -7257,11 +7257,22 @@ public class Oson {
 		Map defaultValue = (Map)objectDTO.defaultValue;
 		
 		if (!StringUtil.isEmpty(value)) {
-			Map<String, Object> values = null;
-			try {
-				values = (Map<String, Object>)value;
-			} catch (Exception e) {
-				// values = null; // new HashMap();
+			Map<Object, Object> values = null;
+			Class valueType = value.getClass();
+			if (Map.class.isAssignableFrom(valueType)) {
+				try {
+					values = (Map<Object, Object>)value;
+				} catch (Exception e) {
+					// values = null; // new HashMap();
+				}
+				
+			} else if (List.class.isAssignableFrom(valueType)) {
+				values = ArrayToJsonMap.list2Map((List)value);
+				
+			} else {
+				try {
+					values = (Map<Object, Object>)value;
+				} catch (Exception e) {}
 			}
 	
 			if (values != null && values.size() > 0) {
@@ -7272,13 +7283,15 @@ public class Oson {
 						Object returnedValue = null;
 
 						if (function instanceof Json2DataMapperFunction) {
-							DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
+							DataMapper classData = new DataMapper(returnType, values, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
 							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
 
 						} else if (function instanceof Json2FieldDataFunction) {
 							Json2FieldDataFunction f = (Json2FieldDataFunction)function;
 							FieldData fieldData = objectDTO.clone();
 							
+							fieldData.valueToProcess = values;
+
 							returnedValue = f.apply(fieldData);
 							
 						} else if (function instanceof Json2MapFunction) {
@@ -7329,7 +7342,7 @@ public class Oson {
 					Class<E> componentType = guessComponentType(objectDTO); // objectDTO.getComponentType(getJsonClassType());
 					boolean isObject = ObjectUtil.isObject(componentType);
 					
-					Collection<String> keys = values.keySet();
+					Collection<Object> keys = values.keySet();
 					// || getOrderByKeyAndProperties()
 					if (objectDTO.classMapper.orderByKeyAndProperties) {
 						keys = new TreeSet(keys);
@@ -7337,7 +7350,7 @@ public class Oson {
 
 					//for (Entry<String, Object> entry: values.entrySet()) {
 					// Object obj = entry.getValue(); // obj.getClass()
-					for (String key: keys) {
+					for (Object key: keys) {
 						Object obj = values.get(key); // entry.getValue(); // obj.getClass()
 						
 						Object component = null;
@@ -7359,8 +7372,8 @@ public class Oson {
 						
 						//String key = entry.getKey();
 						Object keyObj = null;
-						if (StringUtil.parenthesized(key)) {
-							keyObj = getListMapObject (key);
+						if (StringUtil.parenthesized((String)key)) {
+							keyObj = getListMapObject ((String)key);
 							FieldData newFieldData = new FieldData(keyObj, keyObj.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
 							newFieldData.field = objectDTO.field;
 							newFieldData.setter = objectDTO.setter;
