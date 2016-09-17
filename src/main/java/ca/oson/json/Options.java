@@ -242,7 +242,25 @@ public class Options {
 	 */
 	private Set<FieldMapper> fieldMappers = null;
 	
+	/*
+	 * Map can be configured to serialized to List style Json output.
+	 * Such as Map with Object as key, then it makes sense to have this setting:
+	 * map.put(new Foo("foo1"), new Bar("bar1"));map.put(new Foo("foo2"), new Bar("bar2")) can be serialized to 
+	 * [[{"foo":"foo1"},{"bar":"bar1"}],[{"foo":"foo2"},{"bar":"bar2"}]] where it is set to true
+	 */
+	private boolean map2ListStyle = false;
 	
+	
+	public boolean isMap2ListStyle() {
+		return map2ListStyle;
+	}
+
+
+	public void setMap2ListStyle(boolean map2ListStyle) {
+		this.map2ListStyle = map2ListStyle;
+	}
+
+
 	public void excludeFieldsWithModifiers(int... modifiers) {
 		if (modifiers == null || modifiers.length == 0) {
 			return;

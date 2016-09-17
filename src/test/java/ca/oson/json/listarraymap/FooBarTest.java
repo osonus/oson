@@ -25,6 +25,8 @@ import com.google.gson.reflect.TypeToken;
 import ca.oson.json.ComponentType;
 import ca.oson.json.DataMapper;
 import ca.oson.json.Oson.FieldData;
+import ca.oson.json.OsonAssert;
+import ca.oson.json.OsonAssert.MODE;
 import ca.oson.json.function.DataMapper2JsonFunction;
 import ca.oson.json.function.Json2FieldDataFunction;
 import ca.oson.json.support.TestCaseBase;
@@ -116,6 +118,24 @@ public class FooBarTest extends TestCaseBase {
 
 		   assertEquals(json, json2);
 	   }
+	   
+	   
+	   @Test
+	   public void testSerializeDeserializeMapWithOson() {
+		   String expected = "{\"map\":[[{\"foo\":\"foo1\"},{\"bar\":\"bar1\"}],[{\"foo\":\"foo2\"},{\"bar\":\"bar2\"}]]}";
+		   
+		   Baz baz = new Baz();
+		   // following the map to list configuration
+		   String json = oson.setMap2ListStyle(true).serialize(baz);
+		   assertEquals(expected, json);
+
+		   Baz baz2 = oson.deserialize(json, Baz.class);
+		   
+		   assertEquals(expected, oson.serialize(baz2));
+		   
+		   OsonAssert.assertEquals(baz, baz2, MODE.EXACT);
+	   }
+	   
 }
 
 class Foo {

@@ -24,10 +24,19 @@ public class ArrayToJsonMap {
 	public static Map<Object, Object> list2Map(List list) {
 		Map<Object, Object> map = new LinkedHashMap<>();
 
-		int length = list.size() - 1;
-
+		int length = list.size();
 		for (int i = 0; i < length; i++) {
-			map.put(list.get(i), list.get(++i));
+			Object obj = list.get(i);
+			
+			if (Map.class.isAssignableFrom(obj.getClass())) {
+				map.put(obj, list.get(++i));
+				
+			} else if (List.class.isAssignableFrom(obj.getClass())) {
+				List l = (List)obj;
+				if (l.size() == 2) {
+					map.put(l.get(0), l.get(1));
+				}
+			}
 		}
 
 		return map;

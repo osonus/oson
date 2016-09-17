@@ -245,6 +245,7 @@ public class Oson {
 		// for internal use only
 		public boolean doubleQuote = false;
 		transient private ComponentType componentType;
+		transient public boolean isMapValue = false;
 		
 		public Integer getLength() {
 			if (length == null && classMapper != null) {
@@ -1755,6 +1756,18 @@ public class Oson {
 	}
 	
 	
+	private boolean isMap2ListStyle() {
+		return options.isMap2ListStyle();
+	}
+
+
+	public Oson setMap2ListStyle(boolean map2ListStyle) {
+		options.setMap2ListStyle(map2ListStyle);
+
+		return this;
+	}
+	
+	
 	/////////////////////////////////////////////////////////////////////////////////
 	// start to set up class mapper
 	
@@ -2276,7 +2289,7 @@ public class Oson {
 
 		return this;
 	}
-	
+		
 	// end of setting up class mapper
 	
 	
@@ -6917,7 +6930,22 @@ public class Oson {
 			Class fieldType = null;
 			if (newFieldData.field != null) {
 				toGenericString = newFieldData.field.toGenericString();
-				fieldType = ObjectUtil.getComponentType(toGenericString);
+				Class[] fieldTypes = ObjectUtil.getComponentTypes(toGenericString);
+				
+				if (fieldTypes != null && fieldTypes.length > 0) {
+					if (fieldTypes.length == 1) {
+						fieldType = fieldTypes[0];
+					} else {
+						fieldType = fieldTypes[0];
+						
+						if (newFieldData.isMapValue) {
+							fieldType = fieldTypes[1];
+						} else {
+							fieldType = fieldTypes[0];
+						}
+					}
+				}
+				
 				if (returnTypeName != null && toGenericString.indexOf(returnTypeName) > -1) {
 					returnTypeCount++;
 				}
@@ -7257,6 +7285,8 @@ public class Oson {
 		Map defaultValue = (Map)objectDTO.defaultValue;
 		
 		if (!StringUtil.isEmpty(value)) {
+			boolean map2ListStyle = this.isMap2ListStyle();
+			
 			Map<Object, Object> values = null;
 			Class valueType = value.getClass();
 			if (Map.class.isAssignableFrom(valueType)) {
@@ -7268,6 +7298,7 @@ public class Oson {
 				
 			} else if (List.class.isAssignableFrom(valueType)) {
 				values = ArrayToJsonMap.list2Map((List)value);
+				map2ListStyle = true;
 				
 			} else {
 				try {
@@ -7356,6 +7387,8 @@ public class Oson {
 						Object component = null;
 						if (obj != null) {
 							FieldData newFieldData = new FieldData(obj, obj.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
+							newFieldData.field = objectDTO.field;
+							newFieldData.isMapValue = true;
 							newFieldData.returnType = guessComponentType(newFieldData);
 							if (isObject) {
 								if (ObjectUtil.isBasicDataType(newFieldData.returnType)) {
@@ -7372,8 +7405,12 @@ public class Oson {
 						
 						//String key = entry.getKey();
 						Object keyObj = null;
-						if (StringUtil.parenthesized((String)key)) {
-							keyObj = getListMapObject ((String)key);
+						if (Map.class.isAssignableFrom(key.getClass()) || StringUtil.parenthesized((String)key)) {
+							if (Map.class.isAssignableFrom(key.getClass())) {
+								keyObj = key;
+							} else {
+								keyObj = getListMapObject ((String)key);
+							}
 							FieldData newFieldData = new FieldData(keyObj, keyObj.getClass(), objectDTO.json2Java, objectDTO.level, objectDTO.set);
 							newFieldData.field = objectDTO.field;
 							newFieldData.setter = objectDTO.setter;
@@ -7461,6 +7498,20 @@ public class Oson {
 			objectDTO.incrLevel();
 			String repeatedItem = getPrettyIndentationln(objectDTO.level);
 			StringBuilder sbuilder = new StringBuilder();
+			
+			String startCursor;
+			String endCursor;
+			String separator;
+			if (this.isMap2ListStyle()) {
+				startCursor = "[";
+				endCursor = "]";
+				separator = ",";
+				repeatedItem = repeatedItem + startCursor;
+			} else {
+				startCursor = "{";
+				endCursor = "}";
+				separator = ":";
+			}
 
 			try {
 				if (map != null) {
@@ -7515,9 +7566,9 @@ public class Oson {
 							newFieldData.returnType = guessMapKeyType(newFieldData);
 							
 							if (newFieldData.returnType == String.class) {
-								sbuilder.append(repeatedItem + StringUtil.doublequote(name) + ":" + pretty);
+								sbuilder.append(repeatedItem + StringUtil.doublequote(name) + separator + pretty);
 							} else {
-								sbuilder.append(repeatedItem + name + ":" + pretty);
+								sbuilder.append(repeatedItem + name + separator + pretty);
 							}
 							
 						} else {
@@ -7528,10 +7579,13 @@ public class Oson {
 								newFieldData.fieldMapper = objectDTO.fieldMapper;
 								name = object2Json(newFieldData);
 							}
-							sbuilder.append(repeatedItem + StringUtil.doublequote(name) + ":" + pretty);
+							sbuilder.append(repeatedItem + StringUtil.doublequote(name) + separator + pretty);
 						}
 						
 						sbuilder.append(str);
+						if (this.isMap2ListStyle()) {
+							sbuilder.append("]");
+						}
 						sbuilder.append(",");
 					}
 				}
@@ -7558,7 +7612,7 @@ public class Oson {
 				}
 
 			} else {
-				return "{" + str.substring(0, size - 1) + repeated + "}";
+				return startCursor + str.substring(0, size - 1) + repeated + endCursor;
 			}
 		}
 		

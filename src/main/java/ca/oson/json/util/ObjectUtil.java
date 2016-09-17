@@ -501,29 +501,41 @@ public class ObjectUtil {
     }
 
     public static Class getComponentType(String toGenericString) {
-    	Class componentType = null;
-		String className = null;
+    	Class[] componentTypes = getComponentTypes(toGenericString);
+    	
+    	if (componentTypes == null || componentTypes.length < 1) {
+    		return null;
+    	}
+	
+		return componentTypes[0];
+    }
+    
+    public static Class[] getComponentTypes(String toGenericString) {
 		int idx = toGenericString.indexOf("<");
 		if (idx > -1) {
 			int idex2 = toGenericString.indexOf(">");
 			if (idex2 > idx) {
-				className = toGenericString.substring(idx + 1, idex2);
+				String className = toGenericString.substring(idx + 1, idex2);
 				String[] classNames = className.split(",");
-				className = classNames[0];
+				
+				Class[] componentTypes = new Class[classNames.length];
+
+				for (int i = 0; i < classNames.length; i++) {
+					className = classNames[i];
+					if (!StringUtil.isEmpty(className)) {
+						try {
+							componentTypes[i] = Class.forName(className.trim());
+						} catch (ClassNotFoundException e) {
+							//e.printStackTrace();
+						}
+					}
+				}
+				
+				return componentTypes;
 			}
 		}
-		
-		if (!StringUtil.isEmpty(className)) {
-			try {
-				
-				
-				componentType = Class.forName(className);
-			} catch (ClassNotFoundException e) {
-				//e.printStackTrace();
-			}
-		}
-	
-		return componentType;
+
+		return null;
     }
 
 	public static <E> Class<E> getTypeClass(java.lang.reflect.Type type) {
