@@ -136,6 +136,28 @@ public class FooBarTest extends TestCaseBase {
 		   OsonAssert.assertEquals(baz, baz2, MODE.EXACT);
 	   }
 	   
+	   
+	   @Test
+	   public void testSerializeDeserializeMap2List() {
+		   Map<Foo, Bar> map = new LinkedHashMap<>();
+		   map.put(new Foo("foo1"), new Bar("bar1"));
+		   map.put(new Foo("foo2"), new Bar("bar2"));
+		   map.put(new Foo("foo3"), new Bar("bar3"));
+		   map.put(new Foo("foo4"), new Bar("bar4"));
+		   
+		   String expected = "[[{\"foo\":\"foo1\"},{\"bar\":\"bar1\"}],[{\"foo\":\"foo2\"},{\"bar\":\"bar2\"}],[{\"foo\":\"foo3\"},{\"bar\":\"bar3\"}],[{\"foo\":\"foo4\"},{\"bar\":\"bar4\"}]]";
+
+		   // following the map to list configuration
+		   String json = oson.setMap2ListStyle(true).serialize(map);
+		   assertEquals(expected, json);
+
+		   Map<Foo, Bar> map2 = (Map<Foo, Bar>) oson.deserialize(json, new TypeToken<Map<Foo, Bar>>() {}.getType());
+		   
+		   assertEquals(expected, oson.serialize(map2));
+		   
+		   OsonAssert.assertEquals(map, map2, MODE.EXACT);
+	   }
+	   
 }
 
 class Foo {

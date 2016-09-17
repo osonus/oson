@@ -7298,6 +7298,7 @@ public class Oson {
 				
 			} else if (List.class.isAssignableFrom(valueType)) {
 				values = ArrayToJsonMap.list2Map((List)value);
+				objectDTO.valueToProcess = values;
 				map2ListStyle = true;
 				
 			} else {
@@ -7369,7 +7370,6 @@ public class Oson {
 					}
 					
 					objectDTO.incrLevel();
-					
 					Class<E> componentType = guessComponentType(objectDTO); // objectDTO.getComponentType(getJsonClassType());
 					boolean isObject = ObjectUtil.isObject(componentType);
 					
@@ -11935,8 +11935,8 @@ public class Oson {
 			
 			source = removeComments(source);
 			
-			source = source.trim();
-			if (source.startsWith("[") && ObjectUtil.isArrayOrCollection(valueType)) {
+			source = source.trim();//
+			if (source.startsWith("[") && (ObjectUtil.isArrayOrCollection(valueType) || (this.isMap2ListStyle() && Map.class.isAssignableFrom(valueType)))) {
 				List list = null;
 //				try { // JSONArray performs better than ObjectMapper
 //					list = new ObjectMapper().readValue(source, List.class);
