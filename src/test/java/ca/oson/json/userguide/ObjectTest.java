@@ -23,6 +23,7 @@ import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.Oson.JSON_PROCESSOR;
 import ca.oson.json.Oson.MODIFIER;
 import ca.oson.json.OsonIO;
+import ca.oson.json.OsonQuery;
 import ca.oson.json.domain.DateTime;
 import ca.oson.json.domain.IgnoreObject;
 import ca.oson.json.domain.OrderedPerson;
@@ -230,42 +231,60 @@ public class ObjectTest extends TestCaseBase {
 	}
 	
 	
-//	@Test
-//	public void testDeserializeVolume() {
-//		OsonIO oson = new OsonIO();
-//		URL url = getClass().getResource("volume.txt");
-//		File file = new File(url.getPath());
-//		
-//		VolumeContainer vc = oson.readValue(file, VolumeContainer.class);
-//		
-//		assertEquals(((Volume)(vc.volumes.get(0))).support.status, "supported");
-//
-//		String json = oson.serialize(vc);
-//
-//		assertTrue(json.contains("\"This volume is not a candidate for management because it is already attached to a virtual machine.  To manage this volume with PowerVC, select the virtual machine to which the volume is attached for management. The attached volume will be automatically included for management.\""));
-//
-//		// System.out.println(json);
-//	}
+	@Test
+	public void testDeserializeVolume() {
+		URL url = getClass().getResource("../volume.txt");
+		File file = new File(url.getPath());
 
-//	@Test
-//	public void testDeserializeVolumeList() {
-//		OsonIO oson = new OsonIO();
-//		URL url = getClass().getResource("volume.txt");
-//		File file = new File(url.getPath());
-//		
-//		ComponentType type = new ComponentType("java.util.Map<String, java.util.List<ca.oson.json.domain.Volume>>");
-//		
-//		Map<String, List<Volume>> vc = oson.readValue(file, type);
-//		
-//		assertEquals(((Volume)(vc.get("volumes").get(0))).support.status, "supported");
-//
-//		String json = oson.serialize(vc);
-//
-//		assertTrue(json.contains("\"This volume is not a candidate for management because it is already attached to a virtual machine.  To manage this volume with PowerVC, select the virtual machine to which the volume is attached for management. The attached volume will be automatically included for management.\""));
-//
-//		// System.out.println(json);
-//	}
+		VolumeContainer vc = oson.readValue(file, VolumeContainer.class);
+		
+		assertEquals(((Volume)(vc.volumes.get(0))).support.status, "supported");
 
+		String json = oson.serialize(vc);
+
+		assertTrue(json.contains("\"This volume is not a candidate for management because it is already attached to a virtual machine.  To manage this volume with PowerVC, select the virtual machine to which the volume is attached for management. The attached volume will be automatically included for management.\""));
+
+		// System.out.println(json);
+	}
+
+	@Test
+	public void testDeserializeVolumeList() {
+		URL url = getClass().getResource("../volume.txt");
+		File file = new File(url.getPath());
+		
+		ComponentType type = new ComponentType("java.util.Map<String, java.util.List<ca.oson.json.domain.Volume>>");
+		
+		Map<String, List<Volume>> vc = oson.readValue(file, type);
+		
+		assertEquals(((Volume)(vc.get("volumes").get(0))).support.status, "supported");
+
+		String json = oson.serialize(vc);
+
+		assertTrue(json.contains("\"This volume is not a candidate for management because it is already attached to a virtual machine.  To manage this volume with PowerVC, select the virtual machine to which the volume is attached for management. The attached volume will be automatically included for management.\""));
+
+		// System.out.println(json);
+	}
+
+	@Test
+	public void testQueryVolume() {
+		URL url = getClass().getResource("../volume.txt");
+		File file = new File(url.getPath());
+
+		VolumeContainer vc = oson.readValue(file, VolumeContainer.class);
+		String json = oson.serialize(vc);
+
+		String attr = "volumes.support.status";
+		
+		String found = OsonQuery.getAttribute(json, attr);
+
+		assertEquals("\"supported\"", found);
+		
+		found = OsonQuery.getAttribute(json, "storage_pool");
+		assertEquals("[\"pfm9253_pfm9254_new\",\"KVM\",\"Chassis2_IBMi\"]", found);
+
+		found = OsonQuery.getAttribute(json, "support.reasons");
+		assertEquals("[\"This volume is not a candidate for management because it is already attached to a virtual machine.  To manage this volume with PowerVC, select the virtual machine to which the volume is attached for management. The attached volume will be automatically included for management.\"]", found);
+	}
 }
 
 

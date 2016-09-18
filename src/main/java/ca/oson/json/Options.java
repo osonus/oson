@@ -250,6 +250,11 @@ public class Options {
 	 */
 	private boolean map2ListStyle = false;
 	
+	/*
+	 * When a class has only one attribute named "value" with a value, just return its value
+	 */
+	private boolean valueOnly = false;
+	
 	
 	public boolean isMap2ListStyle() {
 		return map2ListStyle;
@@ -1290,5 +1295,15 @@ public class Options {
 
 	public void setAppendingFloatingZero(boolean appendingFloatingZero) {
 		this.appendingFloatingZero = appendingFloatingZero;
+	}
+
+
+	public boolean isValueOnly() {
+		return valueOnly;
+	}
+
+
+	public void setValueOnly(boolean valueOnly) {
+		this.valueOnly = valueOnly;
 	}
 }

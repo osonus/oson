@@ -1767,6 +1767,16 @@ public class Oson {
 		return this;
 	}
 	
+	private boolean isValueOnly() {
+		return options.isValueOnly();
+	}
+
+	public Oson setValueOnly(boolean valueOnly) {
+		options.setValueOnly(valueOnly);
+
+		return this;
+	}
+	
 	
 	/////////////////////////////////////////////////////////////////////////////////
 	// start to set up class mapper
@@ -7378,6 +7388,8 @@ public class Oson {
 					if (objectDTO.classMapper.orderByKeyAndProperties) {
 						keys = new TreeSet(keys);
 					}
+					
+					boolean isBsonDocument = returnObj.getClass().getCanonicalName().equals("org.bson.BsonDocument");
 
 					//for (Entry<String, Object> entry: values.entrySet()) {
 					// Object obj = entry.getValue(); // obj.getClass()
@@ -7396,7 +7408,16 @@ public class Oson {
 								}
 							}
 							newFieldData.fieldMapper = objectDTO.fieldMapper;
-							component = json2Object(newFieldData);
+							
+							if (isBsonDocument) {
+								newFieldData.defaultValue = json2Object(newFieldData);
+								component = Json2BsonValueFunction.apply(newFieldData);
+								if (component == null) {
+									continue;
+								}
+							} else {
+								component = json2Object(newFieldData);
+							}
 						}
 						
 						if (component == null && getDefaultType() == JSON_INCLUDE.DEFAULT) {
@@ -7431,6 +7452,7 @@ public class Oson {
 						
 						if (keyObj == null) { // failed to get a correct key value, just use its key
 							returnObj.put(key, component);
+
 						} else {
 							returnObj.put(keyObj, component);
 						}
@@ -11756,6 +11778,25 @@ public class Oson {
 					}
 					
 					keyJsonStrings = map;
+				}
+				
+				
+				if (keyJsonStrings.size() == 1 && this.isValueOnly()) {
+					for (Map.Entry<String, String> entry: keyJsonStrings.entrySet()) {
+						if (entry.getKey().toLowerCase().equals("value")) {
+							String value = entry.getValue();
+							String[] values = value.split(":");
+							value = null;
+							if (values.length == 1) {
+								value = values[0];
+							} else if (values.length == 2) {
+								value = values[1];
+							}
+							if (value != null && value.length() > 1) {
+								return value.substring(0, value.length() - 1);
+							}
+						}
+					}
 				}
 				
 

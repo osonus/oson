@@ -35,7 +35,7 @@
     * [Use Constructor Annotation](#TOC-Use-Constructor-Annotation)
   * [Lambda Expression](#TOC-Deserialize-Lambda-Expression)
 6. [Oson Assert](#TOC-Oson-Assert)
-
+7. [Oson Query](#TOC-Oson-Query)
 
 ## <a name="TOC-Overview"></a>Overview
 
@@ -829,6 +829,8 @@ A required attribute is defined as follows, and Oson setting overwriting externa
 
 Annotation com.fasterxml.jackson.annotation.JsonInclude is translated into a value of JSON_INCLUDE defaultType in Oson.
 
+Some objects of custom classes have only one value, with an attribute named "value". In this case, a specific configuration for this is: oson.setValueOnly(boolean valueOnly), which will make its value as a Json value. An example case is with org.bson.BsonValue objects.
+
 
 #### <a name="TOC-Serialize-Raw-Values"></a>**Raw Values**
 
@@ -987,6 +989,8 @@ There are three settings you can change in this regards:
   * to enable indentation, call oson.pretty(), oson.pretty(Boolean prettyPrinting), or oson.prettyPrinting(Boolean prettyPrinting), with prettyPrinting to be true
 
 These features are tested in [IndentationTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/userguide/IndentationTest.java).
+
+There are cases when the keys of map are objects of custom classes, and maps can be serialized following List's conventions. The configuration for this is oson.setMap2ListStyle(boolean map2ListStyle). See examples in [FooBarTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/listarraymap/FooBarTest.java)
 
 
 ## <a name="TOC-How-To-Convert-Json-Document-Java-Object"></a>How to convert Json document to Java object
@@ -1328,7 +1332,16 @@ Both DataMapper and FieldData parameters provide lots of detailed information to
 
 ## <a name="TOC-Oson-Assert"></a>Oson Assert
 
-Junit is used in the testing of Oson functions. To facilitate the comparison of Json text and Java objects, Oson Assert is developed to extend the abilities of the generic Assert class (This feature is suggested by Ravikumar S). A Mode enum is used to specify different comparison scenarios. The purpose is to link two different Json data and Java objects up in 7 specific ways.
+Junit is used in the testing of Oson functions. To facilitate the comparison of Json text and Java objects, Oson Assert is developed to extend the abilities of the generic Assert class (This feature is suggested by Ravikumar S). A Mode enum is used to specify different comparison scenarios. The purpose is to link two different Json data and Java objects up in 7 specific ways, with a trend:
+  * ignore trailing 0's after decimal point
+  * ignore naming differences based on Oson.FIELD_NAMING, trailing 0's
+  * ignore attribute and key ordering, naming differences, trailing 0's
+  * ignore array and list value ordering, naming differences, trailing 0's
+  * ignore all of the above
+  * child-parent relationship
+  * ignore attribute and key names, only based on ordered values
+
+A brief descriptions as follow:
 
   * EXACT Match
 
@@ -1368,3 +1381,10 @@ Checks the existence of parent-child relationship, and/or one data sets is a sub
 Checks the matches of values only, regardless of ordering and attribute names or map keys.
 
 Use cases can be found in [AssertTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/asserts/AssertTest.java).
+
+
+## <a name="TOC-Oson-Query"></a>Oson Query
+
+It is useful to have a flexible query function for Json document, just like xpath for XML documents. Json documents can be queried using attributes connected by ".", such as the query phrase "a.b.c", which means to find the parts in a Json document that first has attribute or key named "a", then from the found parts, locate smaller parts of attributes and keys named "b", until "c"...
+
+See examples in [testQueryVolume() in ObjectTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/userguide/ObjectTest.java)

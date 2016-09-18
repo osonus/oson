@@ -875,8 +875,9 @@ public class ObjectUtil {
 				hash = obj.hashCode();
 			}
 			
-		} catch (Exception ex) {
-			// *
+		} catch (Exception ex) {}
+		
+		if (Math.abs(hash) < 100) {
 			String str = obj.toString();
 
 			int strlen = str.length();
@@ -888,7 +889,6 @@ public class ObjectUtil {
 			for (int i = 0; i < strlen; i++) {
 				hash = hash * 31 + str.charAt(i);
 			}
-			// */
 		}
 
 		return hash;
