@@ -66,7 +66,7 @@ public class StringUtil {
 		}
 		
 		String str = obj.toString().trim();
-		return (str.length() == 0 || str.equals("\"\"") || str.equals("''") || obj.getClass().getName().equals("org.json.JSONObject$Null"));
+		return (obj.getClass().getName().equals("org.json.JSONObject$Null") || isEmpty(str));
 	}
 
 	public static boolean isEmpty(String str) {
@@ -74,7 +74,7 @@ public class StringUtil {
 			return true;
 		}
 
-		return (str.length() == 0 || str.equals("\"\"") || str.equals("''"));
+		return (str.length() == 0 || str.equals("\"\"") || str.equals("''") || str.equalsIgnoreCase("null"));
 	}
 	
 	public static String getPrettyIndentationln(int level, int indentation) {

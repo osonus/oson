@@ -11953,12 +11953,15 @@ public class Oson {
 	
 	// used to test data types only
 	public static Object getListMapObject (String source) {
-		JSONObject obj = ObjectUtil.getJSONObject(source);
-		
-		return fromJsonMap(obj);
+		return getListMapObject (source, FIELD_NAMING.FIELD);
 	}
 	public static Object getListMapObject (String source, FIELD_NAMING naming) {
-		JSONObject obj = ObjectUtil.getJSONObject(source);
+		Object obj;
+		if (source.startsWith("[")) {
+			obj = new JSONArray(source);
+		} else {
+			obj = ObjectUtil.getJSONObject(source);
+		}
 		
 		return fromJsonMap(obj, naming);
 	}

@@ -3,7 +3,6 @@ package ca.oson.json;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
-import ca.oson.json.asserts.AssertTest;
 import ca.oson.json.userguide.ArrayTest;
 import ca.oson.json.userguide.BascicDateTypeTest;
 import ca.oson.json.userguide.ClassMapperConfigurationTest;
@@ -34,8 +33,7 @@ import ca.oson.json.userguide.SerializeCarTest;
 	BascicDateTypeTest.class,
 	DogTest.class,
 	ClassMapperTest.class,
-	IndentationTest.class,
-	AssertTest.class
+	IndentationTest.class
 })
 public class UserGuideTestSuite {
 

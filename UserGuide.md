@@ -1385,6 +1385,15 @@ Use cases can be found in [AssertTest](https://github.com/osonus/oson/blob/maste
 
 ## <a name="TOC-Oson-Query"></a>Oson Query
 
-It is useful to have a flexible query function for Json document, just like xpath for XML documents. Json documents can be queried using attributes connected by ".", such as the query phrase "a.b.c", which means to find the parts in a Json document that first has attribute or key named "a", then from the found parts, locate smaller parts of attributes and keys named "b", until "c"...
+It is useful to have a simple query function for Json document, just like xpath for XML documents. Json documents can be queried using attributes connected by ".", such as the query phrase "a.b.c", which means to find the parts in a Json document that first has attribute or key named "a", then from the found parts, locate smaller parts of attributes and keys named "b", until "c"...
 
-See examples in [testQueryVolume() in ObjectTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/userguide/ObjectTest.java)
+The found Json string can be a single item; or a string of list of items, if multiple items are found; or null, if none is found.
+
+For now, two methods are provided:
+the first is a pure text search, which queries attribute and key names from beginning to end, so this search can cross Json structure boundaries.
+The second method is an object or map search, searching through object structures, from root to leaves, with the same attribute dotted notations.
+
+The second search method can have an optional boolean parameter called strict. When strict is true, once the search is started, it follows the attribute and key names, until the first attribute is reached, and values are returned, without any other further search on deeper levels.
+
+See examples in [QueryTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/query/QueryTest.java)
+

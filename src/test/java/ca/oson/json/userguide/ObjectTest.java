@@ -252,6 +252,8 @@ public class ObjectTest extends TestCaseBase {
 		URL url = getClass().getResource("../volume.txt");
 		File file = new File(url.getPath());
 		
+		oson.clearAll();
+		
 		ComponentType type = new ComponentType("java.util.Map<String, java.util.List<ca.oson.json.domain.Volume>>");
 		
 		Map<String, List<Volume>> vc = oson.readValue(file, type);
@@ -265,26 +267,6 @@ public class ObjectTest extends TestCaseBase {
 		// System.out.println(json);
 	}
 
-	@Test
-	public void testQueryVolume() {
-		URL url = getClass().getResource("../volume.txt");
-		File file = new File(url.getPath());
-
-		VolumeContainer vc = oson.readValue(file, VolumeContainer.class);
-		String json = oson.serialize(vc);
-
-		String attr = "volumes.support.status";
-		
-		String found = OsonQuery.getAttribute(json, attr);
-
-		assertEquals("\"supported\"", found);
-		
-		found = OsonQuery.getAttribute(json, "storage_pool");
-		assertEquals("[\"pfm9253_pfm9254_new\",\"KVM\",\"Chassis2_IBMi\"]", found);
-
-		found = OsonQuery.getAttribute(json, "support.reasons");
-		assertEquals("[\"This volume is not a candidate for management because it is already attached to a virtual machine.  To manage this volume with PowerVC, select the virtual machine to which the volume is attached for management. The attached volume will be automatically included for management.\"]", found);
-	}
 }
 
 
