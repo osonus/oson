@@ -160,6 +160,24 @@ public class NumberUtil {
 		return getNumber(str, number.getClass());
 	}
 	
+	
+	public static Number max (Number num1, Number num2) {
+		return (num1.doubleValue() > num2.doubleValue()) ? num1 : num2;
+	}
+	
+	public static Number min (Number num1, Number num2) {
+		return (num1.doubleValue() > num2.doubleValue()) ? num2 : num1;
+	}
+	
+	
+	public static Number avg (Number num1, Number num2) {
+		if (isFloatingNumber(num1) || isFloatingNumber(num2)) {
+			return (num1.doubleValue() + num2.doubleValue()) / 2;
+		} else {
+			return (num1.longValue() + num2.longValue()) / 2;
+		}
+	}
+	
 	public static <E> Number getNumber(E number, Class valueType) {
 		try {
 			Class type = number.getClass();

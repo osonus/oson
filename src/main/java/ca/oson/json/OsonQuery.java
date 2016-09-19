@@ -28,8 +28,10 @@ public class OsonQuery {
 	 * 
 	 */
 	public static String search(String source, String attr, boolean strict) {
-		Oson oson = new Oson().setFieldNaming(naming);
-		Object obj = oson.includeClassTypeInJson(false).deserialize(source);
+		Oson oson = new Oson()
+				.setFieldNaming(naming)
+				.includeClassTypeInJson(false);
+		Object obj = oson.deserialize(source);
 		
 		String[] attrs = attr.split("\\.");
 		

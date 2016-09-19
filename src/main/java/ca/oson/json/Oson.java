@@ -13991,7 +13991,68 @@ public class Oson {
 	// START OF public methods
 	////////////////////////////////////////////////////////////////////////////////
 
-
+	
+	/*
+	 * Deserialize JSONObject object, to Map object
+	 */
+	public <T> T deserialize(JSONObject source) {
+		JSON_PROCESSOR processor = getJsonProcessor();
+		if (processor == JSON_PROCESSOR.JACKSON || processor == JSON_PROCESSOR.GSON) {
+			return deserialize(source.toString());
+		}
+		
+		Map<String, Object> map = (Map)fromJsonMap(source);
+		
+		return json2Object(new FieldData(map, null, null, true));
+	}
+	public <T> T deserialize(JSONObject source, T obj) {
+		JSON_PROCESSOR processor = getJsonProcessor();
+		if (processor == JSON_PROCESSOR.JACKSON || processor == JSON_PROCESSOR.GSON) {
+			return deserialize(source.toString(), obj);
+		}
+		
+		Map<String, Object> map = (Map)fromJsonMap(source);
+		
+		return json2Object(new FieldData(map, null, obj, true));
+	}
+	public <T> T deserialize(JSONObject source, Class<T> valueType) {
+		JSON_PROCESSOR processor = getJsonProcessor();
+		if (processor == JSON_PROCESSOR.JACKSON || processor == JSON_PROCESSOR.GSON) {
+			return deserialize(source.toString(), valueType);
+		}
+		
+		ComponentType componentType = new ComponentType(valueType);
+		startCachedComponentTypes(componentType);
+		
+		Map<String, Object> map = (Map)fromJsonMap(source);
+		
+		return json2Object(new FieldData(map, valueType, null, true));
+	}
+	public <T> T deserialize(JSONObject source, Type type) {
+		JSON_PROCESSOR processor = getJsonProcessor();
+		if (processor == JSON_PROCESSOR.JACKSON || processor == JSON_PROCESSOR.GSON) {
+			return deserialize(source.toString(), type);
+		}
+		
+		Map<String, Object> map = (Map)fromJsonMap(source);
+		
+		Class<T> valueType = null;
+		ComponentType componentType = null;
+		if (type != null) {
+			if (ComponentType.class.isAssignableFrom(type.getClass())) {
+				componentType = (ComponentType)type;
+			} else {
+				componentType = new ComponentType(type);
+			}
+			valueType = componentType.getClassType();
+			
+			startCachedComponentTypes(componentType);
+		}
+		
+		return deserialize(source, valueType);
+	}
+	
+	
 	/*
 	 * string to object, deserialize, set method should be used
 	 */

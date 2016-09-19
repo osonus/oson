@@ -36,6 +36,8 @@
   * [Lambda Expression](#TOC-Deserialize-Lambda-Expression)
 6. [Oson Assert](#TOC-Oson-Assert)
 7. [Oson Query](#TOC-Oson-Query)
+8. [Oson Merge](#TOC-Oson-Merge)
+
 
 ## <a name="TOC-Overview"></a>Overview
 
@@ -1396,4 +1398,15 @@ The second method is an object or map search, searching through object structure
 The second search method can have an optional boolean parameter called strict. When strict is true, once the search is started, it follows the attribute and key names, until the first attribute is reached, and values are returned, without any other further search on deeper levels.
 
 See examples in [QueryTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/query/QueryTest.java)
+
+
+## <a name="TOC-Oson-Merge"></a>Oson Merge
+
+There are cases when you want to merge multiple Json documents together to form a single Json output. (This feature is suggested by Ravikumar S).
+
+There are different aspects to configure the way how this kind of merging can be done:
+  * attribute names between two documents
+  * non-overlapping attributes from them
+  * how to merge numeric and non-numeric values
+  * how to  handle list and array values from two documents
 
