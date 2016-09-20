@@ -59,7 +59,7 @@ public class MoreSpecificTypeSerializationTest extends TestCaseBase {
     ClassWithContainersOfBaseFields target = new ClassWithContainersOfBaseFields(list, null);
     String json = oson.toJson(target);
     assertTrue(json, json.contains("{\"b\":1}"));
-    assertTrue(json, json.contains("{\"b\":2,\"s\":3}"));
+    assertTrue(json, json.contains("{\"s\":3,\"b\":2}"));
   }
 
 //  public void testMapOfSubclassFields() {

@@ -135,7 +135,7 @@ public class NullObjectAndFieldTest extends TestCaseBase {
     gsonBuilder = new GsonBuilder();
     Gson gson = gsonBuilder.create();
     String result = oson.toJson(new ClassWithMembers());
-    assertEquals("{\"str\":null,\"col\":null,\"array\":null}", result);
+    assertEquals("{\"str\":null,\"array\":null,\"col\":null}", result);
 
     gson = gsonBuilder.serializeNulls().create();
     result = oson.toJson(new ClassWithMembers());

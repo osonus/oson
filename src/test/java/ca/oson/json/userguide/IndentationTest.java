@@ -54,12 +54,12 @@ public class IndentationTest extends TestCaseBase {
 		
 		oson.pretty().setDefaultType(JSON_INCLUDE.NON_NULL);
 		String json = oson.serialize(volumeContainer);
-		String expected = "{\n  \"volumes\": [\n    {\n      \"size\": 12,\n      \"managed\": true,\n      \"support\": {\n        \"status\": \"supported\"\n      },\n      \"status\": \"available\"\n    }\n  ]\n}";
+		String expected = "{\n  \"volumes\": [\n    {\n      \"status\": \"available\",\n      \"managed\": true,\n      \"support\": {\n        \"status\": \"supported\"\n      },\n      \"size\": 12\n    }\n  ]\n}";
 		assertEquals(expected, json);
 		
 		oson.setIndentation(1);
 		json = oson.serialize(volumeContainer);
-		expected = "{\n \"volumes\": [\n  {\n   \"size\": 12,\n   \"managed\": true,\n   \"support\": {\n    \"status\": \"supported\"\n   },\n   \"status\": \"available\"\n  }\n ]\n}";
+		expected = "{\n \"volumes\": [\n  {\n   \"status\": \"available\",\n   \"managed\": true,\n   \"support\": {\n    \"status\": \"supported\"\n   },\n   \"size\": 12\n  }\n ]\n}";
 		assertEquals(expected, json);
 		
 		oson.setIndentation(5).setLevel(1);

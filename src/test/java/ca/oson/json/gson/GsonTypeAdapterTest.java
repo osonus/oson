@@ -84,7 +84,7 @@ public class GsonTypeAdapterTest extends TestCaseBase {
     instance.a = "android";
     instance.b = "beep";
     assertSerialized("{\"a\":\"android\"}", Abstract.class, instance);
-    assertSerialized("{\"a\":\"android\",\"b\":\"beep\"}", Concrete.class, instance);
+    assertSerialized("{\"b\":\"beep\",\"a\":\"android\"}", Concrete.class, instance);
   }
 
   private void assertSerialized(String expected, Class<?> instanceType, Object instance) {

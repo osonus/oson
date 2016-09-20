@@ -29,7 +29,7 @@ public class NewInstanceTest extends TestCaseBase {
 
 		String json = oson.serialize(anyBean);
 
-		String expected = "{\"name\":\"Any Name\",\"type\":\"Java\",\"age\":35}";
+		String expected = "{\"name\":\"Any Name\",\"age\":35,\"type\":\"Java\"}";
 
 		assertEquals(expected, json);
 	}
@@ -55,7 +55,7 @@ public class NewInstanceTest extends TestCaseBase {
 		expected.setType("Java");
 		
 		String json = oson.serialize(expected);
-		String jsonExpected = "{\"name\":\"Any Name\",\"type\":\"Java\",\"age\":35}";
+		String jsonExpected = "{\"name\":\"Any Name\",\"age\":35,\"type\":\"Java\"}";
 		
 		assertEquals(jsonExpected, json);
 		
@@ -77,7 +77,7 @@ public class NewInstanceTest extends TestCaseBase {
 		expected.setType("Java");
 		
 		String json = oson.serialize(expected);
-		String jsonExpected = "{\"name\":\"Any Name\",\"type\":\"Java\",\"age\":35}";
+		String jsonExpected = "{\"name\":\"Any Name\",\"age\":35,\"type\":\"Java\"}";
 		
 		assertEquals(jsonExpected, json);
 		
@@ -127,7 +127,7 @@ public class NewInstanceTest extends TestCaseBase {
         addressList.add(workAddress);
         Person person = new Person("Sawyer", "Bootstrapper", 23, addressList);
         
-        String expected = "{\"addressList\":[{\"zipcode\":12345,\"street\":\"Stenhammer Drive\"},{\"zipcode\":7986,\"street\":\"Market Street\"}],\"name\":\"Sawyer\",\"age\":23,\"lastName\":\"Bootstrapper\"}";
+        String expected = "{\"name\":\"Sawyer\",\"lastName\":\"Bootstrapper\",\"age\":23,\"addressList\":[{\"zipcode\":12345,\"street\":\"Stenhammer Drive\"},{\"zipcode\":7986,\"street\":\"Market Street\"}]}";
 
         String result = oson.pretty(false).writeValueAsString(person);
 
@@ -156,7 +156,7 @@ public class NewInstanceTest extends TestCaseBase {
 	public void testSerializeCustomer() {
 		Customer customer = new Customer();
         
-        String expected = "{\"vehicles\":[{\"doors\":4,\"year\":2016,\"brand\":\"Audi\"},{\"doors\":4,\"year\":2016,\"brand\":\"Mercedes\"}],\"carList\":[{\"doors\":4,\"year\":2016,\"brand\":\"BMW\"},{\"doors\":4,\"year\":2016,\"brand\":\"Chevy\"}]}";
+        String expected = "{\"vehicles\":[{\"brand\":\"Audi\",\"doors\":4,\"year\":2016},{\"brand\":\"Mercedes\",\"doors\":4,\"year\":2016}],\"carList\":[{\"brand\":\"BMW\",\"doors\":4,\"year\":2016},{\"brand\":\"Chevy\",\"doors\":4,\"year\":2016}]}";
         
         String result = oson.pretty(false).setDefaultType(JSON_INCLUDE.NON_NULL).writeValueAsString(customer);
         

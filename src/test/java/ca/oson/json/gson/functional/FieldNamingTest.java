@@ -36,10 +36,8 @@ public final class FieldNamingTest extends TestCaseBase {
     Gson gson = getGsonWithNamingPolicy(IDENTITY);
     
     String json = oson.setFieldNaming(FIELD_NAMING.FIELD).toJson(new TestNames()).replace('\"', '\'');
-    
-    //System.err.println(json);
-    
-    assertEquals("{'lower_words':5,'lowerCamel':1,'UpperCamel':2,'lowerId':8,'_lowerCamelLeadingUnderscore':3,'UPPER_WORDS':6,'_UpperCamelLeadingUnderscore':4,'annotatedName':7}",
+
+    assertEquals("{'lowerCamel':1,'UpperCamel':2,'_lowerCamelLeadingUnderscore':3,'_UpperCamelLeadingUnderscore':4,'lower_words':5,'UPPER_WORDS':6,'annotatedName':7,'lowerId':8}",
         json);
   }
 
@@ -48,7 +46,7 @@ public final class FieldNamingTest extends TestCaseBase {
     
     String json = oson.setFieldNaming(FIELD_NAMING.UPPER_CAMELCASE).toJson(new TestNames()).replace('\"', '\'');
 
-    assertEquals("{'LowerWords':5,'LowerCamel':1,'UpperCamel':2,'LowerId':8,'LowerCamelLeadingUnderscore':3,'UpperWords':6,'UpperCamelLeadingUnderscore':4,'annotatedName':7}",
+    assertEquals("{'LowerCamel':1,'UpperCamel':2,'LowerCamelLeadingUnderscore':3,'UpperCamelLeadingUnderscore':4,'LowerWords':5,'UpperWords':6,'annotatedName':7,'LowerId':8}",
     		json);
   }
 
@@ -56,11 +54,8 @@ public final class FieldNamingTest extends TestCaseBase {
     Gson gson = getGsonWithNamingPolicy(UPPER_CAMEL_CASE_WITH_SPACES);
     
     String json = oson.setFieldNaming(FIELD_NAMING.SPACE_UPPER_CAMELCASE).toJson(new TestNames()).replace('\"', '\'');
-    
-    //System.err.println(json);
 
-    assertEquals("{'Lower Words':5,'Lower Camel':1,'Upper Camel':2,'Lower Id':8,'Lower Camel Leading Underscore':3,'Upper Words':6,'Upper Camel Leading Underscore':4,'annotatedName':7}"
-    		,json);
+    assertEquals("{'Lower Camel':1,'Upper Camel':2,'Lower Camel Leading Underscore':3,'Upper Camel Leading Underscore':4,'Lower Words':5,'Upper Words':6,'annotatedName':7,'Lower Id':8}",json);
   }
 
   public void testLowerCaseWithUnderscores() {
@@ -68,7 +63,7 @@ public final class FieldNamingTest extends TestCaseBase {
     
     String json = oson.setFieldNaming(FIELD_NAMING.UNDERSCORE_LOWER).toJson(new TestNames()).replace('\"', '\'');
 
-    assertEquals("{'lower_words':5,'lower_camel':1,'upper_camel':2,'lower_id':8,'lower_camel_leading_underscore':3,'upper_words':6,'upper_camel_leading_underscore':4,'annotatedName':7}",
+    assertEquals("{'lower_camel':1,'upper_camel':2,'lower_camel_leading_underscore':3,'upper_camel_leading_underscore':4,'lower_words':5,'upper_words':6,'annotatedName':7,'lower_id':8}", 
     		json);
   }
 
@@ -77,7 +72,7 @@ public final class FieldNamingTest extends TestCaseBase {
     
     String json = oson.setFieldNaming(FIELD_NAMING.DASH_LOWER).toJson(new TestNames()).replace('\"', '\'');
 
-    assertEquals("{'lower-words':5,'lower-camel':1,'upper-camel':2,'lower-id':8,'lower-camel-leading-underscore':3,'upper-words':6,'upper-camel-leading-underscore':4,'annotatedName':7}",
+    assertEquals("{'lower-camel':1,'upper-camel':2,'lower-camel-leading-underscore':3,'upper-camel-leading-underscore':4,'lower-words':5,'upper-words':6,'annotatedName':7,'lower-id':8}",
         json);
   }
 

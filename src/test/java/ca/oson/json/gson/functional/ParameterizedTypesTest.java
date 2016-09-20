@@ -90,7 +90,7 @@ public class ParameterizedTypesTest extends TestCaseBase {
     String json = oson.setAppendingFloatingZero(false).useAttribute(false).setDefaultType(JSON_INCLUDE.NON_NULL).setClassMappers(classMapper).toJson(src, typeOfSrc);
     String expected = "{\"a\":10,\"b\":1.0,\"c\":2.1,\"d\":\"abc\","
         + "\"e\":{\"longValue\":0,\"intValue\":0,\"booleanValue\":false,\"stringValue\":\"\"}}";
-    expected = "{\"a\":10,\"b\":1,\"c\":2.1,\"d\":\"abc\",\"e\":{\"intValue\":0,\"stringValue\":\"\",\"longValue\":0,\"booleanValue\":false}}";
+    expected = "{\"a\":10,\"b\":1,\"c\":2.1,\"d\":\"abc\",\"e\":{\"longValue\":0,\"intValue\":0,\"booleanValue\":false,\"stringValue\":\"\"}}";
     assertEquals(expected, json);
   }
 
@@ -189,7 +189,7 @@ public class ParameterizedTypesTest extends TestCaseBase {
     String json = oson.useAttribute(false).toJson(objToSerialize, typeOfSrc);
 
     String expected = objToSerialize.getExpectedJson();
-    assertEquals("{\"arrayOfListOfWildcardTypeParameters\":[[4,5],[4,5]],\"listOfTypeParameters\":[4,5],\"listOfWildcardTypeParameters\":[4,5],\"typeParameterArray\":[1,2,3],\"arrayOfListOfTypeParameters\":[[4,5],[4,5]],\"typeParameterObj\":0}", json);
+    assertEquals("{\"typeParameterObj\":0,\"typeParameterArray\":[1,2,3],\"listOfTypeParameters\":[4,5],\"arrayOfListOfTypeParameters\":[[4,5],[4,5]],\"listOfWildcardTypeParameters\":[4,5],\"arrayOfListOfWildcardTypeParameters\":[[4,5],[4,5]]}", json);
   }
 
   @SuppressWarnings("unchecked")
@@ -208,7 +208,7 @@ public class ParameterizedTypesTest extends TestCaseBase {
     ObjectWithTypeVariables<Integer> objAfterDeserialization = oson.fromJson(json, typeOfSrc);
     
     String expected = objAfterDeserialization.getExpectedJson();
-    expected = "{\"arrayOfListOfWildcardTypeParameters\":[[4,5],[4,5]],\"listOfTypeParameters\":[4,5],\"listOfWildcardTypeParameters\":[4,5],\"typeParameterArray\":[1,2,3],\"arrayOfListOfTypeParameters\":[[4,5],[4,5]],\"typeParameterObj\":0}";
+    expected = "{\"typeParameterObj\":0,\"typeParameterArray\":[1,2,3],\"listOfTypeParameters\":[4,5],\"arrayOfListOfTypeParameters\":[[4,5],[4,5]],\"listOfWildcardTypeParameters\":[4,5],\"arrayOfListOfWildcardTypeParameters\":[[4,5],[4,5]]}";
 
     assertEquals(expected, json);
   }

@@ -18,7 +18,7 @@ public class SerializeCarTest extends TestCaseBase {
 		String json = oson.serialize(car);
 		//System.out.println(json);
 
-		String expected = "{\"doors\":6,\"year\":2016,\"brand\":\"Chevron\",\"years\":null}";
+		String expected = "{\"brand\":\"Chevron\",\"doors\":6,\"year\":2016,\"years\":null}";
 
 		assertEquals(expected, json);
 	}

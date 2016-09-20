@@ -37,14 +37,17 @@ public class DogTest extends TestCaseBase {
 
 	@Test
 	public void testSerializeClassType() {
-	    String expectedDog = "{\"owner\":null,\"bread\":\"GERMAN_SHEPHERD\",\"birthDate\":null,\"name\":\"I am a dog\",\"weight\":12.5,\"age\":1}";
+	    String expectedDog = "{\"name\":\"I am a dog\",\"bread\":\"GERMAN_SHEPHERD\",\"birthDate\":null,\"owner\":null,\"weight\":12.5,\"age\":1}";
 	    String expectedPet = "{\"owner\":null,\"weight\":12.5,\"age\":1}";
 	    String expectedAnimal = "{\"weight\":12.5,\"age\":1}";
+	    String expectedEukaryote = "{\"name\":\"I am a dog\",\"bread\":\"GERMAN_SHEPHERD\",\"birthDate\":null,\"someField_name\":null,\"owner\":null,\"weight\":12.5,\"age\":1}";
 
 	    assertEquals(expectedDog, oson.clearAll().serialize(dog));
 	    assertEquals(expectedPet, oson.serialize(dog, Pet.class));
 	    assertEquals(expectedAnimal, oson.serialize(dog, Animal.class));
-	    assertEquals(expectedDog, oson.serialize(dog, Eukaryote.class));
+	    assertEquals(expectedEukaryote, oson.serialize(dog, Eukaryote.class));
+	    
+	    OsonAssert.assertEquals(expectedDog, expectedEukaryote, MODE.KEY_SORT);
 	    
 	    Dog dog = oson.deserialize(expectedDog, Dog.class);
 	    Animal animal = oson.deserialize(expectedAnimal, Dog.class);
@@ -61,7 +64,7 @@ public class DogTest extends TestCaseBase {
 	@Test
 	public void testSerializeUseFieldsOnly() {
 		oson.clear().useAttribute(false);
-		String expected = "{\"owner\":null,\"bread\":\"GERMAN_SHEPHERD\",\"birthDate\":null,\"name\":\"I am a dog\",\"weight\":12.5}";
+		String expected = "{\"name\":\"I am a dog\",\"bread\":\"GERMAN_SHEPHERD\",\"birthDate\":null,\"someField_name\":null,\"owner\":null,\"weight\":12.5}";
 		assertEquals(expected, oson.serialize(dog));
 		
 		oson.useField(false);
@@ -164,7 +167,7 @@ public class DogTest extends TestCaseBase {
 	
 	@Test
 	public void testSerializeNullEmptyDefaultValues() {
-	    String expectedNonNull = "{\"bread\":\"GERMAN_SHEPHERD\",\"name\":\"\",\"weight\":0.0,\"age\":1}";
+	    String expectedNonNull = "{\"name\":\"\",\"bread\":\"GERMAN_SHEPHERD\",\"weight\":0.0,\"age\":1}";
 	    String expectedNonEmpty = "{\"bread\":\"GERMAN_SHEPHERD\",\"weight\":0.0,\"age\":1}";
 	    String expectedNonDefault = "{\"bread\":\"GERMAN_SHEPHERD\",\"age\":1}";
 	    String expectedNonDefault2 = "{\"bread\":\"GERMAN_SHEPHERD\"}";
@@ -196,10 +199,10 @@ public class DogTest extends TestCaseBase {
 	    
 	    Double ddouble = DefaultValue.ddouble;
 
-	    assertEquals("{\"owner\":null,\"bread\":\"GERMAN_SHEPHERD\",\"birthDate\":null,\"name\":\"\",\"weight\":0.0,\"age\":1}", oson.serialize(dog));
+	    assertEquals("{\"name\":\"\",\"bread\":\"GERMAN_SHEPHERD\",\"birthDate\":null,\"someField_name\":\"\",\"owner\":null,\"weight\":0.0,\"age\":1}", oson.serialize(dog));
 
 	    DefaultValue.ddouble = 1.0;
-	    assertEquals("{\"owner\":null,\"bread\":\"GERMAN_SHEPHERD\",\"birthDate\":null,\"name\":\"\",\"weight\":1.0,\"age\":1}", oson.serialize(dog));
+	    assertEquals("{\"name\":\"\",\"bread\":\"GERMAN_SHEPHERD\",\"birthDate\":null,\"someField_name\":\"\",\"owner\":null,\"weight\":1.0,\"age\":1}", oson.serialize(dog));
 
 	    String format = "yyyy-MM-dd";
 	    oson.setDateFormat(format);
@@ -209,16 +212,16 @@ public class DogTest extends TestCaseBase {
 	    oson.setFieldMappers(fieldMapper);
 
 	    DefaultValue.date = date;
-	    assertEquals("{\"owner\":null,\"bread\":\"GERMAN_SHEPHERD\",\"birthDate\":\"2011-01-18\",\"name\":\"\",\"weight\":1.0,\"age\":1}", oson.serialize(dog));
+	    assertEquals("{\"name\":\"\",\"bread\":\"GERMAN_SHEPHERD\",\"birthDate\":\"2011-01-18\",\"someField_name\":\"\",\"owner\":null,\"weight\":1.0,\"age\":1}", oson.serialize(dog));
 
 	    date = oson.deserialize("2011-01-19", Date.class);
 	    ClassMapper classMapper = new ClassMapper(Date.class).setDefaultValue(date);
 	    oson.setClassMappers(classMapper);
-	    assertEquals("{\"owner\":null,\"bread\":\"GERMAN_SHEPHERD\",\"birthDate\":\"2011-01-19\",\"name\":\"\",\"weight\":1.0,\"age\":1}", oson.serialize(dog));
+	    assertEquals("{\"name\":\"\",\"bread\":\"GERMAN_SHEPHERD\",\"birthDate\":\"2011-01-19\",\"someField_name\":\"\",\"owner\":null,\"weight\":1.0,\"age\":1}", oson.serialize(dog));
 
 	    date = oson.deserialize("2011-01-20", Date.class);
 	    fieldMapper.setDefaultValue(date);
-	    assertEquals("{\"owner\":null,\"bread\":\"GERMAN_SHEPHERD\",\"birthDate\":\"2011-01-20\",\"name\":\"\",\"weight\":1.0,\"age\":1}", oson.serialize(dog));
+	    assertEquals("{\"name\":\"\",\"bread\":\"GERMAN_SHEPHERD\",\"birthDate\":\"2011-01-20\",\"someField_name\":\"\",\"owner\":null,\"weight\":1.0,\"age\":1}", oson.serialize(dog));
 	}
 	
 	

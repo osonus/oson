@@ -42,7 +42,7 @@ public final class JavaSerializationTest extends TestCaseBase {
 
   public void testMapIsSerializable() throws Exception {
     Type type = new TypeToken<Map<String, Integer>>() {}.getType();
-    Map<String, Integer> map = oson.fromJson("{\"b\":1,\"c\":2,\"a\":3}", type);
+    Map<String, Integer> map = oson.fromJson("{\"a\":3,\"b\":1,\"c\":2}", type);
     Map<String, Integer> serialized = serializedCopy(map);
     assertEquals(map, serialized);
     // Also check that the iteration order is retained.

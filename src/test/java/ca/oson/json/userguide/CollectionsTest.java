@@ -77,7 +77,7 @@ public class CollectionsTest extends TestCaseBase {
 
 		String json = oson.setDefaultType(JSON_INCLUDE.NON_NULL).serialize(cars);
 
-		String expected = "[{\"doors\":4,\"year\":2016,\"brand\":\"Ford\"},{\"doors\":6,\"year\":2016,\"brand\":\"Chrysler\"},{\"doors\":2,\"year\":2016,\"brand\":\"Hundai\"}]";
+		String expected = "[{\"brand\":\"Ford\",\"doors\":4,\"year\":2016},{\"brand\":\"Chrysler\",\"doors\":6,\"year\":2016},{\"brand\":\"Hundai\",\"doors\":2,\"year\":2016}]";
 		
 		assertEquals(expected, json);
 	}
@@ -111,7 +111,7 @@ public class CollectionsTest extends TestCaseBase {
 		
 		//System.err.println(json);
 
-		String expected = "[{\"@class\":\"ca.oson.json.domain.Car\",\"doors\":4,\"year\":2016,\"brand\":\"Ford\"},{\"@class\":\"ca.oson.json.domain.Car\",\"doors\":6,\"year\":2016,\"brand\":\"Chrysler\"},{\"@class\":\"ca.oson.json.domain.Car\",\"doors\":2,\"year\":2016,\"brand\":\"Hundai\"}]";
+		String expected = "[{\"@class\":\"ca.oson.json.domain.Car\",\"brand\":\"Ford\",\"doors\":4,\"year\":2016},{\"@class\":\"ca.oson.json.domain.Car\",\"brand\":\"Chrysler\",\"doors\":6,\"year\":2016},{\"@class\":\"ca.oson.json.domain.Car\",\"brand\":\"Hundai\",\"doors\":2,\"year\":2016}]";
 		
 		assertEquals(expected, json);
 	}
@@ -338,9 +338,9 @@ public class CollectionsTest extends TestCaseBase {
 		String json = oson.setDefaultType(JSON_INCLUDE.NON_NULL).serialize(
 				expected);
 
-		String myjson = "[{\"bools\":[true,false,true],\"string\":\"I am a string.\",\"integer\":12345,\"event\":{\"name\":\"GREETINGS\",\"source\":\"guest\"},\"customer\":{\"vehicles\":[{\"doors\":4,\"year\":2016,\"brand\":\"Audi\"},{\"doors\":4,\"year\":2016,\"brand\":\"Mercedes\"}],\"carList\":[{\"doors\":4,\"year\":2016,\"brand\":\"BMW\"},{\"doors\":4,\"year\":2016,\"brand\":\"Chevy\"}]}},[[[1,2],[3,24]],[[5,6],[7,8]],[[9,10],[11,12]]],999876,\"This is a testing.\",[{\"doors\":4,\"year\":2016,\"brand\":\"Ford\"},1,{\"toyota\":{\"doors\":2,\"year\":2016,\"brand\":\"Toyota\"},\"new_event\":{\"name\":\"HELLO\",\"source\":\"hostess\"}}]]";
+		String myjson = "[{\"bools\":[true,false,true],\"string\":\"I am a string.\",\"integer\":12345,\"event\":{\"name\":\"GREETINGS\",\"source\":\"guest\"},\"customer\":{\"vehicles\":[{\"brand\":\"Audi\",\"doors\":4,\"year\":2016},{\"brand\":\"Mercedes\",\"doors\":4,\"year\":2016}],\"carList\":[{\"brand\":\"BMW\",\"doors\":4,\"year\":2016},{\"brand\":\"Chevy\",\"doors\":4,\"year\":2016}]}},[[[1,2],[3,24]],[[5,6],[7,8]],[[9,10],[11,12]]],999876,\"This is a testing.\",[{\"brand\":\"Ford\",\"doors\":4,\"year\":2016},1,{\"toyota\":{\"brand\":\"Toyota\",\"doors\":2,\"year\":2016},\"new_event\":{\"name\":\"HELLO\",\"source\":\"hostess\"}}]]";
 
-		assertEquals(json, myjson);
+		assertEquals(myjson, json);
 
 		ComponentType type = new ComponentType(List.class, Customer.class,
 				Event.class, Car.class, int[][][].class, Boolean[].class,

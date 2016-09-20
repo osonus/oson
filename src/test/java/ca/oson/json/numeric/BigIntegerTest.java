@@ -150,8 +150,8 @@ public class BigIntegerTest extends TestCaseBase {
 	   @Test
 	   public void testSerializeBigIntegerWithGenericFunction() {
 		   BigInteger value = BigInteger.valueOf(8);
-		   String expected = "{\"doors\":4,\"year\":2016,\"brand\":\"Eight\",\"years\":null}";
-		   
+		   String expected = "{\"brand\":\"Eight\",\"doors\":4,\"year\":2016,\"years\":null}";
+
 		   Function function = (Object p) -> {
 			   BigInteger bint = (BigInteger) p;
 			   

@@ -2360,9 +2360,9 @@ public class Oson {
 	public Oson clearAll() {
 		clear();
 		
-		cachedFields = new ConcurrentHashMap<>();
-		cachedMethods = new ConcurrentHashMap<>();
-		cachedComponentTypes = new ConcurrentHashMap<>();
+		cachedFields.clear();
+		cachedMethods.clear();
+		cachedComponentTypes.clear();
 		
 		return this;
 	}
@@ -9643,7 +9643,7 @@ public class Oson {
 		}
 		
 		// return a new copy, so original copy will not get modified
-		return new HashMap(cachedMethods.get(fullName)[METHOD.SET.value]);
+		return cachedMethods.get(fullName)[METHOD.SET.value];
 	}
 	private <T> Map <String, Method> getGetters(T obj) {
 		if (obj == null) {
@@ -9663,7 +9663,7 @@ public class Oson {
 			processMethods(valueType, fullName);
 		}
 		
-		return new HashMap(cachedMethods.get(fullName)[METHOD.GET.value]);
+		return cachedMethods.get(fullName)[METHOD.GET.value];
 	}
 	private <T> Map <String, Method> getOtherMethods(T obj) {
 		if (obj == null) {
@@ -9683,7 +9683,7 @@ public class Oson {
 			processMethods(valueType, fullName);
 		}
 		
-		return new HashMap(cachedMethods.get(fullName)[METHOD.OTHER.value]);
+		return cachedMethods.get(fullName)[METHOD.OTHER.value];
 	}
 	
 	private <T> void processMethods(Class<T> valueType, String fullName) {
@@ -9694,9 +9694,9 @@ public class Oson {
 //			valueType = (Class<T>) valueType.getSuperclass();
 //		}
 
-		Map <String, Method> setters = new HashMap<>();
-		Map <String, Method> getters = new HashMap<>();
-		Map <String, Method> others = new HashMap<>();
+		Map <String, Method> setters = new LinkedHashMap<>();
+		Map <String, Method> getters = new LinkedHashMap<>();
+		Map <String, Method> others = new LinkedHashMap<>();
 		
 		String name;
 		boolean notSetGetOnly = !getSetGetOnly();
@@ -10571,9 +10571,9 @@ public class Oson {
 
 		Set<Class> ignoreFieldsWithAnnotations = classMapper.ignoreFieldsWithAnnotations;
 
-		Map<String, String> keyJsonStrings = new HashMap<>();
+		Map<String, String> keyJsonStrings = new LinkedHashMap<>();
 		// to hold relation between name and changed name 
-		Map<String, String> fieldNames = new HashMap<>();
+		Map<String, String> fieldNames = new LinkedHashMap<>();
 		
 		Set<String> processedNameSet = new HashSet<>();
 		//StringBuffer sb = new StringBuffer();
@@ -11769,7 +11769,7 @@ public class Oson {
 				
 				
 				if (exposed != null && exposed.size() > 0) {
-					Map<String, String> map = new HashMap<>();
+					Map<String, String> map = new LinkedHashMap<>();
 					
 					for (String key: keyJsonStrings.keySet()) {
 						if (exposed.contains(key)) {
@@ -11851,7 +11851,7 @@ public class Oson {
 	////////////////////////////////////////////////////////////////////////////////
 
 
-	static Object fromJsonMap(Object obj) {
+	public static Object fromJsonMap(Object obj) {
 		FIELD_NAMING naming = FIELD_NAMING.FIELD;
 		return fromJsonMap(obj, naming);
 	}
@@ -11861,7 +11861,7 @@ public class Oson {
 	 * more confortable to work with map and list
 	 * instead of JSONObject and JSONArray
 	 */
-	static Object fromJsonMap(Object obj, FIELD_NAMING naming) {
+	public static Object fromJsonMap(Object obj, FIELD_NAMING naming) {
 		if (obj instanceof JSONArray) {
 			JSONArray jobj = (JSONArray) obj; // .getJSONArray(key);
 
@@ -11881,7 +11881,7 @@ public class Oson {
 
 			// since JSONObject gives unordered map, nothing can be done about it?
 			// LinkedHashMap
-			Map<String, Object> map = new HashMap<String, Object>();
+			Map<String, Object> map = new LinkedHashMap<String, Object>();
 
 			Iterator<?> keys = jobj.keys();
 

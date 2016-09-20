@@ -19,7 +19,7 @@ public class OptionalTest extends TestCaseBase {
 		
 		String json = oson.serialize(obj);
 
-		String expected = "{\"opt\":{\"value\":12},\"optString\":{\"value\":\"This is an optional string\"},\"value\":12}";
+		String expected = "{\"value\":12,\"opt\":{\"value\":12},\"optString\":{\"value\":\"This is an optional string\"}}";
 		
 		// oson.print(obj);
 
@@ -53,7 +53,7 @@ public class OptionalTest extends TestCaseBase {
 
 		String json = oson.serialize(obj);
 
-		String expected = "{\"optCustomer\":{\"value\":{\"vehicles\":[{\"doors\":4,\"year\":2016,\"brand\":\"Audi\",\"years\":null},{\"doors\":4,\"year\":2016,\"brand\":\"Mercedes\",\"years\":null}],\"carList\":[{\"doors\":4,\"year\":2016,\"brand\":\"BMW\",\"years\":null},{\"doors\":4,\"year\":2016,\"brand\":\"Chevy\",\"years\":null}]}}}";
+		String expected = "{\"optCustomer\":{\"value\":{\"vehicles\":[{\"brand\":\"Audi\",\"doors\":4,\"year\":2016,\"years\":null},{\"brand\":\"Mercedes\",\"doors\":4,\"year\":2016,\"years\":null}],\"carList\":[{\"brand\":\"BMW\",\"doors\":4,\"year\":2016,\"years\":null},{\"brand\":\"Chevy\",\"doors\":4,\"year\":2016,\"years\":null}]}}}";
 		
 		// oson.print(obj);
 
@@ -84,7 +84,7 @@ public class OptionalTest extends TestCaseBase {
 
 		String json = oson.clear().serialize(obj);
 
-		String expected = "{\"optCustomer\":{\"value\":{\"vehicles\":[{\"doors\":4,\"year\":2016,\"brand\":\"Audi\",\"years\":null},{\"doors\":4,\"year\":2016,\"brand\":\"Mercedes\",\"years\":null}],\"carList\":[{\"doors\":4,\"year\":2016,\"brand\":\"BMW\",\"years\":null},{\"doors\":4,\"year\":2016,\"brand\":\"Chevy\",\"years\":null}]}}}";
+		String expected = "{\"optCustomer\":{\"value\":{\"vehicles\":[{\"brand\":\"Audi\",\"doors\":4,\"year\":2016,\"years\":null},{\"brand\":\"Mercedes\",\"doors\":4,\"year\":2016,\"years\":null}],\"carList\":[{\"brand\":\"BMW\",\"doors\":4,\"year\":2016,\"years\":null},{\"brand\":\"Chevy\",\"doors\":4,\"year\":2016,\"years\":null}]}}}";
 		
 		// oson.print(obj);
 

@@ -79,7 +79,7 @@ public class QueryTest extends TestCaseBase {
 		assertEquals(expected, found);
 		
 		found = OsonQuery.search(json, "status");
-		expected = "[\"supported\",\"available\",\"not_supported\",\"in-use\"]";
+		expected = "[\"available\",\"supported\",\"in-use\",\"not_supported\"]";
 		assertEquals(expected, found);
 		
 		found = OsonQuery.search(json, "volumes.status");

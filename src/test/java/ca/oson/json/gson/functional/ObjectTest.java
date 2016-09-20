@@ -487,15 +487,13 @@ public class ObjectTest extends TestCaseBase {
 
     product.departments.add(new Department());
     String json = oson.toJson(product);
-    //{"attributes":[],"departments":[{"code":"123","name":"abc"}]}
-    assertEquals("{\"attributes\":[],\"departments\":[{\"code\":\"123\",\"name\":\"abc\"}]}", json);
+    assertEquals("{\"attributes\":[],\"departments\":[{\"name\":\"abc\",\"code\":\"123\"}]}", json);
     
     //oson.fromJson(gson.toJson(product), Product.class);
 
     product.attributes.add("456");
     json = oson.toJson(product);
-    //{"attributes":["456"],"departments":[{"code":"123","name":"abc"}]}
-    assertEquals("{\"attributes\":[\"456\"],\"departments\":[{\"code\":\"123\",\"name\":\"abc\"}]}",
+    assertEquals("{\"attributes\":[\"456\"],\"departments\":[{\"name\":\"abc\",\"code\":\"123\"}]}",
     		json);
     oson.fromJson(gson.toJson(product), Product.class);
   }
