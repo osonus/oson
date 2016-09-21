@@ -12,7 +12,11 @@ Just like annotation and lambda expressions make Java look like a functional lan
   * Allow 3 level control of name and value conversions: global, class-level, and field level
   * Allow these conversions to be either annotation-oriented, or Java oriented, or both
   * Allow well-formatted JSON output: any indentation, any depth, as far as object linkage goes, without redundancy
-  * Function of lambda expressions is added to the serialization and deserialization processes, allowing easy value transformation
+  * Functions of lambda expressions are added to the serialization and deserialization processes, allowing easy value transformation
+  * OsonAssert.assertEquals methods are implemented for JUnit testing, to compare Json string, JSONObject and Java objects
+  * OsonMerge is implemented to merge Json strings, JSONObject and Java objects, with flexible configuration options
+  * OsonPath is on the way, to implement XML XPath-similar features, and with queries easier to use
+  * OsonConvert is on the way, to create custom Java object and classes from Json input
 
 ###*Oson Documentation*
   * Oson [API](http://www.javadoc.io/doc/ca.oson.json/oson): Javadocs for the current Oson release
@@ -27,7 +31,7 @@ To use Oson with Maven2/3, you can use the Oson version available in Maven Centr
 	<dependency>
 	    <groupId>ca.oson.json</groupId>
 	    <artifactId>oson</artifactId>
-	    <version>1.0.7</version>
+	    <version>1.0.8</version>
 	</dependency>
 </dependencies>
 ```
