@@ -169,9 +169,9 @@ public class OsonMerge {
 		return mergeObjects(object, obj, null);
 	}
 	private Object mergeObjects(Object object, Object obj, String path) {
-		if (object == null) {
+		if (StringUtil.isNull(object)) {
 			return obj;
-		} else if (obj == null) {
+		} else if (StringUtil.isNull(obj)) {
 			return object;
 		}
 		

@@ -127,6 +127,11 @@ public class FieldMapper<T, E> {
 	public Boolean jsonValue = null;
 	
 	/*
+	 * If this value is true, then no attribute or key name will be used in Json output.
+	 */
+	public Boolean jsonNoName = null;
+
+	/*
 	 * method with this value set to true will get all properties not specified earlier.
 	 * It will normally return a Map<String, Object>
 	 */
@@ -491,13 +496,22 @@ public class FieldMapper<T, E> {
 		return this;
 	}
 
-	public FieldMapper setJsonRawValue(boolean jsonRawValue) {
+	public FieldMapper setJsonRawValue(Boolean jsonRawValue) {
 		this.jsonRawValue = jsonRawValue;
 		return this;
 	}
 
-	public FieldMapper setJsonValue(boolean jsonValue) {
+	public FieldMapper setJsonValue(Boolean jsonValue) {
 		this.jsonValue = jsonValue;
+		return this;
+	}
+	
+	public Boolean getJsonNoName() {
+		return jsonNoName;
+	}
+
+	public FieldMapper setJsonNoName(Boolean jsonNoName) {
+		this.jsonNoName = jsonNoName;
 		return this;
 	}
 

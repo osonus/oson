@@ -173,9 +173,6 @@ public class NumberUtil {
 	
 	
 	public static Number avg (Number... numbers) {
-		
-		int count = numbers.length;
-		
 		boolean isFloating = false;
 
 		for (Number num: numbers) {
@@ -184,7 +181,12 @@ public class NumberUtil {
 				break;
 			}
 		}
-
+		
+		return avg (isFloating, numbers);
+	}
+	
+	public static Number avg (boolean isFloating, Number... numbers) {
+		int count = numbers.length;
 		
 		if (isFloating) {
 			double total = 0;
@@ -204,6 +206,7 @@ public class NumberUtil {
 		}
 	}
 	
+	
 	private static boolean outsideThreshold (Number number, Number average, double errorThreshold) {
 		if (Math.abs(number.doubleValue() - average.doubleValue()) < errorThreshold) {
 			return false;
@@ -213,29 +216,27 @@ public class NumberUtil {
 	
 	public static Number avg (List<Number> values, double errorThreshold) {
 		int count = values.size();
-		
+		boolean isFloating = false;
 		Number[] numbers = new Number[count];
 		int i = 0;
 		for (Number value: values) {
 			numbers[i++] = value;
+			if (!isFloating && isFloatingNumber(value)) {
+				isFloating = true;
+			}
 		}
 
 		if (errorThreshold == 0 || count < 3) {
-			return avg(numbers);
+			return avg(isFloating, numbers);
 		}
+		
+		errorThreshold = Math.abs(errorThreshold);
 		
 		// the algorithm: sort it first
 		// throw away the largest or smallest one that is more than threshold
 		// until all are within threshold, or only 2 left
 		
 		Arrays.sort(numbers);
-		boolean isFloating = false;
-		for (Number num: numbers) {
-			if (isFloatingNumber(num)) {
-				isFloating = true;
-				break;
-			}
-		}
 		
 		int first = 0;
 		int last = count - 1;

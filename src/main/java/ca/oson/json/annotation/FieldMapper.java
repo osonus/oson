@@ -105,6 +105,11 @@ public @interface FieldMapper {
 	 * in a class, only one method returning a String value is allowed to set this value to true
 	 */
 	BOOLEAN jsonValue() default BOOLEAN.NONE;
+
+	/*
+	 * If this value is true, then no attribute or key name will be used in Json output.
+	 */
+	BOOLEAN jsonNoName() default BOOLEAN.NONE;
 	
 	/*
 	 * Ignore this field if true

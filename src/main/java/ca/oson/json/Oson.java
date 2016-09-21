@@ -10136,6 +10136,10 @@ public class Oson {
 			fieldMapper.jsonValue = fieldMapperAnnotation.jsonValue().value();
 		}
 		
+		if (fieldMapperAnnotation.jsonNoName() != BOOLEAN.NONE) {
+			fieldMapper.jsonNoName = fieldMapperAnnotation.jsonNoName().value();
+		}
+		
 		if (fieldMapperAnnotation.jsonAnySetter() != BOOLEAN.NONE) {
 			fieldMapper.jsonAnySetter = fieldMapperAnnotation.jsonAnySetter().value();
 		}
@@ -10222,6 +10226,10 @@ public class Oson {
 		
 		if (javaFieldMapper.jsonValue != null) {
 			fieldMapper.jsonValue = javaFieldMapper.jsonValue;
+		}
+		
+		if (javaFieldMapper.jsonNoName != null) {
+			fieldMapper.jsonNoName = javaFieldMapper.jsonNoName;
 		}
 		
 		if (javaFieldMapper.required != null) {
@@ -11209,7 +11217,9 @@ public class Oson {
 
 				StringBuffer sb = new StringBuffer();
 				sb.append(repeatedItem);
-				sb.append("\"" + name + "\":" + pretty);
+				if (fieldMapper.jsonNoName == null || !fieldMapper.jsonNoName) {
+					sb.append("\"" + name + "\":" + pretty);
+				}
 				sb.append(str);
 				sb.append(",");
 				
