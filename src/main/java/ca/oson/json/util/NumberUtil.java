@@ -3,6 +3,8 @@ package ca.oson.json.util;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -170,13 +172,133 @@ public class NumberUtil {
 	}
 	
 	
-	public static Number avg (Number num1, Number num2) {
-		if (isFloatingNumber(num1) || isFloatingNumber(num2)) {
-			return (num1.doubleValue() + num2.doubleValue()) / 2;
+	public static Number avg (Number... numbers) {
+		
+		int count = numbers.length;
+		
+		boolean isFloating = false;
+
+		for (Number num: numbers) {
+			if (isFloatingNumber(num)) {
+				isFloating = true;
+				break;
+			}
+		}
+
+		
+		if (isFloating) {
+			double total = 0;
+			for (Number number: numbers) {
+				total += number.doubleValue();
+			}
+			
+			return total / count;
+			
 		} else {
-			return (num1.longValue() + num2.longValue()) / 2;
+			long total = 0;
+			for (Number number: numbers) {
+				total += number.doubleValue();
+			}
+			
+			return total / count;
 		}
 	}
+	
+	private static boolean outsideThreshold (Number number, Number average, double errorThreshold) {
+		if (Math.abs(number.doubleValue() - average.doubleValue()) < errorThreshold) {
+			return false;
+		}
+		return true;
+	}
+	
+	public static Number avg (List<Number> values, double errorThreshold) {
+		int count = values.size();
+		
+		Number[] numbers = new Number[count];
+		int i = 0;
+		for (Number value: values) {
+			numbers[i++] = value;
+		}
+
+		if (errorThreshold == 0 || count < 3) {
+			return avg(numbers);
+		}
+		
+		// the algorithm: sort it first
+		// throw away the largest or smallest one that is more than threshold
+		// until all are within threshold, or only 2 left
+		
+		Arrays.sort(numbers);
+		boolean isFloating = false;
+		for (Number num: numbers) {
+			if (isFloatingNumber(num)) {
+				isFloating = true;
+				break;
+			}
+		}
+		
+		int first = 0;
+		int last = count - 1;
+		
+		if (isFloating) {
+			double total = 0, average = 0;
+			for (Number num: numbers) {
+				total += num.doubleValue();
+			}
+			
+			while (last - first > 1) {
+				average = total / (last - first + 1);
+				double firstdiff = Math.abs(numbers[first].doubleValue() - average);
+				double lastdiff = Math.abs(numbers[last].doubleValue() - average);
+				
+				if (firstdiff > errorThreshold || lastdiff > errorThreshold) {
+					if (firstdiff > lastdiff) {
+						total -= numbers[first].doubleValue();
+						first++;
+						
+					} else {
+						total -= numbers[last].doubleValue();
+						last--;
+					}
+					
+				} else {
+					break;
+				}
+			}
+
+			return (total / (last - first + 1));
+		}
+		
+		
+		long total = 0, average = 0;
+		for (Number num: numbers) {
+			total += num.longValue();
+		}
+		
+		while (last - first > 1) {
+			average = total / (last - first + 1);
+			double firstdiff = Math.abs(numbers[first].longValue() - average);
+			double lastdiff = Math.abs(numbers[last].longValue() - average);
+			
+			if (firstdiff > errorThreshold || lastdiff > errorThreshold) {
+				if (firstdiff > lastdiff) {
+					total -= numbers[first].longValue();
+					first++;
+					
+				} else {
+					total -= numbers[last].longValue();
+					last--;
+				}
+				
+			} else {
+				break;
+			}
+		}
+
+		return (total / (last - first + 1));
+	}
+	
+	
 	
 	public static <E> Number getNumber(E number, Class valueType) {
 		try {

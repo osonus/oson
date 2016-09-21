@@ -14,7 +14,7 @@ import ca.oson.json.Oson.FIELD_NAMING;
 import ca.oson.json.util.StringUtil;
 
 public class OsonQuery {
-	private static FIELD_NAMING naming = FIELD_NAMING.UNDERSCORE_LOWER;
+	private static FIELD_NAMING naming = FIELD_NAMING.CAMELCASE;
 	
 	/*
 	 * Search for attribute or key's values in the Json source. The search follows Json document structure

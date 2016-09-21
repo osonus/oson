@@ -19,7 +19,7 @@ import ca.oson.json.util.ObjectUtil;
 import ca.oson.json.util.StringUtil;
 
 public class OsonMerge {
-	private static FIELD_NAMING naming = FIELD_NAMING.UNDERSCORE_LOWER;
+	private static FIELD_NAMING naming = FIELD_NAMING.CAMELCASE;
 	
 	public static enum NUMERIC_VALUE {
 		KEEP_NEW, // additional parameter values take precedence over previous ones
@@ -47,7 +47,9 @@ public class OsonMerge {
 		KEEP_NEW, // additional parameter values take precedence over previous ones
 		KEEP_OLD, // keep previous values
 		APPENDING, // concate arrays/lists with the same name
-		KEEP_UNIQUE // keeps unique set of values
+		KEEP_UNIQUE, // keeps unique set of values
+		MERGE // merge each items of lists into 1, using specific merging rules for specific values, 
+		// either NUMERIC_VALUE or OTHER_VALUE rules
 	}
 	
 	public static class Config
@@ -62,6 +64,13 @@ public class OsonMerge {
 		 * to use a new value to replace the earlier value
 		 */
 		public NUMERIC_VALUE numericValue = NUMERIC_VALUE.KEEP_NEW;
+		
+		/*
+		 * when averaging numeric values, the biggest difference allowed between the average value and the other values
+		 * Say the values are 1, 10, 13, 15, 10000, if the the error threshold is 20, then the largest number 10000 
+		 * is removed from the rest to calculate the average.
+		 */
+		public double errorThreshold = 0;
 		
 		/*
 		 * How to keep non-numeric attribute values, the default is 
@@ -85,34 +94,29 @@ public class OsonMerge {
 		 * unless specified by names map
 		 */
 		public FIELD_NAMING namingPolicy = FIELD_NAMING.FIELD;
-		
-		/*
-		 * Old names are replaced by new names in the result:
-		 * {"oldName": "newName"}
-		 */
-		private Map<String,String> names = new HashMap<>();
 
-		private Map<String, String> getNames() {
-			return names;
-		}
-
-		public void setNames(Map<String, String> names) {
-			if (this.names != null && this.names.size() > 0) {
-				for (String key: names.keySet()) {
-					this.names.put(StringUtil.formatName(key, naming), names.get(key));
-				}
-			}
-			
-			this.names = names;
-		}
-		
 	}
 
 	private Config config;
+	
+	/*
+	 * key: attribute or key names, or path of them
+	 * this is used to allow specific attribute or path to have specific configuration.
+	 * Each of this configuration entry in the map is a specialized copy of the global config. 
+	 * This settings make the merge to be very flexible in the way it can be used.
+	 * 
+	 */
+	private Map<String,Config> configs = new HashMap<>();
 
+	/*
+	 * Old names are replaced by new names in the result:
+	 * {"oldName": "newName"}
+	 */
+	private Map<String,String> names = new HashMap<>();
 
 	private Oson oson;
 	private Map<String, Map<Object, Integer>> cachedValues = new ConcurrentHashMap<>();
+	private Map<String, List<Number>> cachedListValues = new ConcurrentHashMap<>();
 	
 	public OsonMerge() {
 		this(new Config());
@@ -125,7 +129,12 @@ public class OsonMerge {
 			.setDefaultType(config.defaultType)
 			.setFieldNaming(config.namingPolicy)
 			.includeClassTypeInJson(false);
+		
+		if (config.namingPolicy != FIELD_NAMING.FIELD) {
+			naming = config.namingPolicy;
+		}
 	}
+	
 	
 	public Config getConfig() {
 		return config;
@@ -135,6 +144,27 @@ public class OsonMerge {
 		this.config = config;
 	}
 	
+	private Map<String, String> getNames() {
+		return names;
+	}
+
+	public void setNames(Map<String, String> names) {
+		if (this.names != null && this.names.size() > 0) {
+			for (String key: names.keySet()) {
+				this.names.put(StringUtil.formatName(key, naming), names.get(key));
+			}
+		}
+		
+		this.names = names;
+	}
+	
+	
+	private void clear() {
+		cachedListValues.clear();
+		cachedValues.clear();
+	}
+	
+	
 	private Object mergeObjects(Object object, Object obj) {
 		return mergeObjects(object, obj, null);
 	}
@@ -143,6 +173,13 @@ public class OsonMerge {
 			return obj;
 		} else if (obj == null) {
 			return object;
+		}
+		
+		Config config;
+		if (path != null && configs.containsKey(path)) {
+			config = configs.get(path);
+		} else {
+			config = this.config;
 		}
 		
 		if (Map.class.isInstance(object) && Map.class.isInstance(obj)) {
@@ -161,18 +198,20 @@ public class OsonMerge {
 			boolean keepNew = false;
 			boolean keepOld = false;
 			
-			if (this.config.nonOverlapValue == NON_OVERLAP_VALUE.KEEP_BOTH) {
+			if (config.nonOverlapValue == NON_OVERLAP_VALUE.KEEP_BOTH) {
 				keepNew = true;
 				keepOld = true;
-			} else if (this.config.nonOverlapValue == NON_OVERLAP_VALUE.KEEP_NEW) {
+			} else if (config.nonOverlapValue == NON_OVERLAP_VALUE.KEEP_NEW) {
 				keepNew = true;
-			} else if (this.config.nonOverlapValue == NON_OVERLAP_VALUE.KEEP_OLD) {
+			} else if (config.nonOverlapValue == NON_OVERLAP_VALUE.KEEP_OLD) {
 				keepOld = true;
 			}
 			
 			
 			if (path != null) {
 				path += ".";
+			} else {
+				path = "";
 			}
 
 			for (String key : objMap.keySet()) {
@@ -183,17 +222,45 @@ public class OsonMerge {
 				Object ob = null;
 				
 				if (nameKeys.containsKey(name)) {
-					
 					ob = mergeObjects(objectMap.get(nameKeys.get(name)), o, path + name);
 					nameKeys.remove(name);
-					
+
 				} else if (keepNew) {
 					ob = o;
 				}
 				
 				if (ob != null) {
-					if (this.config.names.containsKey(name)) {
-						newMap.put(this.config.names.get(name), ob);
+					boolean ignore = false;
+					switch (config.defaultType) {
+					case NON_NULL:
+						if (StringUtil.isNull(ob)) {
+							ignore = true;
+						}
+						break;
+						
+					case NON_EMPTY:
+						if (StringUtil.isEmpty(ob)) {
+							ignore = true;
+						}
+						break;
+						
+					case NON_DEFAULT:
+						if (DefaultValue.isDefault(ob)) {
+							ignore = true;
+						}
+						break;
+					}
+					
+					if (ignore) {
+						continue;
+					}
+					
+					if (names.containsKey(name)) {
+						newMap.put(names.get(name), ob);
+						
+					} else if (names.containsKey(path + name)) {
+						newMap.put(names.get(path + name), ob);
+						
 					} else {
 						newMap.put(key, ob);
 					}
@@ -204,44 +271,123 @@ public class OsonMerge {
 			
 			if (keepOld && nameKeys.size() > 0) {
 				for (String name: nameKeys.keySet()) {
-					if (this.config.names.containsKey(name)) {
-						newMap.put(this.config.names.get(name), objectMap.get(nameKeys.get(name)));
+					Object ob = objectMap.get(nameKeys.get(name));
+					boolean ignore = false;
+					switch (config.defaultType) {
+					case NON_NULL:
+						if (StringUtil.isNull(ob)) {
+							ignore = true;
+						}
+						break;
+						
+					case NON_EMPTY:
+						if (StringUtil.isEmpty(ob)) {
+							ignore = true;
+						}
+						break;
+						
+					case NON_DEFAULT:
+						if (DefaultValue.isDefault(ob)) {
+							ignore = true;
+						}
+						break;
+					}
+					
+					if (ignore) {
+						continue;
+					}
+					
+					if (names.containsKey(name)) {
+						newMap.put(names.get(name), ob);
+						
+					} else if (names.containsKey(path + name)) {
+						newMap.put(names.get(path + name), ob);
+						
 					} else {
-						newMap.put(nameKeys.get(name), objectMap.get(nameKeys.get(name)));
+						newMap.put(nameKeys.get(name), ob);
 					}
 				}
 			}
 			
 			return newMap;
 			
-		} else if (List.class.isInstance(object) && List.class.isInstance(obj)) {
+		} else if (List.class.isInstance(object) || List.class.isInstance(obj)) {
 			List list = null;
-			switch (this.config.listValue) {
+			switch (config.listValue) {
 			case KEEP_NEW:
-				list = (List) obj;
-				break;
-				
+				return obj;
+
 			case KEEP_OLD:
-				list = (List) object;
-				break;
-				
+				return object;
+
 			case APPENDING:
-				((List)object).addAll((List)obj);
-				list = (List) object;
-				break;
+				if (List.class.isInstance(object)) {
+					if (List.class.isInstance(obj)) {
+						((List)object).addAll((List)obj);
+						return object;
+					} else {
+						((List)object).add(obj);
+						return object;
+					}
+					
+				} else {
+					((List)obj).add(object);
+					return obj;
+				}
 				
 			case KEEP_UNIQUE:
-				Set set = new LinkedHashSet((List)object);
-				set.addAll((List)obj);
-				list = new ArrayList(set);
-				break;
+				Set set = new LinkedHashSet();
+				if (List.class.isInstance(object)) {
+					set.addAll((List)object);
+				} else {
+					set.add(object);
+				}
+				
+				if (List.class.isInstance(obj)) {
+					set.addAll((List)obj);
+				} else {
+					set.add(obj);
+				}
+				
+				return new ArrayList(set);
+
+			case MERGE:
+
+				Object head;
+				if (List.class.isInstance(object)) {
+					list = (List) object;
+					head = list.get(0);
+					int size = list.size();
+
+					for (int i = 1; i < size; i++) {
+						head = mergeObjects(head, list.get(i), path);
+					}
+
+				} else {
+					head = object;
+				}
+				
+				if (List.class.isInstance(obj)) {
+					list = (List) obj;
+					int size = list.size();
+
+					for (int i = 0; i < size; i++) {
+						head = mergeObjects(head, list.get(i), path);
+					}
+
+				} else {
+					head = mergeObjects(head, obj, path);
+				}
+				
+				return head;
 			}
 			
 			
+			return object;
 		}
 		
 		
-		switch (this.config.defaultType) {
+		switch (config.defaultType) {
 		case NON_NULL:
 			if (StringUtil.isNull(obj)) {
 				return object;
@@ -271,10 +417,17 @@ public class OsonMerge {
 			
 		}
 
+		String myroot;
+		if (path != null) {
+			myroot = path;
+		} else {
+			myroot = "ROOT";
+		}
+		
 		if ( obj != null && object != null && 
 				Number.class.isAssignableFrom(obj.getClass()) &&
 				Number.class.isAssignableFrom(object.getClass()) ) {
-			switch (this.config.numericValue) {
+			switch (config.numericValue) {
 			case KEEP_NEW:
 				return obj;
 			case KEEP_OLD:
@@ -284,13 +437,22 @@ public class OsonMerge {
 			case KEEP_MIN:
 				return NumberUtil.min((Number)object, (Number)obj);
 			case AVERAGE:
-				return NumberUtil.avg((Number)object, (Number)obj);
+				List<Number> values = cachedListValues.get(myroot);
+				if (values == null) {
+					values = new ArrayList();
+					values.add((Number)object);
+					cachedListValues.put(myroot, values);
+				}
+				values.add((Number)obj);
+				
+				return NumberUtil.avg(values, config.errorThreshold);
+				
 			case FREQUENT:
 				
 			}
 			
 		} else {
-			switch (this.config.otherValue) {
+			switch (config.otherValue) {
 			case KEEP_NEW:
 				return obj;
 			case KEEP_OLD:
@@ -300,18 +462,18 @@ public class OsonMerge {
 		}
 
 		// most FREQUENT
-		Map<Object, Integer> map = cachedValues.get(path);
+		Map<Object, Integer> map = cachedValues.get(myroot);
 		if (map == null) {
 			map = new HashMap<>();
 			map.put(object, 1);
-			cachedValues.put(path, map);
+			cachedValues.put(myroot, map);
 		}
 		if (map.containsKey(obj)) {
 			map.put(obj, map.get(obj) + 1);
 		} else {
 			map.put(obj, 1);
 		}
-		
+
 		int max = 0;
 		for (Map.Entry<Object, Integer> entry: map.entrySet()) {
 			if (entry.getValue() > max) {
@@ -329,7 +491,7 @@ public class OsonMerge {
 	 */
 	public String merge(String json, String... jsons) {
 		Object object = oson.deserialize(json);
-		cachedValues.clear();
+		 clear();
 
 		if ((jsons == null || jsons.length == 0) && List.class.isInstance(object)) {
 			object = merge((List)object);
@@ -351,7 +513,7 @@ public class OsonMerge {
 	 */
 	public JSONObject merge(JSONObject source, JSONObject... sources) {
 		Object object = oson.deserialize(source);
-		cachedValues.clear();
+		clear();
 		
 		Object obj;
 		for (JSONObject src: sources) {
@@ -384,7 +546,7 @@ public class OsonMerge {
 	 */
 	public JSONObject merge(JSONArray source, JSONArray... sources) {
 		Object object = oson.deserialize(source.toString());
-		cachedValues.clear();
+		 clear();
 
 		if ((sources == null || sources.length == 0) && List.class.isInstance(object)) {
 			object = merge((List)object);
@@ -407,7 +569,7 @@ public class OsonMerge {
 	 */
 	public Object merge(Object ob, Object... obs) {
 		Object object = oson.deserialize(oson.serialize(ob));
-		cachedValues.clear();
+		 clear();
 		
 		Object obj;
 		if ((obs == null || obs.length == 0) && List.class.isInstance(object)) {
