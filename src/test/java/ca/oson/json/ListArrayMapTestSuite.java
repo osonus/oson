@@ -8,6 +8,7 @@ import ca.oson.json.listarraymap.FooBarTest;
 import ca.oson.json.listarraymap.ListObjectTest;
 import ca.oson.json.listarraymap.ListTest;
 import ca.oson.json.listarraymap.MapTest;
+import ca.oson.json.listarraymap.SurveyResultTest;
 
 
 @RunWith(Suite.class)
@@ -16,7 +17,8 @@ import ca.oson.json.listarraymap.MapTest;
 	ListObjectTest.class,
 	ArrayTest.class,
 	MapTest.class,
-	FooBarTest.class
+	FooBarTest.class,
+	SurveyResultTest.class
 })
 public class ListArrayMapTestSuite {
 
