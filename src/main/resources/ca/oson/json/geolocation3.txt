@@ -1,0 +1,20 @@
+{
+  "geoplugin_request":"184.66.33.61",
+  "geoplugin_status":200,
+  "geoplugin_credit":"Some of the returned data includes GeoLite data created by MaxMind, available from <a href='http:\/\/www.maxmind.com'>http:\/\/www.maxmind.com<\/a>.",
+  "geoplugin_city":"Victoria",
+  "geoplugin_region":"BC",
+  "geoplugin_areaCode":"0",
+  "geoplugin_dmaCode":"0",
+  "geoplugin_countryCode":"CA",
+  "geoplugin_countryName":"Canada",
+  "geoplugin_continentCode":"NA",
+  "geoplugin_latitude":"48.4765",
+  "geoplugin_longitude":"-123.3145",
+  "geoplugin_regionCode":"BC",
+  "geoplugin_regionName":"British Columbia",
+  "geoplugin_currencyCode":"CAD",
+  "geoplugin_currencySymbol":"&#36;",
+  "geoplugin_currencySymbol_UTF8":"$",
+  "geoplugin_currencyConverter":1.321
+}

@@ -13,7 +13,7 @@ import java.util.Stack;
 import ca.oson.json.Oson.FIELD_NAMING;
 import ca.oson.json.util.StringUtil;
 
-public class OsonQuery {
+public class OsonPath {
 	private static FIELD_NAMING naming = FIELD_NAMING.CAMELCASE;
 	
 	/*

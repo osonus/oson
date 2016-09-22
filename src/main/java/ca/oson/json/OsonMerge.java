@@ -61,9 +61,9 @@ public class OsonMerge {
 		
 		/*
 		 * How to keep numeric attribute values, the default is 
-		 * to use a new value to replace the earlier value
+		 * to use the average value
 		 */
-		public NUMERIC_VALUE numericValue = NUMERIC_VALUE.KEEP_NEW;
+		public NUMERIC_VALUE numericValue = NUMERIC_VALUE.AVERAGE;
 		
 		/*
 		 * when averaging numeric values, the biggest difference allowed between the average value and the other values
@@ -74,9 +74,9 @@ public class OsonMerge {
 		
 		/*
 		 * How to keep non-numeric attribute values, the default is 
-		 * to use a new value to replace the earlier value
+		 * to use the most frequent value
 		 */
-		public OTHER_VALUE otherValue = OTHER_VALUE.KEEP_NEW;
+		public OTHER_VALUE otherValue = OTHER_VALUE.FREQUENT;
 		
 		/*
 		 * How to handle the cases that some attributes only exist in the old object, 
@@ -112,11 +112,16 @@ public class OsonMerge {
 	 * Old names are replaced by new names in the result:
 	 * {"oldName": "newName"}
 	 */
-	private Map<String,String> names = new HashMap<>();
+	private Map<String,String> replacedByNames = new HashMap<>();
 
 	private Oson oson;
 	private Map<String, Map<Object, Integer>> cachedValues = new ConcurrentHashMap<>();
 	private Map<String, List<Number>> cachedListValues = new ConcurrentHashMap<>();
+	
+	/*
+	 * format returned Json output
+	 */
+	public boolean pretty = false;
 	
 	public OsonMerge() {
 		this(new Config());
@@ -145,17 +150,17 @@ public class OsonMerge {
 	}
 	
 	private Map<String, String> getNames() {
-		return names;
+		return replacedByNames;
 	}
 
 	public void setNames(Map<String, String> names) {
-		if (this.names != null && this.names.size() > 0) {
+		if (names != null && names.size() > 0) {
 			for (String key: names.keySet()) {
-				this.names.put(StringUtil.formatName(key, naming), names.get(key));
+				this.replacedByNames.put(StringUtil.formatName(key, naming), names.get(key));
 			}
+		} else {
+			this.replacedByNames.clear();
 		}
-		
-		this.names = names;
 	}
 	
 	
@@ -255,12 +260,17 @@ public class OsonMerge {
 						continue;
 					}
 					
-					if (names.containsKey(name)) {
-						newMap.put(names.get(name), ob);
+					
+					if (replacedByNames.containsKey(path + name)) {
+						if (!StringUtil.isEmpty(replacedByNames.get(path + name))) {
+							newMap.put(replacedByNames.get(path + name), ob);
+						}
 						
-					} else if (names.containsKey(path + name)) {
-						newMap.put(names.get(path + name), ob);
-						
+					} else if (replacedByNames.containsKey(name)) {
+						if (!StringUtil.isEmpty(replacedByNames.get(name))) {
+							newMap.put(replacedByNames.get(name), ob);
+						}
+							
 					} else {
 						newMap.put(key, ob);
 					}
@@ -297,12 +307,16 @@ public class OsonMerge {
 						continue;
 					}
 					
-					if (names.containsKey(name)) {
-						newMap.put(names.get(name), ob);
-						
-					} else if (names.containsKey(path + name)) {
-						newMap.put(names.get(path + name), ob);
-						
+					if (replacedByNames.containsKey(path + name)) {
+						if (!StringUtil.isEmpty(replacedByNames
+								.get(path + name))) {
+							newMap.put(replacedByNames.get(path + name), ob);
+						}
+					} else if (replacedByNames.containsKey(name)) {
+						if (!StringUtil.isEmpty(replacedByNames.get(name))) {
+							newMap.put(replacedByNames.get(name), ob);
+						}
+
 					} else {
 						newMap.put(nameKeys.get(name), ob);
 					}
@@ -504,7 +518,7 @@ public class OsonMerge {
 			}
 		}
 		
-		return oson.serialize(object);
+		return oson.pretty(pretty).serialize(object);
 	}
 	
 	/*

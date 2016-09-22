@@ -1,0 +1,26 @@
+{
+    "query_status" : {
+        "query_status_code" : "OK",
+        "query_status_description" : "Query successfully performed."
+    },
+    "ip_address" : "184.66.33.61",
+    "geolocation_data" : {
+        "continent_code" : "NA",
+        "continent_name" : "North America",
+        "country_code_iso3166alpha2" : "CA",
+        "country_code_iso3166alpha3" : "CAN",
+        "country_code_iso3166numeric" : "124",
+        "country_code_fips10-4" : "CA",
+        "country_name" : "Canada",
+        "region_code" : "BC",
+        "region_name" : "British Columbia",
+        "city" : "Victoria",
+        "postal_code" : "V8N",
+        "metro_code" : "-",
+        "area_code" : "-",
+        "latitude" : 48.4765,
+        "longitude" : -123.3145,
+        "isp" : "Shaw Communications",
+        "organization" : "Shaw Communications"
+    }
+}

@@ -1,0 +1,13 @@
+{
+	"statusCode" : "OK",
+	"statusMessage" : "",
+	"ipAddress" : "184.66.33.61",
+	"countryCode" : "CA",
+	"countryName" : "Canada",
+	"regionName" : "British Columbia",
+	"cityName" : "Sooke",
+	"zipCode" : "V9Z 0A1",
+	"latitude" : "48.3746",
+	"longitude" : "-123.728",
+	"timeZone" : "-07:00"
+}

@@ -1,0 +1,1 @@
+{"as":"AS6327 Shaw Communications Inc.","city":"Victoria","country":"Canada","countryCode":"CA","isp":"Shaw Communications","lat":48.4765,"lon":-123.3145,"org":"Shaw Communications","query":"184.66.33.61","region":"BC","regionName":"British Columbia","status":"success","timezone":"America/Vancouver","zip":"V8N"}

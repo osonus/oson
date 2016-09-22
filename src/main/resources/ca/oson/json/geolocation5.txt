@@ -1,0 +1,10 @@
+{
+  "ip": "184.66.33.61",
+  "hostname": "S010684948cd37c83.gv.shawcable.net",
+  "city": "Victoria",
+  "region": "British Columbia",
+  "country": "CA",
+  "loc": "48.4765,-123.3145",
+  "org": "AS6327 Shaw Communications Inc.",
+  "postal": "V8N"
+}

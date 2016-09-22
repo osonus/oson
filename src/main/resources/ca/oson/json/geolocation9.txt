@@ -1,0 +1,1 @@
+{"ip_address":"184.66.33.61","country":"Canada","country_code":"CA","continent":"North America","continent_code":"NA","city":"Victoria","county":null,"region":"British Columbia","region_code":"BC","timezone":"PST","owner":"SHAW COMMUNICATIONS INC.","longitude":-123.35,"latitude":48.43}

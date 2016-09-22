@@ -24,7 +24,7 @@ public class MergeTest extends TestCaseBase {
 		String str1 = "{\"id\":1, \"username\":\"osonus\", \"webSite\":\"google.com\"}";
 		String str2 = "{\"id\":2, \"email\":\"osonus@gmail.com\", \"web_site\":\"oson.ca\"}";
 		
-		String expected = "{\"id\":2,\"email\":\"osonus@gmail.com\",\"web_site\":\"oson.ca\",\"username\":\"osonus\"}";
+		String expected = "{\"id\":1,\"email\":\"osonus@gmail.com\",\"web_site\":\"google.com\",\"username\":\"osonus\"}";
 
 		String json = merge.merge(str1, str2);
 		assertEquals(expected, json);
@@ -36,7 +36,7 @@ public class MergeTest extends TestCaseBase {
 		String list = "[{\"foo\":\"foo1\"},{\"bar\":\"bar2\"},{\"foo\":\"foo1\"},{\"bar\":\"bar1\"},{\"foo\":\"foo2\"},{\"bar\":\"bar3\"}]";;
 		
 		String json = merge.merge(list);
-		String expected = "{\"bar\":\"bar3\",\"foo\":\"foo2\"}";
+		String expected = "{\"bar\":\"bar1\",\"foo\":\"foo1\"}";
 		assertEquals(expected, json);
 		
 		

@@ -20,6 +20,17 @@ public class ArrayToJsonMap {
 
 		return map;
 	}
+	public static Map<String, String> array2Map(String[] array) {
+		Map<String, String> map = new LinkedHashMap<>();
+
+		int length = array.length - 1;
+
+		for (int i = 0; i < length; i++) {
+			map.put(array[i], array[++i]);
+		}
+
+		return map;
+	}
 	
 	public static Map<Object, Object> list2Map(List list) {
 		Map<Object, Object> map = new LinkedHashMap<>();

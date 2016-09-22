@@ -17,6 +17,7 @@ import java.io.UnsupportedEncodingException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.lang.reflect.Type;
+import java.net.URL;
 import java.util.function.Consumer;
 
 /**
@@ -206,8 +207,11 @@ public class OsonIO extends Oson {
 		return null;
 	}
 
-	public <T> T readValue(String file) {
-		return readValue(new File(file), null);
+	public <T> T readValue(String fileName) {
+		URL url = getClass().getResource(fileName);
+		File file = new File(url.getPath());
+		
+		return readValue(file, null);
 	}
 	
 	public <T> T readValue(Class<T> valueType, String file) {
