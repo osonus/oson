@@ -4,8 +4,14 @@ import javax.persistence.EnumType;
 
 import org.junit.Test;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 import ca.oson.json.ClassMapper;
+import ca.oson.json.OsonAssert;
+import ca.oson.json.OsonAssert.MODE;
 import ca.oson.json.Oson.*;
+import ca.oson.json.enumbooleandate.EnumMaster.MatchingSensitivity;
 import ca.oson.json.function.Enum2JsonFunction;
 import ca.oson.json.support.TestCaseBase;
 
@@ -57,4 +63,43 @@ public class EnumTest extends TestCaseBase {
 		   assertEquals(expected, result);
 	   }
 
+	   @Test
+	   public void testDeSerializeEnumWithAnnotation() {
+		   EnumMaster master = new EnumMaster();
+		   master.threshold = 10;
+		   
+		   master.matchingSensitivity = MatchingSensitivity.MEDIUM;
+		   
+		   String json = oson.serialize(master);
+		   
+		   EnumMaster student = oson.deserialize(json, EnumMaster.class);
+		   
+		   OsonAssert.assertEquals(json, student, MODE.EXACT);
+	   }
+	   
+}
+
+
+class EnumMaster 
+{
+	public enum MatchingSensitivity {
+		LOW,
+		MEDIUM,
+		HIGH;
+
+		@JsonValue
+		public String toValue() {
+			return this.name().toLowerCase();
+		}
+
+		@JsonCreator
+		public static MatchingSensitivity forValue(String value) {
+			return MatchingSensitivity.valueOf(value.toUpperCase());
+		}
+	}
+	
+	
+	MatchingSensitivity matchingSensitivity;
+	int threshold;
+	
 }

@@ -13,11 +13,14 @@
  *******************************************************************************/
 package ca.oson.json.util;
 
+import java.beans.Expression;
+import java.beans.Statement;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
@@ -79,6 +82,57 @@ import com.fasterxml.jackson.annotation.JsonSetter;
 import com.google.gson.annotations.SerializedName;
 
 public class ObjectUtil {
+	@SuppressWarnings("unchecked")
+	public static <E> void setMethodValue(E obj, Method method, Object... args) {
+		try {
+			method.setAccessible(true);
+			
+			method.invoke(obj, args);
+			
+		} catch (InvocationTargetException | IllegalAccessException | IllegalArgumentException e) {
+			// e.printStackTrace();
+			try {
+				if (obj != null) {
+					Statement stmt = new Statement(obj, method.getName(), args);
+					stmt.execute();
+				}
+				
+			} catch (Exception e1) {
+				// e1.printStackTrace();
+			}
+		}
+	}
+	
+	
+	@SuppressWarnings("unchecked")
+	public static <E,R> R getMethodValue(E obj, Method method, Object... args) {
+		R value = null;
+
+		try {
+			method.setAccessible(true);
+			
+			value = (R) method.invoke(obj, args);
+		} catch (InvocationTargetException | IllegalAccessException | IllegalArgumentException e) {
+			// e.printStackTrace();
+			try {
+				if (obj != null) {
+					Expression expr = new Expression(obj, method.getName(), args);
+					expr.execute();
+					value = (R) expr.getValue();
+				}
+				
+				if (value == null) {
+					value = (R) method.getDefaultValue();
+				}
+				
+			} catch (Exception e1) {
+				// e1.printStackTrace();
+			}
+		}
+		
+		return value;
+	}
+	
 
 	public static boolean isBasicDataType(Class valueType) {
 		if (valueType == null) { // no idea, just assume

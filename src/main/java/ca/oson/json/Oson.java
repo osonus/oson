@@ -517,13 +517,7 @@ public class Oson {
 				}
 				
 				if (getter != null) {
-					getter.setAccessible(true);
-					try {
-						defaultValue = getter.invoke(enclosingObj, null);
-					} catch (InvocationTargetException | IllegalAccessException | IllegalArgumentException e) {
-						// e.printStackTrace();
-						defaultValue = getter.getDefaultValue();
-					}
+					defaultValue = ObjectUtil.getMethodValue(enclosingObj, getter);
 				}
 			}
 			
@@ -6718,6 +6712,24 @@ public class Oson {
 		} catch (Exception ex) {
 		}
 		
+		for (Method method: enumType.getDeclaredMethods()) {
+			for (Annotation annotation: method.getDeclaredAnnotations()) {
+				String aname = annotation.annotationType().getName();
+				
+				switch (aname) {
+					case "com.fasterxml.jackson.annotation.JsonCreator":
+					case "org.codehaus.jackson.annotate.JsonCreator":
+						return ObjectUtil.getMethodValue(null, method, value);
+						
+					case "ca.oson.json.annotation.FieldMapper":
+						ca.oson.json.annotation.FieldMapper fieldMapper = (ca.oson.json.annotation.FieldMapper)annotation;
+						if (fieldMapper.jsonCreator() != null && fieldMapper.jsonCreator() == BOOLEAN.TRUE) {
+							return ObjectUtil.getMethodValue(null, method, value);
+						}
+				}
+			}
+
+		}
 		
 		String fieldName = null;
 		for (Field field: enumType.getDeclaredFields()) {
@@ -8992,6 +9004,26 @@ public class Oson {
 		String name = en.name();
 		
 		if (enumType == null || enumType == EnumType.STRING) {
+
+			for (Method method: valueType.getDeclaredMethods()) {
+				for (Annotation annotation: method.getDeclaredAnnotations()) {
+					String aname = annotation.annotationType().getName();
+					
+					switch (aname) {
+						case "com.fasterxml.jackson.annotation.JsonValue":
+						case "org.codehaus.jackson.annotate.JsonValue":
+							return ObjectUtil.getMethodValue(en, method);
+							
+						case "ca.oson.json.annotation.FieldMapper":
+							ca.oson.json.annotation.FieldMapper fieldMapper = (ca.oson.json.annotation.FieldMapper)annotation;
+							if (fieldMapper.jsonValue() != null && fieldMapper.jsonValue() == BOOLEAN.TRUE) {
+								return ObjectUtil.getMethodValue(en, method);
+							}
+					}
+				}
+
+			}
+			
 			for (Field field: valueType.getDeclaredFields()) {
 				if (name.equalsIgnoreCase(field.getName())) {
 					ca.oson.json.annotation.FieldMapper fieldMapper = field.getAnnotation(ca.oson.json.annotation.FieldMapper.class);
@@ -10620,26 +10652,8 @@ public class Oson {
 				Method getter = valueType.getDeclaredMethod("toString", null);
 				
 				if (getter != null) {
-					E getterValue = null;
+					E getterValue = ObjectUtil.getMethodValue(obj, getter);
 
-					try {
-						getterValue = (E) getter.invoke(obj, null);
-					} catch (InvocationTargetException | IllegalAccessException | IllegalArgumentException e) {
-						// e.printStackTrace();
-						try {
-							Expression expr = new Expression(obj, getter.getName(), new Object[0]);
-							expr.execute();
-							getterValue = (E) expr.getValue();
-							
-							if (getterValue == null) {
-								getterValue = (E) getter.getDefaultValue();
-							}
-							
-						} catch (Exception e1) {
-							// e1.printStackTrace();
-						}
-					}
-					
 					if (getterValue != null) {
 						Class returnType = getterValue.getClass();
 						
@@ -10706,26 +10720,7 @@ public class Oson {
 				
 				
 				if (getter != null) {
-					E getterValue = null;
-
-					try {
-						getter.setAccessible(true);
-						getterValue = (E) getter.invoke(obj, null);
-					} catch (InvocationTargetException | IllegalAccessException | IllegalArgumentException e) {
-						//e.printStackTrace();
-						try {
-							Expression expr = new Expression(obj, getter.getName(), new Object[0]);
-							expr.execute();
-							getterValue = (E) expr.getValue();
-							
-							if (getterValue == null) {
-								getterValue = (E) getter.getDefaultValue();
-							}
-							
-						} catch (Exception e1) {
-							//e1.printStackTrace();
-						}
-					}
+					E getterValue = ObjectUtil.getMethodValue(obj, getter);
 					
 					if (getterValue != null) {
 						Class returnType = getterValue.getClass();
@@ -11139,24 +11134,7 @@ public class Oson {
 
 				if (getter != null) {
 					if (fieldMapper.useAttribute == null || fieldMapper.useAttribute) {
-						try {
-							getterValue = (E) getter.invoke(obj, null);
-						} catch (InvocationTargetException e) {
-							// e.printStackTrace();
-							try {
-								Expression expr = new Expression(obj, getter.getName(), new Object[0]);
-								expr.execute();
-								getterValue = (E) expr.getValue();
-								
-								if (getterValue == null) {
-									getterValue = (E) getter.getDefaultValue();
-								}
-								
-							} catch (Exception e1) {
-								// e1.printStackTrace();
-							}
-						}
-						
+						getterValue = ObjectUtil.getMethodValue(obj, getter);
 						//getterValue = ObjectUtil.unwraponce(getterValue);
 					}
 					
@@ -11555,25 +11533,7 @@ public class Oson {
 				
 				
 				// get value
-				E value = null;
-
-				try {
-					value = (E) getter.invoke(obj, null);
-				} catch (Exception e) {
-					// e.printStackTrace();
-					try {
-						Expression expr = new Expression(obj, getter.getName(), new Object[0]);
-						expr.execute();
-						value = (E) expr.getValue();
-						
-						if (value == null) {
-							value = (E) getter.getDefaultValue();
-						}
-						
-					} catch (Exception e1) {
-						// e1.printStackTrace();
-					}
-				}
+				E value = ObjectUtil.getMethodValue(obj, getter);
 
 				if (fieldMapper.jsonValue != null && fieldMapper.jsonValue) {
 					if (value != null) {
@@ -11626,7 +11586,9 @@ public class Oson {
 
 				StringBuffer sb = new StringBuffer();
 				sb.append(repeatedItem);
-				sb.append("\"" + name + "\":" + pretty);
+				if (fieldMapper.jsonNoName == null || !fieldMapper.jsonNoName) {
+					sb.append("\"" + name + "\":" + pretty);
+				}
 				sb.append(str);
 				sb.append(",");
 				
@@ -11648,30 +11610,11 @@ public class Oson {
 							continue;
 						}
 						
-						if (annotation instanceof JsonValue) {
-							try {
-								method.setAccessible(true);
-								Object mvalue = method.invoke(obj, null);
-			
-								if (mvalue != null) {
-									return StringUtil.doublequote(mvalue, isEscapeHtml());
-								}
-								
-							} catch (InvocationTargetException e) {
-								// e.printStackTrace();
-							}
-							
-						} else if (annotation instanceof org.codehaus.jackson.annotate.JsonValue) {
-							try {
-								method.setAccessible(true);
-								Object mvalue = method.invoke(obj, null);
-			
-								if (mvalue != null) {
-									return StringUtil.doublequote(mvalue, isEscapeHtml());
-								}
-								
-							} catch (InvocationTargetException e) {
-								// e.printStackTrace();
+						if (annotation instanceof JsonValue ||
+								annotation instanceof org.codehaus.jackson.annotate.JsonValue) {
+							Object mvalue = ObjectUtil.getMethodValue(obj, method);
+							if (mvalue != null) {
+								return StringUtil.doublequote(mvalue, isEscapeHtml());
 							}
 							
 						} else if (annotation instanceof JsonAnyGetter || annotation instanceof org.codehaus.jackson.annotate.JsonAnyGetter
@@ -11694,26 +11637,7 @@ public class Oson {
 
 			for (Method method: jsonAnyGetterMethods) {
 				if (method != null) {
-					Object allValues = null;
-					
-					try {
-						method.setAccessible(true);
-						allValues = method.invoke(obj, null);
-					} catch (Exception e) {
-						try {
-							Expression expr = new Expression(obj, method.getName(), new Object[0]);
-							expr.execute();
-							allValues = expr.getValue();
-							
-							if (allValues == null) {
-								allValues = method.getDefaultValue();
-							}
-							
-						} catch (Exception e1) {
-							// e1.printStackTrace();
-						}
-						
-					}
+					Object allValues = ObjectUtil.getMethodValue(obj, method);
 
 					if (allValues != null && allValues instanceof Map) {
 						Map<String, Object> map = (Map)allValues;
@@ -11847,8 +11771,7 @@ public class Oson {
 				}
 			}
 
-		} catch (IllegalAccessException | IllegalArgumentException
-				| SecurityException e) {
+		} catch (IllegalArgumentException | SecurityException e) {
 			e.printStackTrace();
 			throw new RuntimeException(e);
 			// } catch (InvocationTargetException e) {
@@ -12224,25 +12147,11 @@ public class Oson {
 		for (Method method: valueType.getDeclaredMethods()) {
 			if (method.getParameterCount() == 1) {
 				if (ObjectUtil.isSameDataType(method.getParameterTypes()[0], singleMapValueType)) {
-					try {
-						method.setAccessible(true);
-						Object object = method.invoke(obj, singleMapValue);
-						
-						if (object != null && valueType.isAssignableFrom(object.getClass())) {
-							return (T) object;
-						}
+					Object object = ObjectUtil.getMethodValue(obj, method, singleMapValue);
 
-					} catch (IllegalAccessException
-							| IllegalArgumentException | InvocationTargetException ex) {
-							//ex.printStackTrace();
-						try {
-							Statement stmt = new Statement(obj, method.getName(), new Object[]{singleMapValue});
-							stmt.execute();
-						} catch (Exception e) {
-							//e.printStackTrace();
-						}
+					if (object != null && valueType.isAssignableFrom(object.getClass())) {
+						return (T) object;
 					}
-					
 				}
 
 			}
@@ -12662,14 +12571,12 @@ public class Oson {
 							int parameterCount = method.getParameterCount();
 							if (parameterCount == 0) {
 								try {
-									obj = (T)method.invoke(null);
+									obj = ObjectUtil.getMethodValue(null, method);
 									if (obj != null) {
 										return setSingleMapValue(obj, valueType, singleMapValue, singleMapValueType);
 									}
 
-								} catch (IllegalAccessException
-										| IllegalArgumentException
-										| InvocationTargetException e) {
+								} catch (IllegalArgumentException e) {
 									// TODO Auto-generated catch block
 									//e.printStackTrace();
 								}
@@ -12697,21 +12604,13 @@ public class Oson {
 							
 							if (ObjectUtil.isSameDataType(parameterTypes[0], singleMapValueType)) {
 								try {
-									method.setAccessible(true);
-									obj = (T)method.invoke(null, singleMapValue);
+									obj = ObjectUtil.getMethodValue(null, method, singleMapValue);
 									if (obj != null) {
 										return obj;
 									}
 
-								} catch (IllegalAccessException
-										| IllegalArgumentException | InvocationTargetException ex) {
+								} catch (IllegalArgumentException ex) {
 										//ex.printStackTrace();
-									try {
-										Statement stmt = new Statement(obj, method.getName(), new Object[]{singleMapValue});
-										stmt.execute();
-									} catch (Exception e) {
-										//e.printStackTrace();
-									}
 								}
 								
 							}
@@ -12737,15 +12636,13 @@ public class Oson {
 							}
 						}
 
-						obj = (T)method.invoke(null, parameterValues);
+						obj = ObjectUtil.getMethodValue(null, method, parameterValues);
+						
 						if (obj != null) {
 							return setSingleMapValue(obj, valueType, singleMapValue, singleMapValueType);
 						}
 
-					} catch (IOException
-							| IllegalAccessException
-							| IllegalArgumentException
-							| InvocationTargetException e) {
+					} catch (IOException | IllegalArgumentException e) {
 						//e.printStackTrace();
 					}
 				}
@@ -12771,7 +12668,7 @@ public class Oson {
 						if (parameterCount > 0) {
 							if (parameterCount == 1 && map.size() == 1 && singleMapValue != null && singleMapValueType != null) {
 								if (ObjectUtil.isSameDataType(method.getParameterTypes()[0], singleMapValueType)) {
-									obj = (T)method.invoke(null, singleMapValueType);
+									obj = ObjectUtil.getMethodValue(null, method, singleMapValueType);
 									if (obj != null) {
 										return obj;
 									}
@@ -12804,15 +12701,12 @@ public class Oson {
 							}
 						}
 
-						obj = (T)method.invoke(null, parameterValues);
+						obj = ObjectUtil.getMethodValue(obj, method, parameterValues);
 						if (obj != null) {
 							return setSingleMapValue(obj, valueType, singleMapValue, singleMapValueType);
 						}
 
-					} catch (IOException
-							| IllegalAccessException
-							| IllegalArgumentException
-							| InvocationTargetException e) {
+					} catch (IOException | IllegalArgumentException e) {
 						//e.printStackTrace();
 					}
 					
@@ -13537,19 +13431,7 @@ public class Oson {
 							| IllegalArgumentException ex) {
 						//ex.printStackTrace();
 						if (setter != null) {
-							try {
-								setter.invoke(obj, value);
-
-							} catch (IllegalAccessException
-									| IllegalArgumentException | InvocationTargetException exc) {
-									//exc.printStackTrace();
-								try {
-									Statement stmt = new Statement(obj, setter.getName(), new Object[]{value});
-									stmt.execute();
-								} catch (Exception e) {
-									//e.printStackTrace();
-								}
-							}
+							ObjectUtil.setMethodValue(obj, setter, value);
 						}
 					}
 				}
@@ -13904,19 +13786,8 @@ public class Oson {
 						}
 					}
 
-					try {
-						setter.invoke(obj, value);
+					ObjectUtil.setMethodValue(obj, setter, value);
 
-					} catch (IllegalAccessException
-							| IllegalArgumentException | InvocationTargetException ex) {
-							//ex.printStackTrace();
-						try {
-							Statement stmt = new Statement(obj, setter.getName(), new Object[]{value});
-							stmt.execute();
-						} catch (Exception e) {
-							//e.printStackTrace();
-						}
-					}
 					nameKeys.remove(name);
 				}
 			}
@@ -13967,18 +13838,7 @@ public class Oson {
 						String java = json2Java(name);
 
 						if (value != null && !StringUtil.isEmpty(java)) {
-							try {
-								jsonAnySetterMethod.setAccessible(true);
-								jsonAnySetterMethod.invoke(obj, java, value);
-							} catch (InvocationTargetException e) {
-								// e.printStackTrace();
-								try {
-									Statement stmt = new Statement(obj, jsonAnySetterMethod.getName(), new Object[]{java, value});
-									stmt.execute();
-								} catch (Exception ex) {
-									//e.printStackTrace();
-								}
-							}
+							ObjectUtil.setMethodValue(obj, jsonAnySetterMethod, java, value);
 						}
 
 					}
@@ -13989,7 +13849,7 @@ public class Oson {
 			return obj;
 
 			// | InvocationTargetException
-		} catch (IllegalAccessException | IllegalArgumentException e) {
+		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 		}
 

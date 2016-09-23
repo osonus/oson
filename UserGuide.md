@@ -35,9 +35,8 @@
     * [Use Constructor Annotation](#TOC-Use-Constructor-Annotation)
   * [Lambda Expression](#TOC-Deserialize-Lambda-Expression)
 6. [Oson Assert](#TOC-Oson-Assert)
-7. [Oson Query](#TOC-Oson-Query)
-8. [Oson Merge](#TOC-Oson-Merge)
-
+7. [Oson Merge](#TOC-Oson-Merge)
+8. [Oson Query](#TOC-Oson-Query)
 
 ## <a name="TOC-Overview"></a>Overview
 
@@ -1385,7 +1384,18 @@ Checks the matches of values only, regardless of ordering and attribute names or
 Use cases can be found in [AssertTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/asserts/AssertTest.java).
 
 
-## <a name="TOC-Oson-Query"></a>Oson Query
+## <a name="TOC-Oson-Merge"></a>Oson Merge
+
+There are cases when you want to merge multiple Json documents together to form a single Json output. (This feature is suggested by Ravikumar S).
+
+There are different aspects to configure the way how this kind of merging can be done:
+  * attribute names between two documents
+  * non-overlapping attributes from them
+  * how to merge numeric and non-numeric values
+  * how to  handle list and array values from two documents
+
+
+## <a name="TOC-Oson-Path"></a>Oson Path (under development)
 
 It is useful to have a simple query function for Json document, just like xpath for XML documents. Json documents can be queried using attributes connected by ".", such as the query phrase "a.b.c", which means to find the parts in a Json document that first has attribute or key named "a", then from the found parts, locate smaller parts of attributes and keys named "b", until "c"...
 
@@ -1399,14 +1409,4 @@ The second search method can have an optional boolean parameter called strict. W
 
 See examples in [QueryTest](https://github.com/osonus/oson/blob/master/src/test/java/ca/oson/json/query/QueryTest.java)
 
-
-## <a name="TOC-Oson-Merge"></a>Oson Merge
-
-There are cases when you want to merge multiple Json documents together to form a single Json output. (This feature is suggested by Ravikumar S).
-
-There are different aspects to configure the way how this kind of merging can be done:
-  * attribute names between two documents
-  * non-overlapping attributes from them
-  * how to merge numeric and non-numeric values
-  * how to  handle list and array values from two documents
 
