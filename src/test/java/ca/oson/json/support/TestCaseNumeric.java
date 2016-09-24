@@ -7,14 +7,10 @@ import org.junit.Before;
 import ca.oson.json.OsonIO;
 import ca.oson.json.Oson.JSON_PROCESSOR;
 
-public abstract class TestCaseNumeric extends TestCase {
-	protected OsonIO oson;
-	public static JSON_PROCESSOR processor = JSON_PROCESSOR.OSON;
-	
+public abstract class TestCaseNumeric extends TestCaseBase {
    @Before 
    public void setUp() {
-	   oson = new OsonIO();
-	   oson.setJsonProcessor(processor);
+	   super.setUp();
 	   oson.setCommentPatterns(new String[] {"//[^\n\r]*\n?", "/\\*[^\\*/]*\\*/"});
    }
    

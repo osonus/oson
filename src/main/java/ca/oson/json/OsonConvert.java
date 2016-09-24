@@ -1,6 +1,7 @@
 package ca.oson.json;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,45 @@ public class OsonConvert {
 	 * Create a custom Java object, based on a Json string
 	 */
 	public static Object json2Object (String json) {
+		
+		return null;
+	}
+	
+	/*
+	 * Filter the Json string based on the filters criteria
+	 * @param json     the Json string to filter
+	 * @param filters  the filtering rule: filter out any attributes with values to be null or empty, rename any other attribute with value
+	 *
+	 * @return the filtered Json string
+	 */
+	public static String filter(String json, Map<String, String> filters) {
+		return filter(json, filters, null);
+	}
+	
+	public static String filter(String json, Map<String, String> filters, String root) {
+		if (!StringUtil.isEmpty(root)) {
+			json = OsonPath.search(json, root, true);
+			
+			root = root.toLowerCase() + ".";
+			Map<String, String> map = new HashMap<>();
+			for (String k: filters.keySet()) {
+				String key = k.toLowerCase();
+				int idx = key.indexOf(root);
+				if (idx == 0) {
+					key = k.substring(root.length());
+				} else if (idx > 0 && key.charAt(idx -1) == '.') {
+					key = k.substring(idx + root.length());
+				} else {
+					key = k;
+				}
+				
+				map.put(key, filters.get(k));
+			}
+		}
+		
+		
+		
+		
 		
 		return null;
 	}

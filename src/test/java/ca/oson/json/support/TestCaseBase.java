@@ -9,13 +9,13 @@ import junit.framework.TestCase;
 
 public abstract class TestCaseBase extends TestCase {
 	protected OsonIO oson;
-	public static JSON_PROCESSOR processor = JSON_PROCESSOR.OSON;
+	public static JSON_PROCESSOR processor = JSON_PROCESSOR.OSON;//.JACKSON;
 	
    @Before 
    protected void setUp() {
 	   ObjectUtil.getJSONObject(null);
 	   oson = new OsonIO();
-	   oson.setJsonProcessor(processor).setPrintErrorUseOsonInFailure(true);
+	   oson.setJsonProcessor(processor).setPrintErrorUseOsonInFailure(false);
    }
    
    

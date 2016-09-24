@@ -89,6 +89,10 @@ public class QueryTest extends TestCaseBase {
 		expected = "[\"available\",\"in-use\"]";
 		assertEquals(expected, found);
 		
+		found = OsonPath.search(json, "status", true);
+		expected = "[\"available\",\"in-use\"]";
+		assertEquals(expected, found);
+		
 		found = OsonPath.search(json, "volumes.name.status");
 		expected = null;
 		assertEquals(expected, found);
