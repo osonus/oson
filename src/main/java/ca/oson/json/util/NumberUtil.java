@@ -214,16 +214,45 @@ public class NumberUtil {
 		return true;
 	}
 	
+	
+	public static double[] doubleValues(List<Number> values) {
+		int count = values.size();
+		double[] dvalues = new double[count];
+		
+		int i = 0;
+		for (Number value: values) {
+			if (value == null) {
+				// dvalues[i++] = 0.0; // exclude null
+			} else {
+				dvalues[i++] = value.doubleValue();
+			}
+		}
+		
+		if (i < count) {
+			return Arrays.copyOfRange(dvalues, 0, i);
+		}
+		
+		return dvalues;
+	}
+	
 	public static Number avg (List<Number> values, double errorThreshold) {
 		int count = values.size();
 		boolean isFloating = false;
 		Number[] numbers = new Number[count];
 		int i = 0;
 		for (Number value: values) {
-			numbers[i++] = value;
-			if (!isFloating && isFloatingNumber(value)) {
-				isFloating = true;
+			if (value != null) {
+				numbers[i++] = value;
+				if (!isFloating && isFloatingNumber(value)) {
+					isFloating = true;
+				}
 			}
+		}
+		
+		if (i < count) {
+			numbers = Arrays.copyOfRange(numbers, 0, i);
+			
+			count = i;
 		}
 
 		if (errorThreshold == 0 || count < 3) {

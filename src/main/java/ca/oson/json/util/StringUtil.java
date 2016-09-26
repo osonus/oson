@@ -5,11 +5,15 @@ import java.io.StreamTokenizer;
 import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.json.JSONObject;
+
+import com.google.gson.FieldNamingPolicy;
 
 import ca.oson.json.Oson.FIELD_NAMING;
 
@@ -505,11 +509,30 @@ public class StringUtil {
 	public static String formatName(String name, FIELD_NAMING format) {
 		if (name == null) {
 			return name;
+			
+		} else if (name.indexOf(".") != -1) {
+			String[] names = name.split(".");
+			
+			StringBuffer sb = new StringBuffer();
+			for (int i = 0; i < names.length; i++) {
+				if (i > 0) {
+					sb.append(".");
+				}
+				sb.append(formatName(names[i], format));
+			}
+			
+			return sb.toString();
 		}
 		
 		switch(format) {
 		case FIELD: // someField_name
 			return name;
+
+		case LOWER: // somefield_name
+			return name.toLowerCase();
+
+		case UPPER: // SOMEFIELD_NAME
+			return name.toUpperCase();
 
 		case CAMELCASE: // someFieldName
 			return camelCase(name);
@@ -557,6 +580,51 @@ public class StringUtil {
 		return name;
 	}
 	
+	/*
+	 * If any of the formatted values based on FIELD_NAMING enum is the same,
+	 * these two strings are considered to have the same name.
+	 * 
+	 * @param name    the first name
+	 * @param name2   the second name
+	 * 
+	 * @return        a boolean value indicating both names are the same
+	 */
+	public static boolean hasSameNaming(String name, String name2) {
+		return hasSameNaming(name, name2, null);
+	}
+	
+	public static boolean hasSameNaming(String name, String name2, FIELD_NAMING format) {
+		if (isEmpty(name)) {
+			if (isEmpty(name2)) {
+				return true;
+			} else {
+				return false;
+			}
+		} else if (isEmpty(name2)) {
+			return false;
+		}
+		
+		if (format != null) {
+			String name0 = StringUtil.formatName(name, format);
+			String name3 = StringUtil.formatName(name2, format);
+			
+			if (name0.equals(name3)) {
+				return true;
+			}
+			
+		} else {
+			for (FIELD_NAMING naming: FIELD_NAMING.values()) {
+				String name0 = StringUtil.formatName(name, naming);
+				String name3 = StringUtil.formatName(name2, naming);
+				
+				if (name0.equals(name3)) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
 	
 	public static boolean isNumeric(String str) {
 		try {

@@ -12,14 +12,19 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.json.JSONObject;
 import org.json.JSONArray;
 
+import com.google.common.base.Function;
+
 import ca.oson.json.Oson.FIELD_NAMING;
 import ca.oson.json.Oson.JSON_INCLUDE;
+import ca.oson.json.function.ConvertFunction;
+import ca.oson.json.util.ConvertUtil;
 import ca.oson.json.util.NumberUtil;
 import ca.oson.json.util.ObjectUtil;
+import ca.oson.json.util.Statistics;
 import ca.oson.json.util.StringUtil;
 
 public class OsonMerge {
-	private static FIELD_NAMING naming = FIELD_NAMING.CAMELCASE;
+	private static FIELD_NAMING naming = ConvertUtil.naming;
 	
 	public static enum NUMERIC_VALUE {
 		KEEP_NEW, // additional parameter values take precedence over previous ones
@@ -27,7 +32,11 @@ public class OsonMerge {
 		KEEP_MAX, // keep the maximum value, in case numeric
 		KEEP_MIN, // keep the smallest value
 		AVERAGE, // take an average value of all numeric values
-		FREQUENT // keep the most frequent value
+		FREQUENT, // keep the most frequent value
+		MEAN, // return Mean value
+		VARIANCE, // return Variance
+		MEDIAN, // return median
+		STDDEV // return StdDev value
 	}
 	
 	public static enum OTHER_VALUE {
@@ -111,8 +120,11 @@ public class OsonMerge {
 	/*
 	 * Old names are replaced by new names in the result:
 	 * {"oldName": "newName"}
+	 * 
+	 * The Object value can also be a ConvertFunction or a general Function
+	 * that can be used to customize how to process values for a particular key.
 	 */
-	private Map<String,String> replacedByNames = new HashMap<>();
+	private Map<String,Object> replacedByNames = new HashMap<>();
 
 	private Oson oson;
 	private Map<String, Map<Object, Integer>> cachedValues = new ConcurrentHashMap<>();
@@ -149,11 +161,11 @@ public class OsonMerge {
 		this.config = config;
 	}
 	
-	private Map<String, String> getNames() {
+	private Map<String, Object> getNames() {
 		return replacedByNames;
 	}
 
-	public void setNames(Map<String, String> names) {
+	public void setNames(Map<String, Object> names) {
 		if (names != null && names.size() > 0) {
 			for (String key: names.keySet()) {
 				this.replacedByNames.put(StringUtil.formatName(key, naming), names.get(key));
@@ -168,7 +180,7 @@ public class OsonMerge {
 		cachedListValues.clear();
 		cachedValues.clear();
 	}
-	
+
 	
 	private Object mergeObjects(Object object, Object obj) {
 		return mergeObjects(object, obj, null);
@@ -262,14 +274,10 @@ public class OsonMerge {
 					
 					
 					if (replacedByNames.containsKey(path + name)) {
-						if (!StringUtil.isEmpty(replacedByNames.get(path + name))) {
-							newMap.put(replacedByNames.get(path + name), ob);
-						}
+						ConvertUtil.processNameMap(newMap, path + name, ob, replacedByNames.get(path + name));
 						
 					} else if (replacedByNames.containsKey(name)) {
-						if (!StringUtil.isEmpty(replacedByNames.get(name))) {
-							newMap.put(replacedByNames.get(name), ob);
-						}
+						ConvertUtil.processNameMap(newMap, name, ob, replacedByNames.get(name));
 							
 					} else {
 						newMap.put(key, ob);
@@ -308,14 +316,10 @@ public class OsonMerge {
 					}
 					
 					if (replacedByNames.containsKey(path + name)) {
-						if (!StringUtil.isEmpty(replacedByNames
-								.get(path + name))) {
-							newMap.put(replacedByNames.get(path + name), ob);
-						}
+						ConvertUtil.processNameMap(newMap, path + name, ob, replacedByNames.get(path + name));
+
 					} else if (replacedByNames.containsKey(name)) {
-						if (!StringUtil.isEmpty(replacedByNames.get(name))) {
-							newMap.put(replacedByNames.get(name), ob);
-						}
+						ConvertUtil.processNameMap(newMap, name, ob, replacedByNames.get(name));
 
 					} else {
 						newMap.put(nameKeys.get(name), ob);
@@ -366,34 +370,88 @@ public class OsonMerge {
 				return new ArrayList(set);
 
 			case MERGE:
-
+				// if items are basic or list types, this will behavior like appending
+				// if items are map, will merge them
+				
 				Object head;
+				boolean isMap = true;
 				if (List.class.isInstance(object)) {
 					list = (List) object;
-					head = list.get(0);
 					int size = list.size();
 
-					for (int i = 1; i < size; i++) {
-						head = mergeObjects(head, list.get(i), path);
+					for (int i = 0; i < size; i++) {
+						head = list.get(i);
+						if (!Map.class.isInstance(head)) {
+							isMap = false;
+							break;
+						}
 					}
 
 				} else {
-					head = object;
+					isMap = false;
 				}
 				
-				if (List.class.isInstance(obj)) {
+				if (isMap && List.class.isInstance(object)) {
 					list = (List) obj;
 					int size = list.size();
 
 					for (int i = 0; i < size; i++) {
-						head = mergeObjects(head, list.get(i), path);
+						head = list.get(i);
+						if (!Map.class.isInstance(head)) {
+							isMap = false;
+							break;
+						}
 					}
-
+					
 				} else {
-					head = mergeObjects(head, obj, path);
+					isMap = false;
 				}
 				
-				return head;
+				
+				if (!isMap) {
+					if (List.class.isInstance(object)) {
+						if (List.class.isInstance(obj)) {
+							((List)object).addAll((List)obj);
+							return object;
+						} else {
+							((List)object).add(obj);
+							return object;
+						}
+						
+					} else {
+						((List)obj).add(object);
+						return obj;
+					}
+					
+				} else {
+					if (List.class.isInstance(object)) {
+						list = (List) object;
+						head = list.get(0);
+						int size = list.size();
+	
+						for (int i = 1; i < size; i++) {
+							head = mergeObjects(head, list.get(i), path);
+						}
+	
+					} else {
+						head = object;
+					}
+					
+					if (List.class.isInstance(obj)) {
+						list = (List) obj;
+						int size = list.size();
+	
+						for (int i = 0; i < size; i++) {
+							head = mergeObjects(head, list.get(i), path);
+						}
+	
+					} else {
+						head = mergeObjects(head, obj, path);
+					}
+					
+					return head;
+				}
+				
 			}
 			
 			
@@ -451,6 +509,10 @@ public class OsonMerge {
 			case KEEP_MIN:
 				return NumberUtil.min((Number)object, (Number)obj);
 			case AVERAGE:
+			case MEAN:
+			case VARIANCE:
+			case MEDIAN:
+			case STDDEV:
 				List<Number> values = cachedListValues.get(myroot);
 				if (values == null) {
 					values = new ArrayList();
@@ -459,7 +521,29 @@ public class OsonMerge {
 				}
 				values.add((Number)obj);
 				
-				return NumberUtil.avg(values, config.errorThreshold);
+				if (config.numericValue == NUMERIC_VALUE.AVERAGE) {
+					return NumberUtil.avg(values, config.errorThreshold);
+					
+				} else {
+					double[] doubleValues = NumberUtil.doubleValues(values);
+					
+					Statistics calculator = new Statistics(doubleValues);
+					
+					if (config.numericValue == NUMERIC_VALUE.MEAN) {
+						return calculator.getMean();
+						
+					} else if (config.numericValue == NUMERIC_VALUE.VARIANCE) {
+						return calculator.getVariance();
+						
+					} else if (config.numericValue == NUMERIC_VALUE.MEDIAN) {
+						return calculator.median();
+						
+					} else if (config.numericValue == NUMERIC_VALUE.STDDEV) {
+						return calculator.getStdDev();
+					}
+
+					return calculator.getMean();
+				}
 				
 			case FREQUENT:
 				

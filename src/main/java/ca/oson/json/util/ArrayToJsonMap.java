@@ -20,8 +20,8 @@ public class ArrayToJsonMap {
 
 		return map;
 	}
-	public static Map<String, String> array2Map(String[] array) {
-		Map<String, String> map = new LinkedHashMap<>();
+	public static Map<String, Object> array2Map(String[] array) {
+		Map<String, Object> map = new LinkedHashMap<>();
 
 		int length = array.length - 1;
 

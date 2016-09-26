@@ -195,6 +195,9 @@ public class OsonIO extends Oson {
 		return null;
 	}
 	public <T> T readValue(File file, Class<T> valueType) {
+		if (file == null) {
+			return null;
+		}
 		try {
 			InputStream is = new BufferedInputStream(new FileInputStream(file));
 			
@@ -208,8 +211,15 @@ public class OsonIO extends Oson {
 	}
 
 	public <T> T readValue(String fileName) {
-		URL url = getClass().getResource(fileName);
-		File file = new File(url.getPath());
+		File file = null;
+		
+		try {
+			file = new File(fileName);
+			
+		} catch (Exception e) {
+			URL url = getClass().getResource(fileName);
+			file = new File(url.getPath());
+		}
 		
 		return readValue(file, null);
 	}

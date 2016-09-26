@@ -23,7 +23,7 @@ import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.Oson.JSON_PROCESSOR;
 import ca.oson.json.Oson.MODIFIER;
 import ca.oson.json.OsonIO;
-import ca.oson.json.OsonPath;
+import ca.oson.json.OsonSearch;
 import ca.oson.json.domain.DateTime;
 import ca.oson.json.domain.IgnoreObject;
 import ca.oson.json.domain.OrderedPerson;

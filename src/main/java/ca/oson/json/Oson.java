@@ -155,6 +155,8 @@ public class Oson {
 	
 	public static enum FIELD_NAMING {
 		FIELD, // someField_name: use field name of a class/object, original field name
+		LOWER, // simple lower case
+		UPPER, // simply upper case
 		CAMELCASE, // someFieldName: convert underscore to camelcase, first leter lower case
 		UPPER_CAMELCASE, // SomeFieldName: first letter upper case
 		UNDERSCORE_CAMELCASE, // some_Field_Name
@@ -2882,6 +2884,12 @@ public class Oson {
 			switch (getFieldNaming()) {
 			case FIELD: // original field name: someField_name
 				gsonBuilder.setFieldNamingPolicy(FieldNamingPolicy.IDENTITY);
+				break;
+			case LOWER: // somefield_name -> some_field_name
+				gsonBuilder.setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES);
+				break;
+			case UPPER: //SOMEFIELD_NAME -> SomeFieldName
+				gsonBuilder.setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE);
 				break;
 			case CAMELCASE: // someFieldName
 				gsonBuilder.setFieldNamingPolicy(FieldNamingPolicy.IDENTITY);

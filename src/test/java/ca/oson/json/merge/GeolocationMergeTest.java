@@ -3,15 +3,18 @@ package ca.oson.json.merge;
 import java.io.File;
 import java.net.URL;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import ca.oson.json.MapData;
 import ca.oson.json.Oson.FIELD_NAMING;
 import ca.oson.json.OsonConvert;
 import ca.oson.json.OsonMerge;
 import ca.oson.json.OsonMerge.NUMERIC_VALUE;
-import ca.oson.json.OsonPath;
+import ca.oson.json.OsonSearch;
+import ca.oson.json.function.ConvertFunction;
 import ca.oson.json.support.TestCaseBase;
 import ca.oson.json.util.ArrayToJsonMap;
 import ca.oson.json.util.StringUtil;
@@ -19,7 +22,7 @@ import ca.oson.json.util.StringUtil;
 public class GeolocationMergeTest extends TestCaseBase {
 	OsonMerge merge;
 	
-	private static Map<String, String> getConversionMap() {
+	private static Map<String, Object> getConversionMap() {
     	String[] names = new String[] {
   		  "geobytesremoteip", "ip",
   		  "geobytesipaddress", "ip",
@@ -117,11 +120,33 @@ public class GeolocationMergeTest extends TestCaseBase {
 	  	"area_code", "",
 	  	"code","",
 	  	"accuracy_radius","",
-	  	"loc", "",
 	  	"geoplugin_country_name", ""
     	};
+    	
+    	Map<String, Object> namesMap = ArrayToJsonMap.array2Map(names);
+    	
+    	//"loc": "48.4765,-123.3145"
+    	ConvertFunction function = (MapData data) -> {
+    		String loc = data.value.toString();
+    		
+    		String[] location = loc.split(",");
+    		if (location.length == 2) {
+    			data.map.put("latitude", location[0]);
+    			data.map.put("longitude", location[1]);
+    		}
+            
+    		return data.map;
+    	};
+    	
+    	namesMap.put("loc", function);
+    	
+    	Function func = (Object p) -> {
+    		return null;
+    	};
+    	
+    	namesMap.put("statusCode", func);
 	
-    	return ArrayToJsonMap.array2Map(names);
+    	return namesMap;
 	}
 	
 	
@@ -136,7 +161,7 @@ public class GeolocationMergeTest extends TestCaseBase {
 			Object obj = oson.readValue("geolocation1.txt");
 			
 			//geolocation_data
-			String json = OsonPath.search(oson.serialize(obj), "geolocation_data");
+			String json = OsonSearch.search(oson.serialize(obj), "geolocation_data");
 			String[] jsons = new String[] {
 					oson.serialize(oson.readValue("geolocation2.txt")),
 					oson.serialize(oson.readValue("geolocation3.txt")),
@@ -153,7 +178,7 @@ public class GeolocationMergeTest extends TestCaseBase {
 			//merge.pretty = true;
 			
 			String merged = merge.merge(json, jsons);
-			//System.err.println(merged);
+			// System.err.println(merged);
 			
 			String expected = "{\"ip\":\"184.66.33.61\",\"country_code\":\"CA\",\"continent\":\"North America\",\"continent_code\":\"NA\",\"city\":\"Victoria\",\"region\":\"British Columbia\",\"region_code\":\"BC\",\"time_zone\":\"America/Vancouver\",\"isp\":\"Shaw Communications\",\"longitude\":-123.32633333333332,\"latitude\":48.461,\"zipCode\":\"V9Z 0A1\",\"capital\":\"Ottawa\",\"postal_code\":\"V8N\",\"population\":\"31592805\",\"hostname\":\"S010684948cd37c83.gv.shawcable.net\",\"nationality\":\"Canadians\",\"currency\":\"CAD\",\"location\":\"Victoria, BC, Canada\",\"countryName\":\"Canada\"}";
 			

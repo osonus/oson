@@ -8,10 +8,16 @@ import java.util.Map;
 
 import org.json.JSONObject;
 
+import ca.oson.json.Oson.FIELD_NAMING;
+import ca.oson.json.util.ConvertUtil;
 import ca.oson.json.util.StringUtil;
 
 public class OsonConvert {
 	private static String DELIMITER = "_";
+	private static FIELD_NAMING naming = ConvertUtil.naming;
+	private static Oson oson = new Oson()
+				.includeClassTypeInJson(false)
+				.setFieldNaming(naming);
 	
 	// 
 	/*
@@ -37,37 +43,93 @@ public class OsonConvert {
 	 *
 	 * @return the filtered Json string
 	 */
-	public static String filter(String json, Map<String, String> filters) {
+	public static String filter(String json, Map<String, Object> filters) {
 		return filter(json, filters, null);
 	}
 	
-	public static String filter(String json, Map<String, String> filters, String root) {
+	public static String filter(String json, Map<String, Object> filters, String root) {
 		if (!StringUtil.isEmpty(root)) {
-			json = OsonPath.search(json, root, true);
+			json = OsonSearch.search(json, root, true);
 			
-			root = root.toLowerCase() + ".";
-			Map<String, String> map = new HashMap<>();
+			String rootPath = root.toLowerCase() + ".";
+			Map<String, Object> map = new HashMap<>();
 			for (String k: filters.keySet()) {
 				String key = k.toLowerCase();
-				int idx = key.indexOf(root);
+				int idx = key.indexOf(rootPath);
 				if (idx == 0) {
-					key = k.substring(root.length());
+					key = k.substring(rootPath.length());
 				} else if (idx > 0 && key.charAt(idx -1) == '.') {
-					key = k.substring(idx + root.length());
+					key = k.substring(idx + rootPath.length());
 				} else {
 					key = k;
 				}
 				
 				map.put(key, filters.get(k));
 			}
+			
+			filters = map;
 		}
 		
 		
+		Object object = oson.deserialize(json);
 		
+		object = filtering (object, filters);
 		
-		
-		return null;
+		return oson.serialize(object);
 	}
+	
+	static Object filtering (Object object, Map<String, Object> filters) {
+		return filtering (object, filters, null);
+	}
+	
+	static Object filtering (Object object, Map<String, Object> filters, String path) {
+		if (object == null) {
+			return null;
+		}
+		
+		if (Map.class.isInstance(object)) {
+			Map<String, Object> map = (Map)object;
+			
+			if (path != null) {
+				path += ".";
+			} else {
+				path = "";
+			}
+			
+			Map<String, Object> newMap = new LinkedHashMap<>();
+			
+			for (String key: map.keySet()) {
+				String name = StringUtil.formatName(key, naming);
+				Object obj = filtering (map.get(key), filters, path + name);
+				
+				if (filters.containsKey(path + name)) {
+					ConvertUtil.processNameMap(newMap, path + name, obj, filters.get(path + name));
+					
+				} else if (filters.containsKey(name)) {
+					ConvertUtil.processNameMap(newMap, name, obj, filters.get(name));
+					
+				} else {
+					newMap.put(key, obj);
+				}
+				
+			}
+			
+			return newMap;
+			
+		} else if (List.class.isInstance(object)) {
+			List list = (List)object;
+			
+			for (int i = 0; i < list.size(); i++) {
+				list.set(i, filtering (list.get(i), filters, path));
+			}
+			
+			return list;
+	
+		} else {
+			return object;
+		}
+	}
+	
 	
 	
 	/*
@@ -81,8 +143,6 @@ public class OsonConvert {
 	 * @return flattened Json string
 	 */
 	public static String flatten (String json, String delimiter) {
-		Oson oson = new Oson().includeClassTypeInJson(false);
-		
 		Object obj = oson.deserialize(json);
 		
 		obj = flat(obj, delimiter);
