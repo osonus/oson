@@ -36,13 +36,15 @@ public class OsonMerge {
 		MEAN, // return Mean value
 		VARIANCE, // return Variance
 		MEDIAN, // return median
-		STDDEV // return StdDev value
+		STDDEV, // return StdDev value
+		MERGE // merge them into array or list
 	}
 	
-	public static enum OTHER_VALUE {
+	public static enum NONNUMERICAL_VALUE {
 		KEEP_NEW, // additional parameter values take precedence over previous ones
 		KEEP_OLD, // keep previous values
-		FREQUENT // keep the most frequent value
+		FREQUENT, // keep the most frequent value, based on counting
+		MERGE // merge them into array or list
 	}
 	
 	public static enum NON_OVERLAP_VALUE {
@@ -57,8 +59,8 @@ public class OsonMerge {
 		KEEP_OLD, // keep previous values
 		APPENDING, // concate arrays/lists with the same name
 		KEEP_UNIQUE, // keeps unique set of values
-		MERGE // merge each items of lists into 1, using specific merging rules for specific values, 
-		// either NUMERIC_VALUE or OTHER_VALUE rules
+		MERGE // if items are basic or list types, this will behavior like appending
+		// if the type of items are map or object, will merge them
 	}
 	
 	public static class Config
@@ -85,7 +87,7 @@ public class OsonMerge {
 		 * How to keep non-numeric attribute values, the default is 
 		 * to use the most frequent value
 		 */
-		public OTHER_VALUE otherValue = OTHER_VALUE.FREQUENT;
+		public NONNUMERICAL_VALUE nonnumericalValue = NONNUMERICAL_VALUE.FREQUENT;
 		
 		/*
 		 * How to handle the cases that some attributes only exist in the old object, 
@@ -515,7 +517,7 @@ public class OsonMerge {
 			case STDDEV:
 				List<Number> values = cachedListValues.get(myroot);
 				if (values == null) {
-					values = new ArrayList();
+					values = new ArrayList<>();
 					values.add((Number)object);
 					cachedListValues.put(myroot, values);
 				}
@@ -550,13 +552,22 @@ public class OsonMerge {
 			}
 			
 		} else {
-			switch (config.otherValue) {
+			switch (config.nonnumericalValue) {
 			case KEEP_NEW:
 				return obj;
 			case KEEP_OLD:
 				return object;
 			case FREQUENT:
 			}
+		}
+		
+		if ( config.nonnumericalValue == NONNUMERICAL_VALUE.MERGE ||
+				config.numericValue == NUMERIC_VALUE.MERGE) {
+			List values = new ArrayList<>();
+			values.add(object);
+			values.add(obj);
+
+			return values;
 		}
 
 		// most FREQUENT

@@ -6,7 +6,7 @@ import org.junit.Test;
 import ca.oson.json.OsonIO;
 import ca.oson.json.OsonMerge;
 import ca.oson.json.OsonMerge.NUMERIC_VALUE;
-import ca.oson.json.OsonMerge.OTHER_VALUE;
+import ca.oson.json.OsonMerge.NONNUMERICAL_VALUE;
 import ca.oson.json.support.TestCaseBase;
 import ca.oson.json.util.ObjectUtil;
 
@@ -40,13 +40,13 @@ public class MergeTest extends TestCaseBase {
 		assertEquals(expected, json);
 		
 		
-		merge.getConfig().otherValue = OTHER_VALUE.KEEP_OLD;
+		merge.getConfig().nonnumericalValue = NONNUMERICAL_VALUE.KEEP_OLD;
 		json = merge.merge(list);
 		expected = "{\"bar\":\"bar2\",\"foo\":\"foo1\"}";
 		assertEquals(expected, json);
 		
 		
-		merge.getConfig().otherValue = OTHER_VALUE.FREQUENT;
+		merge.getConfig().nonnumericalValue = NONNUMERICAL_VALUE.FREQUENT;
 		json = merge.merge(list);
 		expected = "{\"bar\":\"bar1\",\"foo\":\"foo1\"}";
 		assertEquals(expected, json);

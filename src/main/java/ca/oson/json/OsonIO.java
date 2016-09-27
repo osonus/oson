@@ -204,7 +204,7 @@ public class OsonIO extends Oson {
 			return readValue(is, valueType);
 			
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			// e.printStackTrace();
 		}
 		
 		return null;
@@ -214,11 +214,11 @@ public class OsonIO extends Oson {
 		File file = null;
 		
 		try {
-			file = new File(fileName);
-			
-		} catch (Exception e) {
 			URL url = getClass().getResource(fileName);
 			file = new File(url.getPath());
+
+		} catch (Exception e) {
+			file = new File(fileName);
 		}
 		
 		return readValue(file, null);

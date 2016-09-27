@@ -154,7 +154,7 @@ public class IntegerTest extends TestCaseBase {
 	   @Test
 	   public void testDeserializeIntWithFunctionEnum() {
 		   String value = "1";
-		   Integer expected = 4;
+		   Integer expected = 6;
 		   
 		   oson.setClassMappers(new ClassMapper(Integer.class)
 		   	.setDeserializer((Object p) -> FIELD_NAMING.UNDERSCORE_UPPER_CAMELCASE));

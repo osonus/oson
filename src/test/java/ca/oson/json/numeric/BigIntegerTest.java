@@ -223,7 +223,7 @@ public class BigIntegerTest extends TestCaseBase {
 	   @Test
 	   public void testDeserializeBigIntegerWithFunctionEnum() {
 		   String value = "1";
-		   BigInteger expected = BigInteger.valueOf(4);
+		   BigInteger expected = BigInteger.valueOf(6);
 		   
 		   oson.setClassMappers(new ClassMapper(BigInteger.class)
 		   	.setDeserializer((Object p) -> FIELD_NAMING.UNDERSCORE_UPPER_CAMELCASE));

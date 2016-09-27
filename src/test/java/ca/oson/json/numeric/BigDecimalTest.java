@@ -158,7 +158,7 @@ public class BigDecimalTest extends TestCaseBase {
 	   @Test
 	   public void testDeserializeBigDecimalWithFunctionEnum() {
 		   String value = "1";
-		   BigDecimal expected = new BigDecimal(4);
+		   BigDecimal expected = new BigDecimal(6);
 		   
 		   oson.setClassMappers(new ClassMapper(BigDecimal.class)
 		   	.setDeserializer((Object p) -> FIELD_NAMING.UNDERSCORE_UPPER_CAMELCASE));

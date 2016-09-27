@@ -158,7 +158,7 @@ public class AtomicIntegerTest extends TestCaseNumeric {
 	   @Test
 	   public void testDeserializeAtomicIntegerWithFunctionEnum() {
 		   String value = "1";
-		   AtomicInteger expected = new AtomicInteger(4);
+		   AtomicInteger expected = new AtomicInteger(6);
 		   
 		   oson.setClassMappers(new ClassMapper(AtomicInteger.class)
 		   	.setDeserializer((Object p) -> FIELD_NAMING.UNDERSCORE_UPPER_CAMELCASE));

@@ -108,7 +108,7 @@ public class XPathProcessor extends PathProcessor {
 			idx4 = previous.lastIndexOf("]");
 			if (idx3 == -1 || idx4 > idx3) {
 				parts.add(previous);
-				idx1 = idx2;
+				idx1 = idx2+1;
 			}
 			
 			idx2 = xpath2.indexOf(stepDelimiter, idx2 + 1);

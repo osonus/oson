@@ -158,7 +158,7 @@ public class AtomicLongTest extends TestCaseNumeric {
 	   @Test
 	   public void testDeserializeAtomicLongWithFunctionEnum() {
 		   String value = "1";
-		   AtomicLong expected = new AtomicLong(4);
+		   AtomicLong expected = new AtomicLong(6);
 		   
 		   oson.setClassMappers(new ClassMapper(AtomicLong.class)
 		   	.setDeserializer((Object p) -> FIELD_NAMING.UNDERSCORE_UPPER_CAMELCASE));
