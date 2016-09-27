@@ -63,7 +63,8 @@ public class XPathProcessor extends PathProcessor {
 		Map<String, Object> cleanupMap = ArrayToJsonMap.array2Map(new String[] {
 			"child::", "",
 			"descendant-or-self::node()", "",
-			"self::node()", "."
+			"self::node()", ".",
+			"parent::node()", ".."
 		});
 		
 		for (String key: cleanupMap.keySet()) {
@@ -71,7 +72,7 @@ public class XPathProcessor extends PathProcessor {
 			xpath.replaceAll(key, replacement);
 		}
 
-		//int length = xpath.length();
+		
 		int currentPos = 0;
 		
 		Step current = null;
@@ -91,8 +92,31 @@ public class XPathProcessor extends PathProcessor {
 			currentPos++;
 		}
 
+		String xpath2 = xpath.substring(currentPos);
 		
-		String[] splitted = xpath.substring(currentPos).split(stepDelimiter);
+		List<String> parts = new ArrayList<>(); 
+		
+		int idx1 = 0;
+		int idx2 = xpath2.indexOf(stepDelimiter, idx1);
+		int length = xpath2.length();
+		int idx3, idx4;
+		String previous;
+		
+		while (idx2 != -1) {
+			previous = xpath2.substring(idx1, idx2);
+			idx3 = previous.lastIndexOf("[");
+			idx4 = previous.lastIndexOf("]");
+			if (idx3 == -1 || idx4 > idx3) {
+				parts.add(previous);
+				idx1 = idx2;
+			}
+			
+			idx2 = xpath2.indexOf(stepDelimiter, idx2 + 1);
+		}
+		previous = xpath2.substring(idx1);
+		parts.add(previous);
+		
+		String[] splitted = parts.toArray(new String[0]); // xpath.substring(currentPos).split(stepDelimiter);
 
 		for (int i = 0; i < splitted.length; i++) {
 			String raw = splitted[i].trim();
