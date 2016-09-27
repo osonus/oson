@@ -9,6 +9,8 @@ public class Filter {
 	List<Filter> predicates = null;
 	
 	
-	
+	public Filter(String raw) {
+		this.raw = raw;
+	}
 	
 }

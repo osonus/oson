@@ -3,6 +3,11 @@ package ca.oson.json.path;
 import java.util.Set;
 
 public class Index extends Filter {
+	public Index(String raw) {
+		super(raw);
+		// TODO Auto-generated constructor stub
+	}
+
 	public static enum RANGE {
 		INDEX,
 		SLICE,
