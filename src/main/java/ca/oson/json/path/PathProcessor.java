@@ -23,7 +23,7 @@ public abstract class PathProcessor {
 			return false;
 		}
 		
-		if (xpath.contains("/")) {
+		if (xpath.contains("/") || xpath.contains("last()")) {
 			return true;
 		}
 		

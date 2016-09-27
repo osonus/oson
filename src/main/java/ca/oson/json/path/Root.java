@@ -5,5 +5,13 @@ package ca.oson.json.path;
  * can be $ or //, depending on the xpath or jsonpath convention to use
  */
 public class Root extends Step {
-
+	private static Root step = new Root();
+	
+	private Root() {
+		super("/", "Root");
+	}
+	
+	public static Root getInstance() {
+		return step;
+	}
 }
