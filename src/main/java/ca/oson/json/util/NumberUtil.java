@@ -171,6 +171,13 @@ public class NumberUtil {
 		return (num1.doubleValue() > num2.doubleValue()) ? num2 : num1;
 	}
 	
+	public static Number sum (Number num1, Number num2) {
+		if (isFloatingNumber(num1) || isFloatingNumber(num2)) {
+			return (num1.doubleValue() + num2.doubleValue());
+		}
+		
+		return (num1.longValue() + num2.longValue());
+	}
 	
 	public static Number avg (Number... numbers) {
 		boolean isFloating = false;

@@ -15,12 +15,17 @@ public class Statistics {
         size = data.length;
     }   
 
-    public double getMean()
+    public double sum()
     {
         double sum = 0.0;
         for(double a : data)
             sum += a;
-        return sum/size;
+        return sum;
+    }
+    
+    public double getMean()
+    {
+        return sum()/size;
     }
 
     public double getVariance()

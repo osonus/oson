@@ -37,6 +37,7 @@ public class OsonMerge {
 		VARIANCE, // return Variance
 		MEDIAN, // return median
 		STDDEV, // return StdDev value
+		SUM, // sum them up into a total
 		MERGE // merge them into array or list
 	}
 	
@@ -510,11 +511,14 @@ public class OsonMerge {
 				return NumberUtil.max((Number)object, (Number)obj);
 			case KEEP_MIN:
 				return NumberUtil.min((Number)object, (Number)obj);
+			case SUM:
+				return NumberUtil.sum((Number)object, (Number)obj);
 			case AVERAGE:
 			case MEAN:
 			case VARIANCE:
 			case MEDIAN:
 			case STDDEV:
+			
 				List<Number> values = cachedListValues.get(myroot);
 				if (values == null) {
 					values = new ArrayList<>();
