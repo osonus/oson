@@ -1,8 +1,11 @@
 package ca.oson.json.path;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
 import ca.oson.json.path.Step.Type;
 import ca.oson.json.util.ArrayToJsonMap;
@@ -14,11 +17,125 @@ public class XPathProcessor extends PathProcessor {
 	}
 	
 	
+	private Predicate processPredicate(String raw) {
+		raw = raw.trim();
+		
+		
+		
+		
+		Predicate predicate = new Predicate(raw);
+		
+		
+		
+		return predicate;
+	}
+	
+	
+	 private List<Filter> processPredicates(String raw, String andOr) {
+		 List<Filter> predicates = new ArrayList<>();
+		 
+		 int idx = 0;
+		 int idx2 = raw.indexOf(andOr, idx);
+		 
+		 while (idx2 != -1) {
+			 String condition = raw.substring(idx, idx2);
+			 
+			 predicates.add(processPredicate(condition));
+		 
+			 idx = idx2 + 2;
+			 
+			 idx2 = raw.indexOf(andOr, idx);
+		 }
+
+		 return predicates;
+	 }
+	
+	
 	/*
 	 * Major predicate processing
 	 */
 	private Filter processFilter(String raw) {
 		Filter filter = new Filter(raw);
+		
+		
+		
+		String rawLc = raw.toLowerCase();
+		
+		rawLc.replaceAll(" and ", " && ");
+		rawLc.replaceAll(" or ", " || ");
+
+		int idx = rawLc.indexOf("&&");
+		int idx2 = rawLc.indexOf("||");
+		
+		
+		
+		if (idx != -1) {
+			if (idx2 != -1) {
+				List<Filter> predicates = new ArrayList<>();
+
+				Map<Integer, Integer> counts = new LinkedHashMap<>();
+
+				List<Integer> andList = new ArrayList<>();
+				while (idx != -1) {
+					andList.add(idx);
+					idx = raw.indexOf("&&", idx + 2);
+				}
+				
+				List<Integer> orList = new ArrayList<>();
+				while (idx2 != -1) {
+					andList.add(idx2);
+					idx2 = raw.indexOf("||", idx2 + 2);
+				}
+				
+				int length = andList.size() + orList.size();
+				int[] andors = new int[length];
+				
+				int i = 0, j = 0, k = 0, a, b;
+				while (i < andList.size() && j < orList.size()) {
+					a = andList.get(i);
+					b = orList.get(j);
+					if (a < b) {
+						andors[k] = a;
+						i++;
+					} else {
+						andors[k] = b;
+						j++;
+					}
+					k++;
+				}
+				
+				while (i < andList.size()) {
+					andors[k++] = andList.get(i++);
+				}
+				
+				while (j < andList.size()) {
+					andors[k++] = orList.get(j++);
+				}
+				
+				// now counting parenthesis
+				i = 0;
+				k = 0;
+				Stack<Character> stack = new Stack<>();
+				while (i <  andors[k]) {
+					
+				}
+				
+				
+			} else {
+				filter.selector = SELECTOR.AND;
+				filter.predicates = processPredicates(raw, "&&");
+			}
+
+			
+		} else if (idx2 != -1) {
+			filter.selector = SELECTOR.OR;
+			filter.predicates = processPredicates(raw, "||");
+			
+		} else {
+			List<Filter> predicates = new ArrayList<>();
+			predicates.add(processPredicate(raw));
+		}
+		
 		
 		
 		return filter;
