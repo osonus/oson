@@ -1,9 +1,9 @@
 package ca.oson.json.path;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class Filter {
+	Filter parent = null;
 	String raw;
 	SELECTOR selector;
 	List<Filter> predicates = null;
@@ -13,4 +13,7 @@ public class Filter {
 		this.raw = raw;
 	}
 	
+	public Filter(SELECTOR selector) {
+		this.selector = selector;
+	}
 }

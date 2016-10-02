@@ -2,12 +2,7 @@ package ca.oson.json.path;
 
 import java.util.Set;
 
-public class Index extends Filter {
-	public Index(String raw) {
-		super(raw);
-		// TODO Auto-generated constructor stub
-	}
-
+public class Index extends Predicate {
 	public static enum RANGE {
 		INDEX,
 		SLICE,
@@ -16,9 +11,22 @@ public class Index extends Filter {
 		ALL
 	}
 	
+	public Index(String raw) {
+		super(raw);
+	}
+	
+	
+	public Index(Predicate predicate) {
+		super(predicate.raw);
+		this.op = predicate.op;
+		this.func = predicate.func;
+	}
+
+
+	
 	static int NONE = -1000;
 	
-	RANGE range;
+	RANGE range = null;
 	
 	int index = NONE;
 	

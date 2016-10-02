@@ -1,22 +1,17 @@
 package ca.oson.json.path;
 
+import java.util.List;
+
 public class Step {
-	public enum Type {
-		ROOT, // The root element to query. This starts all path expressions. can be $ or //, depending on the xpath or jsonpath convention to use
-		ONE_OR_MORE, // recursive descent, or Deep scan. Available anywhere a name is required.
-		ANY, // *
-		REGULAR // all the other types of step
-	}
-	
 	private static Step oneOrMore = null;
 	private static Step root = null;
 	private static Step any = null;
 	
-	private Type type;
+	private Type type = null;
 	
 	String raw;
 	String name;
-	Filter filter;
+	List<Filter> filters = null;
 	
 	public Step(String raw, String name) {
 		this.type = Type.REGULAR;
@@ -57,7 +52,5 @@ public class Step {
 
 		return new Step(type);
 	}
-	
-	
 	
 }

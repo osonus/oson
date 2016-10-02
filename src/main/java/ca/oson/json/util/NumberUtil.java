@@ -40,6 +40,17 @@ public class NumberUtil {
 		}
 	}
 	
+
+	public static boolean isInt(String str)
+	{
+	  return str.matches("^-?\\d+$");
+	}
+	
+	public static boolean isNumeric(String str)
+	{
+	  return str.matches("^-?\\d+(\\.\\d+)?$");  //match a number with optional '-' and decimal.
+	}
+	
 	public static String appendingFloatingZero(String str, boolean appendingFloatingZero) {
 		if (appendingFloatingZero) {
 			int idx = str.indexOf(".");
