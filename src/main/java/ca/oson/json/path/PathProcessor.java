@@ -35,4 +35,10 @@ public abstract class PathProcessor {
 	}
 	
 	public abstract List<Step> process();
+	
+	public List<Step> process(String xpath) {
+		this.xpath = xpath;
+		return process();
+	}
+	
 }

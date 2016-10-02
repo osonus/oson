@@ -9,7 +9,7 @@ import ca.oson.json.util.ConvertUtil;
 
 public class OsonPath {
 	private static FIELD_NAMING naming = ConvertUtil.naming;
-	private static Oson oson = new Oson()
+	public static Oson oson = new Oson()
 				.includeClassTypeInJson(false)
 				.setFieldNaming(naming);
 	

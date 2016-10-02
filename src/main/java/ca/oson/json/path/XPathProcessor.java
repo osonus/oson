@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import ca.oson.json.OsonPath;
 import ca.oson.json.path.Index.RANGE;
 import ca.oson.json.util.NumberUtil;
 
@@ -210,18 +211,21 @@ public class XPathProcessor extends PathProcessor {
 		
 		left = left.trim();
 		rawLc = left.toLowerCase();
-		
-		if (right != null) {
-			right = right.trim();
-		}
-		
-		
+
 		// processing func
 		for (Func func: Func.values()) {
 			idx = rawLc.indexOf(func.toString());
 			if (idx != -1) {
 				predicate.func = func;
 				break;
+			}
+		}
+		
+		if (right != null) {
+			right = right.trim();
+			
+			if (xpath.contains("/")) {
+				predicate.value = this.process(right);
 			}
 		}
 		
@@ -264,10 +268,10 @@ public class XPathProcessor extends PathProcessor {
 		}
 		
 		predicate.field = left;
-		
-		
-		
-		predicate.value = right;
+
+		if (predicate.value == null) {
+			predicate.value = OsonPath.oson.deserialize(right);
+		}
 		
 		return predicate;
 	}
@@ -498,7 +502,7 @@ public class XPathProcessor extends PathProcessor {
 		return step;
 	}
 
-	
+
 	@Override
 	public List<Step> process() {
 		// first clean up unncessary phrases

@@ -6,12 +6,12 @@ import java.util.List;
 import ca.oson.json.util.StringUtil;
 
 public class Path {
-	List<Step> steps;
+	List<List<Step>> steps;
 
 	/*
 	 * the position of the current step in a path
 	 */
-	int pos = 0;
+	int[] positions;
 	
 	public Path(String xpath) {
 		if (StringUtil.isEmpty(xpath)) {
@@ -22,17 +22,38 @@ public class Path {
 		processPath(xpath);
 	}
 	
+	
 	private void processPath(String xpath) {
 		PathProcessor processor;
-		if (PathProcessor.isXpath(xpath)) {
+		
+		String[] xpaths = xpath.split("\\|");
+		
+		boolean isXpath = false;
+		
+		for (String p: xpaths) {
+			if (PathProcessor.isXpath(xpaths[0])) {
+				isXpath = true;
+				break;
+			}
+		}
+		
+		if (isXpath) {
 			processor = new XPathProcessor(xpath);
 		} else {
 			processor = new XPathProcessor(xpath);
 		}
-		steps = processor.process();
+		
+		steps = new ArrayList<>();
+		
+		for (String p: xpaths) {
+			steps.add(processor.process(p));
+		}
+		
+		positions = new int[steps.size()];
 	}
+
 	
-	public List<Step> getSteps() {
+	public List<List<Step>> getSteps() {
 		return steps;
 	}
 }

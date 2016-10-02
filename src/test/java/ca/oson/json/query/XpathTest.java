@@ -9,7 +9,7 @@ import ca.oson.json.support.TestCaseBase;
 public class XpathTest extends TestCaseBase {
 	
 	@Test
-	public void testPath() {
+	public void testXPath() {
 		String xpath = "/bookstore/book[1]";
 		Path path = new Path(xpath);
 		
