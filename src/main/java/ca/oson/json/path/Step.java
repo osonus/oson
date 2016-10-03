@@ -32,7 +32,7 @@ public class Step {
 		switch(type) {
 		case ROOT:
 			if (root == null) {
-				root = new Step(type, "/", "Root");
+				root = new Step(type, "$|/", "Root");
 			}
 			return root;
 			
@@ -44,7 +44,7 @@ public class Step {
 			
 		case ONE_OR_MORE:
 			if (oneOrMore == null) {
-				oneOrMore = new Step(type, "//", "One or more");
+				oneOrMore = new Step(type, "$..|//", "One or more");
 			}
 			return oneOrMore;
 			

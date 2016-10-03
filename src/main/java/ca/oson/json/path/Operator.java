@@ -15,7 +15,8 @@ public enum Operator {
 	LESS_THAN_EQUAL ("<=", "le"), // Less than or equal to
 	LESS_THAN ("<", "lt"), // Less than, price<9.80
 	EQUAL ("=", "==", "eq"), // is equal to
-	NOT_EQUAL ("!=", "ne"); // Not equal
+	NOT_EQUAL ("!=", "ne"), // Not equal
+	REGEX ("=~");
 	
 	String[] ops;
 	

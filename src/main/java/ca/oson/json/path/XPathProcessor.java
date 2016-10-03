@@ -16,71 +16,7 @@ public class XPathProcessor extends PathProcessor {
 		super(xpath);
 	}
 	
-	
-	public static String cleanUpParenthesis(String raw) {
-		int i = 0;
-		Stack<Character> stack = new Stack<>();
-		while (i < raw.length()) {
-			char c = raw.charAt(i);
-			if (c == '(') {
-				stack.push(c);
-				
-			} else if (c == ')') {
-				if (stack.isEmpty()) {
-					// 
-				} else {
-					stack.pop();
-				}
-			}
-			
-			i++;
-		}
-		
-		int size = stack.size();
-		if (size == 0) {
-			return raw;
-		}
-		
-		String parenthesis = stack.toString();
-		if (parenthesis.startsWith("(")) {
-			i = 0;
-			while (size > 0) {
-				i = raw.indexOf("(", i);
-				if (i != -1) {
-					raw = raw.substring(i+1);
-				} else {
-					i = raw.indexOf(")", i);
-					if (i != -1) {
-						raw = raw.substring(i+1);
-					} else {
-						throw new RuntimeException("Unbalanced parenthsis");
-					}
-				}
-				size--;
-			}
 
-		} else {
-			i = raw.length() - 1;
-			while (size > 0) {
-				i = raw.lastIndexOf(")", i);
-				if (i != -1) {
-					raw = raw.substring(0, i);
-				} else {
-					i = raw.indexOf("(", i);
-					if (i != -1) {
-						raw = raw.substring(0, i);
-					} else {
-						throw new RuntimeException("Unbalanced parenthsis");
-					}
-				}
-				size--;
-			}
-		}
-		
-		return raw.trim();
-	}
-	
-	
 	private Filter processPredicate(String raw) {
 		raw = raw.trim();
 		
@@ -221,14 +157,6 @@ public class XPathProcessor extends PathProcessor {
 			}
 		}
 		
-		if (right != null) {
-			right = right.trim();
-			
-			if (xpath.contains("/")) {
-				predicate.value = this.process(right);
-			}
-		}
-		
 
 		idx = rawLc.indexOf("position()");
 		idx2 = rawLc.indexOf("last()");
@@ -269,8 +197,16 @@ public class XPathProcessor extends PathProcessor {
 		
 		predicate.field = left;
 
-		if (predicate.value == null) {
-			predicate.value = OsonPath.oson.deserialize(right);
+		if (right != null) {
+			right = right.trim();
+			
+			if (right.contains("/")) {
+				predicate.value = this.process(right);
+			}
+			
+			if (predicate.value == null) {
+				predicate.value = OsonPath.oson.deserialize(right);
+			}
 		}
 		
 		return predicate;
@@ -543,7 +479,6 @@ public class XPathProcessor extends PathProcessor {
 		
 		int idx1 = 0;
 		int idx2 = xpath2.indexOf(stepDelimiter, idx1);
-		int length = xpath2.length();
 		int idx3, idx4;
 		String previous;
 		
@@ -552,6 +487,7 @@ public class XPathProcessor extends PathProcessor {
 			idx3 = previous.lastIndexOf("[");
 			idx4 = previous.lastIndexOf("]");
 			if (idx3 == -1 || idx4 > idx3) {
+				// make sure previous is a separate step
 				parts.add(previous);
 				idx1 = idx2+1;
 			}

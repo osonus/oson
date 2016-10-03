@@ -40,7 +40,7 @@ public class Path {
 		if (isXpath) {
 			processor = new XPathProcessor(xpath);
 		} else {
-			processor = new XPathProcessor(xpath);
+			processor = new JPathProcessor(xpath);
 		}
 		
 		steps = new ArrayList<>();

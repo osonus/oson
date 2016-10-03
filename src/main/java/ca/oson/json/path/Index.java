@@ -2,6 +2,9 @@ package ca.oson.json.path;
 
 import java.util.Set;
 
+import ca.oson.json.util.NumberUtil;
+import ca.oson.json.util.StringUtil;
+
 public class Index extends Predicate {
 	public static enum RANGE {
 		INDEX,
@@ -37,6 +40,12 @@ public class Index extends Predicate {
 	
 	Set<Integer> set = null;
 	
-	
+	public static int getValue(String value) {
+		if (StringUtil.isEmpty(value)) {
+			return NONE;
+		}
+		
+		return (int) NumberUtil.getNumber(value, Integer.class);
+	}
 	
 }

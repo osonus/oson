@@ -13,7 +13,12 @@ public enum Func {
 	ROUND, // round()
 	FLOOR, // floor()
 	CEILING, // ceiling()
-	POSITION; // position()
+	POSITION, // position()
+	MIN, // min()
+	MAX, // max()
+	AVG, // avg()
+	STDDEV, // stddev()
+	LENGTH; // length()
 	
 	public String toString() {
 		return this.name().toLowerCase().replaceAll("_", "-") + "()";
