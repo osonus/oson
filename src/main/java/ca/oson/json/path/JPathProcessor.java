@@ -63,13 +63,13 @@ public class JPathProcessor extends PathProcessor {
 		List<String> list = new ArrayList<>();
 
 		if (raw.startsWith("+(") && raw.endsWith(")")) {
-			list.addAll(OsonPath.oson.deserialize("[" + raw.substring(2, raw.length()-3) + "]", list.getClass()));
+			list.addAll(OsonPath.oson.deserialize("[" + raw.substring(2, raw.length()-1) + "]", list.getClass()));
 			predicate.value = list;
 			predicate.selector = SELECTOR.EXPOSE;
 			return predicate;
 
 		} else if (raw.startsWith("-(") && raw.endsWith(")")) {
-			list.addAll(OsonPath.oson.deserialize("[" + raw.substring(2, raw.length()-3) + "]", list.getClass()));
+			list.addAll(OsonPath.oson.deserialize("[" + raw.substring(2, raw.length()-1) + "]", list.getClass()));
 			predicate.value = list;
 			predicate.selector = SELECTOR.IGNORE;
 			return predicate;
@@ -77,7 +77,7 @@ public class JPathProcessor extends PathProcessor {
 		
 		
 		while (raw.startsWith("(") && raw.endsWith(")")) {
-			raw = raw.substring(1, raw.length() - 2).trim();
+			raw = raw.substring(1, raw.length() - 1).trim();
 		}
 
 		raw = raw.trim();
@@ -95,7 +95,7 @@ public class JPathProcessor extends PathProcessor {
 
 		if (cached.containsKey(raw)) {
 			predicate.value = cached.get(raw);
-			predicate.selector = SELECTOR.HAS;
+			predicate.selector = SELECTOR.CONTAINS;
 			
 			return predicate;
 		}
@@ -501,7 +501,7 @@ public class JPathProcessor extends PathProcessor {
 								parts.add(previous.substring(0, idx3) + "[" + str + "]");
 								
 							} else {
-								parts.add(previous.substring(0, idx3) + "[" + str.substring(1, str.length()-2) + "]");
+								parts.add(previous.substring(0, idx3) + "[" + str.substring(1, str.length()-1) + "]");
 							}
 							
 						} else {
@@ -538,7 +538,7 @@ public class JPathProcessor extends PathProcessor {
 						parts.add(parts.remove(parts.size()-1) + "[" + previous + "]");
 						
 					} else {
-						parts.add(previous.substring(1, previous.length()-2));
+						parts.add(previous.substring(1, previous.length()-1));
 					}
 					
 				} else if (previous.matches("^[-0-9 ,:]+$")) {

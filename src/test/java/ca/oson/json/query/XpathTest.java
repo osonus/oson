@@ -21,6 +21,18 @@ public class XpathTest extends TestCaseBase {
 		path = new Path(xpath);
 		
 		json = oson.print(path);
+		
+		//contains(.,"foo")
+		// xpath = "*[contains('X Y Z', local-name())]/AABBCC";
+		// xpath = "*[self::X | self::Y | self::Z]/AABBCC";
+		// xpath = "//(X|Y|Z)/AABBCC";
+		xpath = "(book/author)[last()]";
+		// xpath = "//parent[(childA[contains(.,\"foo\")] or childB[contains(.,\"foo\")]) AND (childA[contains(.,\"bar\")] or childB[contains(.,\"bar\")])]";
+		path = new Path(xpath);
+		
+		json = oson.print(path);
+		
+		
 	}
 
 }

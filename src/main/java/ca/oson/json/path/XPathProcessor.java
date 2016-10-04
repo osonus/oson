@@ -1,14 +1,17 @@
 package ca.oson.json.path;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.stream.Collectors;
 
 import ca.oson.json.OsonPath;
 import ca.oson.json.path.Index.RANGE;
 import ca.oson.json.util.NumberUtil;
+import ca.oson.json.util.StringUtil;
 
 public class XPathProcessor extends PathProcessor {
 
@@ -35,8 +38,31 @@ public class XPathProcessor extends PathProcessor {
 		}
 		
 		while (raw.startsWith("(") && raw.endsWith(")")) {
-			raw = raw.substring(1, raw.length() - 2).trim();
+			raw = raw.substring(1, raw.length() - 1).trim();
 		}
+		
+		rawLc = raw.toLowerCase();
+		
+		// contains('X Y Z', local-name())
+		if (rawLc.startsWith("contains(") && raw.endsWith(")")) {
+			int i = rawLc.lastIndexOf(",");
+			if (i > 9) {
+				raw = raw.substring(9, i).trim();
+			} else {
+				raw = raw.substring(9, raw.length()-1).trim();
+			}
+			
+			if ( (raw.startsWith("'") && raw.endsWith("'"))
+					|| (raw.startsWith("\"") && raw.endsWith("\""))) {
+				raw = raw.substring(1, raw.length()-1).trim();
+			}
+
+			predicate.value = StringUtil.array2List(raw.split(" "));
+			predicate.selector = SELECTOR.CONTAINS;
+			
+			return predicate;
+		}
+		
 		
 		rawLc = raw.toLowerCase();
 		
@@ -49,8 +75,7 @@ public class XPathProcessor extends PathProcessor {
 			for (Axis axis: Axis.values()) {
 				if (rawLc.endsWith(axis.toString())) {
 					predicate.axis = axis;
-					
-					
+
 					rawLc = rawLc.substring(0, rawLc.length() - axis.toString().length());
 					
 					rawLc = rawLc.trim().toLowerCase();
@@ -62,8 +87,11 @@ public class XPathProcessor extends PathProcessor {
 					break;
 				}
 			}
+
+			raw = raw.substring(idx + 2);
 			
-			rawLc = raw.substring(idx + 2);
+			raw = raw.replaceAll("self::", "");
+			
 			
 		} else {
 			idx = raw.indexOf("..");
@@ -81,15 +109,24 @@ public class XPathProcessor extends PathProcessor {
 				 
 			} else if (idx2 != -1) {
 				predicate.axis = Axis.SELF;
-				rawLc = raw.substring(0, idx).toLowerCase();
+				rawLc = raw.substring(0, idx2).toLowerCase();
 				
 				if (rawLc.contains("!") || rawLc.contains("not")) {
 					predicate.not = true;
 				}
 				
-				raw = raw.substring(idx + 2); 
+				raw = raw.substring(idx2 + 2); 
 			}
 		}
+		
+		String[] splitted = raw.split("\\|");
+		if (splitted.length > 1) {
+			predicate.value = StringUtil.array2List(splitted);
+			predicate.selector = SELECTOR.CONTAINS;
+			
+			return predicate;
+		}
+		
 		
 		raw = raw.trim();
 		rawLc = raw.toLowerCase();
@@ -404,6 +441,10 @@ public class XPathProcessor extends PathProcessor {
 	
 	private Step processStep(String raw) {
 		String name = "";
+		
+		if (raw.startsWith("(") && raw.endsWith(")") && raw.contains("|")) {
+			raw = "[" + raw.substring(1, raw.length() - 1) + "]";
+		}
 		
 		int i = raw.indexOf("[");
 		

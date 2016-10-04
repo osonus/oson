@@ -25,16 +25,34 @@ public class Path {
 	
 	private void processPath(String xpath) {
 		PathProcessor processor;
-		
-		String[] xpaths = xpath.split("\\|");
-		
+
 		boolean isXpath = false;
 		
-		for (String p: xpaths) {
-			if (PathProcessor.isXpath(xpaths[0])) {
-				isXpath = true;
-				break;
+		String xp;
+		List<String> xpaths = new ArrayList<>();
+
+		int idx = 0;
+		int idx2 = xpath.indexOf("|", idx);
+		while (idx2 != -1) {
+			xp = xpath.substring(idx, idx2);
+
+			if (StringUtil.isParenthesisBalanced(xp)) {
+				if (!isXpath && PathProcessor.isXpath(xp)) {
+					isXpath = true;
+				}
+				
+				xpaths.add(xp.trim());
+				
+				idx = idx2 + 1;
 			}
+
+			idx2 = xpath.indexOf("|", idx2 + 1);
+		}
+		
+		xp = xpath.substring(idx);
+		xpaths.add(xp.trim());
+		if (!isXpath && PathProcessor.isXpath(xp)) {
+			isXpath = true;
 		}
 		
 		if (isXpath) {

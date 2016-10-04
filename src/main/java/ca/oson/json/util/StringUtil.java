@@ -5,9 +5,11 @@ import java.io.StreamTokenizer;
 import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.Stack;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -634,5 +636,56 @@ public class StringUtil {
 			return str.matches("-?\\d+(\\.\\d+)?(E-?\\d+)?");
 		}
 		return true;
+	}
+	
+	
+	public static boolean isParenthesisBalanced(String str) {
+		int i = 0;
+		int len = str.length();
+		Stack<Character> stack = new Stack<>();
+		char c;
+		while (i < len) {
+			c = str.charAt(i);
+			if (c == '(' || c == '[' || c == '{') {
+				stack.push(c);
+				
+			} else if (c == ')') {
+				if (stack.isEmpty()) {
+					return false;
+					
+				} else if (stack.pop() != '(') {
+					return false;
+				}
+				
+			} else if (c == ']') {
+				if (stack.isEmpty()) {
+					return false;
+					
+				} else if (stack.pop() != '[') {
+					return false;
+				}
+				
+			} else if (c == '}') {
+				if (stack.isEmpty()) {
+					return false;
+					
+				} else if (stack.pop() != '{') {
+					return false;
+				}
+			}
+			
+			i++;
+		}
+		
+		if (stack.isEmpty()) {
+			return true;
+		}
+		
+		return false;
+	}
+	
+	
+	public static List<String> array2List(String[] strs) {
+		return (List<String>) Arrays.asList(strs).stream().map(s -> s.trim()).filter(s -> (s.length() > 0)).collect(Collectors.toList());
 	}
 }

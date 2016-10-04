@@ -16,7 +16,8 @@ public abstract class PathProcessor {
 				
 			} else if (c == ')') {
 				if (stack.isEmpty()) {
-					// 
+					stack.push(c);
+					
 				} else {
 					stack.pop();
 				}
@@ -30,39 +31,17 @@ public abstract class PathProcessor {
 			return raw;
 		}
 		
-		String parenthesis = stack.toString();
-		if (parenthesis.startsWith("(")) {
-			i = 0;
-			while (size > 0) {
-				i = raw.indexOf("(", i);
-				if (i != -1) {
-					raw = raw.substring(i+1);
-				} else {
-					i = raw.indexOf(")", i);
-					if (i != -1) {
-						raw = raw.substring(i+1);
-					} else {
-						throw new RuntimeException("Unbalanced parenthsis");
-					}
+		i = 0;
+		for (char c: stack) {
+			if (c == '(') {
+				i = raw.indexOf(c, i) + 1;
+				raw = raw.substring(i);
+			} else {
+				if (i == 0) {
+					i = raw.length();
 				}
-				size--;
-			}
-
-		} else {
-			i = raw.length() - 1;
-			while (size > 0) {
-				i = raw.lastIndexOf(")", i);
-				if (i != -1) {
-					raw = raw.substring(0, i);
-				} else {
-					i = raw.indexOf("(", i);
-					if (i != -1) {
-						raw = raw.substring(0, i);
-					} else {
-						throw new RuntimeException("Unbalanced parenthsis");
-					}
-				}
-				size--;
+				i = raw.lastIndexOf(c, i);
+				raw = raw.substring(0, i);
 			}
 		}
 		
@@ -87,7 +66,7 @@ public abstract class PathProcessor {
 			return false;
 		}
 		
-		if (xpath.contains("/") || xpath.contains("last()")) {
+		if (xpath.contains("/") || xpath.contains("last()") || xpath.contains("@")) {
 			return true;
 		}
 		

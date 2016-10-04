@@ -11,18 +11,24 @@ public class Step {
 	
 	String raw;
 	String name;
+	public void setName(String name) {
+		this.name = PathProcessor.cleanUpParenthesis(name);
+	}
+
 	List<Filter> filters = null;
+	
+	
 	
 	public Step(String raw, String name) {
 		this.type = Type.REGULAR;
 		this.raw = raw;
-		this.name = name;
+		this.setName(name);
 	}
 	
 	private Step(Type type, String raw, String name) {
 		this.type = type;
 		this.raw = raw;
-		this.name = name;
+		this.setName(name);
 	}
 	private Step(Type type) {
 		this.type = type;
@@ -44,7 +50,7 @@ public class Step {
 			
 		case ONE_OR_MORE:
 			if (oneOrMore == null) {
-				oneOrMore = new Step(type, "$..|//", "One or more");
+				oneOrMore = new Step(type, "..|//", "One or more");
 			}
 			return oneOrMore;
 			
