@@ -461,15 +461,27 @@ public class XPathProcessor extends PathProcessor {
 		
 
 		while (i > -1) {
-			raw = raw.substring(i+1).trim();
+			i = raw.indexOf("]", i+1);
 			
-			i = raw.indexOf("]");
-
-			Filter filter = processFilter(raw.substring(0, i).trim());
-			
+			if (i > -1) {
+				String part = raw.substring(0, i).trim();
+	
+				if (StringUtil.isParenthesisBalanced(part)) {
+					Filter filter = processFilter(part);
+					filters.add(filter);
+					raw = raw.substring(i+1).trim();
+					
+					i = raw.indexOf("[", i+1);
+	
+				} else {
+					i++;
+				}
+			}
+		}
+		
+		if (raw.length() > 0) {
+			Filter filter = processFilter(raw);
 			filters.add(filter);
-			
-			i = raw.indexOf("[", i+1);
 		}
 
 		if (filters.size() > 0) {
