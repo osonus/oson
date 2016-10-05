@@ -1,6 +1,10 @@
 package ca.oson.json.merge;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -110,4 +114,43 @@ public class MergeTest extends TestCaseBase {
 	}
 
 	
+	@Test
+	public void testTableMerge2() {
+		List<Map> list = oson.readValue("rows2Columns.txt");
+		
+		Map<String, List> collected = new HashMap<>();
+
+		for (Map map: list) {
+			String key = (String) map.get("PM");
+			List obj = collected.get(key);
+			
+			if (obj == null) {
+				obj = new ArrayList();
+				
+				collected.put(key, obj);
+			}
+			
+			obj.add(map);
+		}
+
+		Config config = merge.getConfig();
+		config.numericValue = NUMERIC_VALUE.MERGE_UNIQUE;
+		config.nonnumericalValue = NONNUMERICAL_VALUE.MERGE_UNIQUE;
+		config.listValue = LIST_VALUE.MERGE_UNIQUE;
+
+		Map<String, Object> results = new HashMap<>();
+		
+		for (String key: collected.keySet()) {
+			results.put(key, merge.merge(collected.get(key)));
+		}
+		
+		Collection result = results.values();
+		
+		// oson.pretty();
+		String json = oson.serialize(result);
+		
+		String expected = "[{\"PM\":\"Jill\",\"e\":\"j@nunya.com\",\"h\":[\"21.00\",\"12.00\"],\"w\":[\"10/30/2016 12:00:00 AM\",\"11/06/2016 12:00:00 AM\"],\"c\":\"John\",\"p\":\"Sad Town USA\"},{\"PM\":\"Jane\",\"e\":\"j@nunya.com\",\"h\":[\"15.00\",\"11.00\"],\"w\":[\"10/30/2016 12:00:00 AM\",\"11/06/2016 12:00:00 AM\"],\"c\":\"John\",\"p\":\"Happy Town USA\"}]";
+
+		assertEquals(expected, json);
+	}
 }
