@@ -276,28 +276,34 @@ public class XPathProcessor extends PathProcessor {
 	private Filter processFilter(String raw) {
 		Filter filter = new Filter(raw);
 
+		raw = raw.replaceAll("\\&\\&", " &&  ");
+		raw = raw.replaceAll("\\|\\|", " || ");
+		
 		String rawLc = raw.toLowerCase();
 		
-		rawLc.replaceAll(" and ", " && ");
-		rawLc.replaceAll(" or ", " || ");
+		rawLc = rawLc.replaceAll(" and ", " &&  ");
+		rawLc = rawLc.replaceAll(" or ", " || ");		
+		
 
 		int idx = rawLc.indexOf("&&");
 		int idx2 = rawLc.indexOf("||");
 		
-		if (idx != -1) {
-			if (idx2 != -1) {
-				List<Integer> andList = new ArrayList<>();
-				while (idx != -1) {
-					andList.add(idx);
-					idx = raw.indexOf("&&", idx + 2);
-				}
-				
-				List<Integer> orList = new ArrayList<>();
-				while (idx2 != -1) {
-					andList.add(idx2);
-					idx2 = raw.indexOf("||", idx2 + 2);
-				}
-				
+		List<Integer> andList = new ArrayList<>();
+		while (idx != -1) {
+			andList.add(idx);
+			raw = raw.substring(0, idx) + "&&  " + raw.substring(idx + 4);
+			idx = rawLc.indexOf("&&", idx + 4);
+		}
+		
+		List<Integer> orList = new ArrayList<>();
+		while (idx2 != -1) {
+			orList.add(idx2);
+			raw = raw.substring(0, idx2) + "|| " + raw.substring(idx2 + 3);
+			idx2 = rawLc.indexOf("||", idx2 + 3);
+		}
+		
+		if (andList.size() > 0) {
+			if (orList.size() > 0) {
 				int length = andList.size() + orList.size();
 				int[] andors = new int[length];
 				
@@ -319,7 +325,7 @@ public class XPathProcessor extends PathProcessor {
 					andors[k++] = andList.get(i++);
 				}
 				
-				while (j < andList.size()) {
+				while (j < orList.size()) {
 					andors[k++] = orList.get(j++);
 				}
 				
@@ -345,7 +351,7 @@ public class XPathProcessor extends PathProcessor {
 					}
 					
 					i++;
-					if (i == andors[k]) {
+					if (k < andors.length && i == andors[k]) {
 						idx2 = stack.size();
 						levelMap.put(k, idx2);
 						raws[k] = raw.substring(last, i);
@@ -366,12 +372,13 @@ public class XPathProcessor extends PathProcessor {
 				// now combining conditions
 				while (idx >= 0) {
 					for (k = 0; k < length; k++) {
-						idx = andors[k];
-						if (levelMap.get(idx) == k) {
+						
+						if (levelMap.get(k) == idx) {
+							idx2 = andors[k];
 							SELECTOR selector = null;
-							if (andList.contains(idx)) {
+							if (andList.contains(idx2)) {
 								selector = SELECTOR.AND;
-							} else {
+							} else if (orList.contains(idx2)) {
 								selector = SELECTOR.OR;
 							}
 							
@@ -384,16 +391,25 @@ public class XPathProcessor extends PathProcessor {
 							if (leftFilter == null) {
 								leftFilter = processPredicate(leftRaw);
 								filters[k] = leftFilter;
+							} else {
+								while (leftFilter.parent != null) {
+									leftFilter = leftFilter.parent;
+								}
 							}
 							
 							if (rightFilter == null) {
 								rightFilter = processPredicate(rightRaw);
+								filters[k+1] = rightFilter;
+							} else {
+								while (rightFilter.parent != null) {
+									rightFilter = rightFilter.parent;
+								}
 							}
 
 							if (leftFilter.selector != null && leftFilter.selector == selector && leftFilter.predicates != null) {
 								leftFilter.predicates.add(rightFilter);
 								currentFilter = leftFilter;
-								rightFilter.parent = currentFilter;
+								rightFilter.parent = leftFilter;
 								
 							} else if (rightFilter.selector != null && rightFilter.selector == selector && rightFilter.predicates != null) {
 								rightFilter.predicates.add(leftFilter);
@@ -425,7 +441,7 @@ public class XPathProcessor extends PathProcessor {
 			}
 
 			
-		} else if (idx2 != -1) {
+		} else if (orList.size() > 0) {
 			filter.selector = SELECTOR.OR;
 			filter.predicates = processPredicates(raw, "||");
 			
@@ -459,12 +475,12 @@ public class XPathProcessor extends PathProcessor {
 		
 		List<Filter> filters = new ArrayList<>();
 		
-
+		int idx = i;
 		while (i > -1) {
-			i = raw.indexOf("]", i+1);
+			i = raw.indexOf("]", i);
 			
 			if (i > -1) {
-				String part = raw.substring(0, i).trim();
+				String part = raw.substring(idx, i+1).trim();
 	
 				if (StringUtil.isParenthesisBalanced(part)) {
 					Filter filter = processFilter(part);
@@ -472,6 +488,7 @@ public class XPathProcessor extends PathProcessor {
 					raw = raw.substring(i+1).trim();
 					
 					i = raw.indexOf("[", i+1);
+					idx = i;
 	
 				} else {
 					i++;
