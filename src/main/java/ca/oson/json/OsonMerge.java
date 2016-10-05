@@ -38,14 +38,16 @@ public class OsonMerge {
 		MEDIAN, // return median
 		STDDEV, // return StdDev value
 		SUM, // sum them up into a total
-		MERGE // merge them into array or list
+		MERGE, // merge them into array or list
+		MERGE_UNIQUE // merge them into array or list only if not unique, otherwise, keep the single unique value
 	}
 	
 	public static enum NONNUMERICAL_VALUE {
 		KEEP_NEW, // additional parameter values take precedence over previous ones
 		KEEP_OLD, // keep previous values
 		FREQUENT, // keep the most frequent value, based on counting
-		MERGE // merge them into array or list
+		MERGE, // merge them into array or list
+		MERGE_UNIQUE // merge them into array or list only if not unique, otherwise, keep the single unique value
 	}
 	
 	public static enum NON_OVERLAP_VALUE {
@@ -59,7 +61,7 @@ public class OsonMerge {
 		KEEP_NEW, // additional parameter values take precedence over previous ones
 		KEEP_OLD, // keep previous values
 		APPENDING, // concate arrays/lists with the same name
-		KEEP_UNIQUE, // keeps unique set of values
+		MERGE_UNIQUE, // keeps unique set of values
 		MERGE // if items are basic or list types, this will behavior like appending
 		// if the type of items are map or object, will merge them
 	}
@@ -356,7 +358,7 @@ public class OsonMerge {
 					return obj;
 				}
 				
-			case KEEP_UNIQUE:
+			case MERGE_UNIQUE:
 				Set set = new LinkedHashSet();
 				if (List.class.isInstance(object)) {
 					set.addAll((List)object);
@@ -551,6 +553,11 @@ public class OsonMerge {
 					return calculator.getMean();
 				}
 				
+			case MERGE_UNIQUE:
+				if (NumberUtil.same((Number)object, (Number)obj)) {
+					return object;
+				}
+				
 			case FREQUENT:
 				
 			}
@@ -561,12 +568,22 @@ public class OsonMerge {
 				return obj;
 			case KEEP_OLD:
 				return object;
+				
+			case MERGE_UNIQUE:
+				if (object == obj || object.equals(obj)) {
+					return object;
+				}
+				
 			case FREQUENT:
 			}
 		}
 		
-		if ( config.nonnumericalValue == NONNUMERICAL_VALUE.MERGE ||
-				config.numericValue == NUMERIC_VALUE.MERGE) {
+		
+		
+		if (config.nonnumericalValue == NONNUMERICAL_VALUE.MERGE ||
+				config.numericValue == NUMERIC_VALUE.MERGE ||
+				config.nonnumericalValue == NONNUMERICAL_VALUE.MERGE_UNIQUE ||
+				config.numericValue == NUMERIC_VALUE.MERGE_UNIQUE) {
 			List values = new ArrayList<>();
 			values.add(object);
 			values.add(obj);
@@ -636,6 +653,7 @@ public class OsonMerge {
 		
 		return ObjectUtil.getJSONObject(oson.serialize(object));
 	}
+	
 	
 	private Object merge(List list) {
 		Object object = null;

@@ -173,6 +173,18 @@ public class NumberUtil {
 		return getNumber(str, number.getClass());
 	}
 	
+	public static double epsilon = 0.0000001; // 2 * Double.MIN_VALUE
+	public static boolean isZero(Number num) {
+		//if (isFloatingNumber(num)) {
+			return (Math.abs(num.doubleValue()) < epsilon);
+		//}
+		
+		//return (num.longValue() == 0);
+	}
+
+	public static boolean same (Number num1, Number num2) {
+		return isZero(num1.doubleValue() - num2.doubleValue());
+	}
 	
 	public static Number max (Number num1, Number num2) {
 		return (num1.doubleValue() > num2.doubleValue()) ? num1 : num2;

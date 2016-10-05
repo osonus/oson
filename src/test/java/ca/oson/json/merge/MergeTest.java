@@ -1,10 +1,16 @@
 package ca.oson.json.merge;
 
+import java.util.List;
+
 import org.junit.Before;
 import org.junit.Test;
 
+import ca.oson.json.OsonConvert;
 import ca.oson.json.OsonIO;
 import ca.oson.json.OsonMerge;
+import ca.oson.json.OsonMerge.Config;
+import ca.oson.json.OsonMerge.LIST_VALUE;
+import ca.oson.json.OsonSearch;
 import ca.oson.json.OsonMerge.NUMERIC_VALUE;
 import ca.oson.json.OsonMerge.NONNUMERICAL_VALUE;
 import ca.oson.json.support.TestCaseBase;
@@ -85,5 +91,23 @@ public class MergeTest extends TestCaseBase {
 		result = merge.merge(json);
 		assertEquals("15", result);
 	}
+	
+	
+	@Test
+	public void testTableMerge() {
+		Object obj = oson.readValue("rows2Columns.txt");
+
+		Config config = merge.getConfig();
+		config.numericValue = NUMERIC_VALUE.MERGE_UNIQUE;
+		config.nonnumericalValue = NONNUMERICAL_VALUE.MERGE_UNIQUE;
+		config.listValue = LIST_VALUE.MERGE_UNIQUE;
+
+		Object merged = merge.merge(obj);
+		
+		String expected = "{\"PM\":[\"Jane\",\"Jill\"],\"e\":\"j@nunya.com\",\"h\":[\"15.00\",\"11.00\",\"21.00\",\"12.00\"],\"w\":[\"10/30/2016 12:00:00 AM\",\"11/06/2016 12:00:00 AM\"],\"c\":\"John\",\"p\":[\"Happy Town USA\",\"Sad Town USA\"]}";
+
+		assertEquals(expected, oson.serialize(merged));
+	}
+
 	
 }
