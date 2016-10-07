@@ -6,10 +6,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import ca.oson.json.util.NumberUtil;
 import ca.oson.json.util.StringUtil;
 
 public abstract class PathProcessor {
 	protected String xpath;
+	
+	public static Number cleanUpNumber(String raw, Class <? extends Number> type) {
+		raw = cleanUpParenthesis(raw);
+		raw = raw.replaceAll(" ", "");
+		
+		return NumberUtil.getNumber(raw, type);
+	}
 	
 	public static String cleanUpParenthesis(String raw) {
 		int i = 0;
@@ -33,7 +41,7 @@ public abstract class PathProcessor {
 		
 		int size = stack.size();
 		if (size == 0) {
-			return raw;
+			return StringUtil.unwrap(raw, "[", "]");
 		}
 		
 		i = 0;
@@ -50,7 +58,7 @@ public abstract class PathProcessor {
 			}
 		}
 		
-		return raw.trim();
+		return StringUtil.unwrap(raw, "[", "]");
 	}
 	
 	
@@ -92,9 +100,9 @@ public abstract class PathProcessor {
 		 
 		 int idx = 0;
 		 int idx2 = raw.indexOf(andOr, idx);
-		 
+		 String condition = null;
 		 while (idx2 != -1) {
-			 String condition = raw.substring(idx, idx2);
+			 condition = raw.substring(idx, idx2);
 			 
 			 predicates.add(processPredicate(condition));
 		 
@@ -102,6 +110,9 @@ public abstract class PathProcessor {
 			 
 			 idx2 = raw.indexOf(andOr, idx);
 		 }
+		 
+		 condition = raw.substring(idx);
+		 predicates.add(processPredicate(condition));
 
 		 return predicates;
 	 }
@@ -272,6 +283,7 @@ public abstract class PathProcessor {
 				filter.selector = currentFilter.selector;
 				filter.predicates = currentFilter.predicates;
 				
+				
 			} else {
 				filter.selector = SELECTOR.AND;
 				filter.predicates = processPredicates(raw, "&&");
@@ -293,7 +305,7 @@ public abstract class PathProcessor {
 	
 	
 	protected Step processStep(String raw) {
-		String name = "";
+		// String name = "";
 		
 		if (raw.startsWith("(") && raw.endsWith(")") && raw.contains("|")) {
 			raw = "[" + raw.substring(1, raw.length() - 1) + "]";
@@ -301,14 +313,14 @@ public abstract class PathProcessor {
 		
 		int i = raw.indexOf("[");
 		
+		Step step = null;
 		if (i > -1) {
-			name = raw.substring(0, i).trim();
+			step = new Step(raw, raw.substring(0, i).trim());
 			
 		} else {
-			name = raw;
+			step = new Step(raw, raw);
+			raw = "";
 		}
-
-		Step step = new Step(raw, name);
 		
 		List<Filter> filters = new ArrayList<>();
 		

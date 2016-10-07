@@ -419,6 +419,25 @@ public class StringUtil {
 		return unquote(str.toString(), escapeHtml);
 	 }
 	 
+	 public static String unwrap(String str, String start) {
+		 return unwrap(str, start, start);
+	 }
+	 
+	 public static String unwrap(String str, String start, String end) {
+		 if (str == null || start == null || end == null) {
+			 return str;
+		 }
+		 str = str.trim();
+		 int slen = start.length();
+		 int elen = end.length();
+		 
+		 while (str.startsWith(start) && str.endsWith(end)) {
+			str = str.substring(slen, str.length() - elen).trim();
+		}
+		 
+		 return str;
+	 }
+	 
 	 
 	public static String unquote(String str, boolean escapeHtml) {
 		if (isEmpty(str)) {
@@ -426,11 +445,8 @@ public class StringUtil {
 		}
 		int length = str.length();
 		if (length > 1) {
-			if (str.startsWith("\"") && str.endsWith("\"")) {
-				str = str.substring(1, length-1);
-			} else if (str.startsWith("'") && str.endsWith("'")) {
-				str = str.substring(1, length-1);
-			}
+			str = unwrap(str, "\"");
+			str = unwrap(str, "'");
 		}
 
 		String [][] filters = new String[][] { 

@@ -181,6 +181,29 @@ public class XPathProcessor extends PathProcessor {
 		
 		if (left == null) {
 			left = raw;
+			
+		} else {
+			rawLc = right.toLowerCase(); 
+			if (rawLc.contains("position()")) {
+				rawLc = right;
+				right = left;
+				left = rawLc;
+				
+				switch (predicate.op) {
+				case GREATER_THAN_EQUAL:
+					predicate.op = Operator.LESS_THAN_EQUAL;
+					break;
+				case LESS_THAN_EQUAL:
+					predicate.op = Operator.GREATER_THAN_EQUAL;
+					break;
+				case GREATER_THAN:
+					predicate.op = Operator.LESS_THAN;
+					break;
+				case LESS_THAN:
+					predicate.op = Operator.GREATER_THAN;
+					break;
+				}
+			}
 		}
 		
 		left = left.trim();
@@ -213,8 +236,9 @@ public class XPathProcessor extends PathProcessor {
 				index.range = RANGE.LAST;
 				left = left.substring(idx2 + 6).trim();
 			}
+
 			if (left.length() > 0) {
-				index.index = (int) NumberUtil.getNumber(left, Integer.class);
+				index.index = (Integer) cleanUpNumber(left, Integer.class);
 			}
 			
 			
@@ -225,8 +249,9 @@ public class XPathProcessor extends PathProcessor {
 					index.range = RANGE.LAST;
 					right = right.substring(idx2 + 6).trim();
 				}
+
 				if (right.length() > 0) {
-					index.index = (int) NumberUtil.getNumber(right, Integer.class);
+					index.index = (Integer) cleanUpNumber(right, Integer.class);
 				}
 			}
 

@@ -32,11 +32,11 @@ public class Index extends Predicate {
 	
 	RANGE range = null;
 	
-	int index = NONE;
+	Integer index = NONE;
 	
-	int start = NONE;
-	int end = NONE;
-	int step = 1;
+	Integer start = NONE;
+	Integer end = NONE;
+	Integer step = 1;
 	
 	Set<Integer> set = null;
 	

@@ -13,7 +13,7 @@ public class NumberUtil {
 	public static String removeTrailingDecimalZeros(Object value) {
 		String str = value.toString().trim();
 		str = str.replaceFirst("\\.0*$", "");
-		
+
 		return str.replaceFirst("^(.*\\.[0-9]*[1-9])0*$", "$1");
 	}
 	
@@ -388,6 +388,7 @@ public class NumberUtil {
 			}
 			
 			String str = removeTrailingDecimalZeros(StringUtil.unquote(number, true));
+			
 			
 			switch (valueType.getName()) {
 			case "java.lang.Integer": return Integer.parseInt(str);

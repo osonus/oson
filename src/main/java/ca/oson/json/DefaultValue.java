@@ -357,38 +357,64 @@ public class DefaultValue {
 			return true;
 		}
 		
+		Class objType = obj.getClass();
+		
 		if (type == null) {
-			type = obj.getClass();
+			type = objType;
 		}
 
-		if (type == String.class) {
+		if (type == String.class && objType == String.class) {
 			String str = obj.toString().trim();
 			return (str.equals("[]") || str.equals("{}"));
 			
 		} else if (Collection.class.isAssignableFrom(type)) {
-			Collection list = (Collection)obj;
-			if (list.size() == 0) {
-				return true;
-			}
-
-			for (Object item: list) {
-				if (!isDefault(item)) {
-					return false;
+			if (Collection.class.isAssignableFrom(objType)) {
+				Collection list = (Collection)obj;
+				if (list.size() == 0) {
+					return true;
 				}
+	
+				for (Object item: list) {
+					if (!isDefault(item)) {
+						return false;
+					}
+				}
+				
+				return true;
+				
+			} else {
+				String str = obj.toString().trim();
+				if (str.equals("[]")) {
+					return true;
+				}
+				
+				return false;
 			}
 			
-			return true;
-			
-		} else if (Map.class.isAssignableFrom(type) && obj != null && Map.class.isAssignableFrom(obj.getClass())) {
-			Map map = (Map)obj;
-			return (map.size() == 0);
+		} else if (Map.class.isAssignableFrom(type)) {
+			if (Map.class.isAssignableFrom(objType)) {
+				Map map = (Map)obj;
+				return (map.size() == 0);
+			} else {
+				String str = obj.toString().trim();
+				if (str.equals("{}")) {
+					return true;
+				}
+				
+				return false;
+			}
 			
 		} else if (type.isArray()) {
-			if (Array.getLength(obj) == 0) {
+			if (objType.isArray() && Array.getLength(obj) == 0) {
 				return true;
+			} else {
+				String str = obj.toString().trim();
+				if (str.equals("[]")) {
+					return true;
+				}
+				
+				return false;
 			}
-			
-			return false;
 
 		} else if (type == Character.class || type == char.class) {
 			return DefaultValue.character.equals(obj);
@@ -434,6 +460,9 @@ public class DefaultValue {
 			} else {
 			}
 		
+		} else {
+			String str = obj.toString().trim();
+			return (str.equals("[]") || str.equals("{}"));
 		}
 		
 		return false;
