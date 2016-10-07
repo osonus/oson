@@ -42,8 +42,10 @@ public class XpathTest extends TestCaseBase {
 		oson.pretty().setDefaultType(JSON_INCLUDE.NON_DEFAULT);
 		//xpath = "//exercise[note>5]/title";
 		//xpath = "//solutions/item[@val=\"low\"]";
-		String xpath = "author [((last() - 4) <= position()) and (position() <= last())]";
-		
+		//xpath = "author [((last() - 4) <= position()) and (position() <= last())]";
+		//xpath = "/project/participants/participant[2]/FirstName";
+		String xpath = "//Participant[string-length(FirstName)>=8]";
+
 		Path path = new Path(xpath);
 		
 		String json = oson.print(path);

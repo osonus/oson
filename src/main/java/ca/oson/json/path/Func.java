@@ -8,7 +8,8 @@ public enum Func {
 	SUBSTRING_AFTER, // substring-after()
 	TRANSLATE, // translate()
 	NORMALIZE_SPACE, // normalize-space()
-	STRING_LENGTH, // string-length()
+	STARTS_WITH, // starts-with
+	STRING_LENGTH, // //Participant[string-length(FirstName)>=8]
 	SUM, // sum()
 	ROUND, // round()
 	FLOOR, // floor()
@@ -21,6 +22,6 @@ public enum Func {
 	LENGTH; // length()
 	
 	public String toString() {
-		return this.name().toLowerCase().replaceAll("_", "-") + "()";
+		return this.name().toLowerCase().replaceAll("_", "-"); //  + "()"
 	}
 }

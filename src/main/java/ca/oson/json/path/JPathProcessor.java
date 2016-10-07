@@ -95,7 +95,7 @@ public class JPathProcessor extends PathProcessor {
 
 		if (cached.containsKey(raw)) {
 			predicate.value = cached.get(raw);
-			predicate.selector = SELECTOR.CONTAINS;
+			predicate.selector = SELECTOR.HAS;
 			
 			return predicate;
 		}

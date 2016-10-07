@@ -2,6 +2,7 @@ package ca.oson.json.path;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +60,7 @@ public class XPathProcessor extends PathProcessor {
 			}
 
 			predicate.value = StringUtil.array2List(raw.split(" "));
-			predicate.selector = SELECTOR.CONTAINS;
+			predicate.selector = SELECTOR.HAS;
 			
 			return predicate;
 		}
@@ -123,7 +124,7 @@ public class XPathProcessor extends PathProcessor {
 		String[] splitted = raw.split("\\|");
 		if (splitted.length > 1) {
 			predicate.value = StringUtil.array2List(splitted);
-			predicate.selector = SELECTOR.CONTAINS;
+			predicate.selector = SELECTOR.HAS;
 			
 			return predicate;
 		}
@@ -165,6 +166,7 @@ public class XPathProcessor extends PathProcessor {
 		}
 		
 		if (predicate.op == null && left == null && right == null) {
+			Map<String, Operator> map = new HashMap<>();
 			for (Operator operator: Operator.values()) {
 				for (String op: operator.ops) {
 					idx = rawLc.indexOf(op);
@@ -172,8 +174,25 @@ public class XPathProcessor extends PathProcessor {
 						left = raw.substring(0, idx);
 						right = raw.substring(idx + op.length());
 						predicate.op = operator;
-						break;
+						map.put(op, operator);
 					}
+				}
+			}
+			
+			if (map.size() > 0) {
+				int max = 0;
+				String op = "";
+				for (String key: map.keySet()) {
+					if (key.length() > max) {
+						max = key.length();
+						op = key;
+					}
+				}
+				idx = rawLc.indexOf(op);
+				if (idx != -1) {
+					left = raw.substring(0, idx);
+					right = raw.substring(idx + op.length());
+					predicate.op = map.get(op);
 				}
 			}
 		}
@@ -210,10 +229,27 @@ public class XPathProcessor extends PathProcessor {
 		rawLc = left.toLowerCase();
 
 		// processing func
+		String name;
 		for (Func func: Func.values()) {
-			idx = rawLc.indexOf(func.toString());
-			if (idx != -1) {
+			name = func.toString();
+			if (containsFunction(rawLc, name)) {
 				predicate.func = func;
+				idx = rawLc.indexOf(name);
+				idx2 = rawLc.indexOf("(", idx);
+				String[] params = null;
+				if (idx2 > idx) {
+					params = getParameters(left.substring(idx2 + 1));
+				}
+				
+				switch (func) {
+				case STRING_LENGTH:
+					if (params != null && params.length > 0) {
+						predicate.field = params[0];
+					}
+				
+				}
+				
+				
 				break;
 			}
 		}
@@ -254,11 +290,19 @@ public class XPathProcessor extends PathProcessor {
 					index.index = (Integer) cleanUpNumber(right, Integer.class);
 				}
 			}
+			
+			// fix indexing
+			if (index.index != null && index.index > 0) {
+				index.index = index.index - 1;
+			}
 
 			return index;
 		}
 		
-		predicate.field = left;
+		
+		if (predicate.field == null) {
+			predicate.field = left;
+		}
 
 		if (right != null) {
 			right = right.trim();

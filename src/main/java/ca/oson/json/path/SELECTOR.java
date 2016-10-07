@@ -7,5 +7,5 @@ public enum SELECTOR {
 	EXPOSE, // include this in the result
 	IGNORE, // ignore this in the result
 	NONE, // ?, current
-	CONTAINS; // contains
+	HAS; // contains
 }

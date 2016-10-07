@@ -12,6 +12,75 @@ import ca.oson.json.util.StringUtil;
 public abstract class PathProcessor {
 	protected String xpath;
 	
+	
+	public static String[] getParameters(String raw) {
+		int i = 0, last = 0;
+		Stack<Character> stack = new Stack<>();
+		List<String> list = new ArrayList<>();
+		while (i < raw.length()) {
+			char c = raw.charAt(i);
+			if (c == '(') {
+				stack.push(c);
+				
+			} else if (c == ')') {
+				if (stack.isEmpty()) {
+					String part = raw.substring(last, i);
+					part = StringUtil.unwrap(part, "\"");
+					part = StringUtil.unwrap(part, "'");
+					part = StringUtil.unwrap(part, "(", ")");
+					list.add(part);
+					break;
+					
+				} else {
+					stack.pop();
+				}
+				
+			} else if (c == ',') {
+				String part = raw.substring(last, i).trim();
+				boolean balanced = true;
+				if (part.startsWith("\"")) {
+					if (!part.endsWith("\"")) {
+						balanced = false;
+					} else {
+						part = StringUtil.unwrap(part, "\"");
+					}
+				}
+				if (balanced && part.startsWith("'")) {
+					if (!part.endsWith("'")) {
+						balanced = false;
+					} else {
+						part = StringUtil.unwrap(part, "'");
+					}
+				}
+				if (balanced) {
+					part = StringUtil.unwrap(part, "(", ")");
+					list.add(part);
+					last = i + 1;
+				}
+			}
+			
+			i++;
+		}
+		
+//		String str = raw.substring(0, i);
+//		return str.split(",");
+		
+		return list.toArray(new String[0]);
+	}
+	
+	public static boolean containsFunction(String str, String funcName) {
+		int idx = str.indexOf(funcName);
+		if (idx != -1) {
+			int i = str.indexOf("(", idx);
+			if (i > idx && str.substring(idx + funcName.length(), i).trim().length() == 0) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	
 	public static Number cleanUpNumber(String raw, Class <? extends Number> type) {
 		raw = cleanUpParenthesis(raw);
 		raw = raw.replaceAll(" ", "");
