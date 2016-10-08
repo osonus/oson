@@ -46,24 +46,24 @@ public class XPathProcessor extends PathProcessor {
 		rawLc = raw.toLowerCase();
 		
 		// contains('X Y Z', local-name())
-		if (rawLc.startsWith("contains(") && raw.endsWith(")")) {
-			int i = rawLc.lastIndexOf(",");
-			if (i > 9) {
-				raw = raw.substring(9, i).trim();
-			} else {
-				raw = raw.substring(9, raw.length()-1).trim();
-			}
-			
-			if ( (raw.startsWith("'") && raw.endsWith("'"))
-					|| (raw.startsWith("\"") && raw.endsWith("\""))) {
-				raw = raw.substring(1, raw.length()-1).trim();
-			}
-
-			predicate.value = StringUtil.array2List(raw.split(" "));
-			predicate.selector = SELECTOR.HAS;
-			
-			return predicate;
-		}
+//		if (rawLc.startsWith("contains(") && raw.endsWith(")")) {
+//			int i = rawLc.lastIndexOf(",");
+//			if (i > 9) {
+//				raw = raw.substring(9, i).trim();
+//			} else {
+//				raw = raw.substring(9, raw.length()-1).trim();
+//			}
+//			
+//			if ( (raw.startsWith("'") && raw.endsWith("'"))
+//					|| (raw.startsWith("\"") && raw.endsWith("\""))) {
+//				raw = raw.substring(1, raw.length()-1).trim();
+//			}
+//
+//			predicate.value = StringUtil.array2List(raw.split(" "));
+//			predicate.selector = SELECTOR.HAS;
+//			
+//			return predicate;
+//		}
 		
 		
 		rawLc = raw.toLowerCase();
@@ -170,7 +170,7 @@ public class XPathProcessor extends PathProcessor {
 			for (Operator operator: Operator.values()) {
 				for (String op: operator.ops) {
 					idx = rawLc.indexOf(op);
-					if (idx != -1 && !op.matches("[a-z]+")) {
+					if (idx != -1 && !op.matches("[a-z]+") && !op.equals("-")) {
 						left = raw.substring(0, idx);
 						right = raw.substring(idx + op.length());
 						predicate.op = operator;
@@ -243,10 +243,35 @@ public class XPathProcessor extends PathProcessor {
 				
 				switch (func) {
 				case STRING_LENGTH:
+				case NUMBER:
+				case COUNT:
+				case SUM:
+				case ROUND:
 					if (params != null && params.length > 0) {
 						predicate.field = params[0];
 					}
-				
+					break;
+
+				case STARTS_WITH:
+				case CONTAINS:
+					if (params != null && params.length > 1) {
+						predicate.field = params[0];
+						predicate.value = params[1];
+					}
+					
+					break;
+
+				case TRANSLATE:
+					if (params != null && params.length > 2) {
+						predicate.field = params[0];
+						List<Object> list = new ArrayList<>();
+						list.add(params[1]);
+						list.add(params[2]);
+						
+						predicate.value = list;
+					}
+					
+					break;
 				}
 				
 				
@@ -361,20 +386,33 @@ public class XPathProcessor extends PathProcessor {
 		
 		int idx1 = 0;
 		int idx2 = xpath2.indexOf(stepDelimiter, idx1);
+		int idx = xpath2.indexOf(oneOrMore, idx1);
 		int idx3, idx4;
 		String previous;
-		
+
 		while (idx2 != -1) {
 			previous = xpath2.substring(idx1, idx2);
 			idx3 = previous.lastIndexOf("[");
 			idx4 = previous.lastIndexOf("]");
-			if (idx3 == -1 || idx4 > idx3) {
+			if ((idx3 == -1 || idx4 > idx3) && StringUtil.isParenthesisBalanced(previous)) {
 				// make sure previous is a separate step
 				parts.add(previous);
-				idx1 = idx2+1;
+
+				if (idx2 == idx) {
+					parts.add(oneOrMore);
+					idx1 = idx2+2;
+				} else {
+					idx1 = idx2+1;
+				}
+				
+				idx2 = idx1;
+				
+			} else {
+				idx2 = idx2+1;
 			}
-			
-			idx2 = xpath2.indexOf(stepDelimiter, idx2 + 1);
+
+			idx = xpath2.indexOf(oneOrMore, idx2);
+			idx2 = xpath2.indexOf(stepDelimiter, idx2);
 		}
 		previous = xpath2.substring(idx1);
 		parts.add(previous);
@@ -384,7 +422,7 @@ public class XPathProcessor extends PathProcessor {
 		for (int i = 0; i < splitted.length; i++) {
 			String raw = splitted[i].trim();
 			
-			if (raw.equals("")) {
+			if (raw.equals(oneOrMore)) {
 				current = Step.getInstance(Type.ONE_OR_MORE);
 				
 			} else if (raw.equals(any)) {

@@ -13,6 +13,7 @@ import ca.oson.json.OsonPath;
 import ca.oson.json.path.Index.RANGE;
 import ca.oson.json.util.ArrayToJsonMap;
 import ca.oson.json.util.NumberUtil;
+import ca.oson.json.util.StringUtil;
 
 public class JPathProcessor extends PathProcessor {
 	public Map<String, List<String>> cached = new HashMap<>();
@@ -252,17 +253,19 @@ public class JPathProcessor extends PathProcessor {
 		
 		List<String> parts = new ArrayList<>(); 
 
-		int idx2, idx3, idx4;
+		int idx2, idx3, idx4, idx;
 		String previous;
 		
 		int idx1 = 0;
 		if (dotNotation) {
+			oneOrMore = "..";
 			idx2 = xpath2.indexOf(stepDelimiter, idx1);
+			idx = xpath2.indexOf(oneOrMore, idx1);
 			while (idx2 != -1) {
 				previous = xpath2.substring(idx1, idx2);
 				idx3 = previous.lastIndexOf("[");
 				idx4 = previous.lastIndexOf("]");
-				if (idx3 == -1 || idx4 > idx3) {
+				if ((idx3 == -1 || idx4 > idx3) && StringUtil.isParenthesisBalanced(previous)) {
 					
 					if (idx4 > idx3) {
 						String str = previous.substring(idx3 + 1, idx4);
@@ -289,10 +292,22 @@ public class JPathProcessor extends PathProcessor {
 						parts.add(previous);
 					}
 					
-					idx1 = idx2+1;
+					if (idx2 == idx) {
+						parts.add(oneOrMore);
+						idx1 = idx2+2;
+					} else {
+						idx1 = idx2+1;
+					}
+					
+					idx2 = idx1;
+					
+				} else {
+					idx2 = idx2+1;
+					
 				}
 				
-				idx2 = xpath2.indexOf(stepDelimiter, idx2 + 1);
+				idx = xpath2.indexOf(oneOrMore, idx2);
+				idx2 = xpath2.indexOf(stepDelimiter, idx2);
 			}
 			previous = xpath2.substring(idx1);
 			parts.add(previous);
@@ -337,7 +352,7 @@ public class JPathProcessor extends PathProcessor {
 		for (int i = 0; i < splitted.length; i++) {
 			String raw = splitted[i].trim();
 			
-			if (raw.equals("")) {
+			if (raw.equals(oneOrMore)) {
 				current = Step.getInstance(Type.ONE_OR_MORE);
 				
 			} else if (raw.equals(any)) {

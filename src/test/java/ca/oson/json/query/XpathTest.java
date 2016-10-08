@@ -4,6 +4,8 @@ import org.junit.Test;
 
 import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.path.Path;
+import ca.oson.json.path.Step;
+import ca.oson.json.path.Type;
 import ca.oson.json.support.TestCaseBase;
 
 public class XpathTest extends TestCaseBase {
@@ -44,10 +46,16 @@ public class XpathTest extends TestCaseBase {
 		//xpath = "//solutions/item[@val=\"low\"]";
 		//xpath = "author [((last() - 4) <= position()) and (position() <= last())]";
 		//xpath = "/project/participants/participant[2]/FirstName";
-		String xpath = "//Participant[string-length(FirstName)>=8]";
+		// xpath = "//Participant[string-length(FirstName)>=8]";
+		// xpath = "/outputTree/command/pivotTable/dimension//category[@text='Measurement']/dimension/category/cell[@text='Nominal']";
+		// "//problems[count(//problem) >= 2]";
+		// "//Participant[starts-with(Firstname,'Berna')]";
+		String xpath = "//Participant[contains(FirstName,'nat')]";
+		
+		
 
 		Path path = new Path(xpath);
-		
+
 		String json = oson.print(path);
 	}
 	
