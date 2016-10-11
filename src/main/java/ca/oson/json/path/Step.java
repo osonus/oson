@@ -6,11 +6,15 @@ public class Step {
 	private static Step oneOrMore = null;
 	private static Step root = null;
 	private static Step any = null;
-	
-	private Type type = null;
+
+	Axis axis = null;
+	Type type = null;
+	Operand operand = null;
 	
 	String raw;
 	String name;
+	
+	
 	public void setName(String name) {
 		this.name = PathProcessor.cleanUpParenthesis(name);
 	}
@@ -20,6 +24,7 @@ public class Step {
 	
 	
 	public Step(String raw, String name) {
+		
 		this.type = Type.REGULAR;
 		this.raw = raw;
 		this.setName(name);

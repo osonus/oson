@@ -1,11 +1,6 @@
 package ca.oson.json.path;
 
 public enum Operator {
-	ADDITION ("+"), // Addition,
-	SUBTRACTION ("-"), // Subtraction,
-	MULTIPLICATION ("*"), // Multiplication
-	DIVISION ("div"), // Division
-	MODULUS ("%", "mod"), // Modulus (division remainder)
 	IN ("in"), // in a list of values
 	NOT_IN ("! in", "not in", "nin"), // not in a set
 	BETWEEN ("between"), // Between an inclusive range

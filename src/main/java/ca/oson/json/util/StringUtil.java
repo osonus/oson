@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -431,8 +432,15 @@ public class StringUtil {
 		 int slen = start.length();
 		 int elen = end.length();
 		 
+		 String str2;
 		 while (str.startsWith(start) && str.endsWith(end)) {
-			str = str.substring(slen, str.length() - elen).trim();
+			 str2 = str.substring(slen, str.length() - elen).trim();
+			
+			if (StringUtil.isParenthesisBalanced(str2)) {
+				str = str2;
+			} else {
+				return str;
+			}
 		}
 		 
 		 return str;
@@ -703,5 +711,47 @@ public class StringUtil {
 	
 	public static List<String> array2List(String[] strs) {
 		return (List<String>) Arrays.asList(strs).stream().map(s -> s.trim()).filter(s -> (s.length() > 0)).collect(Collectors.toList());
+	}
+	
+	
+	public static String[] toArray(String str, String delimiter) {
+		List<String> list = new ArrayList<>();
+		
+		int last = 0;
+		int len = delimiter.length();
+		
+		int i = str.indexOf(delimiter, 0);
+		String p;
+		while (i != -1) {
+			p = str.substring(last, i).trim();
+			
+			if (p.length() > 0 && isParenthesisBalanced(p)) {
+				if (p.startsWith("'")) {
+					if (p.endsWith("'")) {
+						list.add(unwrap(p, "'"));
+						last = i + len;
+					}
+					
+				} else if (p.startsWith("\"")) {
+					if (p.endsWith("\"")) {
+						list.add(unwrap(p, "\""));
+						last = i + len;
+					}
+					
+				} else {
+					list.add(p);
+					last = i + len;
+				}
+			}
+
+			i = str.indexOf(delimiter, i + len);
+		}
+		
+		p = str.substring(last).trim();
+		if (p.length() > 0) {
+			list.add(p);
+		}
+		
+		return list.toArray(new String[0]);
 	}
 }

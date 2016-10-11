@@ -1,0 +1,25 @@
+{ "empinfo": {
+    "employee": [ 
+      { "id": "1",
+        "name": "Opal Kole",
+        "designation": "Senior Engineer",
+        "designation@discipline": "web",
+        "designation@experience": "3 year",
+        "email": "OpalKole@myemail.com"
+      },
+      { "id": "2",
+        "name": "Max Miller",
+        "name@from": "CA",
+        "designation": "DBA Engineer",
+        "designation@discipline": "DBA",
+        "designation@experience": "2 year",
+        "email": "maxmiller@email.com"
+      },
+      { "id": "3",
+        "name": "Beccaa Moss",
+        "designation": "Application Developer",
+        "designation@discipline": "appdev",
+        "email": "beccaamoss@email.com"
+      }
+    ]
+}

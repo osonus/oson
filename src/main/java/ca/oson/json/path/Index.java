@@ -22,8 +22,8 @@ public class Index extends Predicate {
 	public Index(Predicate predicate) {
 		super(predicate.raw);
 		this.op = predicate.op;
-		this.func = predicate.func;
-		this.value = predicate.value;
+		this.left.func = predicate.left.func;
+		this.right.value = predicate.right.value;
 	}
 
 

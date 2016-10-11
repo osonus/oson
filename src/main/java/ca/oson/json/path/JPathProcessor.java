@@ -22,6 +22,57 @@ public class JPathProcessor extends PathProcessor {
 		super(xpath);
 		// TODO Auto-generated constructor stub
 	}
+	
+	
+	@Override
+	protected Field getField(String raw, String node) {
+		Field field = new Field(raw);
+		
+		Axis axis = Axis.NONE;
+	
+		// parent, self, child
+		if (raw.startsWith("@...")) {
+			raw = raw.substring(4).trim();
+			axis = Axis.DESCENDANT;
+			
+		} else if (raw.startsWith("@..")) {
+			raw = raw.substring(3).trim();
+			axis = Axis.CHILD;
+			
+		} else if (raw.startsWith("..@.")) {
+			raw = raw.substring(4).trim();
+			axis = Axis.ANCESTOR;
+			
+		} else if (raw.startsWith(".@.")) {
+			raw = raw.substring(3).trim();
+			axis = Axis.PARENT;
+		}
+
+		field.axis = axis;
+		field.type = getType(raw);
+		
+		int idx = raw.indexOf(".");
+		
+		if (raw.startsWith("$") || idx != -1) {
+			field.steps = this.process(raw);
+			
+		} else {
+			// if it is separated by |
+			idx = raw.indexOf("|");
+			int idx2 = raw.indexOf(",");
+			int idx3 = raw.indexOf(" ");
+			
+			if (idx != -1) {
+				field.names = StringUtil.toArray(raw, "|");
+			} else if (idx2 != -1) {
+				field.names = StringUtil.toArray(raw, ",");
+			} else if (idx3 != -1) {
+				field.names = StringUtil.toArray(raw, " ");
+			}
+		}
+		
+		return field;
+	}
 
 
 	protected Filter processPredicate(String raw) {
@@ -41,69 +92,52 @@ public class JPathProcessor extends PathProcessor {
 			raw = raw.substring(1).trim();
 		}
 		
-		// parent, self, child
-		if (raw.startsWith("@...")) {
-			raw = raw.substring(4).trim();
-			predicate.axis = Axis.DESCENDANT;
-			
-		} else if (raw.startsWith("@..")) {
-			raw = raw.substring(3).trim();
-			predicate.axis = Axis.CHILD;
-			
-		} else if (raw.startsWith("..@.")) {
-			raw = raw.substring(4).trim();
-			predicate.axis = Axis.ANCESTOR;
-			
-		} else if (raw.startsWith(".@.")) {
-			raw = raw.substring(3).trim();
-			predicate.axis = Axis.PARENT;
-		}
+		// idx2 != -1 
+		int idx2 = rawLc.indexOf("@.length");
 		
 		raw = raw.replaceAll("@.", "").trim();
 
 		List<String> list = new ArrayList<>();
+		
+		raw = StringUtil.unwrap(raw, "(", ")");
 
-		if (raw.startsWith("+(") && raw.endsWith(")")) {
+		if (raw.startsWith("+(") && raw.endsWith(")") && StringUtil.isParenthesisBalanced(raw.substring(2, raw.length()-1))) {
 			list.addAll(OsonPath.oson.deserialize("[" + raw.substring(2, raw.length()-1) + "]", list.getClass()));
-			predicate.value = list;
+			predicate.right.value = list;
 			predicate.selector = SELECTOR.EXPOSE;
-			return predicate;
-
-		} else if (raw.startsWith("-(") && raw.endsWith(")")) {
-			list.addAll(OsonPath.oson.deserialize("[" + raw.substring(2, raw.length()-1) + "]", list.getClass()));
-			predicate.value = list;
-			predicate.selector = SELECTOR.IGNORE;
-			return predicate;
-		}
-		
-		
-		while (raw.startsWith("(") && raw.endsWith(")")) {
-			raw = raw.substring(1, raw.length() - 1).trim();
-		}
-
-		raw = raw.trim();
-		rawLc = raw.toLowerCase();
-		
-		int idx = rawLc.indexOf("*");
 			
-		if (idx != -1) {
-			predicate.type = Type.ANY;
-			raw = raw.substring(idx + 1);
+			return predicate;
+
+		} else if (raw.startsWith("-(") && raw.endsWith(")") && StringUtil.isParenthesisBalanced(raw.substring(2, raw.length()-1))) {
+			list.addAll(OsonPath.oson.deserialize("[" + raw.substring(2, raw.length()-1) + "]", list.getClass()));
+			predicate.right.value = list;
+			predicate.selector = SELECTOR.IGNORE;
+			
+			return predicate;
 		}
 		
+		raw = StringUtil.unwrap(raw, "(", ")");
+
 		raw = raw.trim();
 		rawLc = raw.toLowerCase();
+		
+		int idx; // = rawLc.indexOf("*");
+//		if (idx != -1) {
+//			//predicate.left.type = Type.ANY;
+//			raw = raw.substring(idx + 1);
+//		}
+//		raw = raw.trim();
 
 		if (cached.containsKey(raw)) {
-			predicate.value = cached.get(raw);
+			predicate.right.value = cached.get(raw);
 			predicate.selector = SELECTOR.HAS;
 			
 			return predicate;
 		}
 
-		
+		rawLc = raw.toLowerCase();
 		idx = rawLc.indexOf("length()");
-		int idx2 = rawLc.indexOf("length");
+		
 
 		if (idx != -1 || idx2 != -1 || rawLc.matches("^[-0-9 ,:]+$")) {
 			Index index = new Index(predicate);
@@ -150,6 +184,7 @@ public class JPathProcessor extends PathProcessor {
 			return index;
 		}
 		
+		
 		String left = null, right = null;
 		for (Operator operator: Operator.values()) {
 			for (String op: operator.ops) {
@@ -164,15 +199,33 @@ public class JPathProcessor extends PathProcessor {
 		}
 		
 		if (predicate.op == null && left == null && right == null) {
+			Map<String, Operator> map = new HashMap<>();
 			for (Operator operator: Operator.values()) {
 				for (String op: operator.ops) {
 					idx = rawLc.indexOf(op);
-					if (idx != -1 && !op.matches("[a-z]+")) {
+					if (idx != -1 && !op.matches("[a-z]+")) { // && !op.equals("-")
 						left = raw.substring(0, idx);
 						right = raw.substring(idx + op.length());
 						predicate.op = operator;
-						break;
+						map.put(op, operator);
 					}
+				}
+			}
+			
+			if (map.size() > 0) {
+				int max = 0;
+				String op = "";
+				for (String key: map.keySet()) {
+					if (key.length() > max) {
+						max = key.length();
+						op = key;
+					}
+				}
+				idx = rawLc.indexOf(op);
+				if (idx != -1) {
+					left = raw.substring(0, idx);
+					right = raw.substring(idx + op.length());
+					predicate.op = map.get(op);
 				}
 			}
 		}
@@ -180,43 +233,105 @@ public class JPathProcessor extends PathProcessor {
 		
 		if (left == null) {
 			left = raw;
-		}
-		
-		left = left.trim();
-		rawLc = left.toLowerCase();
-
-		// processing func
-		for (Func func: Func.values()) {
-			idx = rawLc.indexOf(func.toString());
-			if (idx != -1) {
-				predicate.func = func;
-				break;
+			
+		} else {
+			rawLc = right.toLowerCase(); 
+			if (rawLc.contains("position()")) {
+				rawLc = right;
+				right = left;
+				left = rawLc;
+				
+				switch (predicate.op) {
+				case GREATER_THAN_EQUAL:
+					predicate.op = Operator.LESS_THAN_EQUAL;
+					break;
+				case LESS_THAN_EQUAL:
+					predicate.op = Operator.GREATER_THAN_EQUAL;
+					break;
+				case GREATER_THAN:
+					predicate.op = Operator.LESS_THAN;
+					break;
+				case LESS_THAN:
+					predicate.op = Operator.GREATER_THAN;
+					break;
+				}
 			}
 		}
 		
+		
+		boolean hasMathOp = false;
+		for (MathOperator operator: MathOperator.values()) {
+			for (String op: operator.ops) {
+				idx = rawLc.indexOf(" " + op + " ");
+				if (idx != -1) {
+					hasMathOp = true;
+					break;
+				}
+			}
+		}
+		
+		if (!hasMathOp && right != null) {
+			rawLc = right.toLowerCase();
+			for (MathOperator operator: MathOperator.values()) {
+				for (String op: operator.ops) {
+					idx = rawLc.indexOf(" " + op + " ");
+					if (idx != -1) {
+						hasMathOp = true;
+						rawLc = right;
+						right = left;
+						left = rawLc;
+						
+						break;
+					}
+				}
+			}
+		}
+		
+		
+		predicate.left = processOperand(left, hasMathOp);
+		
+
 		if (right != null) {
 			right = right.trim();
-		}
 
-
-		
-		predicate.field = left;
-
-		if (right != null) {
-			if (xpath.startsWith("$")) {
-				predicate.value = this.process(right);
+			if (right.startsWith("$")) {
+				predicate.right.value = this.process(right);
 			}
 			
-			if (predicate.value == null) {
-				predicate.value = OsonPath.oson.deserialize(right);
+			if (predicate.right.value == null) {
+				predicate.right.value = OsonPath.oson.deserialize(right);
 			}
 		}
 		
 		return predicate;
 	}
+	
+	
+	protected Type getType(String node) {
+		Type type = Type.REGULAR;
+		
+		if (node.length() == 0 || node.equals("*")) {
+			type = Type.ANY;
+		}
+		
+		return type;
+	}
 
+	@Override
+	protected Step processStep(String raw, String node) {
+		Step step = new Step(raw, node);
+		step.type = getType(node);
 
-
+		node = node.toLowerCase();
+		for (Func func: Func.values()) {
+			if (containsFunction(node, func.toString())) {
+				step.operand = processOperand(node);
+				break;
+			}
+		}
+		
+		return step;
+	}
 
 	@Override
 	public List<Step> process() {
@@ -233,7 +348,7 @@ public class JPathProcessor extends PathProcessor {
 		// dot–notation: $.store.book[0].title
 		// the bracket–notation: $['store']['book'][0]['title']
 		boolean dotNotation = true;
-		
+
 		if (xpath.startsWith(oneOrMore)) {
 			current = Step.getInstance(Type.ONE_OR_MORE);
 			steps.add(current);
@@ -245,6 +360,7 @@ public class JPathProcessor extends PathProcessor {
 			
 		} else if (xpath.startsWith("$[")) {
 			current = Step.getInstance(Type.ROOT);
+			steps.add(current);
 			dotNotation = false;
 			currentPos += 1;
 		}

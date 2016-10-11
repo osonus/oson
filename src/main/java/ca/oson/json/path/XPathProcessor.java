@@ -2,6 +2,7 @@ package ca.oson.json.path;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -22,6 +23,67 @@ public class XPathProcessor extends PathProcessor {
 	
 
 	@Override
+	protected Field getField(String raw, String node) {
+		Field field = new Field(raw);
+
+		int idx = raw.indexOf("::");
+		Axis axis = null;
+		if (idx != -1) {
+			axis = getAxis(raw.substring(0, idx));
+			
+			raw = raw.substring(idx+2).trim();
+		}
+
+		field.axis = axis;
+		field.type = getType(raw);
+		
+		int idx2 = raw.indexOf("/");
+		
+		if (idx2 != -1) {
+			field.steps = this.process(raw);
+			
+		} else {
+			// if it is separated by |
+			idx = raw.indexOf("|");
+			idx2 = raw.indexOf(",");
+			int idx3 = raw.indexOf(" ");
+			
+			if (idx != -1) {
+				field.names = StringUtil.toArray(raw, "|");
+			} else if (idx2 != -1) {
+				field.names = StringUtil.toArray(raw, ",");
+			} else if (idx3 != -1) {
+				field.names = StringUtil.toArray(raw, " ");
+				
+			} else if (raw.equals(".")) {
+				idx = node.indexOf(raw);
+				
+				if (idx != -1) {
+					node = node.substring(0, idx);
+					idx = node.indexOf(raw);
+					String[] names = node.split("[^a-zA-Z0-9_]");
+					node = names[0].trim();
+					if (node.length() > 0) {
+						field.name = node;
+					}
+				}
+			}
+			
+			if (field.names != null && field.names.length > 1) {
+				for (idx = 1; idx < field.names.length; idx++) {
+					idx2 = field.names[idx].indexOf("::");
+					if (idx2 != -1) {
+						field.names[idx] = field.names[idx].substring(idx2 + 2).trim();
+					}
+				}
+			}
+			
+		}
+
+		return field;
+	}
+
+	@Override
 	protected Filter processPredicate(String raw) {
 		raw = raw.trim();
 		
@@ -38,120 +100,13 @@ public class XPathProcessor extends PathProcessor {
 			predicate.not = true;
 			raw = raw.substring(1).trim();
 		}
-		
-		while (raw.startsWith("(") && raw.endsWith(")")) {
-			raw = raw.substring(1, raw.length() - 1).trim();
-		}
-		
-		rawLc = raw.toLowerCase();
-		
-		// contains('X Y Z', local-name())
-//		if (rawLc.startsWith("contains(") && raw.endsWith(")")) {
-//			int i = rawLc.lastIndexOf(",");
-//			if (i > 9) {
-//				raw = raw.substring(9, i).trim();
-//			} else {
-//				raw = raw.substring(9, raw.length()-1).trim();
-//			}
-//			
-//			if ( (raw.startsWith("'") && raw.endsWith("'"))
-//					|| (raw.startsWith("\"") && raw.endsWith("\""))) {
-//				raw = raw.substring(1, raw.length()-1).trim();
-//			}
-//
-//			predicate.value = StringUtil.array2List(raw.split(" "));
-//			predicate.selector = SELECTOR.HAS;
-//			
-//			return predicate;
-//		}
-		
-		
-		rawLc = raw.toLowerCase();
-		
-		// handling ::
-		int idx = raw.indexOf("::");
-		int idx2;
-		if (idx != -1) {
-			rawLc = raw.substring(0, idx);
-			
-			for (Axis axis: Axis.values()) {
-				if (rawLc.endsWith(axis.toString())) {
-					predicate.axis = axis;
 
-					rawLc = rawLc.substring(0, rawLc.length() - axis.toString().length());
-					
-					rawLc = rawLc.trim().toLowerCase();
-					
-					if (rawLc.contains("!") || rawLc.contains("not")) {
-						predicate.not = true;
-					}
-					
-					break;
-				}
-			}
-
-			raw = raw.substring(idx + 2);
-			
-			raw = raw.replaceAll("self::", "");
-			
-			
-		} else {
-			idx = raw.indexOf("..");
-			idx2 = raw.indexOf(".");
-			
-			if (idx != -1) {
-				predicate.axis = Axis.PARENT;
-				rawLc = raw.substring(0, idx).toLowerCase();
-				
-				if (rawLc.contains("!") || rawLc.contains("not")) {
-					predicate.not = true;
-				}
-				
-				raw = raw.substring(idx + 2);
-				 
-			} else if (idx2 != -1) {
-				predicate.axis = Axis.SELF;
-				rawLc = raw.substring(0, idx2).toLowerCase();
-				
-				if (rawLc.contains("!") || rawLc.contains("not")) {
-					predicate.not = true;
-				}
-				
-				raw = raw.substring(idx2 + 2); 
-			}
-		}
+		raw = StringUtil.unwrap(raw, "(", ")");
 		
-		String[] splitted = raw.split("\\|");
-		if (splitted.length > 1) {
-			predicate.value = StringUtil.array2List(splitted);
-			predicate.selector = SELECTOR.HAS;
-			
-			return predicate;
-		}
-		
-		
-		raw = raw.trim();
 		rawLc = raw.toLowerCase();
 		
-		idx = rawLc.indexOf("node()");
-		idx2 = rawLc.indexOf("text()");
-		int idx3 = rawLc.indexOf("*");
-			
-		if (idx != -1) {
-			predicate.type = Type.NODE;
-			raw = raw.substring(idx + 6);
-		} else if (idx2 != -1) {
-			predicate.type = Type.TEXT;
-			raw = raw.substring(idx2 + 6);
-		} else if (idx3 == 0) {
-			predicate.type = Type.ANY;
-			raw = raw.substring(idx3 + 1);
-		}
-		
-		raw = raw.trim();
-		rawLc = raw.toLowerCase();
+		int idx, idx2;
 
-		
 		String left = null, right = null;
 		for (Operator operator: Operator.values()) {
 			for (String op: operator.ops) {
@@ -170,7 +125,7 @@ public class XPathProcessor extends PathProcessor {
 			for (Operator operator: Operator.values()) {
 				for (String op: operator.ops) {
 					idx = rawLc.indexOf(op);
-					if (idx != -1 && !op.matches("[a-z]+") && !op.equals("-")) {
+					if (idx != -1 && !op.matches("[a-z]+")) { // && !op.equals("-")
 						left = raw.substring(0, idx);
 						right = raw.substring(idx + op.length());
 						predicate.op = operator;
@@ -228,58 +183,6 @@ public class XPathProcessor extends PathProcessor {
 		left = left.trim();
 		rawLc = left.toLowerCase();
 
-		// processing func
-		String name;
-		for (Func func: Func.values()) {
-			name = func.toString();
-			if (containsFunction(rawLc, name)) {
-				predicate.func = func;
-				idx = rawLc.indexOf(name);
-				idx2 = rawLc.indexOf("(", idx);
-				String[] params = null;
-				if (idx2 > idx) {
-					params = getParameters(left.substring(idx2 + 1));
-				}
-				
-				switch (func) {
-				case STRING_LENGTH:
-				case NUMBER:
-				case COUNT:
-				case SUM:
-				case ROUND:
-					if (params != null && params.length > 0) {
-						predicate.field = params[0];
-					}
-					break;
-
-				case STARTS_WITH:
-				case CONTAINS:
-					if (params != null && params.length > 1) {
-						predicate.field = params[0];
-						predicate.value = params[1];
-					}
-					
-					break;
-
-				case TRANSLATE:
-					if (params != null && params.length > 2) {
-						predicate.field = params[0];
-						List<Object> list = new ArrayList<>();
-						list.add(params[1]);
-						list.add(params[2]);
-						
-						predicate.value = list;
-					}
-					
-					break;
-				}
-				
-				
-				break;
-			}
-		}
-		
-
 		idx = rawLc.indexOf("position()");
 		idx2 = rawLc.indexOf("last()");
 
@@ -325,42 +228,114 @@ public class XPathProcessor extends PathProcessor {
 		}
 		
 		
-		if (predicate.field == null) {
-			predicate.field = left;
+		boolean hasMathOp = false;
+		for (MathOperator operator: MathOperator.values()) {
+			for (String op: operator.ops) {
+				idx = rawLc.indexOf(" " + op + " ");
+				if (idx != -1) {
+					hasMathOp = true;
+					break;
+				}
+			}
 		}
+		
+		if (!hasMathOp && right != null) {
+			rawLc = right.toLowerCase();
+			for (MathOperator operator: MathOperator.values()) {
+				for (String op: operator.ops) {
+					idx = rawLc.indexOf(" " + op + " ");
+					if (idx != -1) {
+						hasMathOp = true;
+						rawLc = right;
+						right = left;
+						left = rawLc;
+						
+						break;
+					}
+				}
+			}
+		}
+		
+		
+		predicate.left = processOperand(left, hasMathOp);
+		
 
 		if (right != null) {
 			right = right.trim();
 			
 			if (right.contains("/")) {
-				predicate.value = this.process(right);
+				predicate.right.value = this.process(right);
 			}
 			
-			if (predicate.value == null) {
-				predicate.value = OsonPath.oson.deserialize(right);
+			if (predicate.right.value == null) {
+				predicate.right.value = OsonPath.oson.deserialize(right);
 			}
 		}
 		
 		return predicate;
 	}
 
+	protected Type getType(String node) {
+		Type type = Type.REGULAR;
+		
+		if (node.length() == 0 || node.equals("*")) {
+			type = Type.ANY;
+			
+		} else {
+			node = node.toLowerCase();
+			
+			if (node.startsWith("text") && node.substring(4, node.indexOf("(", 4)).trim().length() == 0) {
+				type = Type.TEXT;
+				
+			} else if (node.startsWith("node") && node.substring(4, node.indexOf("(", 4)).trim().length() == 0) {
+				type = Type.NODE;
+				
+			}
+		}
+		
+		return type;
+	}
+	
+	protected Axis getAxis(String axisName) {
+		axisName = axisName.toLowerCase();
+		for (Axis ax: Axis.values()) {
+			if (axisName.endsWith(ax.toString())) {
+				return ax;
+			}
+		}
+		
+		return Axis.NONE;
+	}
 
+	@Override
+	protected Step processStep(String raw, String node) {
+		int idx = node.indexOf("::");
+		Axis axis = null;
+		if (idx != -1) {
+			axis = getAxis(node.substring(0, idx));
+			
+			node = node.substring(idx+2).trim();
+		} else if (node.equals(".")) {
+			axis = Axis.SELF;
+		}
+		
+		Step step = new Step(raw, node);
+		step.axis = axis;
+		step.type = getType(node);
+		
+		node = node.toLowerCase();
+		for (Func func: Func.values()) {
+			if (containsFunction(node, func.toString())) {
+				step.operand = processOperand(node);
+				break;
+			}
+		}
+		
+		return step;
+	}
 
 	@Override
 	public List<Step> process() {
-		// first clean up unncessary phrases
-//		Map<String, Object> cleanupMap = ArrayToJsonMap.array2Map(new String[] {
-//			"child::", "",
-//			"descendant-or-self::node()", "",
-//			"self::node()", ".",
-//			"parent::node()", ".."
-//		});
-//		for (String key: cleanupMap.keySet()) {
-//			String replacement = cleanupMap.get(key).toString();
-//			xpath.replaceAll(key, replacement);
-//		}
-
-		
 		int currentPos = 0;
 		
 		Step current = null;

@@ -1,6 +1,8 @@
 package ca.oson.json.path;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +15,299 @@ public abstract class PathProcessor {
 	protected String xpath;
 	
 	
+	protected Field getField(String raw) {
+		return getField(raw, raw);
+	}
+	
+	protected abstract Field getField(String node, String raw);
+
+	protected Operand processOperand(String raw) {
+		Operand operand = new Operand(raw);
+
+		String rawLc = raw.toLowerCase();
+		
+		// processing func
+		int idx, idx2;
+		String name;
+		for (Func func: Func.values()) {
+			name = func.toString();
+			if (containsFunction(rawLc, name)) {
+				operand.func = func;
+				idx = rawLc.indexOf(name);
+				idx2 = rawLc.indexOf("(", idx);
+				String[] params = null;
+				if (idx2 > idx) {
+					params = getParameters(raw.substring(idx2 + 1));
+				}
+				
+				switch (func) {
+				case STRING_LENGTH:
+				case NUMBER:
+				case COUNT:
+				case SUM:
+				case ROUND:
+					if (params != null && params.length > 0) {
+						operand.field = getField(params[0], raw);
+					}
+					break;
+
+				case STARTS_WITH:
+				case CONTAINS:
+					if (params != null && params.length > 1) {
+						operand.field = getField(params[0], raw);
+						operand.value = params[1];
+					}
+					
+					break;
+
+				case TRANSLATE:
+					if (params != null && params.length > 2) {
+						operand.field = getField(params[0], raw);
+
+						operand.value = Arrays.copyOfRange(params, 1, 3);
+					}
+					
+					break;
+				}
+				
+				
+				break;
+			}
+		}
+
+		// operand.func == null && 
+		if (operand.field == null) {
+			operand.field = getField(raw);
+		}
+		
+		return operand;
+	}
+	
+	
+	
+	public static String getNextPar(String raw) {
+		int i = 0;
+		String par = raw;
+		Stack<Character> stack = new Stack<>();
+		while (i < raw.length()) {
+			char c = raw.charAt(i);
+			if (c == '(') {
+				stack.push(c);
+				
+			} else if (c == ')') {
+				if (stack.isEmpty()) {
+					raw = raw.substring(0, i);
+					break;
+					
+				} else {
+					stack.pop();
+				}
+			}
+			
+			i++;
+		}
+
+		return StringUtil.unwrap(raw, "(", ")");
+	}
+	
+	
+	public static String getPrevPar(String raw) {
+		int i = raw.length() - 1;
+		Stack<Character> stack = new Stack<>();
+		String par = raw;
+		while (i > 0) {
+			char c = raw.charAt(i);
+			if (c == ')') {
+				stack.push(c);
+				
+			} else if (c == '(') {
+				if (stack.isEmpty()) {
+					par = raw.substring(i);
+					break;
+					
+				} else {
+					stack.pop();
+				}
+			}
+			
+			i--;
+		}
+
+		return StringUtil.unwrap(raw, "(", ")");
+	}
+	
+	
+	protected Operand processLeftOperand(String raw) {
+		String par = getPrevPar(raw);
+
+		return processOperand(par);
+	}
+	
+	protected Operand processRightOperand(String raw) {
+		String par = getNextPar(raw);
+
+		return processOperand(par);
+	}
+	
+
+	protected Operand processOperand(String raw, boolean hasMathOp) {
+		String rawLc;
+		
+		raw = StringUtil.unwrap(raw, "(", ")");
+		
+		Operand operand = null;
+		
+		if (!hasMathOp) {
+			return processOperand(raw);
+		}
+		
+		
+		// processing math op
+		rawLc = raw.toLowerCase();
+		Map<Integer, MathOperator> map = new HashMap<>();
+		Map<MathOperator, List<Integer>> mmap = new HashMap<>();
+		int idx;
+		for (MathOperator operator: MathOperator.values()) {
+			for (String op: operator.ops) {
+				idx = rawLc.indexOf(" " + op + " ");
+				while (idx != -1) {
+					idx++;
+					map.put(idx, operator);
+					List<Integer> list = mmap.get(operator);
+					if (list == null) {
+						list = new ArrayList<Integer>();
+						mmap.put(operator, list);
+					}
+					list.add(idx);
+					
+					idx = rawLc.indexOf(" " + op + " ", idx + op.length()+2);
+				}
+			}
+		}
+		
+		
+		
+		Integer[] ids = map.keySet().toArray(new Integer[0]);
+		Arrays.sort(ids);
+		
+		int len = ids.length;
+		
+		// first round: parenthesis
+		idx = 0;
+		Operand[] operands = new Operand[len];
+		int idx2 = 0;
+		String rawLc2;
+
+		for (int i = 0; i < len; i++) {
+			MathOperator operator = map.get(ids[i]);
+			rawLc = raw.substring(idx, ids[i]);
+			if (!StringUtil.isParenthesisBalanced(rawLc)) {
+				Operand left = null;
+				if (i > 0) {
+					left = operands[idx];
+					if (left != null) {
+						while (left.parent != null) {
+							left = left.parent;
+						}
+					}
+				}
+				
+				if (left == null) {
+					left = processLeftOperand(rawLc);
+				}
+				
+				
+				idx2 = raw.indexOf(" ", ids[i]) + 1;
+				
+				if (i + 1 < len)
+				{
+					rawLc2 = raw.substring(idx2, ids[i+1]);
+				} else {
+					rawLc2 = raw.substring(idx2);
+				}
+				Operand right = processRightOperand(rawLc2);
+				
+				operand = new Operand(rawLc + raw.substring(ids[i] - 1, idx2) + rawLc2);
+				left.parent = operand;
+				right.parent = operand;
+				operand.left = left;
+				operand.right = right;
+				operand.op = operator;
+				operands[i] = operand;
+			}
+			
+			idx = i;
+		}
+		
+		
+		for (MathOperator operator: MathOperator.values()) {
+			List<Integer> list = mmap.get(operator);
+			if (list != null) {
+				for (Integer l: list) {
+					Operand left = null;
+					int i = Arrays.binarySearch(ids, l);
+					if (i > 0) {
+						left = operands[i-1];
+						if (left != null) {
+							while (left.parent != null) {
+								left = left.parent;
+							}
+						}
+					}
+					
+					if (left == null) {
+						if (i == 0) {
+							rawLc = raw.substring(0, l);
+						} else {
+							rawLc = raw.substring(ids[i-1], l);
+						}
+
+						left = processLeftOperand(rawLc);
+					}
+					
+					
+					Operand right = null;
+					if (i + 1 < len)
+					{
+						right = operands[i + 1];
+						if (right != null) {
+							while (right.parent != null) {
+								right = right.parent;
+							}
+						}
+					}
+					
+					idx2 = raw.indexOf(" ", l) + 1;
+					if (right == null) {
+						if (i + 1 < len)
+						{
+							rawLc2 = raw.substring(idx2, ids[i+1]);
+						} else {
+							rawLc2 = raw.substring(idx2);
+						}
+						right = processRightOperand(rawLc2);
+					}
+					
+					operand = new Operand(left.raw + raw.substring(l - 1, idx2) + right.raw);
+					left.parent = operand;
+					right.parent = operand;
+					operand.left = left;
+					operand.right = right;
+					operand.op = operator;
+					
+					operands[i] = operand;
+				}
+			}
+		}
+
+		return operand;
+	}
+	
 	public static String[] getParameters(String raw) {
+		return getParameters(raw, ',');
+	}
+	
+	public static String[] getParameters(String raw, char character) {
 		int i = 0, last = 0;
 		Stack<Character> stack = new Stack<>();
 		List<String> list = new ArrayList<>();
@@ -28,14 +322,16 @@ public abstract class PathProcessor {
 					part = StringUtil.unwrap(part, "\"");
 					part = StringUtil.unwrap(part, "'");
 					part = StringUtil.unwrap(part, "(", ")");
-					list.add(part);
+					if (part.length() > 0 && StringUtil.isParenthesisBalanced(part)) {
+						list.add(part);
+					}
 					break;
 					
 				} else {
 					stack.pop();
 				}
 				
-			} else if (c == ',') {
+			} else if (c == character) {
 				String part = raw.substring(last, i).trim();
 				boolean balanced = true;
 				if (part.startsWith("\"")) {
@@ -54,7 +350,9 @@ public abstract class PathProcessor {
 				}
 				if (balanced) {
 					part = StringUtil.unwrap(part, "(", ")");
-					list.add(part);
+					if (part.length() > 0 && StringUtil.isParenthesisBalanced(part)) {
+						list.add(part);
+					}
 					last = i + 1;
 				}
 			}
@@ -192,6 +490,8 @@ public abstract class PathProcessor {
 	 */
 	protected Filter processFilter(String raw) {
 		Filter filter = new Filter(raw);
+
+		raw = raw.replaceAll("\\?\\s*\\(", "(");
 
 		raw = raw.replaceAll("\\&\\&", " &&  ");
 		raw = raw.replaceAll("\\|\\|", " || ");
@@ -373,6 +673,9 @@ public abstract class PathProcessor {
 	}
 	
 	
+	protected abstract Step processStep(String raw, String node);
+	
+	
 	protected Step processStep(String raw) {
 		// String name = "";
 		
@@ -384,10 +687,10 @@ public abstract class PathProcessor {
 		
 		Step step = null;
 		if (i > -1) {
-			step = new Step(raw, raw.substring(0, i).trim());
+			step = processStep(raw, raw.substring(0, i).trim());
 			
 		} else {
-			step = new Step(raw, raw);
+			step = processStep(raw, raw);
 			raw = "";
 		}
 		
