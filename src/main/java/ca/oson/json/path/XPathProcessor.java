@@ -27,22 +27,39 @@ public class XPathProcessor extends PathProcessor {
 		Field field = new Field(raw);
 
 		int idx = raw.indexOf("::");
-		Axis axis = null;
+		Axis axis = Axis.NONE;
+		String raw2 = raw;
 		if (idx != -1) {
 			axis = getAxis(raw.substring(0, idx));
 			
 			raw = raw.substring(idx+2).trim();
+
+		} else if (xpath.startsWith("../")) {
+			axis = Axis.PARENT;
+			raw2 = raw2.substring(idx+3).trim();
+			
+		} else if (xpath.startsWith(".//")) {
+			axis = Axis.SELF;
+			raw2 = raw2.substring(idx+3).trim();
+			
+		} else if (xpath.startsWith(".")) {
+			axis = Axis.SELF;
+			raw2 = raw2.substring(idx+1).trim();
+			
 		}
 
 		field.axis = axis;
-		field.type = getType(raw);
+		field.type = getType(raw2);
 		
-		int idx2 = raw.indexOf("/");
+		int idx2 = raw2.indexOf("/");
 		
 		if (idx2 != -1) {
+			// either starts with root, or invovles more than 1 steps
 			field.steps = this.process(raw);
 			
 		} else {
+			raw = raw2;
+			
 			// if it is separated by |
 			idx = raw.indexOf("|");
 			idx2 = raw.indexOf(",");
@@ -315,9 +332,19 @@ public class XPathProcessor extends PathProcessor {
 			axis = getAxis(node.substring(0, idx));
 			
 			node = node.substring(idx+2).trim();
+			
 		} else if (node.equals(".")) {
 			axis = Axis.SELF;
+		
+		} else if (node.equals("../")) {
+			axis = Axis.PARENT;
+			
+		} else if (node.equals(".//")) {
+			axis = Axis.SELF;
+			
 		}
+		
+		
 		
 		Step step = new Step(raw, node);
 		step.axis = axis;
@@ -353,6 +380,25 @@ public class XPathProcessor extends PathProcessor {
 			current = Step.getInstance(Type.ROOT);
 			steps.add(current);
 			currentPos++;
+
+		} else if (xpath.startsWith("../")) {
+			String raw = "../";
+			current = processStep(raw, raw);
+			steps.add(current);
+			currentPos += 3;
+			
+		} else if (xpath.startsWith(".//")) {
+			String raw = ".//";
+			current = processStep(raw, raw);
+			steps.add(current);
+			currentPos += 3;
+			
+		} else if (xpath.startsWith(".")) {
+			String raw = ".";
+			current = processStep(raw, raw);
+			steps.add(current);
+			currentPos++;
+			
 		}
 
 		String xpath2 = xpath.substring(currentPos);

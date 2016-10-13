@@ -150,6 +150,7 @@ public abstract class PathProcessor {
 	}
 	
 
+	// to re-write, using different approach
 	protected Operand processOperand(String raw, boolean hasMathOp) {
 		String rawLc;
 		

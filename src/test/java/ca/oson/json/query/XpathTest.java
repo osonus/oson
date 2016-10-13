@@ -74,5 +74,19 @@ public class XpathTest extends TestCaseBase {
 		json = oson.print(path);
 	}
 	
+	
+	@Test
+	public void testMathOperations() {
+		oson.pretty().setDefaultType(JSON_INCLUDE.NON_DEFAULT);
+		String xpath;
+		Path path;
+		String json;
+		
+		xpath = "//math/operation[(a + b) * c > 100]";
+		path = new Path(xpath);
+		json = oson.print(path);
+		
+	}
+	
 
 }
