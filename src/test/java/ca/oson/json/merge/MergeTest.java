@@ -153,4 +153,21 @@ public class MergeTest extends TestCaseBase {
 
 		assertEquals(expected, json);
 	}
+	
+	
+	@Test
+	public void testTableMerge3() {
+		List<Map> list = oson.readValue("rows2Columns.txt");
+		
+		Config config = merge.getConfig();
+		config.groupBy = "PM";
+		List result = (List)merge.merge(list);
+		
+		// oson.pretty();
+		String json = oson.serialize(result);
+		
+		String expected = "[{\"PM\":\"Jane\",\"e\":\"j@nunya.com\",\"h\":[\"15.00\",\"11.00\"],\"w\":[\"10/30/2016 12:00:00 AM\",\"11/06/2016 12:00:00 AM\"],\"c\":\"John\",\"p\":\"Happy Town USA\"},{\"PM\":\"Jill\",\"e\":\"j@nunya.com\",\"h\":[\"21.00\",\"12.00\"],\"w\":[\"10/30/2016 12:00:00 AM\",\"11/06/2016 12:00:00 AM\"],\"c\":\"John\",\"p\":\"Sad Town USA\"}]";
+		
+		assertEquals(expected, json);
+	}
 }

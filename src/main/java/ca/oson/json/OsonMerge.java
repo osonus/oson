@@ -108,6 +108,11 @@ public class OsonMerge {
 		 * unless specified by names map
 		 */
 		public FIELD_NAMING namingPolicy = FIELD_NAMING.FIELD;
+		
+		/*
+		 * This attribute groups a list into a new smaller list.
+		 */
+		public String groupBy = null;
 
 	}
 
@@ -623,18 +628,22 @@ public class OsonMerge {
 		Object object = oson.deserialize(json);
 		 clear();
 
+		 List list;
 		if ((jsons == null || jsons.length == 0) && List.class.isInstance(object)) {
-			object = merge((List)object);
+			list = (List)object;
 
 		} else {
 			Object obj;
+			list = new ArrayList<>();
+			list.add(object);
 			for (String jsn: jsons) {
 				obj = oson.deserialize(jsn);
-				object = mergeObjects(object, obj);
+				list.add(obj);
 			}
 		}
 		
-		return oson.pretty(pretty).serialize(object);
+		//.pretty(pretty)
+		return oson.serialize(merge(list));
 	}
 	
 	/*
@@ -642,16 +651,17 @@ public class OsonMerge {
 	 * to hold the resulting data
 	 */
 	public JSONObject merge(JSONObject source, JSONObject... sources) {
-		Object object = oson.deserialize(source);
 		clear();
 		
+		List list = new ArrayList();
+		list.add(oson.deserialize(source));
 		Object obj;
 		for (JSONObject src: sources) {
 			obj = oson.deserialize(src);
-			object = mergeObjects(object, obj);
+			list.add(obj);
 		}
 		
-		return ObjectUtil.getJSONObject(oson.serialize(object));
+		return ObjectUtil.getJSONObject(oson.serialize(merge(list)));
 	}
 	
 	
@@ -661,10 +671,42 @@ public class OsonMerge {
 		if (size > 0) {
 			object = list.get(0);
 			Object obj;
-			for (int i = 1; i < size; i++) {
-				obj= list.get(i);
-				object = mergeObjects(object, obj);
+			
+			if (config == null || StringUtil.isEmpty(config.groupBy)) {
+				for (int i = 1; i < size; i++) {
+					obj= list.get(i);
+					object = mergeObjects(object, obj);
+				}
+				
+			} else {
+
+				Map<Object, List> map = new LinkedHashMap<>();
+				for (int j = 0; j < size; j++) {
+					object = OsonSearch.search(list.get(j), config.groupBy, true);
+				
+					if (object != null) {
+						List l = map.get(object);
+						if (l == null) {
+							l = new ArrayList();
+							map.put(object, l);
+						}
+						l.add(list.get(j));
+					}
+				}
+
+				config.groupBy = null;
+				config.numericValue = NUMERIC_VALUE.MERGE_UNIQUE;
+				config.nonnumericalValue = NONNUMERICAL_VALUE.MERGE_UNIQUE;
+				config.listValue = LIST_VALUE.MERGE_UNIQUE;
+				
+				List lst = new ArrayList();
+				for (Object o: map.keySet()) {
+					lst.add(merge(map.get(o)));
+				}
+				
+				return lst;
 			}
+			
 		}
 		
 		return object;
@@ -679,18 +721,19 @@ public class OsonMerge {
 		Object object = oson.deserialize(source.toString());
 		 clear();
 
+		 List list;
 		if ((sources == null || sources.length == 0) && List.class.isInstance(object)) {
-			object = merge((List)object);
+			list = (List)object;
 			
 		} else {
-			Object obj;
+			list = new ArrayList();
+			list.add(object);
 			for (JSONArray src: sources) {
-				obj = oson.deserialize(src.toString());
-				object = mergeObjects(object, obj);
+				list.add(oson.deserialize(src.toString()));
 			}
 		}
 		
-		return ObjectUtil.getJSONObject(oson.serialize(object));
+		return ObjectUtil.getJSONObject(oson.serialize(merge(list)));
 	}
 	
 	
@@ -701,20 +744,22 @@ public class OsonMerge {
 	public Object merge(Object ob, Object... obs) {
 		Object object = oson.deserialize(oson.serialize(ob));
 		 clear();
-		
-		Object obj;
+
+		List list;
 		if ((obs == null || obs.length == 0) && List.class.isInstance(object)) {
-			object = merge((List)object);
+			list = (List)object;
 			
 		} else {
+			Object obj;
+			list = new ArrayList<>();
+			list.add(object);
 			for (Object objt: obs) {
 				obj = oson.deserialize(oson.serialize(objt));
-				object = mergeObjects(object, obj);
+				list.add(obj);
 			}
 		}
-		
-		// to modify later
-		return object;
+
+		return  merge(list);
 	}
 
 }

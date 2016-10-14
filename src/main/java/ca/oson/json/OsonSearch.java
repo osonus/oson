@@ -17,6 +17,9 @@ import ca.oson.json.util.StringUtil;
 public class OsonSearch {
 	private static FIELD_NAMING naming = ConvertUtil.naming;
 	
+	private static Oson oson = new Oson().includeClassTypeInJson(false).setFieldNaming(naming);
+	
+	
 	/*
 	 * Search for attribute or key's values in the Json source. The search follows Json document structure
 	 * from the root to children through attr, with dot notation.
@@ -29,11 +32,13 @@ public class OsonSearch {
 	 * 
 	 */
 	public static String search(String source, String attr, boolean strict) {
-		Oson oson = new Oson()
-				.setFieldNaming(naming)
-				.includeClassTypeInJson(false);
 		Object obj = oson.deserialize(source);
 		
+		return search(obj, attr, strict);
+	}
+	
+
+	static String search(Object obj, String attr, boolean strict) {
 		String[] attrs = attr.split("\\.");
 		
 		Set found = find(obj, attrs, strict, false);
@@ -47,6 +52,7 @@ public class OsonSearch {
 		}
 		
 		return oson.serialize(found);
+		
 	}
 	
 	/*
@@ -147,8 +153,6 @@ public class OsonSearch {
 	 * 
 	 */
 	public static String query(String source, String attr) {
-		Oson oson = new Oson().includeClassTypeInJson(false).setFieldNaming(naming);
-
 		source = oson.serialize(oson.deserialize(source));
 		
 		String[] attrs = attr.split("\\.");
