@@ -1,11 +1,12 @@
 package ca.oson.json.path;
 
+import java.util.List;
+
 public class Operand <E> {
-	Operand parent;
-	Operand left;
 	MathOperator op;
-	Operand right;
+	List<Operand> children;
 	
+	// data
 	//boolean not = false;
 	String raw;
 
@@ -20,6 +21,10 @@ public class Operand <E> {
 	
 	public Operand (E value) {
 		this.value = value;
+	}
+	
+	public Operand (MathOperator op) {
+		this.op = op;
 	}
 	
 	public Operand () {

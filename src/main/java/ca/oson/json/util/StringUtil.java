@@ -662,6 +662,9 @@ public class StringUtil {
 		return true;
 	}
 	
+	public static boolean isAlpha(String name) {
+	    return name.matches("[a-zA-Z_]+");
+	}
 	
 	public static boolean isParenthesisBalanced(String str) {
 		int i = 0;
@@ -714,18 +717,51 @@ public class StringUtil {
 	}
 	
 	
-	public static String[] toArray(String str, String delimiter) {
+	public static String[] toArray(String raw, String delimiter) {
 		List<String> list = new ArrayList<>();
+		
+		raw = raw.trim();
 		
 		int last = 0;
 		int len = delimiter.length();
+		int length = raw.length();
+		
+		boolean isOpText = isAlpha(delimiter);
+		String str;
+		if (isOpText) {
+			delimiter = delimiter.toLowerCase();
+			str = raw.toLowerCase();
+		} else {
+			str = raw;
+		}
 		
 		int i = str.indexOf(delimiter, 0);
 		String p;
 		while (i != -1) {
-			p = str.substring(last, i).trim();
+			p = raw.substring(last, i);
 			
-			if (p.length() > 0 && isParenthesisBalanced(p)) {
+			if (isOpText) {
+				if (i == 0) { // startsWith
+					if (i+len < length && str.charAt(i+len) != ' ') {
+						i = str.indexOf(delimiter, i + len);
+						continue;
+					}
+					
+				} else if (i+len == length) { // endsWith
+					if (str.charAt(i-1) != ' ') {
+						i = str.indexOf(delimiter, i + len);
+						continue;
+					}
+					
+				} else if (str.charAt(i-1) != ' ' || (i+len < length && str.charAt(i+len) != ' ')) {
+					i = str.indexOf(delimiter, i + len);
+					continue;
+				}
+			}
+			
+			p = p.trim();
+			
+			if (isParenthesisBalanced(p)) {
 				if (p.startsWith("'")) {
 					if (p.endsWith("'")) {
 						list.add(unwrap(p, "'"));
@@ -747,9 +783,13 @@ public class StringUtil {
 			i = str.indexOf(delimiter, i + len);
 		}
 		
-		p = str.substring(last).trim();
+		p = raw.substring(last).trim();
 		if (p.length() > 0) {
 			list.add(p);
+		} else if (isOpText && raw.endsWith(" " + delimiter)) {
+			list.add("");
+		} else if (raw.endsWith(delimiter)) {
+			list.add("");
 		}
 		
 		return list.toArray(new String[0]);

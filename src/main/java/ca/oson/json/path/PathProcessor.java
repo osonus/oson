@@ -107,7 +107,7 @@ public abstract class PathProcessor {
 			i++;
 		}
 
-		return StringUtil.unwrap(raw, "(", ")");
+		return raw; // StringUtil.unwrap(raw, "(", ")");
 	}
 	
 	
@@ -149,160 +149,264 @@ public abstract class PathProcessor {
 		return processOperand(par);
 	}
 	
+	
+	protected boolean containsMathOperator(String raw) {
+		return containsMathOperator(raw, 0);
+	}
+	
+	protected boolean containsMathOperator(String raw, int startIndx) {
+		String rawLc = raw.toLowerCase();
+
+		MathOperator[] operators = MathOperator.values();
+		int len = operators.length;
+		for (int i = startIndx; i < len; i++) {
+			MathOperator operator = operators[i];
+			for (String op: operator.ops) {
+				if (rawLc.contains(op)) {
+					boolean isOpText = StringUtil.isAlpha(op);
+					if (isOpText) {
+						int idx = rawLc.indexOf(" " + op + " ");
+						if (idx != -1) {
+							return true;
+						}
+						
+					} else {
+						return true;
+					}
+					
+				}
+			}
+		}
+		
+		return false;
+	}
+	
+	
 
 	// to re-write, using different approach
 	protected Operand processOperand(String raw, boolean hasMathOp) {
-		String rawLc;
-		
 		raw = StringUtil.unwrap(raw, "(", ")");
-		
-		Operand operand = null;
-		
+
 		if (!hasMathOp) {
 			return processOperand(raw);
 		}
-		
-		
-		// processing math op
-		rawLc = raw.toLowerCase();
-		Map<Integer, MathOperator> map = new HashMap<>();
-		Map<MathOperator, List<Integer>> mmap = new HashMap<>();
-		int idx;
-		for (MathOperator operator: MathOperator.values()) {
-			for (String op: operator.ops) {
-				idx = rawLc.indexOf(" " + op + " ");
-				while (idx != -1) {
-					idx++;
-					map.put(idx, operator);
-					List<Integer> list = mmap.get(operator);
-					if (list == null) {
-						list = new ArrayList<Integer>();
-						mmap.put(operator, list);
-					}
-					list.add(idx);
-					
-					idx = rawLc.indexOf(" " + op + " ", idx + op.length()+2);
-				}
-			}
-		}
-		
-		
-		
-		Integer[] ids = map.keySet().toArray(new Integer[0]);
-		Arrays.sort(ids);
-		
-		int len = ids.length;
-		
+
+		List<Object> ops = new ArrayList<>();
+
 		// first round: parenthesis
-		idx = 0;
-		Operand[] operands = new Operand[len];
-		int idx2 = 0;
-		String rawLc2;
-
-		for (int i = 0; i < len; i++) {
-			MathOperator operator = map.get(ids[i]);
-			rawLc = raw.substring(idx, ids[i]);
-			if (!StringUtil.isParenthesisBalanced(rawLc)) {
-				Operand left = null;
-				if (i > 0) {
-					left = operands[idx];
-					if (left != null) {
-						while (left.parent != null) {
-							left = left.parent;
-						}
-					}
-				}
-				
-				if (left == null) {
-					left = processLeftOperand(rawLc);
-				}
-				
-				
-				idx2 = raw.indexOf(" ", ids[i]) + 1;
-				
-				if (i + 1 < len)
-				{
-					rawLc2 = raw.substring(idx2, ids[i+1]);
-				} else {
-					rawLc2 = raw.substring(idx2);
-				}
-				Operand right = processRightOperand(rawLc2);
-				
-				operand = new Operand(rawLc + raw.substring(ids[i] - 1, idx2) + rawLc2);
-				left.parent = operand;
-				right.parent = operand;
-				operand.left = left;
-				operand.right = right;
-				operand.op = operator;
-				operands[i] = operand;
-			}
+		int idx = raw.indexOf("(");
+		
+		while (idx != -1) {
+			String nextPar = getNextPar(raw.substring(idx + 1));
 			
-			idx = i;
+			if (containsMathOperator(nextPar)) {
+				
+				String prev = raw.substring(0, idx);
+				
+				ops.add(prev);
+
+				Operand currentOperand = processOperand(nextPar, true);
+				
+				ops.add(currentOperand);
+				
+				raw = raw.substring(idx + nextPar.length() + 2);
+				
+				idx = raw.indexOf("(");
+				
+			} else {
+				idx = raw.indexOf("(", idx + 1);
+			}
+		}
+
+		
+		raw = raw.trim();
+
+		if (raw.length() > 0) {
+			ops.add(raw);
+		}
+		
+		if (ops.size() == 0) {
+			return null;
 		}
 		
 		
-		for (MathOperator operator: MathOperator.values()) {
-			List<Integer> list = mmap.get(operator);
-			if (list != null) {
-				for (Integer l: list) {
-					Operand left = null;
-					int i = Arrays.binarySearch(ids, l);
-					if (i > 0) {
-						left = operands[i-1];
-						if (left != null) {
-							while (left.parent != null) {
-								left = left.parent;
-							}
-						}
-					}
-					
-					if (left == null) {
-						if (i == 0) {
-							rawLc = raw.substring(0, l);
-						} else {
-							rawLc = raw.substring(ids[i-1], l);
-						}
+		return processOperand(ops, 0);
+	}
+	
+	protected Operand processOperand(List<Object> ops, int startIndex) {
+		Operand operand = null;
+		
+		// handling math operations
+		MathOperator[] operators = MathOperator.values();
+		
+		for (int i = startIndex; i < operators.length; i++) {
+			MathOperator operator = operators[i];
 
-						left = processLeftOperand(rawLc);
-					}
-					
-					
-					Operand right = null;
-					if (i + 1 < len)
-					{
-						right = operands[i + 1];
-						if (right != null) {
-							while (right.parent != null) {
-								right = right.parent;
+			String nextOperator = null;
+			for (String op: operator.ops) {
+				boolean isOpText = StringUtil.isAlpha(op);
+
+				for (Object o: ops) {
+					if (String.class.isInstance(o)) {
+						String text = (String)o;
+						text = text.toLowerCase();
+
+						if (text.contains(op)) {
+							if (isOpText) {
+								if (text.startsWith(op + " ") || text.endsWith(" " + op) ||
+										text.contains(" " + op + " ") || text.equals(op)
+										) {
+									
+									nextOperator = op;
+									
+									break;
+								}
+								
+							} else {
+								nextOperator = op;
+								break;
 							}
+							
 						}
 					}
-					
-					idx2 = raw.indexOf(" ", l) + 1;
-					if (right == null) {
-						if (i + 1 < len)
-						{
-							rawLc2 = raw.substring(idx2, ids[i+1]);
-						} else {
-							rawLc2 = raw.substring(idx2);
-						}
-						right = processRightOperand(rawLc2);
-					}
-					
-					operand = new Operand(left.raw + raw.substring(l - 1, idx2) + right.raw);
-					left.parent = operand;
-					right.parent = operand;
-					operand.left = left;
-					operand.right = right;
-					operand.op = operator;
-					
-					operands[i] = operand;
 				}
+				
+				if (nextOperator != null) {
+					break;
+				}
+			}
+
+			
+			if (nextOperator != null) {
+				operand = new Operand(operator);
+				operand.children = new ArrayList<>();
+
+				List<Object> previous = null; // new ArrayList<>();
+				for (Object o: ops) {
+					
+					if (String.class.isInstance(o)) {
+						String[] parts = StringUtil.toArray((String)o, nextOperator);
+
+						if (parts.length > 1) {
+							int j = 0;
+							if (previous != null) {
+								if (!StringUtil.isEmpty(parts[0])) {
+									previous.add(parts[0]);
+								}
+								Operand opr = processOperand(previous, i);
+								if (opr != null) {
+									operand.children.add(opr);
+								}
+								
+								j++;
+							}
+							
+							for (; j < parts.length - 1; j++) {
+								String ob = parts[j];
+							
+								if (!StringUtil.isEmpty(ob)) {
+									boolean hasMOp = false;
+									if (startIndex + 1 < operators.length) {
+										hasMOp = containsMathOperator(ob);
+									}
+									
+									Operand opr = null;
+									
+									if (hasMOp) {
+										previous = new ArrayList<>();
+										previous.add(ob);
+										opr = processOperand(previous, i+1);
+										previous = null;
+									} else {
+										opr = processOperand(ob);
+									}
+									
+									if (opr != null) {
+										operand.children.add(opr);
+									}
+								}
+							}
+							
+							previous = new ArrayList<>();
+							previous.add(parts[j]);
+							
+						} else if (!StringUtil.isEmpty(o)) {
+							if (previous == null) {
+								previous = new ArrayList<>();
+							}
+							previous.add(o);
+							
+						}
+						
+					} else if (Operand.class.isInstance(o)) {
+						Operand opr = (Operand)o;
+						
+						if (operator == opr.op && operator != MathOperator.SUBTRACTION && operator != MathOperator.DIVISION) {
+							operand.children.addAll(opr.children);
+						} else {
+							if (previous == null) {
+								previous = new ArrayList<>();
+							}
+							previous.add(o);
+						}
+						
+						
+					} else {
+						if (previous == null) {
+							previous = new ArrayList<>();
+						}
+						previous.add(o);
+					}
+				}
+				
+				if (previous != null) {
+					Operand opr = null;
+					
+					if (previous.size() == 1) {
+						Object o = previous.get(0);
+						
+						if (String.class.isInstance(o)) {
+							String ob = (String)o;
+							
+							if (!StringUtil.isEmpty(ob)) {
+								boolean hasMOp = false;
+								if (startIndex + 1 < operators.length) {
+									hasMOp = containsMathOperator(ob);
+								}
+
+								if (hasMOp) {
+									opr = processOperand(previous, i+1);
+								} else {
+									opr = processOperand(ob);
+								}
+							}
+							
+						} else {
+							opr = processOperand(previous, i+1);
+						}
+						
+					} else{
+						opr = processOperand(previous, i+1);
+					}
+					
+					if (opr != null) {
+						operand.children.add(opr);
+					}
+				}
+				
+				return operand;
+			}
+		}
+		
+		for (Object o: ops) {
+			if (Operand.class.isInstance(o)) {
+				return (Operand)o;
 			}
 		}
 
 		return operand;
-	}
+	}	
+
 	
 	public static String[] getParameters(String raw) {
 		return getParameters(raw, ',');

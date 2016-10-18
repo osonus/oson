@@ -1,11 +1,11 @@
 package ca.oson.json.path;
 
 public enum MathOperator {
-	DIVISION ("div"), // Division
-	MULTIPLICATION ("*"), // Multiplication
-	MODULUS ("%", "mod"), // Modulus (division remainder)
+	SUBTRACTION ("-"), // Subtraction,
 	ADDITION ("+"), // Addition,
-	SUBTRACTION ("-"); // Subtraction,
+	MODULUS ("%", "mod"), // Modulus (division remainder)
+	MULTIPLICATION ("*"), // Multiplication
+	DIVISION ("div"); // Division
 	
 	String[] ops;
 
