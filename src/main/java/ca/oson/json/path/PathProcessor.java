@@ -340,8 +340,8 @@ public abstract class PathProcessor {
 						
 					} else if (Operand.class.isInstance(o)) {
 						Operand opr = (Operand)o;
-						
-						if (operator == opr.op && operator != MathOperator.SUBTRACTION && operator != MathOperator.DIVISION) {
+						// && operator != MathOperator.DIVISION
+						if (operator == opr.op && operator != MathOperator.SUBTRACTION) {
 							operand.children.addAll(opr.children);
 						} else {
 							if (previous == null) {

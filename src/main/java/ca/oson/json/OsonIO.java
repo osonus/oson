@@ -148,6 +148,11 @@ public class OsonIO extends Oson {
 			while ((bytesRead = reader.read(buffer)) != -1) {
 				contents.append(new String(buffer, 0, bytesRead));
 			}
+			
+			if (valueType != null && String.class == valueType) {
+				return (T) contents.toString();
+			}
+			
 			return readValue(contents.toString(), valueType);
 			
 		} catch (IOException e) {
@@ -210,7 +215,11 @@ public class OsonIO extends Oson {
 		return null;
 	}
 
-	public <T> T readValue(String fileName) {
+	public <T> T readValue(String file) {
+		return readValue(getFile(file), null);
+	}
+	
+	public File getFile(String fileName) {
 		File file = null;
 		
 		try {
@@ -221,11 +230,11 @@ public class OsonIO extends Oson {
 			file = new File(fileName);
 		}
 		
-		return readValue(file, null);
+		return file;
 	}
 	
 	public <T> T readValue(Class<T> valueType, String file) {
-		return readValue(new File(file), valueType);
+		return readValue(getFile(file), valueType);
 	}
 	
 	public <T> T readValue(Type type, String file) {

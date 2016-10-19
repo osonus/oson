@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -170,4 +171,17 @@ public class MergeTest extends TestCaseBase {
 		
 		assertEquals(expected, json);
 	}
+	
+	
+	@Test
+	public void testHits() {
+		String data = oson.readValue(String.class, "hits.txt");
+
+		String json = OsonConvert.changeTo(data, "hits.page", "pages");
+
+		String expected = "{\"pages\":[{\"pagePath\":\"www.scotiabank.com/ca/en/0,,2,00.html\",\"hostname\":\"www.scotiabank.com\",\"pageTitle\":\"Personal Banking | Scotiabank\"},{\"pagePath\":\"http://www.rbcroyalbank.com/personal.html\",\"hostname\":\"www.rbcroyalbank.com\",\"pageTitle\":\"Personal Banking | Royalbank\"}],\"hits\":[{\"hitNumber\":\"1\",\"time\":\"0\",\"hour\":\"10\",\"minute\":\"29\",\"isInteraction\":true},{\"hitNumber\":\"2\",\"time\":\"0\",\"hour\":\"11\",\"minute\":\"25\",\"isInteraction\":true}],\"fullVisitorId\":\"65778887038843\"}";
+		
+		assertEquals(expected, json);
+	}
+	
 }

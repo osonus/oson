@@ -34,14 +34,29 @@ public class OsonSearch {
 	public static String search(String source, String attr, boolean strict) {
 		Object obj = oson.deserialize(source);
 		
-		return search(obj, attr, strict);
+		return find(obj, attr, strict);
 	}
 	
-
-	static String search(Object obj, String attr, boolean strict) {
+	/*
+	 * assume obj is an Oson list-map object, otherwise, this will not work
+	 */
+	public static Set search(Object obj, String attr) {
+		return search(obj, attr, false);
+	}
+	
+	/*
+	 * assume obj is an Oson list-map object, otherwise, this will not work
+	 */
+	public static Set search(Object obj, String attr, boolean strict) {
 		String[] attrs = attr.split("\\.");
 		
-		Set found = find(obj, attrs, strict, false);
+		return find(obj, attrs, strict, false);
+	}
+	
+	static String find(Object obj, String attr, boolean strict) {
+		String[] attrs = attr.split("\\.");
+		
+		Set found = search(obj, attr, strict);
 		
 		if (found == null || found.size() == 0) {
 			return null;
@@ -52,7 +67,6 @@ public class OsonSearch {
 		}
 		
 		return oson.serialize(found);
-		
 	}
 	
 	/*

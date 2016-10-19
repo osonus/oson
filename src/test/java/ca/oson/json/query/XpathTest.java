@@ -91,7 +91,9 @@ public class XpathTest extends TestCaseBase {
 		
 		// xpath = "//math/operation[(a * b) * (c * d) * (e * f) > 100]";
 		
-		xpath = "//math/operation[((a + b) div ((c * d) + t)) * (e div f) > 100]";
+		// xpath = "//math/operation[((a + b) div ((c * d) + t)) * (e div f) > 100]";
+		
+		xpath = "//math/operation[((a + b) div ((c * d) div t)) div (e div f) > 100]";
 		
 		path = new Path(xpath);
 		json = oson.print(path);

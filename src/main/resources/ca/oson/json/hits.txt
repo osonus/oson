@@ -1,0 +1,29 @@
+{  
+  "hits":[  
+    {  
+     "hitNumber":"1",
+     "time":"0",
+     "hour":"10",
+     "minute":"29",
+     "isInteraction":true,
+     "page":{  
+        "pagePath":"www.scotiabank.com/ca/en/0,,2,00.html",
+        "hostname":"www.scotiabank.com",
+        "pageTitle":"Personal Banking | Scotiabank"
+       }         
+     },
+    {  
+     "hitNumber":"2",
+     "time":"0",
+     "hour":"11",
+     "minute":"25",
+     "isInteraction":true,
+     "page":{  
+        "pagePath":"http://www.rbcroyalbank.com/personal.html",
+        "hostname":"www.rbcroyalbank.com",
+        "pageTitle":"Personal Banking | Royalbank"
+       }         
+     }
+   ],
+   "fullVisitorId":"65778887038843"
+}

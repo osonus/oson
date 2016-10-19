@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.json.JSONObject;
 
@@ -78,11 +79,17 @@ public class OsonConvert {
 		return oson.serialize(object);
 	}
 	
-	static Object filtering (Object object, Map<String, Object> filters) {
+	/*
+	 * assume object is an Oson list-map object, otherwise, this will not work
+	 */
+	public static Object filtering (Object object, Map<String, Object> filters) {
 		return filtering (object, filters, null);
 	}
 	
-	static Object filtering (Object object, Map<String, Object> filters, String path) {
+	/*
+	 * assume object is an Oson list-map object, otherwise, this will not work
+	 */
+	public static Object filtering (Object object, Map<String, Object> filters, String path) {
 		if (object == null) {
 			return null;
 		}
@@ -130,6 +137,51 @@ public class OsonConvert {
 		}
 	}
 	
+	
+	/*
+	 * Move the path element to the top level as an attribute of asAttribute
+	 * 
+	 * @param json         the Json string to change
+	 * @param path         the search path of the element to change
+	 * @param asAttribute  the new position of the element to change to
+	 * 
+	 * @return the changed Json string
+	 */
+	public static String changeTo(String json, String path, String asAttribute) {
+		Map data = oson.deserialize(json);
+		
+		Set found = OsonSearch.search(data, path);
+		Object value = null;
+		if (found == null || found.size() > 1) {
+			value = found;
+		} else {
+			value = found.iterator().next();
+		}
+		
+		Map target = new HashMap();
+		Map target2 = target;
+		
+		String[] attrs = asAttribute.split("\\.");
+		int len = attrs.length;
+		for (int i = 0; i < len; i++) {
+			String attr = attrs[i];
+			if (i < len - 1) {
+				Map map = new HashMap();
+				target2.put(attr, map);
+				target2 = map;
+			} else {
+				target2.put(attr, value);
+			}
+		}
+		
+		Map<String, Object> filters = new HashMap<>();
+		filters.put(path, null);
+		Object filtered = filtering(data, filters);
+
+		OsonMerge merge = new OsonMerge();
+		Object merged = merge.merge(filtered, target);
+		return oson.serialize(merged);
+	}
 	
 	
 	/*

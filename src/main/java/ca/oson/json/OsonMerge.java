@@ -682,7 +682,7 @@ public class OsonMerge {
 
 				Map<Object, List> map = new LinkedHashMap<>();
 				for (int j = 0; j < size; j++) {
-					object = OsonSearch.search(list.get(j), config.groupBy, true);
+					object = OsonSearch.find(list.get(j), config.groupBy, true);
 				
 					if (object != null) {
 						List l = map.get(object);
