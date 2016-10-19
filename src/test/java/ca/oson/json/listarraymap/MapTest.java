@@ -117,9 +117,8 @@ public class MapTest extends TestCaseBase {
 		public void testMapToList() {
 			String jsonString = "[{\"user_name\":\"Azim\",\"zip_code\":67890},{\"user_name\":\"Smith\",\"zip_code\":12345}]";
 
-			Function deserializer = (Object p) -> StringUtil.list2Array(((Map)p).values());
-			oson.des(String[].class, deserializer);
-			String[][] users = oson.deserialize(jsonString, String[][].class);
+			String[][] users = oson.des(String[].class, (Object p) -> StringUtil.list2Array(((Map)p).values()))
+					.deserialize(jsonString, String[][].class);
 			
 			String json = oson.serialize(users);
 			String expected = "[[\"Azim\",\"67890\"],[\"Smith\",\"12345\"]]";
