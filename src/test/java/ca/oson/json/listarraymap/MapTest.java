@@ -1,16 +1,21 @@
 package ca.oson.json.listarraymap;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.junit.Test;
 
 import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.OsonAssert;
+import ca.oson.json.OsonConvert;
 import ca.oson.json.OsonAssert.MODE;
 import ca.oson.json.domain.Car;
+import ca.oson.json.function.Map2JsonFunction;
 import ca.oson.json.support.TestCaseBase;
+import ca.oson.json.util.StringUtil;
 import ca.oson.json.ComponentType;
 
 public class MapTest extends TestCaseBase {
@@ -107,4 +112,18 @@ public class MapTest extends TestCaseBase {
 		   assertTrue(result.containsKey("Wyoming"));
 	   }
 	   
+	   
+		@Test
+		public void testMapToList() {
+			String jsonString = "[{\"user_name\":\"Azim\",\"zip_code\":67890},{\"user_name\":\"Smith\",\"zip_code\":12345}]";
+
+			Function deserializer = (Object p) -> StringUtil.list2Array(((Map)p).values());
+			oson.des(String[].class, deserializer);
+			String[][] users = oson.deserialize(jsonString, String[][].class);
+			
+			String json = oson.serialize(users);
+			String expected = "[[\"Azim\",\"67890\"],[\"Smith\",\"12345\"]]";
+			assertEquals(expected, json);
+		}
+		
 }

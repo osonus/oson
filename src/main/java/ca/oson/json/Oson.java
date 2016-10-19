@@ -7082,7 +7082,8 @@ public class Oson {
 				}
 				
 				if (returnTypeCount > 0 && !Map.class.isAssignableFrom(returnType)
-						&& !Collection.class.isAssignableFrom(returnType) && returnType != Optional.class && returnType != Object.class) {
+						&& !Collection.class.isAssignableFrom(returnType) && returnType != Optional.class && 
+						returnType != Object.class && !returnType.isArray()) {
 					if (type != null) {
 						type.add(returnType);
 					}
@@ -8548,51 +8549,55 @@ public class Oson {
 		}
 		
 		if (value != null && value.toString().length() > 0) {	
-			Collection<E> values = (Collection<E>) value;
-			Class<?> valueType = values.getClass();
+
+			Function function = objectDTO.getDeserializer();
+
+			if (function != null) {
+				try {
+					Object returnedValue = null;
+					// suppose to return String, but in case not, try to process
+					if (function instanceof Json2DataMapperFunction) {
+						DataMapper classData = new DataMapper(returnType, value, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
+						returnedValue = ((Json2DataMapperFunction)function).apply(classData);
+
+					} else if (function instanceof Json2FieldDataFunction) {
+						Json2FieldDataFunction f = (Json2FieldDataFunction)function;
+						FieldData fieldData = objectDTO.clone();
+						
+						returnedValue = f.apply(fieldData);
+						
+					} else if (function instanceof Json2ArrayFunction) {
+						return (E[]) ((Json2ArrayFunction)function).apply(value);
+							
+					} else {
+						returnedValue = function.apply(value);
+					}
+
+					if (returnedValue == null) {
+						return null;
+						
+					} else if (returnedValue.getClass().isArray()) {
+						return (E[]) returnedValue;
+						
+					} else if (Collection.class.isAssignableFrom(returnedValue.getClass())) {
+						Collection collection = (Collection)returnedValue;
+						return (E[]) collection.toArray();
+
+					} else {
+						// do not know what to do
+					}
+
+				} catch (Exception e) {}
+			}
 			
-			int size = values.size();
-			if (size > 0) {
-				Function function = objectDTO.getDeserializer();
 
-				if (function != null) {
-					try {
-						Object returnedValue = null;
-						// suppose to return String, but in case not, try to process
-						if (function instanceof Json2DataMapperFunction) {
-							DataMapper classData = new DataMapper(returnType, values, objectDTO.classMapper, objectDTO.level, getPrettyIndentation());
-							returnedValue = ((Json2DataMapperFunction)function).apply(classData);
-
-						} else if (function instanceof Json2FieldDataFunction) {
-							Json2FieldDataFunction f = (Json2FieldDataFunction)function;
-							FieldData fieldData = objectDTO.clone();
-							
-							returnedValue = f.apply(fieldData);
-							
-						} else if (function instanceof Json2ArrayFunction) {
-							return (E[]) ((Json2ArrayFunction)function).apply(values);
-								
-						} else {
-							returnedValue = function.apply(values);
-						}
-
-						if (returnedValue == null) {
-							return null;
-							
-						} else if (returnedValue.getClass().isArray()) {
-							return (E[]) returnedValue;
-							
-						} else if (Collection.class.isAssignableFrom(returnedValue.getClass())) {
-							Collection collection = (Collection)returnedValue;
-							return (E[]) collection.toArray();
-
-						} else {
-							// do not know what to do
-						}
-
-					} catch (Exception e) {}
-				}
-
+			Collection<E> values = null;
+			try {
+				values = (Collection<E>) value;
+				// Class<?> valueType = values.getClass();
+				
+				// int size = values.size();
+				//if (size > 0) {
 				
 				if (returnObj == null) {
 					if (defaultValue != null) {
@@ -8644,7 +8649,8 @@ public class Oson {
 				}
 				
 				return arr;
-			}
+			
+			} catch (Exception e) {}
 		}
 		
 		return json2ArrayDefault(objectDTO);

@@ -6,6 +6,7 @@ import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -716,6 +717,17 @@ public class StringUtil {
 		return (List<String>) Arrays.asList(strs).stream().map(s -> s.trim()).filter(s -> (s.length() > 0)).collect(Collectors.toList());
 	}
 	
+	public static String[] list2Array(Collection strs) {
+		// return strs.toArray(new String[0]);
+		int size = strs.size();
+		String[] arr = new String[size];
+		int i = 0;
+		for (Object str: strs) {
+			arr[i++] = "" + str;
+		}
+		
+		return arr;
+	}
 	
 	public static String[] toArray(String raw, String delimiter) {
 		List<String> list = new ArrayList<>();
