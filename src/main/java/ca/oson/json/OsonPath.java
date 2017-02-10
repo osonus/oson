@@ -1,6 +1,7 @@
 package ca.oson.json;
 
 import java.lang.reflect.Type;
+import java.util.List;
 import java.util.Map;
 
 import ca.oson.json.Oson.FIELD_NAMING;
@@ -12,6 +13,19 @@ public class OsonPath {
 	public static Oson oson = new Oson()
 				.includeClassTypeInJson(false)
 				.setFieldNaming(naming);
+	
+	
+	private static Object select(Object object, List<Step> steps) {
+		Object obj = null;
+		
+		int current = 0;
+		
+		Step step = steps.get(current);
+		
+		//step.
+		
+		return obj;
+	}
 	
 	/*
 	 * Core functionality implemented here. Select nodes based on xpath query string
@@ -25,9 +39,27 @@ public class OsonPath {
 	private static Object select(Object object, String xpath) {
 		Path path = new Path(xpath);
 		
+		List<List<Step>> steps = path.getSteps();
 		
+		Object obj = null;
 		
-		return object;
+		int size = steps.size();
+		OsonMerge merge = null;
+		if (size > 1) {
+			merge = new OsonMerge();
+		}
+		
+		for (List<Step> sp: steps) {
+			Object objct = select(object, sp);
+			
+			if (obj == null) {
+				obj = objct;
+			} else {
+				obj = merge.merge(obj, objct);
+			}
+		}
+		
+		return obj;
 	}
 
 	public static String evaluate(String json, String xpath) {

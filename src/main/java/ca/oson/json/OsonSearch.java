@@ -2,8 +2,6 @@ package ca.oson.json;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -83,6 +81,82 @@ public class OsonSearch {
 		return search(source, attr, false);
 	}
 	
+
+	/*
+	 * Search for attribute or key's values in the Json source. The search follows Json document structure
+	 * from the root to children through attr, with dot notation.
+	 * 
+	 * @param source       the Json source document
+	 * @param attr         the attribute for the values to search. It can be one single attribut name,
+	 *                     or a list of attributes, linked by dot ".", such as "enclosing_attr.enclosed_attr".
+	 * @return             list of items found, or null if no matching attributes and values.
+	 * 
+	 */
+	public static Set get(String source, String attr) {
+		Object obj = oson.deserialize(source);
+		return search(obj, attr, false);
+	}
+	
+	/*
+	 * Search for attribute or key's values in the Json source. The search follows Json document structure
+	 * from the root to children through attr, with dot notation.
+	 * 
+	 * @param source       the Json source document
+	 * @param attr         the attribute for the values to search. It can be one single attribut name,
+	 *                     or a list of attributes, linked by dot ".", such as "enclosing_attr.enclosed_attr".
+	 * @param strict       if strict is true, then the search path will match attr exactly, once the search starts
+	 * 
+	 * @return             list of items found, or null if no matching attributes and values.
+	 * 
+	 */
+	public static Set get(String source, String attr, boolean strict) {
+		Object obj = oson.deserialize(source);
+		return search(obj, attr, strict);
+	}
+	
+	/*
+	 * Search for attribute or key's values in the Json source. The search follows Json document structure
+	 * from the root to children through attr, with dot notation.
+	 * 
+	 * @param source       the Json source document
+	 * @param attr         the attribute for the values to search. It can be one single attribut name,
+	 *                     or a list of attributes, linked by dot ".", such as "enclosing_attr.enclosed_attr".
+	 * @param valueType    The object type in the list to return
+	 *
+	 * @return             list of items found, or null if no matching attributes and values.
+	 * 
+	 */
+	public static <T> Set<T> get(String source, String attr, Class<T> valueType) {
+		return get(source, attr, false, valueType);
+	}
+	
+	/*
+	 * Search for attribute or key's values in the Json source. The search follows Json document structure
+	 * from the root to children through attr, with dot notation.
+	 * 
+	 * @param source       the Json source document
+	 * @param attr         the attribute for the values to search. It can be one single attribut name,
+	 *                     or a list of attributes, linked by dot ".", such as "enclosing_attr.enclosed_attr".
+	 * @param strict       if strict is true, then the search path will match attr exactly, once the search starts
+	 * @param valueType    The object type in the list to return
+	 * 
+	 * @return             list of items found, or null if no matching attributes and values.
+	 * 
+	 */
+	public static <T> Set<T> get(String source, String attr, boolean strict, Class<T> valueType) {
+		Set found = get(source, attr, strict);
+
+		if (found == null) {
+			return null;
+		}
+		
+		Set<T> list = new LinkedHashSet<>();
+		for (Object value: found) {
+			list.add(oson.deserialize(oson.serialize(value), valueType));
+		}
+		
+		return list;
+	}
 	
 	private static Set find(Object obj, String[] attrs, boolean strict, boolean started) {
 		if (obj == null || attrs == null) {

@@ -1,9 +1,11 @@
 package ca.oson.json.util;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -77,6 +79,11 @@ public class ArrayToJsonMap {
 		}
 
 		return names;
+	}
+	
+	
+	public static List map2List (Map map) {
+		return new ArrayList(map.entrySet());
 	}
 }
 

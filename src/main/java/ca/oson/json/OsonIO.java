@@ -161,7 +161,12 @@ public class OsonIO extends Oson {
 		
 		return null;
 	}
+	
 	public <T> T readValue(InputStream is, Type type) {
+		return readValue(readValue(is), type);
+	}
+	
+	public String readValue(InputStream is) {
 	    try {
 			InputStreamReader rdr = new InputStreamReader(is, DEFAULT_ENCODING);
 
@@ -173,7 +178,7 @@ public class OsonIO extends Oson {
 				contents.append(new String(buffer, 0, bytesRead));
 			}
 	        
-	        return readValue(contents.toString(), type);
+	        return contents.toString();
 	        
 	    } catch (IOException e) {
 	    	e.printStackTrace();
@@ -187,6 +192,19 @@ public class OsonIO extends Oson {
 	    
 		return null;
 	}
+	public String readValue(File file) {
+		try {
+			InputStream is = new BufferedInputStream(new FileInputStream(file));
+			
+			return readValue(is);
+			
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	
 	public <T> T readValue(File file, Type type) {
 		try {
 			InputStream is = new BufferedInputStream(new FileInputStream(file));

@@ -1,5 +1,6 @@
 package ca.oson.json.path;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Step {
@@ -13,6 +14,8 @@ public class Step {
 	
 	String raw;
 	String name;
+	
+	List<Object> nodeSet = new ArrayList<>();
 	
 	
 	public void setName(String name) {

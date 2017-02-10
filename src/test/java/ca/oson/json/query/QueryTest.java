@@ -2,12 +2,17 @@ package ca.oson.json.query;
 
 import java.io.File;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.junit.Test;
 
 import ca.oson.json.OsonSearch;
 import ca.oson.json.domain.VolumeContainer;
 import ca.oson.json.support.TestCaseBase;
+import ca.oson.json.util.ArrayToJsonMap;
 
 public class QueryTest extends TestCaseBase {
 	@Test
@@ -114,6 +119,50 @@ public class QueryTest extends TestCaseBase {
 		
 		found = OsonSearch.search(json, "username.id");
 		assertEquals(null, found);
+	}
+	
+	@Test
+	public void testGet() {
+		URL url = getClass().getResource("../sample-program-details-data.json");
+		File file = new File(url.getPath());
+
+		String json = oson.readValue(file);
+
+		String attr = "programQuestions";
+		
+		String found = OsonSearch.search(json, attr);
+		
+		System.err.println(found);
+		
+		if (found != null) {
+			List<Map.Entry> list = null;
+			Object obj = oson.getListMapObject(found);
+			if (Map.class.isAssignableFrom(obj.getClass())) {
+				list = ArrayToJsonMap.map2List((Map)obj);
+				
+				for (Map.Entry o: list) {
+					System.err.println(o.getKey() + " => " + o.getValue());
+				}
+				
+				System.err.println("done\n\n");
+			}
+		}
+		
+		Set set = OsonSearch.get(json, attr);
+		
+		List<Map.Entry> list = null;
+		if (set != null) {
+			list = new ArrayList();
+			for (Object obj: set) {
+				if (Map.class.isAssignableFrom(obj.getClass())) {
+					list.addAll(ArrayToJsonMap.map2List((Map)obj));
+				}
+			}
+			
+			for (Map.Entry obj: list) {
+				System.err.println(obj.getKey() + " => " + obj.getValue());
+			}
+		}
 	}
 	
 }
