@@ -12,7 +12,7 @@ public class TestRunner {
 		// TestCaseBase.processor = JSON_PROCESSOR.GSON; //.JACKSON;//
 		Class[] testSuites = new Class[] {NumericTestSuite.class, EnumBooleanDateTestSuite.class,
 				CharacterStringTestSuite.class, ListArrayMapTestSuite.class, UserGuideTestSuite.class,
-				AnnotationTestSuite.class, GsonTestSuite.class, ObjectTestSuite.class};
+				AnnotationTestSuite.class, ObjectTestSuite.class};
 		
 		int i = 1;
 		int total_success = 0;

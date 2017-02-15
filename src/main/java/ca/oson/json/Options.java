@@ -17,8 +17,6 @@ import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
-import javax.persistence.EnumType;
-
 import ca.oson.json.Oson.FIELD_NAMING;
 import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.Oson.JSON_PROCESSOR;

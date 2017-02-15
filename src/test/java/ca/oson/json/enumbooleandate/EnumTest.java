@@ -1,15 +1,12 @@
 package ca.oson.json.enumbooleandate;
 
-import javax.persistence.EnumType;
-
 import org.junit.Test;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
-
 import ca.oson.json.ClassMapper;
+import ca.oson.json.EnumType;
 import ca.oson.json.OsonAssert;
 import ca.oson.json.OsonAssert.MODE;
+import ca.oson.json.annotation.FieldMapper;
 import ca.oson.json.Oson.*;
 import ca.oson.json.enumbooleandate.EnumMaster.MatchingSensitivity;
 import ca.oson.json.function.Enum2JsonFunction;
@@ -87,12 +84,12 @@ class EnumMaster
 		MEDIUM,
 		HIGH;
 
-		@JsonValue
+		@FieldMapper(jsonValue = BOOLEAN.TRUE)
 		public String toValue() {
 			return this.name().toLowerCase();
 		}
 
-		@JsonCreator
+		@FieldMapper(jsonCreator = BOOLEAN.TRUE)
 		public static MatchingSensitivity forValue(String value) {
 			return MatchingSensitivity.valueOf(value.toUpperCase());
 		}

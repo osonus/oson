@@ -7,8 +7,6 @@ import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import javax.persistence.EnumType;
-
 import ca.oson.json.Oson;
 import ca.oson.json.Oson.BOOLEAN;
 import ca.oson.json.Oson.ENUM_TYPE;

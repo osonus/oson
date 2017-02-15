@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>ca.oson.json</groupId>
   <artifactId>oson</artifactId>
-  <version>1.0.11</version>
+  <version>1.0.12</version>
   <packaging>jar</packaging>
 
   <name>Oson</name>
@@ -106,84 +106,17 @@
   </build>
   
   <dependencies>
-  	<dependency>
-  		<groupId>javax.enterprise</groupId>
-  		<artifactId>cdi-api</artifactId>
-  		<version>2.0-EDR1</version>
-  	</dependency>
-	<dependency>
-	    <groupId>com.google.code.gson</groupId>
-	    <artifactId>gson</artifactId>
-	    <version>2.6.2</version>
-	</dependency>
-	<dependency>
-	    <groupId>com.fasterxml.jackson.core</groupId>
-	    <artifactId>jackson-annotations</artifactId>
-	    <version>2.7.4</version>
-	</dependency>
-	<dependency>
-	    <groupId>com.fasterxml.jackson.core</groupId>
-	    <artifactId>jackson-core</artifactId>
-	    <version>2.7.4</version>
-	</dependency>
-	<dependency>
-	    <groupId>com.fasterxml.jackson.core</groupId>
-	    <artifactId>jackson-databind</artifactId>
-	    <version>2.7.4</version>
-	</dependency>
 	<dependency>
 	    <groupId>org.json</groupId>
 	    <artifactId>json</artifactId>
-	    <version>20160212</version>
-	</dependency>
-	<dependency>
-	    <groupId>asm</groupId>
-	    <artifactId>asm-all</artifactId>
-	    <version>3.3.1</version>
-	</dependency>
-
-	<dependency>
-	    <groupId>org.codehaus.jackson</groupId>
-	    <artifactId>jackson-mapper-asl</artifactId>
-	    <version>1.9.13</version>
-	</dependency>
-
-	<dependency>
-	    <groupId>com.google.inject</groupId>
-	    <artifactId>guice</artifactId>
-	    <version>4.0</version>
-	</dependency>
-
-	<dependency>
-	    <groupId>javassist</groupId>
-	    <artifactId>javassist</artifactId>
-	    <version>3.12.1.GA</version>
-	</dependency>
-
-	<dependency>
-	    <groupId>javax.persistence</groupId>
-	    <artifactId>persistence-api</artifactId>
-	    <version>1.0.2</version>
-	</dependency>
-
-	<dependency>
-	    <groupId>javax.validation</groupId>
-	    <artifactId>validation-api</artifactId>
-	    <version>1.1.0.Final</version>
+	    <version>20140107</version>
 	</dependency>
 
 	<dependency>
 	    <groupId>junit</groupId>
 	    <artifactId>junit</artifactId>
-	    <version>4.12</version>
+	    <version>4.11</version>
 	</dependency>
-
-	<dependency>
-	    <groupId>org.mongodb</groupId>
-	    <artifactId>bson</artifactId>
-	    <version>3.3.0</version>
-	</dependency>
-
   </dependencies>
 
   <profiles>

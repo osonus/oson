@@ -7,9 +7,9 @@ import ca.oson.json.Oson.JSON_PROCESSOR;
 import ca.oson.json.annotation.FieldMapper;
 
 public class RawValues {
-	@com.fasterxml.jackson.annotation.JsonRawValue
+	@FieldMapper(jsonRawValue = BOOLEAN.TRUE)
 	private String svalue;
-	@org.codehaus.jackson.annotate.JsonRawValue
+	@FieldMapper(jsonRawValue = BOOLEAN.TRUE)
 	private char cvalue;
 	@FieldMapper(jsonRawValue = BOOLEAN.TRUE)
 	private Character chvalue;

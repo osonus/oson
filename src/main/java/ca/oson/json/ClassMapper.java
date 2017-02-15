@@ -6,14 +6,10 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.function.Function;
 
-import javax.persistence.EnumType;
-
 import ca.oson.json.function.*;
 import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.Oson.MODIFIER;
 import ca.oson.json.util.ObjectUtil;
-
-import com.google.gson.InstanceCreator;
 
 /*
  * configuration options for a specific class type
@@ -25,10 +21,6 @@ public class ClassMapper<T> {
 	 */
 	private Class<T> type;
 
-	/*
-	 * user implemented creator of this type
-	 */
-	public InstanceCreator<T> constructor;
 	/*
 	 * a default or dummy object of this type
 	 */
@@ -200,10 +192,7 @@ public class ClassMapper<T> {
 	public Class<T> getType() {
 		return type;
 	}
-		public ClassMapper setConstructor(InstanceCreator<T> constructor) {
-		this.constructor = constructor;
-		return this;
-	}
+
 	public ClassMapper setDefaultValue(T defaultValue) {
 		this.defaultValue = defaultValue;
 		return this;

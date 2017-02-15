@@ -15,18 +15,11 @@ public class Dog extends Pet {
 	private Date birthDate;
 	
 	private String someField_name;
-	
-	@com.fasterxml.jackson.annotation.JsonProperty("Jackson name")
-	@FieldMapper(ignore = BOOLEAN.TRUE)
+
+	@FieldMapper(ignore = BOOLEAN.TRUE, name="Jackson name")
 	private String mySpecial_field_name;
 
-	@com.fasterxml.jackson.annotation.JsonProperty("Jackson json property name")
 	@FieldMapper(ignore = BOOLEAN.TRUE, name="Oson name overwrites names from external sources")
-	@com.google.gson.annotations.SerializedName("Gson name")
-	@javax.persistence.Column(name="Column name")
-	@com.google.inject.name.Named("google inject name")
-	@javax.inject.Named("inject name")
-	@org.codehaus.jackson.annotate.JsonProperty("jackson codehaus name")
 	private String special_field_name;
 	
 	

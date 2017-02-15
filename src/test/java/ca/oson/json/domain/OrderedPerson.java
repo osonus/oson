@@ -4,7 +4,9 @@ import java.util.Date;
 import java.util.List;
 
 import ca.oson.json.Oson.BOOLEAN;
+import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.annotation.ClassMapper;
+import ca.oson.json.annotation.FieldMapper;
 import ca.oson.json.Oson.MODIFIER;
 
 @ClassMapper(propertyOrders = {"firstName","lastName"}, orderByKeyAndProperties = BOOLEAN.TRUE,
@@ -17,10 +19,11 @@ public class OrderedPerson {
     private String lastName;
     private int age;
     private List<Address> addressList;
-    
-    @javax.validation.constraints.NotNull
+
+    @FieldMapper(required = BOOLEAN.TRUE)
     private double ignoredValue;
-    @com.fasterxml.jackson.annotation.JsonInclude
+
+    @FieldMapper(defaultType = JSON_INCLUDE.NON_EMPTY)
     private float ignoredFloat;
     
     public char a;

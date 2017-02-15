@@ -25,11 +25,6 @@ public class DeSerializerUtil {
 	 * some abstract class or interface, nowhere can know its implementation
 	 */
 	public static Class implementingClass(String className) {
-		switch (className) {
-		case "com.google.gson.JsonElement": return com.google.gson.JsonPrimitive.class;
-
-
-		}
 		
 		return null;
 	}

@@ -40,46 +40,10 @@ import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.CtConstructor;
-import javassist.CtField;
-import javassist.CtMethod;
-import javassist.bytecode.AnnotationsAttribute;
-import javassist.bytecode.ClassFile;
-import javassist.bytecode.CodeAttribute;
-import javassist.bytecode.ConstPool;
-import javassist.bytecode.LineNumberAttribute;
-import javassist.bytecode.annotation.AnnotationMemberValue;
-import javassist.bytecode.annotation.ArrayMemberValue;
-import javassist.bytecode.annotation.BooleanMemberValue;
-import javassist.bytecode.annotation.ByteMemberValue;
-import javassist.bytecode.annotation.CharMemberValue;
-import javassist.bytecode.annotation.ClassMemberValue;
-import javassist.bytecode.annotation.DoubleMemberValue;
-import javassist.bytecode.annotation.EnumMemberValue;
-import javassist.bytecode.annotation.FloatMemberValue;
-import javassist.bytecode.annotation.IntegerMemberValue;
-import javassist.bytecode.annotation.LongMemberValue;
-import javassist.bytecode.annotation.ShortMemberValue;
-import javassist.bytecode.annotation.StringMemberValue;
-
-import javax.persistence.Column;
-
 import org.json.JSONObject;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.commons.EmptyVisitor;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.LocalVariableNode;
-import org.objectweb.asm.tree.MethodNode;
 
 import ca.oson.json.ComponentType;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSetter;
-import com.google.gson.annotations.SerializedName;
 
 public class ObjectUtil {
 	@SuppressWarnings("unchecked")
@@ -393,166 +357,7 @@ public class ObjectUtil {
 
 		return false;
 	}
-	
-	public static void addAnnotationToMethod(String className,
-			String methodName, String annotationFullName) throws Exception {
-		addAnnotationToMethod(className,
-				methodName, annotationFullName, null, null);
-	}
 
-	public static void addAnnotationToMethod(String className,
-			String methodName, String annotationFullName, String postFix, Map<String, Object> nameValues) throws Exception {
-
-		// pool creation
-		ClassPool pool = ClassPool.getDefault();
-		// extracting the class
-		CtClass cc = pool.getCtClass(className);
-		// looking for the method to apply the annotation on
-		CtMethod methodDescriptor = cc.getDeclaredMethod(methodName);
-
-        for (Object obj: methodDescriptor.getAnnotations()) {
-        	Annotation an = (Annotation)obj;
-
-        	if (an.getClass().getName().equals(annotationFullName)) {
-        		return;
-        	}
-        }
-
-		// create the annotation
-		ClassFile ccFile = cc.getClassFile();
-		ConstPool constpool = ccFile.getConstPool();
-		AnnotationsAttribute attr = new AnnotationsAttribute(constpool,
-				AnnotationsAttribute.visibleTag);
-		javassist.bytecode.annotation.Annotation annot = new javassist.bytecode.annotation.Annotation(annotationFullName, constpool);
-
-		if (nameValues != null) {
-			for (Entry<String, Object> entry: nameValues.entrySet()) {
-				String name = entry.getKey();
-				Object value = entry.getValue();
-				Class<?> returnType = value.getClass();
-
-				if (returnType == String.class) {
-					annot.addMemberValue(name, new StringMemberValue(
-							(String)value, ccFile.getConstPool()));
-
-				} else if (returnType == Boolean.class || returnType == boolean.class) {
-					annot.addMemberValue(entry.getKey(), new BooleanMemberValue(
-							(boolean)value, ccFile.getConstPool()));
-
-				} else if (returnType == Character.class || returnType == char.class) {
-					annot.addMemberValue(entry.getKey(), new CharMemberValue(
-							(char)value, ccFile.getConstPool()));
-
-				} else if (returnType == Long.class || returnType == long.class) {
-					annot.addMemberValue(entry.getKey(), new LongMemberValue(
-							(long)value, ccFile.getConstPool()));
-
-				} else if (returnType == Integer.class || returnType == int.class) {
-					annot.addMemberValue(entry.getKey(), new IntegerMemberValue(
-							(int)value, ccFile.getConstPool()));
-
-				} else if (returnType == Double.class || returnType == double.class) {
-					annot.addMemberValue(entry.getKey(), new DoubleMemberValue(
-							(double)value, ccFile.getConstPool()));
-
-				} else if (returnType == Byte.class || returnType == byte.class) {
-					annot.addMemberValue(entry.getKey(), new ByteMemberValue(
-							(byte)value, ccFile.getConstPool()));
-
-				} else if (returnType == Short.class || returnType == short.class) {
-					annot.addMemberValue(entry.getKey(), new ShortMemberValue(
-							(short)value, ccFile.getConstPool()));
-
-				} else if (returnType == Float.class || returnType == float.class) {
-					annot.addMemberValue(entry.getKey(), new FloatMemberValue(
-							(float)value, ccFile.getConstPool()));
-
-				} else if (returnType.isEnum() || Enum.class.isAssignableFrom(returnType)) {
-					annot.addMemberValue(entry.getKey(), new EnumMemberValue(ccFile.getConstPool()));
-
-				} else if (returnType.isArray()) {
-					annot.addMemberValue(entry.getKey(), new ArrayMemberValue(ccFile.getConstPool()));
-
-				} else if (Annotation.class.isAssignableFrom(returnType)) {
-					annot.addMemberValue(entry.getKey(), new AnnotationMemberValue((javassist.bytecode.annotation.Annotation)value, ccFile.getConstPool()));
-
-				} else if (value instanceof Class) {
-					annot.addMemberValue(entry.getKey(), new ClassMemberValue(((Class)value).getName(), ccFile.getConstPool()));
-
-				}
-			}
-		}
-
-		attr.addAnnotation(annot);
-		// add the annotation to the method descriptor
-		methodDescriptor.getMethodInfo().addAttribute(attr);
-
-        if (postFix != null) {
-        	String newClassName = className + postFix;
-        	cc.setName(newClassName);
-        	cc = pool.makeClass(newClassName);
-        	//cc.writeFile();
-        }
-		
-		// transform the ctClass to java class
-		Class dynamiqueBeanClass = cc.toClass();
-		//http://stackoverflow.com/questions/23336172/adding-an-annotation-to-a-runtime-generated-class-using-javassist
-
-		// instanciating the updated class
-		//dynamiqueBeanClass.newInstance();
-	}
-
-    public static void addAnnotationToField(
-    		String className,
-            String fieldName,
-            String annotationFullName) throws Exception {
-    	
-    	addAnnotationToField(className, fieldName, annotationFullName, null);
-    }
-    
-    public static void addAnnotationToField(
-    		String className,
-            String fieldName,
-            String annotationFullName,
-            String postFix) throws Exception
-    {
-		// pool creation
-		ClassPool pool = ClassPool.getDefault();
-		// extracting the class
-		CtClass cc = pool.getCtClass(className);
-
-        CtField cfield  = cc.getField(fieldName);
-
-        for (Object obj: cfield.getAnnotations()) {
-        	Annotation an = (Annotation)obj;
-
-        	if (an.getClass().getName().equals(annotationFullName)) {
-        		return;
-        	}
-        }
-
-        ClassFile cfile = cc.getClassFile();
-        ConstPool cpool = cfile.getConstPool();
-
-        AnnotationsAttribute attr =
-                new AnnotationsAttribute(cpool, AnnotationsAttribute.visibleTag);
-        javassist.bytecode.annotation.Annotation annot = new javassist.bytecode.annotation.Annotation(annotationFullName, cpool);
-
-        //if (cfield.getAnnotation(annot.getClass()) != null) {
-	        attr.addAnnotation(annot);
-	        cfield.getFieldInfo().addAttribute(attr);
-        //}
-	        
-	        if (postFix != null) {
-	        	String newClassName = className + postFix;
-	        	cc.setName(newClassName);
-	        	cc = pool.makeClass(newClassName);
-	        	//cc.writeFile();
-	        }
-	        
-			// transform the ctClass to java class
-			Class dynamiqueBeanClass = cc.toClass(); 
-    }
 
     public static Class getComponentType(String toGenericString) {
     	Class[] componentTypes = getComponentTypes(toGenericString);
@@ -706,99 +511,8 @@ public class ObjectUtil {
 	 * @throws IOException io exception to throw
 	 */
 	public static List<String> getParameterNames(Constructor<?> constructor) throws IOException {
-	    Class<?> declaringClass = constructor.getDeclaringClass();
-	    ClassLoader declaringClassLoader = declaringClass.getClassLoader();
-
-	    if (declaringClassLoader == null) {
-	    	return null;
-	    }
-
-	    org.objectweb.asm.Type declaringType = org.objectweb.asm.Type.getType(declaringClass);
-	    String constructorDescriptor = org.objectweb.asm.Type.getConstructorDescriptor(constructor);
-	    String url = declaringType.getInternalName() + ".class";
-
-	    InputStream classFileInputStream = declaringClassLoader.getResourceAsStream(url);
-	    if (classFileInputStream == null) {
-	        // throw new IllegalArgumentException("The constructor's class loader cannot find the bytecode that defined the constructor's class (URL: " + url + ")");
-	    	return null;
-	    }
-
-	    ClassNode classNode;
-	    try {
-	        classNode = new ClassNode();
-	        ClassReader classReader = new ClassReader(classFileInputStream);
-	        classReader.accept(classNode, 0);
-	    } finally {
-	        classFileInputStream.close();
-	    }
-
-	    @SuppressWarnings("unchecked")
-	    List<MethodNode> methods = classNode.methods;
-	    for (MethodNode method : methods) {
-	        if (method.name.equals("<init>") && method.desc.equals(constructorDescriptor)) {
-	        	org.objectweb.asm.Type[] argumentTypes = org.objectweb.asm.Type.getArgumentTypes(method.desc);
-	            List<String> parameterNames = new ArrayList<String>(argumentTypes.length);
-
-	            @SuppressWarnings("unchecked")
-	            List<LocalVariableNode> localVariables = method.localVariables;
-	            for (int i = 0; i < argumentTypes.length && i < localVariables.size() - 1; i++) {
-	                // The first local variable actually represents the "this" object
-	                parameterNames.add(localVariables.get(i + 1).name);
-	            }
-
-	            return parameterNames;
-	        }
-	    }
-
 	    return null;
 	}
-
-	private static class VariableReader extends EmptyVisitor {
-		  private Map<String, Map<Integer, String>> methodParameters =
-		    new HashMap<String, Map<Integer, String>>();
-		  private String currentMethod;
-
-		  public MethodVisitor visitMethod(int access, String name,
-		      String desc, String signature, String[] exceptions) {
-		    currentMethod = name + desc;
-		    return this;
-		  }
-
-		  public void visitLocalVariable(String name, String desc,
-		      String signature, Label start, Label end, int index) {
-		    Map<Integer, String> parameters = methodParameters.get(currentMethod);
-		    if(parameters==null) {
-		      parameters = new HashMap<Integer, String>();
-		      methodParameters.put(currentMethod, parameters);
-		    }
-		    parameters.put(index, name);
-		  }
-
-		  public Map<Integer, String> getVariableNames(Method m) {
-		    return methodParameters.get(m.getName() + org.objectweb.asm.Type.getMethodDescriptor(m));
-		  }
-
-		}
-
-	public static String[] getParameterNames(Method m) throws IOException {
-	    Class<?> declaringClass = m.getDeclaringClass();
-	    String resourceName = "/"+declaringClass.getName().replace('.', '/')+".class";
-	    InputStream classData = declaringClass.getResourceAsStream(resourceName);
-
-	    VariableReader variableDiscoverer = new VariableReader();
-
-	    ClassReader r = new ClassReader(classData);
-	    r.accept(variableDiscoverer, 0);
-
-	    Map<Integer, String> variableNames = variableDiscoverer.getVariableNames(m);
-	    String[] parameterNames = new String[m.getParameterTypes().length];
-	    if (variableNames != null) {
-		    for(int i = 0; i < parameterNames.length; i++) {
-		      parameterNames[i] = variableNames.get(i);
-		    }
-	    }
-	    return parameterNames;
-	  }
 
 
 	public static String[] getParameterNames(Parameter[] parameters) {
@@ -843,45 +557,6 @@ public class ObjectUtil {
 		case "ca.oson.json.annotation.FieldMapper":
 			ca.oson.json.annotation.FieldMapper fieldMapper = (ca.oson.json.annotation.FieldMapper)annotation;
 			return fieldMapper.name();
-			
-		case "com.fasterxml.jackson.annotation.JsonProperty":
-			JsonProperty jsonProperty = (JsonProperty)annotation;
-			return jsonProperty.value();
-			
-		case "com.fasterxml.jackson.annotation.JsonSetter":
-			return ((JsonSetter) annotation).value();
-
-		case "org.codehaus.jackson.annotate.JsonSetter":
-			return ((org.codehaus.jackson.annotate.JsonSetter) annotation).value();
-			
-		case "com.google.gson.annotations.SerializedName":
-			return ((SerializedName) annotation).value();
-			
-//		case "org.springframework.web.bind.annotation.RequestParam":
-//			RequestParam requestParam = (RequestParam) annotation;
-//			String name = requestParam.value();
-//			if (name == null) {
-//				name = requestParam.name();
-//			}
-//			return name;
-			
-		case "javax.persistence.Column":
-			return ((Column) annotation).name();
-			
-//		case "com.fasterxml.jackson.databind.util.Named":
-//			return ((com.fasterxml.jackson.databind.util.Named)annotation).getName();
-			
-		case "com.google.inject.name.Named":
-			return ((com.google.inject.name.Named) annotation).value();
-			
-		case "javax.inject.Named":
-			return ((javax.inject.Named)annotation).value();
-			
-//		case "org.codehaus.jackson.map.util.Named":
-//			return ((org.codehaus.jackson.map.util.Named)annotation).getName();
-			
-		case "org.codehaus.jackson.annotate.JsonProperty":
-			return ((org.codehaus.jackson.annotate.JsonProperty) annotation).value();
 		}
 
 		return null;
@@ -974,54 +649,6 @@ public class ObjectUtil {
 	}
 	
 	public static JSONObject getJSONObject(String source) {
-		try {
-			int lineNumberToReplace = 157;
-			
-			ClassPool classPool = ClassPool.getDefault();
-			CtClass ctClass = classPool.get("org.json.JSONObject");
-			
-			if (ctClass.isFrozen() || ctClass.isModified()) {
-				if (source == null) {
-					return new JSONObject();
-				} else {
-					return new JSONObject(source);
-				}
-			}
-			
-			ctClass.stopPruning(true);
-			CtConstructor declaredConstructor = ctClass.getDeclaredConstructor(new CtClass[] {}); 
-			
-			CodeAttribute codeAttribute = declaredConstructor.getMethodInfo().getCodeAttribute();
-			
-			LineNumberAttribute lineNumberAttribute = (LineNumberAttribute)codeAttribute.getAttribute(LineNumberAttribute.tag);
-
-			// Index in bytecode array where the instruction starts
-		    int startPc = lineNumberAttribute.toStartPc(lineNumberToReplace);
-
-		    // Index in the bytecode array where the following instruction starts
-		    int endPc = lineNumberAttribute.toStartPc(lineNumberToReplace+1);
-
-		    // Let's now get the bytecode array
-		    byte[] code = codeAttribute.getCode();
-		    for (int i = startPc; i < endPc; i++) {
-		      // change byte to a no operation code
-		       code[i] = CodeAttribute.NOP;
-		    }
-		    
-		    declaredConstructor.insertAt(lineNumberToReplace, true, "$0.map = new java.util.LinkedHashMap();");
-
-			ctClass.writeFile();
-		    
-			if (source == null) {
-				return (JSONObject) ctClass.toClass().getConstructor().newInstance();
-			} else {
-				return (JSONObject) ctClass.toClass().getConstructor(String.class).newInstance(source);
-			}
-
-		} catch (Exception e) {
-			//e.printStackTrace();
-		}
-
 		if (source == null) {
 			return new JSONObject();
 		} else {

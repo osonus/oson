@@ -3,17 +3,14 @@ package ca.oson.json.domain;
 import ca.oson.json.Oson.BOOLEAN;
 import ca.oson.json.annotation.FieldMapper;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public class Address {
 
     private int zipcode;
     private String street;
 
-    @JsonCreator
-    public Address(@JsonProperty("zipcode") int zipcode,
-                   @JsonProperty("street") String street) {
+    @FieldMapper(jsonCreator = BOOLEAN.TRUE)
+    public Address(@FieldMapper(name="zipcode") int zipcode,
+                   @FieldMapper(name="street") String street) {
         this.zipcode = zipcode;
         this.street = street;
     }

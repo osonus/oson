@@ -12,11 +12,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.json.JSONObject;
 import org.json.JSONArray;
 
-import com.google.common.base.Function;
-
 import ca.oson.json.Oson.FIELD_NAMING;
 import ca.oson.json.Oson.JSON_INCLUDE;
-import ca.oson.json.function.ConvertFunction;
 import ca.oson.json.util.ConvertUtil;
 import ca.oson.json.util.NumberUtil;
 import ca.oson.json.util.ObjectUtil;

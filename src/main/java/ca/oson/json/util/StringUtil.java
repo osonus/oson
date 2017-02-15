@@ -3,21 +3,16 @@ package ca.oson.json.util;
 import java.io.IOException;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.Stack;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.json.JSONObject;
-
-import com.google.gson.FieldNamingPolicy;
 
 import ca.oson.json.Oson.FIELD_NAMING;
 

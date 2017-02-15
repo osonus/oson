@@ -5,9 +5,6 @@ import java.util.List;
 import ca.oson.json.Oson.BOOLEAN;
 import ca.oson.json.annotation.FieldMapper;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public class Person {
 
     private String name;
@@ -15,11 +12,11 @@ public class Person {
     private int age;
     private List<Address> addressList;
 
-    @JsonCreator
-    public Person(@JsonProperty("name") String name,
-                  @JsonProperty("lastName") String lastName,
-                  @JsonProperty("age") int age,
-                  @JsonProperty("addressList") List<Address> addressList) {
+    @FieldMapper(jsonCreator = BOOLEAN.TRUE)
+    public Person(@FieldMapper(name="name") String name,
+    		@FieldMapper(name="lastName") String lastName,
+    		@FieldMapper(name="age") int age,
+    		@FieldMapper(name="addressList") List<Address> addressList) {
         this.name = name;
         this.lastName = lastName;
         this.age = age;

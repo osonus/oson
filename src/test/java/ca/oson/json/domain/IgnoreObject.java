@@ -4,16 +4,13 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.fasterxml.jackson.annotation.JsonProperty.Access;
-
 import ca.oson.json.Oson.BOOLEAN;
 import ca.oson.json.annotation.ClassMapper;
 import ca.oson.json.annotation.FieldMapper;
 
 @ClassMapper(ignoreFieldsWithAnnotations = {"javax.validation.constraints.NotNull"}, 
 jsonIgnoreProperties = {"lastName"})
-@com.fasterxml.jackson.annotation.JsonIgnoreProperties({ "fvalue", "myInt"})
-@org.codehaus.jackson.annotate.JsonIgnoreProperties({ "ch"})
+@ClassMapper(jsonIgnoreProperties = { "fvalue", "myInt", "ch"})
 public class IgnoreObject {
 	transient private String title;
 	volatile private Date birthDate;
@@ -26,23 +23,23 @@ public class IgnoreObject {
     @FieldMapper(ignore=BOOLEAN.TRUE)
     private List<Address> addressList;
     
-    @com.google.gson.annotations.Until(value = 1.0)
+    @FieldMapper(until = 1.0)
     private String firstName;
     
     private Float fvalue;
     
     private Character ch;
     
-    @com.fasterxml.jackson.annotation.JsonIgnore
+    @FieldMapper(ignore = BOOLEAN.TRUE)
     private Long longValue;
     
-    @org.codehaus.jackson.annotate.JsonIgnore
+    @FieldMapper(ignore = BOOLEAN.TRUE)
     private short shortValue;
-    
-    @javax.persistence.Transient
+
+    @FieldMapper(ignore = BOOLEAN.TRUE)
     private AtomicInteger aint;
-    
-    @com.fasterxml.jackson.annotation.JsonProperty(access = Access.WRITE_ONLY)
+
+    @FieldMapper(serialize = BOOLEAN.FALSE)
     private Integer intValue;
     
     
@@ -50,8 +47,8 @@ public class IgnoreObject {
     public byte getByte() {
     	return 16;
     }
-    
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties (allowGetters = false)
+
+    @FieldMapper(useAttribute = BOOLEAN.FALSE)
     public int getMyInt() {
     	return 12;
     }

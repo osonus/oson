@@ -5,8 +5,6 @@ import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.function.Function;
 
-import javax.persistence.EnumType;
-
 import ca.oson.json.function.*;
 import ca.oson.json.Oson.BOOLEAN;
 import ca.oson.json.Oson.JSON_INCLUDE;
