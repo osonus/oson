@@ -8,6 +8,7 @@ import java.util.function.Function;
 import javax.persistence.EnumType;
 
 import ca.oson.json.function.*;
+import ca.oson.json.Oson.BOOLEAN;
 import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.util.ObjectUtil;
 
@@ -171,6 +172,13 @@ public class FieldMapper<T, E> {
 	 * a private flag used to jackson
 	 */
 	private boolean processed = false;
+	
+	/*
+	 * Determine is this field is used only for both deserializing
+	 * Defaults to BOTH
+	 * 
+	 */
+	private BOOLEAN deserializing = BOOLEAN.BOTH;
 	
 	
 	boolean isValid() {
@@ -555,5 +563,20 @@ public class FieldMapper<T, E> {
 		this.dateFormat = dateFormat;
 		
 		return this;
+	}
+
+	public BOOLEAN getDeserializing() {
+		return deserializing;
+	}
+	
+	public boolean isDeserializing() {
+		return deserializing == BOOLEAN.BOTH || deserializing == BOOLEAN.TRUE;
+	}
+	public boolean isSerializing() {
+		return deserializing == BOOLEAN.BOTH || deserializing == BOOLEAN.FALSE;
+	}
+	
+	public void setDeserializing(BOOLEAN deserializing) {
+		this.deserializing = deserializing;
 	}
 }

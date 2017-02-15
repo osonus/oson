@@ -6,6 +6,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import javafx.util.Pair;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -82,8 +84,14 @@ public class ArrayToJsonMap {
 	}
 	
 	
-	public static List map2List (Map map) {
+	public static <K, V> List<Map.Entry<K, V>> map2List (Map<K, V> map) {
 		return new ArrayList(map.entrySet());
 	}
+	
+	
+	public static <K, V> List<Pair> map2Pairs (Map<K, V> map) {
+		return map.entrySet().stream().map(x -> new Pair(x.getKey(), x.getValue())).collect(Collectors.toList());
+	}
+
 }
 

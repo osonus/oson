@@ -1,0 +1,43 @@
+{
+  "formData": {
+    "aboriginalIdentity": {
+      "Aboriginal": false,
+      "aboriginalGroup": null
+    },
+    "previousAffiliation": {
+      "PrevAttend": false,
+      "PrevEmpl": false,
+      "PrevID": null,
+      "PrevAttendDate": null,
+      "mostRecentTermYear": null
+    },
+    "educationHistory": {
+      "EdInterrupt": false,
+      "Withdraw": false,
+      "EdInterruptAct": null,
+      "WithdrawInst": null,
+      "WithdrawDate": null
+    },
+    "agentInformation": {
+      "Agent": false,
+      "AgentName": null,
+      "AgentCompany": null,
+      "AgentEmail": null,
+      "AgentAuth": null
+    },
+    "scholarship": {
+      "Scholar": false,
+      "ScholarContact": null,
+      "ScholarOrg": null,
+      "ScholarAuth": null
+    },
+    "supportServices": {},
+    "englishProficiency": {
+      "proficiency": null,
+      "englishForAcademicPurposesProgram": null
+    }
+  },
+  "formDataSchemaVersions": {
+    "application_additional_information": "C856F028-4E6F-4BFD-8942-F3EF35C40541"
+  }
+}

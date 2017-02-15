@@ -9,10 +9,16 @@ import java.util.Set;
 
 import org.junit.Test;
 
+import ca.oson.json.ComponentType;
+import ca.oson.json.Oson;
+import ca.oson.json.Oson.BOOLEAN;
+import ca.oson.json.OsonConvert;
 import ca.oson.json.OsonSearch;
+import ca.oson.json.domain.AdmissionsApplicationQuestionType;
 import ca.oson.json.domain.VolumeContainer;
 import ca.oson.json.support.TestCaseBase;
 import ca.oson.json.util.ArrayToJsonMap;
+import javafx.util.Pair;
 
 public class QueryTest extends TestCaseBase {
 	@Test
@@ -121,48 +127,99 @@ public class QueryTest extends TestCaseBase {
 		assertEquals(null, found);
 	}
 	
-	@Test
-	public void testGet() {
-		URL url = getClass().getResource("../sample-program-details-data.json");
+	
+	private String getFileContent(String fileName) {
+		URL url = getClass().getResource(fileName);
 		File file = new File(url.getPath());
 
-		String json = oson.readValue(file);
+		return oson.readValue(file);
+	}
+	
+	@Test
+	public void testGet() {
+		String json = getFileContent("../sample-program-details-data.json");
 
 		String attr = "programQuestions";
 		
 		String found = OsonSearch.search(json, attr);
+
+		List<AdmissionsApplicationQuestionType> list = null;
+		list = (List<AdmissionsApplicationQuestionType>) (((Map<String, Object>) Oson.getListMapObject(found))
+				.entrySet().stream().map(x -> {
+					AdmissionsApplicationQuestionType type = new AdmissionsApplicationQuestionType();
+					type.setQuestionID(x.getKey());
+					type.setAnswerText(x.getValue() + "");
+					return type;
+				}).collect(java.util.stream.Collectors.toList()));
+
+		String expected = "[{\"questionID\":\"ShortAnswer1\",\"answerText\":\"Never\"},{\"questionID\":\"ShortAnswer2\",\"answerText\":\"Never\"},{\"questionID\":\"ShortAnswer3\",\"answerText\":\"Never\"},{\"questionID\":\"ShortAnswer4\",\"answerText\":\"Never\"},{\"questionID\":\"AdmitStatus\",\"answerText\":\"1\"}]";
+		assertEquals(expected, oson.serialize(list));
+	}
+	
+	
+	@Test
+	public void testGet2() {
+		String json = getFileContent("../sample-program-details-data.json");
+
+		String attr = "programQuestions";
+
+		Set found = OsonSearch.get(json, attr);
+
+		List<AdmissionsApplicationQuestionType> list = null;
+		list = (List<AdmissionsApplicationQuestionType>) (((Map<String, Object>) (found.iterator().next()))
+				.entrySet().stream().map(x -> {
+					AdmissionsApplicationQuestionType type = new AdmissionsApplicationQuestionType();
+					type.setQuestionID(x.getKey());
+					type.setAnswerText(x.getValue() + "");
+					return type;
+				}).collect(java.util.stream.Collectors.toList()));
+
+		String expected = "[{\"questionID\":\"ShortAnswer1\",\"answerText\":\"Never\"},{\"questionID\":\"ShortAnswer2\",\"answerText\":\"Never\"},{\"questionID\":\"ShortAnswer3\",\"answerText\":\"Never\"},{\"questionID\":\"ShortAnswer4\",\"answerText\":\"Never\"},{\"questionID\":\"AdmitStatus\",\"answerText\":\"1\"}]";
+		assertEquals(expected, oson.serialize(list));
+	}
+	
+	
+	@Test
+	public void testGet3() {
+		String json = getFileContent("../sample-program-details-data.json");
+
+		String attr = "programQuestions";
+
+		Set found = OsonSearch.get(json, attr);
+
+		List<AdmissionsApplicationQuestionType> list = null;
 		
-		System.err.println(found);
+		List<Pair> keyValues = ArrayToJsonMap.map2Pairs(((Map<String, Object>) (found.iterator().next())));
+
+		json = oson.clearAll().useAttribute(false).serialize(keyValues);
 		
-		if (found != null) {
-			List<Map.Entry> list = null;
-			Object obj = oson.getListMapObject(found);
-			if (Map.class.isAssignableFrom(obj.getClass())) {
-				list = ArrayToJsonMap.map2List((Map)obj);
-				
-				for (Map.Entry o: list) {
-					System.err.println(o.getKey() + " => " + o.getValue());
-				}
-				
-				System.err.println("done\n\n");
-			}
-		}
+		list = oson.setFieldMappers(AdmissionsApplicationQuestionType.class, BOOLEAN.TRUE, "questionID", "key", "answerText", "value")
+			.deserialize(json, new ComponentType(List.class, AdmissionsApplicationQuestionType.class));
+		json = oson.serialize(list);
+
+		String expected = "[{\"questionID\":\"ShortAnswer1\",\"answerText\":\"Never\"},{\"questionID\":\"ShortAnswer2\",\"answerText\":\"Never\"},{\"questionID\":\"ShortAnswer3\",\"answerText\":\"Never\"},{\"questionID\":\"ShortAnswer4\",\"answerText\":\"Never\"},{\"questionID\":\"AdmitStatus\",\"answerText\":\"1\"}]";
+		assertEquals(expected, oson.serialize(list));
+	}
+	
+	
+	@Test
+	public void testFlatten() {
+		String json = getFileContent("../sample-additional-info-data.json");
 		
-		Set set = OsonSearch.get(json, attr);
-		
-		List<Map.Entry> list = null;
-		if (set != null) {
-			list = new ArrayList();
-			for (Object obj: set) {
-				if (Map.class.isAssignableFrom(obj.getClass())) {
-					list.addAll(ArrayToJsonMap.map2List((Map)obj));
-				}
-			}
-			
-			for (Map.Entry obj: list) {
-				System.err.println(obj.getKey() + " => " + obj.getValue());
-			}
-		}
+		json = OsonConvert.flatten(json);
+
+		List<AdmissionsApplicationQuestionType> list = (List<AdmissionsApplicationQuestionType>) (((Map<String, Object>) Oson.getListMapObject(json))
+				.entrySet().stream().map(x -> {
+					AdmissionsApplicationQuestionType type = new AdmissionsApplicationQuestionType();
+					type.setQuestionID(x.getKey());
+					type.setAnswerText(x.getValue() + "");
+					return type;
+				}).collect(java.util.stream.Collectors.toList()));
+
+		json = oson.serialize(list);
+
+		String expected = "[{\"questionID\":\"Aboriginal\",\"answerText\":\"false\"},{\"questionID\":\"PrevAttend\",\"answerText\":\"false\"},{\"questionID\":\"PrevEmpl\",\"answerText\":\"false\"},{\"questionID\":\"EdInterrupt\",\"answerText\":\"false\"},{\"questionID\":\"Withdraw\",\"answerText\":\"false\"},{\"questionID\":\"Agent\",\"answerText\":\"false\"},{\"questionID\":\"Scholar\",\"answerText\":\"false\"},{\"questionID\":\"application_additional_information\",\"answerText\":\"C856F028-4E6F-4BFD-8942-F3EF35C40541\"}]";
+		assertEquals(expected, oson.serialize(list));
 	}
 	
 }

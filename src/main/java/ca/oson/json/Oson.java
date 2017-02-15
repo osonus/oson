@@ -90,6 +90,7 @@ import com.google.gson.annotations.SerializedName;
 import com.google.gson.annotations.Since;
 import com.google.gson.annotations.Until;
 
+import ca.oson.json.Oson.BOOLEAN;
 import ca.oson.json.function.*;
 import ca.oson.json.util.*;
 
@@ -1545,6 +1546,24 @@ public class Oson {
 
 		return this;
 	}
+	
+	
+	public <T> Oson setFieldMappers(Class<T> type, BOOLEAN deserializing, String... javaJsons) {
+		if (javaJsons.length < 2) {
+			return this;
+		}
+		
+		for (int i = 0; i + 1 < javaJsons.length; i++) {
+			FieldMapper fieldMapper = new FieldMapper(javaJsons[i], javaJsons[++i], type);
+			fieldMapper.setDeserializing(deserializing);
+			options.setFieldMappers(fieldMapper);
+		}
+		
+		reset();
+
+		return this;
+	}
+	
 	
 	private FieldMapper getFieldMapper(String java, String json, Class type) {
 		FieldMapper fieldMapper = options.getFieldMapper(java, json, type);
@@ -11047,7 +11066,7 @@ public class Oson {
 				}
 				
 				// 11. Apply Java configuration for this particular field
-				if (javaFieldMapper != null) {
+				if (javaFieldMapper != null && javaFieldMapper.isSerializing()) {
 					fieldMapper = overwriteBy (fieldMapper, javaFieldMapper);
 				}
 				
@@ -11474,7 +11493,7 @@ public class Oson {
 				}
 				
 				// 11. Apply Java configuration for this particular field
-				if (javaFieldMapper != null) {
+				if (javaFieldMapper != null && javaFieldMapper.isSerializing()) {
 					fieldMapper = overwriteBy (fieldMapper, javaFieldMapper);
 				}
 				
@@ -13100,7 +13119,7 @@ public class Oson {
 					annotations = f.getAnnotations();
 					
 					if (setter != null && ((javaFieldMapper == null || javaFieldMapper.useAttribute == null) && (fieldMapper.useAttribute == null || fieldMapper.useAttribute))
-							|| (javaFieldMapper != null && javaFieldMapper.useAttribute != null && javaFieldMapper.useAttribute) ) {
+							|| (javaFieldMapper != null && javaFieldMapper.isDeserializing() && javaFieldMapper.useAttribute != null && javaFieldMapper.useAttribute) ) {
 						annotations = Stream
 								.concat(Arrays.stream(annotations),
 										Arrays.stream(setter.getDeclaredAnnotations()))
@@ -13317,7 +13336,7 @@ public class Oson {
 				}
 
 				// 11. Apply Java configuration for this particular field
-				if (javaFieldMapper != null) {
+				if (javaFieldMapper != null && javaFieldMapper.isDeserializing()) {
 					fieldMapper = overwriteBy (fieldMapper, javaFieldMapper);
 				}
 				
@@ -13701,7 +13720,7 @@ public class Oson {
 				}
 
 				// 11. Apply Java configuration for this particular field
-				if (javaFieldMapper != null) {
+				if (javaFieldMapper != null && javaFieldMapper.isDeserializing()) {
 					fieldMapper = overwriteBy (fieldMapper, javaFieldMapper);
 				}
 				
