@@ -69,15 +69,16 @@
 			<artifactId>maven-javadoc-plugin</artifactId>
 			<version>2.9.1</version>
 			<configuration>
-		        <charset>UTF-8</charset>
-		        <docencoding>UTF-8</docencoding>
-		        <docfilessubdirs>true</docfilessubdirs>
+		        	<charset>UTF-8</charset>
+		        	<docencoding>UTF-8</docencoding>
+		        	<docfilessubdirs>true</docfilessubdirs>
 				<sourcepath>${basedir}/src/main/java/;${basedir}/src/test/java/</sourcepath>
 				<links>
 					<link>http://docs.oracle.com/javase/6/docs/api/</link>
 				</links>
 				<includePackageNames>ca.oson.json</includePackageNames>
-				<excludePackageNames>ca.oson.json.gson:ca.oson.json.gson.functional</excludePackageNames>
+				<excludePackageNames>ca.oson.json.gson:ca.oson.json.gson.functional:ca.oson.json.org</excludePackageNames>
+				<additionalparam>${javadoc.opts}</additionalparam>
 			</configuration>
 			<executions>
 				<execution>
