@@ -11210,10 +11210,7 @@ public class Oson {
 
 
 				if (StringUtil.isNull(str)) {
-					if (classMapper.defaultType == JSON_INCLUDE.NON_NULL
-							|| classMapper.defaultType == JSON_INCLUDE.NON_EMPTY
-							 || classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT
-							 || fieldMapper.defaultType == JSON_INCLUDE.NON_NULL
+					if (fieldMapper.defaultType == JSON_INCLUDE.NON_NULL
 		 							|| fieldMapper.defaultType == JSON_INCLUDE.NON_EMPTY
 		 							 || fieldMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
 						continue;
@@ -11223,16 +11220,14 @@ public class Oson {
 					}
 
 				} else if (StringUtil.isEmpty(str)) {
-					if (classMapper.defaultType == JSON_INCLUDE.NON_EMPTY
-							 || classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT
-							 || fieldMapper.defaultType == JSON_INCLUDE.NON_EMPTY
+					if (fieldMapper.defaultType == JSON_INCLUDE.NON_EMPTY
 		 							 || fieldMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
 						continue;
 					}
 
 					str = "\"\"";
 
-				} else if ((classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT || fieldMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) && DefaultValue.isDefault(str, returnType)) {
+				} else if (fieldMapper.defaultType == JSON_INCLUDE.NON_DEFAULT && DefaultValue.isDefault(str, returnType)) {
 					continue;
 				}
 
@@ -11606,10 +11601,7 @@ public class Oson {
 				//}
 
 				if (StringUtil.isNull(str)) {
-					if (classMapper.defaultType == JSON_INCLUDE.NON_NULL
-							|| classMapper.defaultType == JSON_INCLUDE.NON_EMPTY
-							 || classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT
-							 || fieldMapper.defaultType == JSON_INCLUDE.NON_NULL
+					if (fieldMapper.defaultType == JSON_INCLUDE.NON_NULL
 		 							|| fieldMapper.defaultType == JSON_INCLUDE.NON_EMPTY
 		 							 || fieldMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
 						continue;
@@ -11619,16 +11611,14 @@ public class Oson {
 					}
 
 				} else if (StringUtil.isEmpty(str)) {
-					if (classMapper.defaultType == JSON_INCLUDE.NON_EMPTY
-							 || classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT
-							 || fieldMapper.defaultType == JSON_INCLUDE.NON_EMPTY
+					if (fieldMapper.defaultType == JSON_INCLUDE.NON_EMPTY
 		 							 || fieldMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
 						continue;
 					}
 
 					str = "null";
 
-				} else if ((classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT || fieldMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) && DefaultValue.isDefault(str, returnType)) {
+				} else if (fieldMapper.defaultType == JSON_INCLUDE.NON_DEFAULT && DefaultValue.isDefault(str, returnType)) {
 					continue;
 				}
 
