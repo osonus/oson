@@ -2,7 +2,7 @@
  * Copyright (c) 2016- Oson.ca
  * @author	David Ruifang He
  * @email	osonus@gmail.com
- * 
+ *
  * All rights reserved.
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -86,9 +86,9 @@ public class ObjectUtil {
 	public static <E> void setMethodValue(E obj, Method method, Object... args) {
 		try {
 			method.setAccessible(true);
-			
+
 			method.invoke(obj, args);
-			
+
 		} catch (InvocationTargetException | IllegalAccessException | IllegalArgumentException e) {
 			// e.printStackTrace();
 			try {
@@ -96,21 +96,21 @@ public class ObjectUtil {
 					Statement stmt = new Statement(obj, method.getName(), args);
 					stmt.execute();
 				}
-				
+
 			} catch (Exception e1) {
 				// e1.printStackTrace();
 			}
 		}
 	}
-	
-	
+
+
 	@SuppressWarnings("unchecked")
 	public static <E,R> R getMethodValue(E obj, Method method, Object... args) {
 		R value = null;
 
 		try {
 			method.setAccessible(true);
-			
+
 			value = (R) method.invoke(obj, args);
 		} catch (InvocationTargetException | IllegalAccessException | IllegalArgumentException e) {
 			// e.printStackTrace();
@@ -120,25 +120,25 @@ public class ObjectUtil {
 					expr.execute();
 					value = (R) expr.getValue();
 				}
-				
+
 				if (value == null) {
 					value = (R) method.getDefaultValue();
 				}
-				
+
 			} catch (Exception e1) {
 				// e1.printStackTrace();
 			}
 		}
-		
+
 		return value;
 	}
-	
+
 
 	public static boolean isBasicDataType(Class valueType) {
 		if (valueType == null) { // no idea, just assume
 			return true;
 		}
-		
+
 		if (valueType.isPrimitive() || valueType.isEnum()) {
 			return true;
 		}
@@ -146,45 +146,45 @@ public class ObjectUtil {
 		if (Number.class.isAssignableFrom(valueType) || Date.class.isAssignableFrom(valueType)) {
 			return true;
 		}
-		
+
 		if (valueType == String.class
 			|| valueType == Character.class
 			|| valueType == Boolean.class) {
 			return true;
 		}
-		
+
 		return false;
 	}
-	
+
 	public static boolean isArrayOrCollection(Class valueType) {
 		if (valueType == null) { // no idea, just assume
 			return true;
 		}
-		
+
 		if (valueType.isArray()) {
 			return true;
 		}
-		
+
 		if (Collection.class.isAssignableFrom(valueType)) {
 			return true;
 		}
-		
+
 		if (Iterable.class.isAssignableFrom(valueType)) {
 			return true;
 		}
-		
+
 		return false;
 	}
-	 
+
 	public static boolean isMapOrObject(Class valueType) {
 		if (valueType == null) { // no idea, just assume
 			return true;
 		}
-		
+
 		if (Map.class.isAssignableFrom(valueType)) {
 			return true;
 		}
-		
+
 		if (valueType.isPrimitive() || valueType.isEnum()) {
 			return false;
 		}
@@ -192,26 +192,26 @@ public class ObjectUtil {
 		if (Number.class.isAssignableFrom(valueType) || Date.class.isAssignableFrom(valueType)) {
 			return false;
 		}
-		
+
 		if (isArrayOrCollection(valueType)) {
 			return false;
 		}
-		
+
 		if (valueType == String.class
 			|| valueType == Character.class
 			|| valueType == Boolean.class) {
 			return false;
 		}
-		
-		
+
+
 		return true;
 	}
-	
+
 	public static boolean isObject(Class valueType) {
 		if (valueType == null) { // no idea, just assume
 			return false;
 		}
-		
+
 		if (valueType.isPrimitive() || valueType.isEnum()) {
 			return false;
 		}
@@ -219,44 +219,44 @@ public class ObjectUtil {
 		if (Number.class.isAssignableFrom(valueType) || Date.class.isAssignableFrom(valueType)) {
 			return false;
 		}
-		
+
 		if (Map.class.isAssignableFrom(valueType)) {
 			return false;
 		}
-		
+
 		if (isArrayOrCollection(valueType)) {
 			return false;
 		}
-		
+
 		if (valueType == String.class
 			|| valueType == Character.class
 			|| valueType == Boolean.class) {
 			return false;
 		}
-		
-		
+
+
 		return true;
 	}
-	
-	
+
+
 	public static <T> T unwraponce(T obj) {
 		if (obj != null && obj instanceof Optional) {
 			Optional<T> opt = (Optional)obj;
 			obj = opt.orElse(null);
 		}
-	
+
 		return obj;
 	}
-	
+
 	public static <T> T unwrap(T obj) {
 		while (obj != null && obj instanceof Optional) {
 			Optional<T> opt = (Optional)obj;
 			obj = opt.orElse(null);
 		}
-	
+
 		return obj;
 	}
-	
+
 	public static Class getObjectType(Class type) {
 		if (type.isPrimitive()) {
 			if (type == int.class) {
@@ -277,16 +277,16 @@ public class ObjectUtil {
 				return Boolean.class;
 			}
 		}
-	
+
 		return type;
 	}
-	
-	
+
+
 	public static boolean isSameDataType(Class ftype, Class mtype) {
 		if (ftype == null || mtype == null) {
 			return false;
 		}
-		
+
 		if (mtype == java.lang.Integer.class) {
 			if (ftype == int.class
 					|| ftype == byte.class
@@ -308,7 +308,7 @@ public class ObjectUtil {
 					|| Date.class.isAssignableFrom(ftype)) {
 				return true;
 			}
-			
+
 		} else if (mtype == String.class) {
 			if (ftype == String.class
 					|| ftype == char.class
@@ -317,13 +317,13 @@ public class ObjectUtil {
 					|| ftype.isEnum()) {
 				return true;
 			}
-			
+
 		} else if (mtype == Boolean.class) {
 			if (ftype == Boolean.class
 					|| ftype == boolean.class) {
 				return true;
 			}
-			
+
 		} else if (mtype == Double.class) {
 			if (ftype == double.class
 					|| ftype == float.class
@@ -331,31 +331,31 @@ public class ObjectUtil {
 					|| ftype == Double.class) {
 				return true;
 			}
-			
+
 		} else if (mtype.isAssignableFrom(ftype) || ftype.isAssignableFrom(mtype)) {
 			return true;
 		}
-		
+
 		return false;
 	}
-	
+
 	public static boolean isSameType(Class aType, Class bType) {
 		if (aType == null || bType == null) {
 			return false;
 		}
-		
+
 		if (aType.isPrimitive() || bType.isPrimitive()) {
 			if (aType.isPrimitive()) {
 				if (bType.isPrimitive()) {
 					return (aType == bType);
 				}
-				
+
 			} else {
 				Class c = bType;
 				bType = aType;
 				aType = c;
 			}
-			
+
 			if (aType == int.class && bType == Integer.class) {
 				return true;
 			} else if (aType == long.class && bType == Long.class) {
@@ -373,15 +373,15 @@ public class ObjectUtil {
 			} else if (aType == boolean.class && bType == Boolean.class) {
 				return true;
 			}
-			
-			
+
+
 		} else if (aType.isAssignableFrom(bType) || bType.isAssignableFrom(aType)) {
 			return true;
 		}
-		
+
 		return false;
 	}
-	
+
 	public static boolean isPackage(int modifiers) {
 		if (modifiers == 0) {
 			return true;
@@ -393,7 +393,7 @@ public class ObjectUtil {
 
 		return false;
 	}
-	
+
 	public static void addAnnotationToMethod(String className,
 			String methodName, String annotationFullName) throws Exception {
 		addAnnotationToMethod(className,
@@ -493,7 +493,7 @@ public class ObjectUtil {
         	cc = pool.makeClass(newClassName);
         	//cc.writeFile();
         }
-		
+
 		// transform the ctClass to java class
 		Class dynamiqueBeanClass = cc.toClass();
 		//http://stackoverflow.com/questions/23336172/adding-an-annotation-to-a-runtime-generated-class-using-javassist
@@ -506,10 +506,10 @@ public class ObjectUtil {
     		String className,
             String fieldName,
             String annotationFullName) throws Exception {
-    	
+
     	addAnnotationToField(className, fieldName, annotationFullName, null);
     }
-    
+
     public static void addAnnotationToField(
     		String className,
             String fieldName,
@@ -542,28 +542,28 @@ public class ObjectUtil {
 	        attr.addAnnotation(annot);
 	        cfield.getFieldInfo().addAttribute(attr);
         //}
-	        
+
 	        if (postFix != null) {
 	        	String newClassName = className + postFix;
 	        	cc.setName(newClassName);
 	        	cc = pool.makeClass(newClassName);
 	        	//cc.writeFile();
 	        }
-	        
+
 			// transform the ctClass to java class
-			Class dynamiqueBeanClass = cc.toClass(); 
+			Class dynamiqueBeanClass = cc.toClass();
     }
 
     public static Class getComponentType(String toGenericString) {
     	Class[] componentTypes = getComponentTypes(toGenericString);
-    	
+
     	if (componentTypes == null || componentTypes.length < 1) {
     		return null;
     	}
-	
+
 		return componentTypes[0];
     }
-    
+
     public static Class[] getComponentTypes(String toGenericString) {
 		int idx = toGenericString.indexOf("<");
 		if (idx > -1) {
@@ -571,7 +571,7 @@ public class ObjectUtil {
 			if (idex2 > idx) {
 				String className = toGenericString.substring(idx + 1, idex2);
 				String[] classNames = className.split(",");
-				
+
 				Class[] componentTypes = new Class[classNames.length];
 
 				for (int i = 0; i < classNames.length; i++) {
@@ -584,7 +584,7 @@ public class ObjectUtil {
 						}
 					}
 				}
-				
+
 				return componentTypes;
 			}
 		}
@@ -594,12 +594,12 @@ public class ObjectUtil {
 
 	public static <E> Class<E> getTypeClass(java.lang.reflect.Type type) {
 		Class cl = type.getClass();
-		
+
 		if (ComponentType.class.isAssignableFrom(cl)) {
 			ComponentType componentType = (ComponentType)type;
 			return componentType.getClassType();
 		}
-		
+
 		//java.util.List<ca.oson.json.test.Dataset>
 		String className = type.getTypeName();
 		try {
@@ -639,16 +639,16 @@ public class ObjectUtil {
 
 	public static <E> Class getTypeComponentClass(java.lang.reflect.Type type) {
 		Class cl = type.getClass();
-		
+
 		if (ComponentType.class.isAssignableFrom(cl)) {
 			ComponentType componentType = (ComponentType)type;
 			return componentType.getMainComponentType();
 		}
-		
+
 		//java.util.List<ca.oson.json.test.Dataset>
 		String className = type.getTypeName();
 		Class ctype = getComponentType(className);
-		
+
 		if (ctype != null) {
 			return ctype;
 		}
@@ -705,7 +705,7 @@ public class ObjectUtil {
 	 * @return a list of parameter names
 	 * @throws IOException io exception to throw
 	 */
-	public static List<String> getParameterNames(Constructor<?> constructor) throws IOException {
+	private static List<String> getParameterNamesBytecode(Constructor<?> constructor) throws IOException {
 	    Class<?> declaringClass = constructor.getDeclaringClass();
 	    ClassLoader declaringClassLoader = declaringClass.getClassLoader();
 
@@ -751,6 +751,16 @@ public class ObjectUtil {
 	    }
 
 	    return null;
+	}
+
+	public static List<String> getParameterNames(Constructor<?> constructor) throws IOException {
+	    List<String> names = getParameterNamesBytecode(constructor);
+
+			if (names == null) {
+	    	names = Arrays.asList(getParameterNames(constructor.getParameters()));
+	    }
+
+	    return names;
 	}
 
 	private static class VariableReader extends EmptyVisitor {
@@ -843,20 +853,20 @@ public class ObjectUtil {
 		case "ca.oson.json.annotation.FieldMapper":
 			ca.oson.json.annotation.FieldMapper fieldMapper = (ca.oson.json.annotation.FieldMapper)annotation;
 			return fieldMapper.name();
-			
+
 		case "com.fasterxml.jackson.annotation.JsonProperty":
 			JsonProperty jsonProperty = (JsonProperty)annotation;
 			return jsonProperty.value();
-			
+
 		case "com.fasterxml.jackson.annotation.JsonSetter":
 			return ((JsonSetter) annotation).value();
 
 		case "org.codehaus.jackson.annotate.JsonSetter":
 			return ((org.codehaus.jackson.annotate.JsonSetter) annotation).value();
-			
+
 		case "com.google.gson.annotations.SerializedName":
 			return ((SerializedName) annotation).value();
-			
+
 //		case "org.springframework.web.bind.annotation.RequestParam":
 //			RequestParam requestParam = (RequestParam) annotation;
 //			String name = requestParam.value();
@@ -864,22 +874,22 @@ public class ObjectUtil {
 //				name = requestParam.name();
 //			}
 //			return name;
-			
+
 		case "javax.persistence.Column":
 			return ((Column) annotation).name();
-			
+
 //		case "com.fasterxml.jackson.databind.util.Named":
 //			return ((com.fasterxml.jackson.databind.util.Named)annotation).getName();
-			
+
 		case "com.google.inject.name.Named":
 			return ((com.google.inject.name.Named) annotation).value();
-			
+
 		case "javax.inject.Named":
 			return ((javax.inject.Named)annotation).value();
-			
+
 //		case "org.codehaus.jackson.map.util.Named":
 //			return ((org.codehaus.jackson.map.util.Named)annotation).getName();
-			
+
 		case "org.codehaus.jackson.annotate.JsonProperty":
 			return ((org.codehaus.jackson.annotate.JsonProperty) annotation).value();
 		}
@@ -928,9 +938,9 @@ public class ObjectUtil {
 			} else {
 				hash = obj.hashCode();
 			}
-			
+
 		} catch (Exception ex) {}
-		
+
 		if (obj != null && Math.abs(hash) < 100) {
 			String str = obj.toString();
 			hash += str.hashCode();
@@ -963,8 +973,8 @@ public class ObjectUtil {
 
 		return Arrays.binarySearch(names, name) >= 0;
 	}
-	
-	
+
+
 	public static boolean inSet(String name, Set<String> names) {
 		if (name == null || names == null) {
 			return false;
@@ -972,14 +982,14 @@ public class ObjectUtil {
 
 		return names.contains(name);
 	}
-	
+
 	public static JSONObject getJSONObject(String source) {
 		try {
 			int lineNumberToReplace = 157;
-			
+
 			ClassPool classPool = ClassPool.getDefault();
 			CtClass ctClass = classPool.get("org.json.JSONObject");
-			
+
 			if (ctClass.isFrozen() || ctClass.isModified()) {
 				if (source == null) {
 					return new JSONObject();
@@ -987,12 +997,12 @@ public class ObjectUtil {
 					return new JSONObject(source);
 				}
 			}
-			
+
 			ctClass.stopPruning(true);
-			CtConstructor declaredConstructor = ctClass.getDeclaredConstructor(new CtClass[] {}); 
-			
+			CtConstructor declaredConstructor = ctClass.getDeclaredConstructor(new CtClass[] {});
+
 			CodeAttribute codeAttribute = declaredConstructor.getMethodInfo().getCodeAttribute();
-			
+
 			LineNumberAttribute lineNumberAttribute = (LineNumberAttribute)codeAttribute.getAttribute(LineNumberAttribute.tag);
 
 			// Index in bytecode array where the instruction starts
@@ -1007,11 +1017,11 @@ public class ObjectUtil {
 		      // change byte to a no operation code
 		       code[i] = CodeAttribute.NOP;
 		    }
-		    
+
 		    declaredConstructor.insertAt(lineNumberToReplace, true, "$0.map = new java.util.LinkedHashMap();");
 
 			ctClass.writeFile();
-		    
+
 			if (source == null) {
 				return (JSONObject) ctClass.toClass().getConstructor().newInstance();
 			} else {
