@@ -1,20 +1,18 @@
 # oson
 Oson means O(bject) Json, and pronounces as awesome. It is a Java serialization/deserialization library that can convert Java Objects into JSON and back.
 
-This library implements its own Java to/from Json processor, and provides a common interface to Google's Gson and Jackson's ObjectMapper.
-
 Just like annotation and lambda expressions make Java look like a functional language, these features make Oson as a flexible choice of Java-Json processors.
 
 ###*Oson Goals*
   * Convert arbitray Java Object to Json data and back
-  * Provide a common interface to Gson and ObjectMapper
-  * Support major set of Json annotations: including com.fasterxml.jackson, com.google.gson, org.codehaus.jackson, javax.persistence, javax.validation (JPA), in addition to its own ca.oson.json annotation
+  * Provide two annotation classes, with features similar to com.fasterxml.jackson, com.google.gson, org.codehaus.jackson, javax.persistence, javax.validation (JPA)
   * Allow 3 level control of name and value conversions: global, class-level, and field level
   * Allow these conversions to be either annotation-oriented, or Java oriented, or both
   * Allow well-formatted JSON output: any indentation, any depth, as far as object linkage goes, without redundancy
   * Functions of lambda expressions are added to the serialization and deserialization processes, allowing easy value transformation
   * OsonAssert.assertEquals methods are implemented for JUnit testing, to compare Json string, JSONObject and Java objects
   * OsonMerge is implemented to merge Json strings, JSONObject and Java objects, with flexible configuration options
+  * OsonSearch is a simplified JsonPath implementation, with dotted notation to indicate attribute path
   * OsonPath is on the way, to implement XML XPath-similar features, and with queries easier to use
   * OsonConvert is on the way, to create custom Java object and classes from Json input
 
@@ -31,7 +29,7 @@ To use Oson with Maven2/3, you can use the Oson version available in Maven Centr
 	<dependency>
 	    <groupId>ca.oson.json</groupId>
 	    <artifactId>oson</artifactId>
-	    <version>1.0.11</version>
+	    <version>1.0.12</version>
 	</dependency>
 </dependencies>
 ```
@@ -46,14 +44,6 @@ To use Oson with Maven2/3, you can use the Oson version available in Maven Centr
 		Set set = oson.deserialize(json, LinkedHashSet.class);
 		assertEquals(LinkedHashSet.class, set.getClass());
 		assertEquals(json, oson.serialize(set));
-		
-		set = oson.asGson().fromJson(json, LinkedHashSet.class);
-		assertEquals(LinkedHashSet.class, set.getClass());
-		assertEquals(json, oson.toJson(set));
-		
-		set = oson.asJackson().readValue(json, LinkedHashSet.class);
-		assertEquals(LinkedHashSet.class, set.getClass());
-		assertEquals(json, oson.writeValueAsString(set));
 ```
 
 ###*License*
