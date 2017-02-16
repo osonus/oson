@@ -2,7 +2,6 @@ package ca.oson.json.object;
 
 import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.NavigableSet;
 import java.util.TreeSet;
 import java.util.Set;
 import java.util.SortedSet;
@@ -32,15 +31,6 @@ public class SetTest extends TestCaseBase {
 		Set set = oson.deserialize(json, SortedSet.class);
 		assertEquals(TreeSet.class, set.getClass());
 		assertEquals(expected, oson.serialize(set));
-		
-		
-		set = oson.asGson().deserialize(json, SortedSet.class);
-		assertEquals(TreeSet.class, set.getClass());
-		assertEquals(expected, oson.serialize(set));
-		
-		set = oson.asJackson().deserialize(json, SortedSet.class);
-		assertEquals(TreeSet.class, set.getClass());
-		assertEquals(expected, oson.serialize(set));
 	}
 	
 	public void testLinkedHashSetDeserialize() {
@@ -51,14 +41,6 @@ public class SetTest extends TestCaseBase {
 		Set set = oson.deserialize(json, LinkedHashSet.class);
 		assertEquals(LinkedHashSet.class, set.getClass());
 		assertEquals(json, oson.serialize(set));
-		
-		set = oson.asGson().fromJson(json, LinkedHashSet.class);
-		assertEquals(LinkedHashSet.class, set.getClass());
-		assertEquals(json, oson.toJson(set));
-		
-		set = oson.asJackson().readValue(json, LinkedHashSet.class);
-		assertEquals(LinkedHashSet.class, set.getClass());
-		assertEquals(json, oson.writeValueAsString(set));
 	}
 	
 	

@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import junit.framework.Assert;
 
-import org.json.JSONObject;
+import ca.oson.json.org.JSONObject;
 
 import ca.oson.json.Oson.FIELD_NAMING;
 

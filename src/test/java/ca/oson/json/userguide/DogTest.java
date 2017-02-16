@@ -1,23 +1,17 @@
 package ca.oson.json.userguide;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.junit.Test;
 
-import com.google.gson.Gson;
-
 import ca.oson.json.ClassMapper;
 import ca.oson.json.DefaultValue;
 import ca.oson.json.FieldMapper;
-import ca.oson.json.Oson.BOOLEAN;
 import ca.oson.json.Oson.FIELD_NAMING;
 import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.OsonAssert;
 import ca.oson.json.OsonAssert.MODE;
 import ca.oson.json.domain.Animal;
-import ca.oson.json.domain.Car;
 import ca.oson.json.domain.Dog;
 import ca.oson.json.domain.Dog.BREED;
 import ca.oson.json.domain.Eukaryote;

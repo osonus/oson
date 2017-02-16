@@ -9,8 +9,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javafx.util.Pair;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import ca.oson.json.org.JSONArray;
+import ca.oson.json.org.JSONObject;
 
 public class ArrayToJsonMap {
 	public static Map<String, Object> array2Map(Object[] array) {

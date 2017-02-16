@@ -10,8 +10,6 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import com.google.gson.reflect.TypeToken;
-
 import ca.oson.json.Oson;
 import ca.oson.json.ComponentType;
 import ca.oson.json.Oson.JSON_INCLUDE;
@@ -41,7 +39,7 @@ public class CollectionsTest extends TestCaseBase {
 		
 		List<Integer> expected = Arrays.asList(1,2,3,4,5);
 
-		Type collectionType = new TypeToken<Collection<Integer>>(){}.getType();
+		Type collectionType = new ComponentType(Collection.class, Integer.class);
 		
 		List<Integer> ints2 = oson.deserialize(json, collectionType);
 

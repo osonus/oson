@@ -46,7 +46,7 @@ public class AssertTest extends TestCaseBase {
 		String json = oson.serialize(house);
 
 		oson.setFieldNaming(FIELD_NAMING.SPACE_LOWER);
-		String json2 = oson.asGson().serialize(house);
+		String json2 = oson.serialize(house);
 		
 		OsonAssert.assertNotSame(json, json2);
 
@@ -82,7 +82,7 @@ public class AssertTest extends TestCaseBase {
 		String json = oson.serialize(house);
 
 		oson.setFieldNaming(FIELD_NAMING.DASH_UPPER);
-		String json2 = oson.asGson().serialize(house2);
+		String json2 = oson.serialize(house2);
 		
 		OsonAssert.assertNotSame(json, json2);
 

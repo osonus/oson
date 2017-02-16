@@ -7,7 +7,6 @@ import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import ca.oson.json.Oson.JSON_PROCESSOR;
 
 public class BascicDateType {
 	public int pint;
@@ -18,7 +17,6 @@ public class BascicDateType {
 	public long plong;
 	public float pfloat;
 	public double pdouble;
-	public JSON_PROCESSOR processor = JSON_PROCESSOR.GSON;
 
 	public Integer integer = new Integer(0);
 	public BigInteger bigInteger = BigInteger.ZERO;

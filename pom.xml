@@ -35,6 +35,10 @@
     <connection>git@github.com:osonus/oson.git</connection>
   </scm>
 	
+  <properties>
+    <additionalparam>-Xdoclint:none</additionalparam>
+  </properties>
+	
   <build>
     <sourceDirectory>src</sourceDirectory>
 	<plugins>
@@ -106,12 +110,6 @@
   </build>
   
   <dependencies>
-	<dependency>
-	    <groupId>org.json</groupId>
-	    <artifactId>json</artifactId>
-	    <version>20140107</version>
-	</dependency>
-
 	<dependency>
 	    <groupId>junit</groupId>
 	    <artifactId>junit</artifactId>

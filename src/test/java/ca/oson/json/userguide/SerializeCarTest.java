@@ -42,28 +42,6 @@ public class SerializeCarTest extends TestCaseBase {
 	}
 	
 	@Test
-	public void testSerializationAsGson() {
-		String json = oson.asGson().serialize(new Car("Chevron", 6));
-
-		String expected = "{\"brand\":\"Chevron\",\"doors\":6,\"year\":2016,\"years\":null}";
-
-		//System.out.println(json);
-		
-		assertEquals(expected, json);
-	}
-	
-	@Test
-	public void testSerializationAsJackson() {
-		String json = oson.asJackson().serialize(new Car("Chevron", 6));
-
-		String expected = "{\"brand\":\"Chevron\",\"doors\":6,\"year\":2016}";
-		
-		//System.out.println(json);
-
-		assertEquals(expected, json);
-	}
-	
-	@Test
 	public void testSerializationCarOneLinetoJson() {
 		String json = oson.toJson(new Car("Chevron", 6));
 

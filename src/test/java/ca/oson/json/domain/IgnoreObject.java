@@ -8,9 +8,7 @@ import ca.oson.json.Oson.BOOLEAN;
 import ca.oson.json.annotation.ClassMapper;
 import ca.oson.json.annotation.FieldMapper;
 
-@ClassMapper(ignoreFieldsWithAnnotations = {"javax.validation.constraints.NotNull"}, 
-jsonIgnoreProperties = {"lastName"})
-@ClassMapper(jsonIgnoreProperties = { "fvalue", "myInt", "ch"})
+@ClassMapper(jsonIgnoreProperties = { "lastName", "fvalue", "myInt", "ch"})
 public class IgnoreObject {
 	transient private String title;
 	volatile private Date birthDate;
@@ -39,11 +37,11 @@ public class IgnoreObject {
     @FieldMapper(ignore = BOOLEAN.TRUE)
     private AtomicInteger aint;
 
-    @FieldMapper(serialize = BOOLEAN.FALSE)
+    @FieldMapper(serialize = BOOLEAN.TRUE, since=2.0)
     private Integer intValue;
     
     
-    @org.junit.Ignore
+    @FieldMapper(ignore = BOOLEAN.TRUE)
     public byte getByte() {
     	return 16;
     }

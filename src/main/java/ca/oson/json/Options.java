@@ -19,7 +19,6 @@ import java.util.regex.Pattern;
 
 import ca.oson.json.Oson.FIELD_NAMING;
 import ca.oson.json.Oson.JSON_INCLUDE;
-import ca.oson.json.Oson.JSON_PROCESSOR;
 import ca.oson.json.Oson.MODIFIER;
 import ca.oson.json.util.*;
 
@@ -39,19 +38,7 @@ public class Options {
 	 */
 	private String simpleDateFormat = DefaultValue.simpleDateFormat();
 	private DateFormat dateFormat = new SimpleDateFormat(simpleDateFormat);
-	
-	/*
-	 * a flag to indicate if the Oson tool should act as an interface to Gson, Jackson, or simply itself
-	 */
-	private JSON_PROCESSOR jsonProcessor = JSON_PROCESSOR.OSON;
-	
-	/*
-	 * If either Gson or Jackson fails and throws exception
-	 * turn this flag on to print out stack trace message
-	 * and continue to use Oson's own implementation
-	 */
-	private Boolean printErrorUseOsonInFailure = false;
-	
+
 	/*
 	 * Field naming convention, to make a field name: lowercase, uppercase, camelcase, space-delimited,
 	 * dash-delimited, and more
@@ -885,16 +872,6 @@ public class Options {
 		}
 	}
 
-	protected JSON_PROCESSOR getJsonProcessor() {
-		return jsonProcessor;
-	}
-
-	public void setJsonProcessor(JSON_PROCESSOR jsonProcessor) {
-		if (jsonProcessor != null) {
-			this.jsonProcessor = jsonProcessor;
-		}
-	}
-
 	public boolean getAnnotationSupport() {
 		return annotationSupport;
 	}
@@ -917,15 +894,6 @@ public class Options {
 
 	public void setIncludeClassTypeInJson(Boolean includeClassTypeInJson) {
 		this.includeClassTypeInJson = includeClassTypeInJson;
-	}
-
-	public Boolean getPrintErrorUseOsonInFailure() {
-		return printErrorUseOsonInFailure;
-	}
-
-	public void setPrintErrorUseOsonInFailure(
-			Boolean printErrorUseOsonInFailure) {
-		this.printErrorUseOsonInFailure = printErrorUseOsonInFailure;
 	}
 
 	public String getJsonClassType() {

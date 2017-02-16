@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.json.JSONObject;
+import ca.oson.json.org.JSONObject;
 
 import ca.oson.json.Oson.FIELD_NAMING;
 import ca.oson.json.util.ConvertUtil;

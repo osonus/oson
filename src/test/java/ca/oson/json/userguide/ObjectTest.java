@@ -14,13 +14,10 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import com.google.gson.GsonBuilder;
-
 import ca.oson.json.ClassMapper;
 import ca.oson.json.ComponentType;
 import ca.oson.json.FieldMapper;
 import ca.oson.json.Oson.JSON_INCLUDE;
-import ca.oson.json.Oson.JSON_PROCESSOR;
 import ca.oson.json.Oson.MODIFIER;
 import ca.oson.json.OsonIO;
 import ca.oson.json.OsonSearch;
@@ -100,17 +97,16 @@ public class ObjectTest extends TestCaseBase {
 
 		oson.setDateFormat("yyyy-MM-dd");
 		Date dvalue = oson.deserialize("2016-09-07", Date.class);
-		JSON_PROCESSOR jvalue = JSON_PROCESSOR.GSON;
-		
-		RawValues obj = new RawValues(svalue, cvalue, chvalue, dvalue, jvalue);
+
+		RawValues obj = new RawValues(svalue, cvalue, chvalue, dvalue);
 		// annotation in work
-		String expected = "{\"svalue\":String value,\"cvalue\":c,\"chvalue\":h,\"dvalue\":2016-09-07,\"jvalue\":GSON}";
+		String expected = "{\"svalue\":String value,\"cvalue\":c,\"chvalue\":h,\"dvalue\":2016-09-07}";
 		String json = oson.serialize(obj);
 		assertEquals(expected, json);
 		
 		// disable annotation
 		oson.setAnnotationSupport(false);
-		expected = "{\"svalue\":\"String value\",\"cvalue\":\"c\",\"chvalue\":\"h\",\"dvalue\":\"2016-09-07\",\"jvalue\":\"GSON\"}";
+		expected = "{\"svalue\":\"String value\",\"cvalue\":\"c\",\"chvalue\":\"h\",\"dvalue\":\"2016-09-07\"}";
 		json = oson.serialize(obj);
 		assertEquals(expected, json);
 		
@@ -121,7 +117,7 @@ public class ObjectTest extends TestCaseBase {
 				new FieldMapper("svalue", RawValues.class).setJsonRawValue(false)
 		});
 		
-		expected = "{\"svalue\":\"String value\",\"cvalue\":c,\"chvalue\":\"h\",\"dvalue\":2016-09-07,\"jvalue\":GSON}";
+		expected = "{\"svalue\":\"String value\",\"cvalue\":c,\"chvalue\":\"h\",\"dvalue\":2016-09-07}";
 		json = oson.serialize(obj);
 		assertEquals(expected, json);
 	}

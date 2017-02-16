@@ -5,7 +5,6 @@ import junit.framework.TestCase;
 import org.junit.Before;
 
 import ca.oson.json.OsonIO;
-import ca.oson.json.Oson.JSON_PROCESSOR;
 
 public abstract class TestCaseNumeric extends TestCaseBase {
    @Before 

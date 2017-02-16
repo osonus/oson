@@ -2,10 +2,7 @@ package ca.oson.json.domain;
 
 import java.util.Date;
 
-import org.junit.Ignore;
-
 import ca.oson.json.Oson.BOOLEAN;
-import ca.oson.json.annotation.ClassMapper;
 import ca.oson.json.annotation.FieldMapper;
 
 
@@ -83,7 +80,7 @@ public class Dog extends Pet {
 		return "{\"name\":\"Json\"}";
 	}
 
-	@Ignore
+	@FieldMapper(ignore = BOOLEAN.TRUE)
 	public String getSomeField_name() {
 		return someField_name;
 	}

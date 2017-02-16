@@ -6,8 +6,6 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.google.gson.InstanceCreator;
-
 import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.ClassMapper;
 import ca.oson.json.domain.Address;
@@ -59,14 +57,7 @@ public class NewInstanceTest extends TestCaseBase {
 		
 		assertEquals(jsonExpected, json);
 		
-		AnyBean result = oson.setClassMappers(AnyBean.class, new ClassMapper()
-		.setConstructor(new InstanceCreator(){
-			@Override
-			public Object createInstance(Type type) {
-				return new AnyBean(null, 0);
-			}
-			
-		})).deserialize(json, AnyBean.class);
+		AnyBean result = oson.deserialize(json, AnyBean.class);
 
 		assertEquals(expected.toString(), result.toString());
 	}

@@ -7,8 +7,6 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.gson.reflect.TypeToken;
-
 import ca.oson.json.ComponentType;
 import ca.oson.json.domain.Car;
 import ca.oson.json.support.TestCaseBase;
@@ -17,7 +15,6 @@ public class ListObjectTest extends TestCaseBase {
 	   @Before 
 	   public void setUp() {
 		   super.setUp();
-		   oson.asOson();//.asJackson();//.asGson();//
 	   }
 	   
 	   @Test
@@ -52,7 +49,7 @@ public class ListObjectTest extends TestCaseBase {
 		   String value = "[{\"doors\":6,\"year\":2016,\"brand\":\"Chevrolet Malibu\"},{\"doors\":2,\"year\":2016,\"brand\":\"Ford Mondeo\"},{\"doors\":4,\"year\":2016,\"brand\":\"Toyota Camry\"}]";
 		   List<Car> expected = Arrays.asList(new Car("Chevrolet Malibu", 6), new Car("Ford Mondeo", 2), new Car("Toyota Camry", 4));
 
-		   Type type = new TypeToken<List<Car>>(){}.getType();
+		   Type type = new ComponentType(List.class, Car.class); // new TypeToken<List<Car>>(){}.getType();
 		   
 		   List<Car> result = oson.deserialize(value, type);
 
@@ -99,7 +96,7 @@ public class ListObjectTest extends TestCaseBase {
 		   String value = "[{\"doors\":6,\"year\":2016,\"brand\":\"Chevrolet Malibu\"},{\"doors\":2,\"year\":2016,\"brand\":\"Ford Mondeo\"},{\"doors\":4,\"year\":2016,\"brand\":\"Toyota Camry\"}]";
 		   List<Car> expected = Arrays.asList(new Car("Chevrolet Malibu", 6), new Car("Ford Mondeo", 2), new Car("Toyota Camry", 4));
 
-		   Type type = new TypeToken<List<Car>>(){}.getType();
+		   Type type = new ComponentType(List.class, Car.class);
 		   ComponentType ComponentType = new ComponentType(type);
 		   
 		   List<Car> result = oson.deserialize(value, ComponentType);

@@ -4,12 +4,8 @@ import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 
-import ca.oson.json.Oson.JSON_PROCESSOR;
-import ca.oson.json.support.TestCaseBase;
-
 public class TestRunner {
 	public static void main(String[] args) {
-		// TestCaseBase.processor = JSON_PROCESSOR.GSON; //.JACKSON;//
 		Class[] testSuites = new Class[] {NumericTestSuite.class, EnumBooleanDateTestSuite.class,
 				CharacterStringTestSuite.class, ListArrayMapTestSuite.class, UserGuideTestSuite.class,
 				AnnotationTestSuite.class, ObjectTestSuite.class};

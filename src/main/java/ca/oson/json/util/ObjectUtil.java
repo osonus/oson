@@ -40,7 +40,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.json.JSONObject;
+import ca.oson.json.org.JSONObject;
 
 import ca.oson.json.ComponentType;
 
@@ -505,13 +505,17 @@ public class ObjectUtil {
 	 *
 	 * This method relies on the constructor's class loader to locate the
 	 * bytecode resource that defined its class.
+	 * 
+	 * Without the help of asm bytecode library, just return a list of empty strings
 	 *
 	 * @param constructor the constructor to get a list of parameter names
 	 * @return a list of parameter names
 	 * @throws IOException io exception to throw
 	 */
 	public static List<String> getParameterNames(Constructor<?> constructor) throws IOException {
-	    return null;
+		String[] names = getParameterNames(constructor.getParameters());
+		
+		return Arrays.asList(names);
 	}
 
 
@@ -569,6 +573,8 @@ public class ObjectUtil {
 	 * @param annotation the annotation to change its value
 	 * @param key the key in the value map
 	 * @param newValue the new value to change to
+	 * 
+	 * @return The old value for the given key.
 	 */
 	@SuppressWarnings("unchecked")
 	public static Object changeAnnotationValue(Annotation annotation, String key, Object newValue){

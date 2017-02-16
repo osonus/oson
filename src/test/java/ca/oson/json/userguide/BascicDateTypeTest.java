@@ -6,10 +6,9 @@ import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import javax.persistence.EnumType;
-
 import org.junit.Test;
 
+import ca.oson.json.EnumType;
 import ca.oson.json.domain.BascicDateType;
 import ca.oson.json.support.TestCaseBase;
 import ca.oson.json.util.ObjectUtil;

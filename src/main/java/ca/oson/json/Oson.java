@@ -39,9 +39,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import ca.oson.json.org.JSONArray;
+import ca.oson.json.org.JSONException;
+import ca.oson.json.org.JSONObject;
 
 import ca.oson.json.function.*;
 import ca.oson.json.util.*;
@@ -54,14 +54,6 @@ import ca.oson.json.util.*;
  * Date	June 15, 2016
  */
 public class Oson {
-	private static final String mixin = "MixIn";
-	
-	public static enum JSON_PROCESSOR {
-		JACKSON, // use Jacksopn's implementation
-		GSON, // use google's gson implementation
-		OSON // Oson Json processor in Java
-	};
-	
 	// used by annotations
 	public static enum BOOLEAN {
 		FALSE,
@@ -654,31 +646,6 @@ public class Oson {
 		return this;
 	}
 
-	private JSON_PROCESSOR getJsonProcessor() {
-		return options.getJsonProcessor();
-	}
-
-	public Oson setJsonProcessor(JSON_PROCESSOR jsonProcessor) {
-		if (jsonProcessor != null) {
-			options.setJsonProcessor(jsonProcessor);
-			reset();
-		}
-		
-		return this;
-	}
-
-	public Oson asJackson() {
-		return setJsonProcessor(JSON_PROCESSOR.JACKSON);
-	}
-	
-	public Oson asGson() {
-		return setJsonProcessor(JSON_PROCESSOR.GSON);
-	}
-	
-	public Oson asOson() {
-		return setJsonProcessor(JSON_PROCESSOR.OSON);
-	}
-
 	private FIELD_NAMING getFieldNaming() {
 		return options.getFieldNaming();
 	}
@@ -1015,7 +982,7 @@ public class Oson {
 		}
 		
 		for (Class ann: annotations) {
-			if (annotation.getClass() == ann || ann.isAssignableFrom(annotation.getClass())) {
+			if (ann != null && (annotation.getClass() == ann || ann.isAssignableFrom(annotation.getClass()))) {
 				return true;
 			}
 		}
@@ -1029,7 +996,7 @@ public class Oson {
 		}
 		
 		for (Class ann: annotations) {
-			if (annotationClass == ann || ann.isAssignableFrom(annotationClass)) {
+			if (ann != null && (annotationClass == ann || ann.isAssignableFrom(annotationClass))) {
 				return true;
 			}
 		}
@@ -1171,20 +1138,6 @@ public class Oson {
 	public Oson includeClassTypeInJson(Boolean includeClassTypeInJson) {
 		if (includeClassTypeInJson != null) {
 			options.setIncludeClassTypeInJson(includeClassTypeInJson);
-			reset();
-		}
-
-		return this;
-	}
-
-	private Boolean getPrintErrorUseOsonInFailure() {
-		return options.getPrintErrorUseOsonInFailure();
-	}
-
-	public Oson setPrintErrorUseOsonInFailure(
-			Boolean printErrorUseOsonInFailure) {
-		if (printErrorUseOsonInFailure != null) {
-			options.setPrintErrorUseOsonInFailure(printErrorUseOsonInFailure);
 			reset();
 		}
 
@@ -8033,12 +7986,17 @@ public class Oson {
 	@SuppressWarnings("unchecked")
 	private <E> E json2Object(FieldData objectDTO) {
 		// String value, Class<E> returnType
+		Class<E> returnType = objectDTO.returnType;
+		
 		Object value = objectDTO.valueToProcess;
 		if (StringUtil.isNull(value)) {
+			if (objectDTO.required()) {
+				return (E) DefaultValue.getSystemDefault(returnType);
+			}
+			
 			return null;
 		}
 
-		Class<E> returnType = objectDTO.returnType;
 		if (returnType == null || returnType == Object.class) {
 			if (StringUtil.isEmpty(value)) {
 				return null;
@@ -9668,10 +9626,6 @@ public class Oson {
 						}
 					}
 					break;
-
-				case "org.junit.Ignore":
-					classMapper.ignore = true;
-					break;
 				}
 			}
 			
@@ -9998,13 +9952,6 @@ public class Oson {
 							}
 							
 						} else {
-							// to improve performance, using swith on string
-							switch (annotation.annotationType().getName()) {
-							case "org.junit.Ignore":
-								fieldMapper.ignore = true;
-								break;
-							}
-	
 							String fname = ObjectUtil.getName(annotation);
 							if (!StringUtil.isEmpty(fname)) {
 								names.add(fname);
@@ -10184,7 +10131,7 @@ public class Oson {
 					
 					str = "\"\"";
 					
-				} else if (classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT && DefaultValue.isDefault(str, returnType)) {
+				} else if ((classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT || fieldMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) && DefaultValue.isDefault(str, returnType)) {
 					continue;
 				}
 
@@ -10283,13 +10230,6 @@ public class Oson {
 							}
 							
 						} else {
-							// to improve performance, using swith on string
-							switch (annotation.annotationType().getName()) {
-							case "org.junit.Ignore":
-								fieldMapper.ignore = true;
-								break;
-							}
-	
 							String fname = ObjectUtil.getName(annotation);
 							if (fname != null) {
 								names.add(fname);
@@ -10430,7 +10370,7 @@ public class Oson {
 					
 					str = "null";
 					
-				} else if (classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT && DefaultValue.isDefault(str, returnType)) {
+				} else if ((classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT || fieldMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) && DefaultValue.isDefault(str, returnType)) {
 					continue;
 				}
 
@@ -11609,11 +11549,6 @@ public class Oson {
 							}
 						}
 						break;
-
-
-					case "org.junit.Ignore":
-						classMapper.ignore = true;
-						break;
 					}
 				}
 				
@@ -11800,14 +11735,6 @@ public class Oson {
 							}
 							
 						} else {
-
-							switch (annotation.annotationType().getName()) {								
-							case "org.junit.Ignore":
-								fieldMapper.ignore = true;
-								break;
-
-							}
-						
 							String fname = ObjectUtil.getName(annotation);
 							if (!StringUtil.isEmpty(fname)) {
 								names.add(fname);
@@ -12063,15 +11990,6 @@ public class Oson {
 							}
 							
 						} else {
-							// to improve performance, using swith on string
-							switch (annotation.annotationType().getName()) {
-
-							case "org.junit.Ignore":
-								fieldMapper.ignore = true;
-								break;
-
-							}
-						
 							String fname = ObjectUtil.getName(annotation);
 							if (fname != null) {
 								names.add(fname);
@@ -12257,31 +12175,16 @@ public class Oson {
 	 * Deserialize JSONObject object, to Map object
 	 */
 	public <T> T deserialize(JSONObject source) {
-		JSON_PROCESSOR processor = getJsonProcessor();
-		if (processor == JSON_PROCESSOR.JACKSON || processor == JSON_PROCESSOR.GSON) {
-			return deserialize(source.toString());
-		}
-		
 		Map<String, Object> map = (Map)fromJsonMap(source);
 		
 		return json2Object(new FieldData(map, null, null, true));
 	}
 	public <T> T deserialize(JSONObject source, T obj) {
-		JSON_PROCESSOR processor = getJsonProcessor();
-		if (processor == JSON_PROCESSOR.JACKSON || processor == JSON_PROCESSOR.GSON) {
-			return deserialize(source.toString(), obj);
-		}
-		
 		Map<String, Object> map = (Map)fromJsonMap(source);
 		
 		return json2Object(new FieldData(map, null, obj, true));
 	}
 	public <T> T deserialize(JSONObject source, Class<T> valueType) {
-		JSON_PROCESSOR processor = getJsonProcessor();
-		if (processor == JSON_PROCESSOR.JACKSON || processor == JSON_PROCESSOR.GSON) {
-			return deserialize(source.toString(), valueType);
-		}
-		
 		ComponentType componentType = new ComponentType(valueType);
 		startCachedComponentTypes(componentType);
 		
@@ -12290,11 +12193,6 @@ public class Oson {
 		return json2Object(new FieldData(map, valueType, null, true));
 	}
 	public <T> T deserialize(JSONObject source, Type type) {
-		JSON_PROCESSOR processor = getJsonProcessor();
-		if (processor == JSON_PROCESSOR.JACKSON || processor == JSON_PROCESSOR.GSON) {
-			return deserialize(source.toString(), type);
-		}
-		
 		Map<String, Object> map = (Map)fromJsonMap(source);
 		
 		Class<T> valueType = null;
@@ -12330,13 +12228,6 @@ public class Oson {
 		}
 
 		Class<T> valueType = (Class<T>) obj.getClass();
-		JSON_PROCESSOR processor = getJsonProcessor();
-
-		if (processor == JSON_PROCESSOR.JACKSON
-				|| processor == JSON_PROCESSOR.GSON) {
-			return fromJson(source, valueType);
-		}
-
 
 		try {
 			return fromJsonMap(source, valueType, obj, false);
@@ -12377,8 +12268,6 @@ public class Oson {
 	
 
 	public <T> String serialize(T source, Class<T> valueType) {
-		JSON_PROCESSOR processor = getJsonProcessor();
-
 		if (valueType == null) {
 			valueType = (Class<T>) source.getClass();
 		}

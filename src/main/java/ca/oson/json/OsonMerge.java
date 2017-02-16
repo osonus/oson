@@ -9,8 +9,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.json.JSONObject;
-import org.json.JSONArray;
+import ca.oson.json.org.JSONObject;
+import ca.oson.json.org.JSONArray;
 
 import ca.oson.json.Oson.FIELD_NAMING;
 import ca.oson.json.Oson.JSON_INCLUDE;
