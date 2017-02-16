@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>ca.oson.json</groupId>
   <artifactId>oson</artifactId>
-  <version>1.0.12</version>
+  <version>1.0.13</version>
   <packaging>jar</packaging>
 
   <name>Oson</name>
@@ -113,7 +113,7 @@
 	<dependency>
 	    <groupId>junit</groupId>
 	    <artifactId>junit</artifactId>
-	    <version>4.11</version>
+	    <version>4.12</version>
 	</dependency>
   </dependencies>
 
