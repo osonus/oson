@@ -10116,7 +10116,10 @@ public class Oson {
 				if (StringUtil.isNull(str)) {
 					if (classMapper.defaultType == JSON_INCLUDE.NON_NULL 
 							|| classMapper.defaultType == JSON_INCLUDE.NON_EMPTY
-							 || classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
+							 || classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT
+							 || fieldMapper.defaultType == JSON_INCLUDE.NON_NULL 
+								|| fieldMapper.defaultType == JSON_INCLUDE.NON_EMPTY
+								 || fieldMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
 						continue;
 						
 					} else {
@@ -10125,7 +10128,9 @@ public class Oson {
 					
 				} else if (StringUtil.isEmpty(str)) {
 					if (classMapper.defaultType == JSON_INCLUDE.NON_EMPTY
-							 || classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
+							 || classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT
+							 || fieldMapper.defaultType == JSON_INCLUDE.NON_EMPTY
+							 || fieldMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
 						continue;
 					}
 					
@@ -10355,7 +10360,10 @@ public class Oson {
 				if (StringUtil.isNull(str)) {
 					if (classMapper.defaultType == JSON_INCLUDE.NON_NULL 
 							|| classMapper.defaultType == JSON_INCLUDE.NON_EMPTY
-							 || classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
+							 || classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT
+							 || fieldMapper.defaultType == JSON_INCLUDE.NON_NULL 
+								|| fieldMapper.defaultType == JSON_INCLUDE.NON_EMPTY
+								 || fieldMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
 						continue;
 						
 					} else {
@@ -10364,7 +10372,9 @@ public class Oson {
 					
 				} else if (StringUtil.isEmpty(str)) {
 					if (classMapper.defaultType == JSON_INCLUDE.NON_EMPTY
-							 || classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
+							 || classMapper.defaultType == JSON_INCLUDE.NON_DEFAULT
+							 || fieldMapper.defaultType == JSON_INCLUDE.NON_EMPTY
+							 || fieldMapper.defaultType == JSON_INCLUDE.NON_DEFAULT) {
 						continue;
 					}
 					
