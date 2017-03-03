@@ -6759,7 +6759,7 @@ public class Oson {
 						}
 						
 						if (str == null) {
-							if (getDefaultType() == JSON_INCLUDE.DEFAULT) {
+							if (getDefaultType() != JSON_INCLUDE.NON_NULL && getDefaultType() != JSON_INCLUDE.NON_EMPTY && getDefaultType() != JSON_INCLUDE.NON_DEFAULT) {
 								str = "null"; // getDefaultValue(lastValueType).toString();
 							} else {
 								continue;

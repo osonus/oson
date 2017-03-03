@@ -41,7 +41,8 @@ public class DogTest extends TestCaseBase {
 	    assertEquals(expectedAnimal, oson.serialize(dog, Animal.class));
 	    assertEquals(expectedEukaryote, oson.serialize(dog, Eukaryote.class));
 	    
-	    OsonAssert.assertEquals(expectedDog, expectedEukaryote, MODE.KEY_SORT);
+	    String expectedEukaryote2 = "{\"name\":\"I am a dog\",\"bread\":\"GERMAN_SHEPHERD\",\"birthDate\":null,\"owner\":null,\"weight\":12.5,\"age\":1,\"someField_name\":null}";
+	    OsonAssert.assertEquals(expectedEukaryote2, expectedEukaryote, MODE.KEY_SORT);
 	    
 	    Dog dog = oson.deserialize(expectedDog, Dog.class);
 	    Animal animal = oson.deserialize(expectedAnimal, Dog.class);

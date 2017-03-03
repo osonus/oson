@@ -3,6 +3,7 @@ package ca.oson.json.query;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -12,6 +13,7 @@ import org.junit.Test;
 import ca.oson.json.ComponentType;
 import ca.oson.json.Oson;
 import ca.oson.json.Oson.BOOLEAN;
+import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.OsonConvert;
 import ca.oson.json.OsonSearch;
 import ca.oson.json.domain.AdmissionsApplicationQuestionType;
@@ -153,7 +155,7 @@ public class QueryTest extends TestCaseBase {
 				}).collect(java.util.stream.Collectors.toList()));
 
 		String expected = "[{\"questionID\":\"ShortAnswer1\",\"answerText\":\"Never\"},{\"questionID\":\"ShortAnswer2\",\"answerText\":\"Never\"},{\"questionID\":\"ShortAnswer3\",\"answerText\":\"Never\"},{\"questionID\":\"ShortAnswer4\",\"answerText\":\"Never\"},{\"questionID\":\"AdmitStatus\",\"answerText\":\"1\"}]";
-		assertEquals(expected, oson.serialize(list));
+		assertEquals(expected, oson.setDefaultType(JSON_INCLUDE.NON_EMPTY).serialize(list));
 	}
 	
 	
@@ -175,7 +177,7 @@ public class QueryTest extends TestCaseBase {
 				}).collect(java.util.stream.Collectors.toList()));
 
 		String expected = "[{\"questionID\":\"ShortAnswer1\",\"answerText\":\"Never\"},{\"questionID\":\"ShortAnswer2\",\"answerText\":\"Never\"},{\"questionID\":\"ShortAnswer3\",\"answerText\":\"Never\"},{\"questionID\":\"ShortAnswer4\",\"answerText\":\"Never\"},{\"questionID\":\"AdmitStatus\",\"answerText\":\"1\"}]";
-		assertEquals(expected, oson.serialize(list));
+		assertEquals(expected, oson.setDefaultType(JSON_INCLUDE.NON_EMPTY).serialize(list));
 	}
 	
 	
@@ -191,7 +193,7 @@ public class QueryTest extends TestCaseBase {
 		
 		List<Pair> keyValues = ArrayToJsonMap.map2Pairs(((Map<String, Object>) (found.iterator().next())));
 
-		json = oson.clearAll().useAttribute(false).serialize(keyValues);
+		json = oson.clearAll().setDefaultType(JSON_INCLUDE.NON_EMPTY).useAttribute(false).serialize(keyValues);
 		
 		list = oson.setFieldMappers(AdmissionsApplicationQuestionType.class, BOOLEAN.TRUE, "questionID", "key", "answerText", "value")
 			.deserialize(json, new ComponentType(List.class, AdmissionsApplicationQuestionType.class));
@@ -205,7 +207,7 @@ public class QueryTest extends TestCaseBase {
 	@Test
 	public void testFlatten() {
 		String json = getFileContent("../sample-additional-info-data.json");
-		
+
 		json = OsonConvert.flatten(json);
 
 		List<AdmissionsApplicationQuestionType> list = (List<AdmissionsApplicationQuestionType>) (((Map<String, Object>) Oson.getListMapObject(json))
@@ -216,9 +218,37 @@ public class QueryTest extends TestCaseBase {
 					return type;
 				}).collect(java.util.stream.Collectors.toList()));
 
+		oson.clearAll().setDefaultType(JSON_INCLUDE.NON_EMPTY);
 		json = oson.serialize(list);
 
 		String expected = "[{\"questionID\":\"Aboriginal\",\"answerText\":\"false\"},{\"questionID\":\"PrevAttend\",\"answerText\":\"false\"},{\"questionID\":\"PrevEmpl\",\"answerText\":\"false\"},{\"questionID\":\"EdInterrupt\",\"answerText\":\"false\"},{\"questionID\":\"Withdraw\",\"answerText\":\"false\"},{\"questionID\":\"Agent\",\"answerText\":\"false\"},{\"questionID\":\"Scholar\",\"answerText\":\"false\"},{\"questionID\":\"application_additional_information\",\"answerText\":\"C856F028-4E6F-4BFD-8942-F3EF35C40541\"}]";
+		assertEquals(expected, oson.serialize(list));
+	}
+	
+	
+	@Test
+	public void testFlattenNotNullFilter() {
+		String json = getFileContent("../additional_information.json");
+		
+		Map<String, Object> filters = new HashMap();
+		// null means removing this attribute
+		filters.put("formDataSchemaVersions", null);
+		// put any name changes for attributes, dot-notation supported
+		
+		json = OsonConvert.flatten(OsonConvert.filter(json, filters));
+
+		List<AdmissionsApplicationQuestionType> list = (List<AdmissionsApplicationQuestionType>) (((Map<String, Object>) Oson.getListMapObject(json))
+				.entrySet().stream().map(x -> {
+					AdmissionsApplicationQuestionType type = new AdmissionsApplicationQuestionType();
+					type.setQuestionID(x.getKey());
+					type.setAnswerText(x.getValue() + "");
+					return type;
+				}).collect(java.util.stream.Collectors.toList()));
+
+		Oson oson = (new Oson()).setDefaultType(JSON_INCLUDE.NON_EMPTY);
+		json = oson.serialize(list);
+
+		String expected = "[{\"questionID\":\"Aboriginal\",\"answerText\":\"false\"},{\"questionID\":\"Agent\",\"answerText\":\"false\"},{\"questionID\":\"DisabilitySvcs\",\"answerText\":\"false\"}]";
 		assertEquals(expected, oson.serialize(list));
 	}
 	

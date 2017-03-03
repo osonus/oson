@@ -10,15 +10,18 @@ import java.util.Set;
 import ca.oson.json.org.JSONObject;
 
 import ca.oson.json.Oson.FIELD_NAMING;
+import ca.oson.json.Oson.JSON_INCLUDE;
 import ca.oson.json.util.ConvertUtil;
 import ca.oson.json.util.StringUtil;
 
 public class OsonConvert {
 	private static String DELIMITER = "_";
 	private static FIELD_NAMING naming = ConvertUtil.naming;
-	private static Oson oson = new Oson()
+	// expose it to be configurable at the class level
+	public static Oson oson = new Oson()
 				.includeClassTypeInJson(false)
-				.setFieldNaming(naming);
+				.setFieldNaming(naming)
+				.setDefaultType(JSON_INCLUDE.NON_NULL);
 	
 	// 
 	/*
